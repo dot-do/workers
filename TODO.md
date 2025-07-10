@@ -8,12 +8,14 @@
 - [ ] `db` add dynamic data filtering
 - [ ] `db` add semantic / vector search
 - [ ] `ai` support simple openrouter generations
+- [ ] `ctx` confirm incoming `cf-worker` headers can't be overridden
 
 ## Ideas
 
 - [ ] `ai` support getOrCreate? or in `db`?
 - [ ] `ai` add mcp / tool support
 - [ ] `ai` simplify model names from openrouter
+- [ ] `events` webhook support?
 
 # DONE
 

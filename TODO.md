@@ -1,9 +1,11 @@
 # .do Workers
 
 - [ ] db worker
+  - [ ] 
 - [ ] ai worker
 - [ ] auth worker
-  - [ ] [integrate authkit example](https://github.com/cloudflare/ai/tree/main/demos/remote-mcp-authkit)
+  - [x] [integrate authkit example](https://github.com/cloudflare/ai/tree/main/demos/remote-mcp-authkit)
+  - [ ] Configure WorkOS / AuthKit 
 - [ ] mcp worker
 - [ ] agent worker
 - [ ] api worker

@@ -1,0 +1,19 @@
+{
+  "name": "md",
+  "private": true,
+  "packageManager": "pnpm@8.15.2",
+  "scripts": {
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,mdx,css,html,yml,yaml}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "jsxSingleQuote": true,
+    "tabWidth": 2,
+    "useTabs": false,
+    "printWidth": 160
+  }
+}

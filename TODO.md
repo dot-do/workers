@@ -4,6 +4,8 @@
 ## Backlog
 
 - [ ] `db` create simple fetch-based public markdown query
+- [ ] `db` setup cloudflare monorepo deployment
+- [ ] `db` add sql variables for r2 / s3 auth
 - [ ] `db` add glob support to `id` filtering
 - [ ] `db` add dynamic data filtering
 - [ ] `db` add semantic / vector search

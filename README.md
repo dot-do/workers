@@ -9,5 +9,11 @@
 - public datasets & apis are available at .mw domains
   - ip.db.mw/1.1.1.1 
   - asn.db.mw/7922
-  - ua.db.mw/Googlebot/2.1
+  - ua.db.mw/Googlebot_2.1
 - queries use glob syntax `*`, `**`, and `**/*` etc
+- etag / version / cache based on `?_v={sqid(ts,urlHash,contentHash)}`
+
+
+## Decisions
+
+- [ ] Order by uri, or ns + id + v

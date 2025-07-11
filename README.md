@@ -10,8 +10,16 @@
   - ua.db.mw/Googlebot_2.1
 - queries use glob syntax `*`, `**`, and `**/*` etc
 - etag / version / cache based on `?_v={sqid(ts,urlHash,contentHash)}`
+- use `@` for version like `/@86Rf07`
+  - also https://patent.click/leanCanvas@1752229341113
+  - also https://patent.click/leanCanvas@7-2-2025
+
 
 ## Decisions
+
+- [ ] 
+
+## Decisions to make
 
 - [ ] Order by uri, or ns + id + v
 - [ ] Calculate ESM, AST, HTML on insert, or on demand?

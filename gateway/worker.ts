@@ -3,9 +3,7 @@ import { Hono } from 'hono'
 const app = new Hono()
 
 app.get('/', (c) => {
-  const { url } = c.req
-  console.log(url)
-  return c.json({ hello: 'world', url })
+  return c.json({ hello: 'world' })
 })
 
 export default app

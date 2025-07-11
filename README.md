@@ -14,3 +14,5 @@
 ## Decisions
 
 - [ ] Order by uri, or ns + id + v
+- [ ] Calculate ESM, AST, HTML on insert, or on demand?
+  - Most things won't use all of the formats, and many are expensive, so will do on demand

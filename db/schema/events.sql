@@ -46,7 +46,7 @@ CREATE TABLE versions
     ts         UInt32 DEFAULT toUnixTimestamp(now()),
     url        String DEFAULT concat('https://', ns, '/', id),
     name       Nullable(String),
-    data       JSON,
+    data       Nullable(JSON),
     content    String,
     visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public'),
     nsHash     UInt64 MATERIALIZED xxHash32(ns),

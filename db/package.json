@@ -19,6 +19,7 @@
     "yaml": "^2.8.0"
   },
   "devDependencies": {
+    "chdb": "^1.3.0",
     "typescript": "^5.8.3",
     "wrangler": "^4.24.0"
   }

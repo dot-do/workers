@@ -58,18 +58,28 @@ CREATE TABLE versions
     id         String,
     ts         DateTime64(),
     url        String MATERIALIZED concat('https://', ns, '/', id),
+    type       Nullable(String),
     name       Nullable(String),
     data       JSON,
     meta       Nullable(JSON),
-    createdIn  String,
+    event      String,
     content    String,
-    visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public'),
+    visibility LowCardinality(String) DEFAULT 'private',  --if(startsWith(id, '_'), 'private', 'public'),
+    yaml       Nullable(String),
+    code       Nullable(String),
+    jsx        Nullable(String),
+    esm        Nullable(String),
+    mdast      Nullable(JSON),
+    estree     Nullable(JSON),
+    embedding  Array(Float32),
     nsHash     UInt32 MATERIALIZED xxHash32(ns),
     idHash     UInt32 MATERIALIZED xxHash32(id),
     urlHash    UInt32 MATERIALIZED xxHash32(url),
-    contentHash UInt32 MATERIALIZED xxHash32(content),
-    _v         String MATERIALIZED sqidEncode(2, nsHash, idHash, ts, contentHash),  -- versions._v
-    _id        String MATERIALIZED sqidEncode(3, nsHash, idHash),                   -- data._id
+    typeHash   UInt32 MATERIALIZED xxHash32(type),
+    esmHash    UInt32 MATERIALIZED xxHash32(esm),
+    hash       UInt32 MATERIALIZED xxHash32(concat(data, content)),
+    _v         String MATERIALIZED sqidEncode(2, nsHash, idHash, ts, hash),  -- versions._v
+    _id        String MATERIALIZED sqidEncode(3, nsHash, idHash),            -- data._id
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (ns, id, ts);  
@@ -81,6 +91,7 @@ CREATE TABLE data
     ns         String,
     id         String,
     url        String,
+    type       Nullable(String),
     name       Nullable(String),
     data       JSON,
     meta       Nullable(JSON),
@@ -91,10 +102,19 @@ CREATE TABLE data
     updatedAt  DateTime64(),
     updatedIn  String,
     updatedBy  String,
-    visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public'),
+    visibility LowCardinality(String) DEFAULT 'private',
+    yaml       Nullable(String),
+    code       Nullable(String),
+    jsx        Nullable(String),
+    esm        Nullable(String),
+    mdast      Nullable(JSON),
+    estree     Nullable(JSON),
+    embedding  Array(Float32),
     nsHash     UInt32 MATERIALIZED xxHash32(ns),
     idHash     UInt32 MATERIALIZED xxHash32(id),
     urlHash    UInt32 MATERIALIZED xxHash32(url),
+    typeHash   UInt32 MATERIALIZED xxHash32(type),
+    hash       UInt32 MATERIALIZED xxHash32(concat(data, content)),
     _id        String MATERIALIZED sqidEncode(3, nsHash, idHash), -- data._id
 )
 ENGINE = MergeTree
@@ -116,13 +136,35 @@ CREATE TABLE relationships
     idTo        String,
     nsFromHash  UInt32 MATERIALIZED xxHash32(nsFrom),
     idFromHash  UInt32 MATERIALIZED xxHash32(idFrom),
-    typeHash    UInt32 MATERIALIZED xxHash32(type),
     nsToHash    UInt32 MATERIALIZED xxHash32(nsTo),
     idToHash    UInt32 MATERIALIZED xxHash32(idTo),
-    _r          String MATERIALIZED sqidEncode(nsFromHash, idFromHash, typeHash, nsToHash, idToHash), -- 5-part sqid is `relationship` / _r
+    typeHash    UInt32 MATERIALIZED xxHash32(type),
+    _r          String MATERIALIZED sqidEncode(4, nsFromHash, idFromHash, typeHash, nsToHash, idToHash),  -- relationships._r
+    _to         String MATERIALIZED sqidEncode(3, nsToHash, idToHash),  --  _to data._id
 )
 ENGINE = MergeTree
 ORDER BY (nsTo, idTo, type);  
+
+
+CREATE TABLE context
+(
+    ns          String,
+    id          String,
+    ts          DateTime64(),
+    url         String MATERIALIZED concat('https://', ns, '/', id),
+    type        Nullable(String),
+    name        Nullable(String),
+    contentType String,
+    content     String,
+    embedding   Array(Float32),
+    visibility  LowCardinality(String) DEFAULT 'private',
+    nsHash      UInt32 MATERIALIZED xxHash32(ns),
+    idHash      UInt32 MATERIALIZED xxHash32(id),
+    typeHash    UInt32 MATERIALIZED xxHash32(type),
+    urlHash     UInt32 MATERIALIZED xxHash32(url),
+    hash        UInt64 MATERIALIZED xxHash64(concat(contentType, content)),
+    _id         String MATERIALIZED sqidEncode(3, nsHash, idHash), -- context._id
+)
 
 
 -- Stream data from the S3Queue-backed `eventsPipeline` into the canonical `events` table

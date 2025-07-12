@@ -33,7 +33,7 @@ CREATE TABLE events
   nsHash     UInt32 MATERIALIZED xxHash32(ns),
   idHash     UInt32 MATERIALIZED xxHash32(id),
   urlHash    UInt32 MATERIALIZED xxHash32(url),
-  
+
   _e         String MATERIALIZED sqidEncode(1, nsHash, idHash, ts)
   
   INDEX bf_eq_hash (nsHash, idHash, urlHash, _e) TYPE bloom_filter(2048, 3, 0) GRANULARITY 4, -- equality on ns, id, url
@@ -51,6 +51,8 @@ CREATE TABLE versions
   ns         String,
   id         String,
   ts         DateTime64(),
+  branch     Nullable(String),
+  variant    Nullable(String),
   url        String MATERIALIZED concat('https://', ns, '/', id),
   type       Nullable(String),
   name       Nullable(String),
@@ -89,6 +91,7 @@ CREATE TABLE data
   ns         String,
   id         String,
   url        String,
+  variant    Nullable(String),
   type       Nullable(String),
   name       Nullable(String),
   data       JSON,
@@ -112,6 +115,7 @@ CREATE TABLE data
   nsHash     UInt32 MATERIALIZED xxHash32(ns),
   idHash     UInt32 MATERIALIZED xxHash32(id),
   urlHash    UInt32 MATERIALIZED xxHash32(url),
+  varHash    UInt32 MATERIALIZED xxHash32(variant),
   typeHash   UInt32 MATERIALIZED xxHash32(type),
   hash       UInt32 MATERIALIZED xxHash32(concat(data, content)),
 

@@ -33,6 +33,7 @@ CREATE TABLE events
   nsHash     UInt32 MATERIALIZED xxHash32(ns),
   idHash     UInt32 MATERIALIZED xxHash32(id),
   urlHash    UInt32 MATERIALIZED xxHash32(url),
+  
   _e         String MATERIALIZED sqidEncode(1, nsHash, idHash, ts)
   
   INDEX bf_eq_hash (nsHash, idHash, urlHash, _e) TYPE bloom_filter(2048, 3, 0) GRANULARITY 4, -- equality on ns, id, url
@@ -59,6 +60,7 @@ CREATE TABLE versions
   content    String,
   visibility LowCardinality(String) DEFAULT 'private',  --if(startsWith(id, '_'), 'private', 'public'),
   yaml       Nullable(String),
+  html       Nullable(String),
   code       Nullable(String),
   jsx        Nullable(String),
   esm        Nullable(String),
@@ -100,6 +102,7 @@ CREATE TABLE data
   updatedBy  String,
   visibility LowCardinality(String) DEFAULT 'private',
   yaml       Nullable(String),
+  html       Nullable(String),
   code       Nullable(String),
   jsx        Nullable(String),
   esm        Nullable(String),

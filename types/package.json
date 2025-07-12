@@ -1,0 +1,9 @@
+{
+  "name": "@dot-do/types",
+  "version": "0.0.1",
+  "private": true,
+  "types": "./index.ts",
+  "devDependencies": {
+    "schema-dts": "^1.1.5"
+  }
+}

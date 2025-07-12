@@ -3,6 +3,8 @@ import * as Schema from 'schema-dts'
 
 type Dollarize<T> = {
   [K in keyof T as K extends `@${infer R}` ? `$${R}` : K]: Dollarize<T[K]>
+} & {
+  $content?: Dollarize<Schema.Thing>
 }
 
 type WithContext<T> = T & {
@@ -25,7 +27,7 @@ const upsert: WithContext<Action> = {
     $type: 'Thing',
     description: {
       $type: 'TextObject',
-      encodingFormat: 'text/markdown',
+      encodingFormat: 'text/mdx',
       text: '# Hello World',
     }
   }

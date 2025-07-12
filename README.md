@@ -13,6 +13,8 @@
 - use `@` for version like `/@86Rf07`
   - also https://patent.click/leanCanvas@1752229341113
   - also https://patent.click/leanCanvas@7-2-2025
+- Use `::` to get or generate type like `patent.click/_LeanCanvas`
+
 
 
 ## Decisions

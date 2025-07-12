@@ -9,7 +9,7 @@ CREATE TABLE eventsPipeline
 )
 ENGINE = S3Queue(
     'https://<ACCOUNT_ID>.r2.cloudflarestorage.com/my-bucket/**/*.ndjson.gz',
-    concat({r2Id: String},':',{r2Secret: String}),
+    concat({R2_ACCOUNT_ID: String},':',{R2_ACCOUNT_SECRET: String}),
     format = 'JSONAsObject'
 )
 SETTINGS
@@ -26,9 +26,9 @@ CREATE TABLE events
     data       JSON,
     meta       Nullable(JSON),
     content    String,
+    status     String DEFAULT 'CompletedActionStatus',
     result     Nullable(JSON),
     error      Nullable(JSON),
-    status     String DEFAULT 'pending',
     visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public')
     nsHash     UInt32 MATERIALIZED xxHash32(ns),
     idHash     UInt32 MATERIALIZED xxHash32(id),

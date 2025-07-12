@@ -26,11 +26,27 @@ CREATE TABLE events
     data       JSON,
     meta       Nullable(JSON),
     content    String,
+    result     Nullable(JSON),
+    error      Nullable(JSON),
+    status     String DEFAULT 'pending',
     visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public')
-    nsHash     UInt64 MATERIALIZED xxHash32(ns),
-    idHash     UInt64 MATERIALIZED xxHash32(id),
-    urlHash    UInt64 MATERIALIZED xxHash32(url),
-    _e         String MATERIALIZED sqidEncode(nsHash, idHash, ts), -- 3-part sqid is `event`
+    nsHash     UInt32 MATERIALIZED xxHash32(ns),
+    idHash     UInt32 MATERIALIZED xxHash32(id),
+    urlHash    UInt32 MATERIALIZED xxHash32(url),
+    _e         String MATERIALIZED sqidEncode(1, nsHash, idHash, ts)
+    
+    INDEX bf_eq_hash (nsHash, idHash, urlHash, _e)
+        TYPE bloom_filter(2048, 3, 0) GRANULARITY 4,
+
+    INDEX tk_id (id)          -- token search on id
+        TYPE tokenbf_v1(2048, 2, 0) GRANULARITY 4,
+
+    INDEX ng_url (url)        -- arbitrary substring on url
+        TYPE ngrambf_v1(3, 4096, 2, 0) GRANULARITY 8,
+
+    INDEX bf_status (status)  -- equality on JSON status
+        TYPE bloom_filter(1024, 3, 0) GRANULARITY 4
+
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id);  
@@ -40,19 +56,20 @@ CREATE TABLE versions
 (
     ns         String,
     id         String,
-    ts         UInt32 DEFAULT toUnixTimestamp(now()),
+    ts         DateTime64(),
     url        String DEFAULT concat('https://', ns, '/', id),
     name       Nullable(String),
     data       JSON,
     meta       Nullable(JSON),
+    createdIn  String,
     content    String,
     visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public'),
-    nsHash     UInt64 MATERIALIZED xxHash32(ns),
-    idHash     UInt64 MATERIALIZED xxHash32(id),
-    urlHash    UInt64 MATERIALIZED xxHash32(url),
-    contentHash UInt64 MATERIALIZED xxHash32(content),
-    _v         String MATERIALIZED sqidEncode(nsHash, idHash, ts, contentHash), -- 4-part sqid is `version` / _v
-    _id        String MATERIALIZED sqidEncode(nsHash, idHash), -- 2-part sqid is `data` / _id
+    nsHash     UInt32 MATERIALIZED xxHash32(ns),
+    idHash     UInt32 MATERIALIZED xxHash32(id),
+    urlHash    UInt32 MATERIALIZED xxHash32(url),
+    contentHash UInt32 MATERIALIZED xxHash32(content),
+    _v         String MATERIALIZED sqidEncode(2, nsHash, idHash, ts, contentHash),  -- versions._v
+    _id        String MATERIALIZED sqidEncode(3, nsHash, idHash),                   -- data._id
 )
 ENGINE = MergeTree
 ORDER BY (ns, id, ts);  
@@ -68,11 +85,17 @@ CREATE TABLE data
     data       JSON,
     meta       Nullable(JSON),
     content    String,
+    createdAt  DateTime64(),
+    createdIn  String,
+    createdBy  String,
+    updatedAt  DateTime64(),
+    updatedIn  String,
+    updatedBy  String,
     visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public'),
-    nsHash     UInt64 MATERIALIZED xxHash32(ns),
-    idHash     UInt64 MATERIALIZED xxHash32(id),
-    urlHash    UInt64 MATERIALIZED xxHash32(url),
-    _id        String MATERIALIZED sqidEncode(nsHash, idHash), -- 2-part sqid is `data` / _id
+    nsHash     UInt32 MATERIALIZED xxHash32(ns),
+    idHash     UInt32 MATERIALIZED xxHash32(id),
+    urlHash    UInt32 MATERIALIZED xxHash32(url),
+    _id        String MATERIALIZED sqidEncode(3, nsHash, idHash), -- data._id
 )
 ENGINE = MergeTree
 ORDER BY (ns, id, ts);  
@@ -84,17 +107,18 @@ CREATE TABLE relationships
     from        String,
     type        String,
     to          String,
+    ts          DateTime64(),
     data        Nullable(JSON),
     meta        Nullable(JSON),
     nsFrom      String,
     nsTo        String,
     idFrom      String,
     idTo        String,
-    nsFromHash  UInt64 MATERIALIZED xxHash32(nsFrom),
-    idFromHash  UInt64 MATERIALIZED xxHash32(idFrom),
-    typeHash    UInt64 MATERIALIZED xxHash32(type),
-    nsToHash    UInt64 MATERIALIZED xxHash32(nsTo),
-    idToHash    UInt64 MATERIALIZED xxHash32(idTo),
+    nsFromHash  UInt32 MATERIALIZED xxHash32(nsFrom),
+    idFromHash  UInt32 MATERIALIZED xxHash32(idFrom),
+    typeHash    UInt32 MATERIALIZED xxHash32(type),
+    nsToHash    UInt32 MATERIALIZED xxHash32(nsTo),
+    idToHash    UInt32 MATERIALIZED xxHash32(idTo),
     _r          String MATERIALIZED sqidEncode(nsFromHash, idFromHash, typeHash, nsToHash, idToHash), -- 5-part sqid is `relationship` / _r
 )
 ENGINE = MergeTree

@@ -30,14 +30,51 @@ CREATE TABLE events
     type       String DEFAULT 'Action',
     data       JSON,
     content    String,
-    visibility LowCardinality(String) DEFAULT 'public'
+    visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public')
+    nsHash     UInt64 MATERIALIZED xxHash32(ns),
+    idHash     UInt64 MATERIALIZED xxHash32(id),
+    _v         String MATERIALIZED sqidEncode(nsHash, idHash, ts),
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id);  
 
 
+CREATE TABLE versions
+(
+    ns         String,
+    id         String,
+    ts         UInt32 DEFAULT toUnixTimestamp(now()),
+    url        String DEFAULT concat('https://', ns, '/', id),
+    name       Nullable(String),
+    data       JSON,
+    content    String,
+    visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public'),
+    nsHash     UInt64 MATERIALIZED xxHash32(ns),
+    idHash     UInt64 MATERIALIZED xxHash32(id),
+    contentHash UInt64 MATERIALIZED xxHash32(content),
+    _v         String MATERIALIZED sqidEncode(nsHash, idHash, contentHash, ts),
+)
+ENGINE = MergeTree
+ORDER BY (ns, id, ts);  
 
 
+
+CREATE TABLE data
+(
+    ns         String,
+    id         String,
+    url        String,
+    name       Nullable(String),
+    data       JSON,
+    content    String,
+    visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public'),
+    nsHash     UInt64 MATERIALIZED xxHash32(ns),
+    idHash     UInt64 MATERIALIZED xxHash32(id),
+    contentHash UInt64 MATERIALIZED xxHash32(content),
+    _id        String MATERIALIZED sqidEncode(nsHash, idHash),
+)
+ENGINE = MergeTree
+ORDER BY (ns, id, ts);  
 
 
 -- Stream data from the S3Queue-backed `eventsPipeline` into the canonical `events` table

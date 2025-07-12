@@ -9,10 +9,16 @@
 	"compatibility_date": "2025-07-08",
 	"observability": { "enabled": true },
 
-
 	/**
 	 * Service Bindings (communicate between multiple Workers)
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
-	"services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
+	"services": [
+		{ "binding": "ai", "service": "do-ai" },
+		{ "binding": "api", "service": "do-api" },
+		{ "binding": "db", "service": "do-db" }
+	],
+
+	"dispatch_namespaces": [{ "binding": "workers", "namespace": "do" }]
+
 }

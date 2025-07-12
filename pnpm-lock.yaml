@@ -80,6 +80,15 @@ importers:
         specifier: ^4.24.0
         version: 4.24.0(@cloudflare/workers-types@4.20250710.0)
 
+  hash:
+    dependencies:
+      '@taylorzane/hash-wasm':
+        specifier: ^0.0.11
+        version: 0.0.11
+      sqids:
+        specifier: ^0.3.0
+        version: 0.3.0
+
   html:
     dependencies:
       '@cloudflare/workers-oauth-provider':
@@ -656,6 +665,10 @@ packages:
       webcrypto-core: 1.8.1
     dev: false
 
+  /@taylorzane/hash-wasm@0.0.11:
+    resolution: {integrity: sha512-gGS/x7hCq6MlwGoLiscyTG/pSaVhshImaHd+ttV1uK0aYPCQNsbPCROAzBDCh+FxpiLgzX6JaX8BIYFlljFEpQ==}
+    dev: false
+
   /@types/accepts@1.3.7:
     resolution: {integrity: sha512-Pay9fq2lM2wXPWbteBsRAGiWH2hig4ZE2asK+mm7kUzlxRTfL961rj89I6zV/E3PcIkDqyuBEcMxFT7rccugeQ==}
     dependencies:
@@ -1132,6 +1145,10 @@ packages:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
     dev: true
+
+  /sqids@0.3.0:
+    resolution: {integrity: sha512-lOQK1ucVg+W6n3FhRwwSeUijxe93b51Bfz5PMRMihVf1iVkl82ePQG7V5vwrhzB11v0NtsR25PSZRGiSomJaJw==}
+    dev: false
 
   /stacktracey@2.1.8:
     resolution: {integrity: sha512-Kpij9riA+UNg7TnphqjH7/CzctQ/owJGNbFkfEeve4Z4uxT5+JapVLFXcsurIfN34gnTWZNJ/f7NMG0E8JDzTw==}

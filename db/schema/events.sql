@@ -33,7 +33,7 @@ CREATE TABLE events
     visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public')
     nsHash     UInt64 MATERIALIZED xxHash32(ns),
     idHash     UInt64 MATERIALIZED xxHash32(id),
-    _v         String MATERIALIZED sqidEncode(nsHash, idHash, ts),
+    _e         String MATERIALIZED sqidEncode(nsHash, idHash, ts),
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id);  
@@ -70,7 +70,6 @@ CREATE TABLE data
     visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public'),
     nsHash     UInt64 MATERIALIZED xxHash32(ns),
     idHash     UInt64 MATERIALIZED xxHash32(id),
-    contentHash UInt64 MATERIALIZED xxHash32(content),
     _id        String MATERIALIZED sqidEncode(nsHash, idHash),
 )
 ENGINE = MergeTree

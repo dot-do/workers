@@ -25,10 +25,6 @@ const upsert: WithContext<Action> = {
   // startTime: ts.toISOString(), // should be default
   object: {
     $type: 'Thing',
-    description: {
-      $type: 'TextObject',
-      encodingFormat: 'text/mdx',
-      text: '# Hello World',
-    }
+    $content: '# Hello World',
   }
 }

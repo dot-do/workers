@@ -34,3 +34,20 @@ CREATE TABLE events
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id);  
+
+
+
+
+
+
+-- Stream data from the S3Queue-backed `eventsPipeline` into the canonical `events` table
+CREATE OR REPLACE MATERIALIZED VIEW pipelineStream TO events
+AS
+SELECT
+    JSONExtractString(data, 'ns')                       AS ns,
+    JSONExtractString(data, '$id')                      AS id,
+    JSONExtractString(data, '$type')                    AS type,
+    CAST(jsonMergePatch(data, '{"$id":null,"$type":null}') AS JSON) AS data,
+    JSONExtractString(data, 'content')                  AS content,
+    JSONExtractString(data, 'visibility')               AS visibility
+FROM eventsPipeline; 

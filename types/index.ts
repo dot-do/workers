@@ -20,11 +20,14 @@ export type Action = Dollarize<Schema.Action>
 const upsert: WithContext<Action> = {
   // $id: ulid(ts.getTime()),
   $type: 'UpdateAction',
-  $context: 'https://industries.directory.do', 
+  $context: 'https://industries.directory.do', // could be extracted from the object
   // actionStatus: 'CompletedActionStatus', // should be default
   // startTime: ts.toISOString(), // should be default
   object: {
+    // $id: 'https://industries.directory.do/Professional_Services', // could be generated from context and/or name and/or first # title
     $type: 'Thing',
-    $content: '# Hello World',
+    // name: 'Professional Services',
+    $content: '# Professional Services',
   }
 }
+

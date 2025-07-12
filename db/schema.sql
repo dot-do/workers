@@ -106,3 +106,64 @@ SELECT
     content,
     visibility
 FROM s3_events_queue;
+
+CREATE TABLE relationships
+(
+    fromId     String,                      -- object that mentions the link
+    toId       String,                      -- the URL that was found
+    predicate  LowCardinality(String),      -- e.g. 'schema:mentions'
+    relTs      DateTime64(3) DEFAULT now64()
+)
+ENGINE = MergeTree
+PARTITION BY toYYYYMM(relTs)
+ORDER BY (toId, relTs);
+
+
+/* Assume source table `events`
+   (ts DateTime64, object String, json_data JSON, md_content String)  */
+
+CREATE MATERIALIZED VIEW mv_links_to_relationships
+TO relationships
+AS
+/* -------- 1.  JSON field ---------- */
+SELECT
+    object                                   AS fromId,
+    url                                      AS toId,
+    path                                     AS predicate,     --  ←   JSONPath
+    ts                                       AS relTs
+FROM
+(
+    /* Get *all* paths in the document. */
+    SELECT
+        ts, object,
+        arrayZip(                            -- pair path ↔ value
+            JSONAllPaths(json_data),         -- every path (e.g. "$.author.url")
+            arrayMap(p -> JSONExtractRaw(json_data, p),
+                      JSONAllPaths(json_data))
+        ) AS pairs
+    FROM events
+)
+ARRAY JOIN
+    arrayFilter(t -> t.2 LIKE 'http%' OR t.2 LIKE 'https%', pairs) AS t
+    /* unpack each tuple */
+    /* t.1 = path, t.2 = value */
+    -- trim the surrounding quotes RE2-style
+    CAST(trim(BOTH '"' FROM t.2) AS String)  AS url,
+    t.1                                      AS path
+
+UNION ALL
+/* -------- 2.  Markdown field -------- */
+SELECT
+    object                                   AS fromId,
+    url                                      AS toId,
+    '$.markdown'                             AS predicate,     -- static
+    ts                                       AS relTs
+FROM
+(
+    SELECT
+        ts, object,
+        extractAll(md_content,
+                   '(https?://[^\\s)]+)')    AS md_urls         -- every link
+    FROM events
+)
+ARRAY JOIN md_urls AS url ;

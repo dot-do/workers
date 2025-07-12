@@ -30,7 +30,7 @@ CREATE TABLE events
     nsHash     UInt64 MATERIALIZED xxHash32(ns),
     idHash     UInt64 MATERIALIZED xxHash32(id),
     urlHash    UInt64 MATERIALIZED xxHash32(url),
-    _e         String MATERIALIZED sqidEncode(nsHash, idHash, ts),
+    _e         String MATERIALIZED sqidEncode(nsHash, idHash, ts), -- 3-part sqid is `event`
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id);  
@@ -51,7 +51,8 @@ CREATE TABLE versions
     idHash     UInt64 MATERIALIZED xxHash32(id),
     urlHash    UInt64 MATERIALIZED xxHash32(url),
     contentHash UInt64 MATERIALIZED xxHash32(content),
-    _v         String MATERIALIZED sqidEncode(nsHash, idHash, contentHash, ts),
+    _v         String MATERIALIZED sqidEncode(nsHash, idHash, ts, contentHash), -- 4-part sqid is `version` / _v
+    _id        String MATERIALIZED sqidEncode(nsHash, idHash), -- 2-part sqid is `data` / _id
 )
 ENGINE = MergeTree
 ORDER BY (ns, id, ts);  
@@ -71,7 +72,7 @@ CREATE TABLE data
     nsHash     UInt64 MATERIALIZED xxHash32(ns),
     idHash     UInt64 MATERIALIZED xxHash32(id),
     urlHash    UInt64 MATERIALIZED xxHash32(url),
-    _id        String MATERIALIZED sqidEncode(nsHash, idHash),
+    _id        String MATERIALIZED sqidEncode(nsHash, idHash), -- 2-part sqid is `data` / _id
 )
 ENGINE = MergeTree
 ORDER BY (ns, id, ts);  
@@ -83,13 +84,18 @@ CREATE TABLE relationships
     from        String,
     type        String,
     to          String,
+    data        Nullable(JSON),
+    meta        Nullable(JSON),
     nsFrom      String,
     nsTo        String,
     idFrom      String,
     idTo        String,
     nsFromHash  UInt64 MATERIALIZED xxHash32(nsFrom),
+    idFromHash  UInt64 MATERIALIZED xxHash32(idFrom),
+    typeHash    UInt64 MATERIALIZED xxHash32(type),
     nsToHash    UInt64 MATERIALIZED xxHash32(nsTo),
-    _r          String MATERIALIZED sqidEncode(nsFromHash, type, nsToHash),
+    idToHash    UInt64 MATERIALIZED xxHash32(idTo),
+    _r          String MATERIALIZED sqidEncode(nsFromHash, idFromHash, typeHash, nsToHash, idToHash), -- 5-part sqid is `relationship` / _r
 )
 ENGINE = MergeTree
 ORDER BY (nsTo, idTo, type);  

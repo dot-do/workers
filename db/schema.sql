@@ -21,7 +21,7 @@ CREATE TABLE events
     ns         String DEFAULT 'events.do',
     id         String DEFAULT generateULID(),
     ts         DateTime64() MATERIALIZED ULIDStringToDateTime(id, 'America/Chicago'),
-    url        String DEFAULT concat('https://', ns, '/', id),
+    url        String MATERIALIZED concat('https://', ns, '/', id),
     type       String DEFAULT 'Action',
     data       JSON,
     meta       Nullable(JSON),
@@ -57,7 +57,7 @@ CREATE TABLE versions
     ns         String,
     id         String,
     ts         DateTime64(),
-    url        String DEFAULT concat('https://', ns, '/', id),
+    url        String MATERIALIZED concat('https://', ns, '/', id),
     name       Nullable(String),
     data       JSON,
     meta       Nullable(JSON),
@@ -71,7 +71,7 @@ CREATE TABLE versions
     _v         String MATERIALIZED sqidEncode(2, nsHash, idHash, ts, contentHash),  -- versions._v
     _id        String MATERIALIZED sqidEncode(3, nsHash, idHash),                   -- data._id
 )
-ENGINE = MergeTree
+ENGINE = CoalescingMergeTree
 ORDER BY (ns, id, ts);  
 
 

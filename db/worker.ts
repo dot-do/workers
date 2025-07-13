@@ -17,7 +17,7 @@ app.get('/', async (c) => {
   const { url } = c.req
   const { hostname } = new URL(url)
   console.log(url)
-  const result = await sql`SELECT 1`
+  const result = await sql`SELECT * from data`
   return c.json({ ns: hostname, url, ...result })
 })
 

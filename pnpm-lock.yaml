@@ -162,6 +162,22 @@ importers:
         specifier: ^1.1.5
         version: 1.1.5
 
+  wrangler:
+    dependencies:
+      '@cloudflare/sandbox':
+        specifier: ^0.0.8
+        version: 0.0.8
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20250710.0
+        version: 4.20250710.0
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+      wrangler:
+        specifier: ^4.24.0
+        version: 4.24.0(@cloudflare/workers-types@4.20250710.0)
+
 packages:
 
   /@clickhouse/client-common@1.11.2:
@@ -174,12 +190,22 @@ packages:
       '@clickhouse/client-common': 1.11.2
     dev: false
 
+  /@cloudflare/containers@0.0.19:
+    resolution: {integrity: sha512-3Atns+EiKk9xW3aHG3KdTMbkCz4vkf71314CDJpc/h6MiCIUW8Ub5tPbCcdR3NxpZe2sgD1v1zEVPQjgZ5bKXw==}
+    dev: false
+
   /@cloudflare/kv-asset-handler@0.4.0:
     resolution: {integrity: sha512-+tv3z+SPp+gqTIcImN9o0hqE9xyfQjI1XD9pL6NuKjua9B1y7mNYv0S9cP+QEbA4ppVgGZEmKOvHX5G5Ei1CVA==}
     engines: {node: '>=18.0.0'}
     dependencies:
       mime: 3.0.0
     dev: true
+
+  /@cloudflare/sandbox@0.0.8:
+    resolution: {integrity: sha512-8/3cv7QdwjDg7p/6LacT9AnW0wsJ5rlRnuiFQZ04YDtqTcSuJjc7P6HUxct8Kr4BsyISn/TBPkmrmrVrhTtpmg==}
+    dependencies:
+      '@cloudflare/containers': 0.0.19
+    dev: false
 
   /@cloudflare/unenv-preset@2.3.3(unenv@2.0.0-rc.17)(workerd@1.20250705.0):
     resolution: {integrity: sha512-/M3MEcj3V2WHIRSW1eAQBPRJ6JnGQHc6JKMAPLkDb7pLs3m6X9ES/+K3ceGqxI6TKeF32AWAi7ls0AYzVxCP0A==}

@@ -1,0 +1,43 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "do-wrangler",
+	"main": "worker.ts",
+	"compatibility_date": "2025-07-08",
+	"observability": { "enabled": true },
+
+	// /**
+	//  * Service Bindings (communicate between multiple Workers)
+	//  * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+	//  */
+	// "services": [
+	// 	{ "binding": "ai", "service": "do-ai" },
+	// 	{ "binding": "api", "service": "do-api" },
+	// 	{ "binding": "db", "service": "do-db" }
+	// ],
+
+  "containers": [
+    {
+      "class_name": "Sandbox",
+      "image": "./node_modules/@cloudflare/sandbox/Dockerfile",
+      "name": "sandbox"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "class_name": "Sandbox",
+        "name": "Sandbox"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "new_sqlite_classes": ["Sandbox"],
+      "tag": "v1"
+    }
+  ]
+}

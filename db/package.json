@@ -16,6 +16,7 @@
     "@workos-inc/node": "^7.58.0",
     "hono": "^4.8.4",
     "jose": "^6.0.11",
+    "ulid": "^3.0.1",
     "yaml": "^2.8.0"
   },
   "devDependencies": {

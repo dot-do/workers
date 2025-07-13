@@ -1,41 +1,71 @@
-import { Hono } from 'hono'
-import { stringify } from 'yaml'
+// import { stringify } from 'yaml'
+import { ulid } from 'ulid'
 import { clickhouse, sql } from './sql'
 import { WorkerEntrypoint } from 'cloudflare:workers'
 
-const app = new Hono()
 
-// app.all('*', async (c, next) => {
-//   console.log(c.req.raw.cf?.colo)
-//   if (c.req.raw.cf?.colo !== 'IAD') {
-//     for (let i = 0; i < 4; i++) {
-//       await fetch('https://ast-us-east-1-8a1cce82.s3.us-east-1.amazonaws.com/latency-test.json')
-//     }
-//   }
-//   await next()
-// })
-
-app.get('/', async (c) => {
-  const { url } = c.req
-  const { hostname } = new URL(url)
-  console.log(url)
-  const result = await sql`SELECT * from data`
-  return c.text('---\n' + stringify({ ns: hostname, url, ...result }, { indent: 2, lineWidth: 120 }) + '---')
-})
-
-app.get('/:id', async (c) => {
-  const { url } = c.req
-  const { hostname } = new URL(url)
-  console.log(url)
-  const result = await sql`SELECT 1`
-  return c.json({ ns: hostname, url, ...result })
-})
-
-
-// export default app
-export { DB } from './db'
 export default class extends WorkerEntrypoint {
+  
   async fetch(request: Request) {
-    return app.fetch(request)
+    const { url, method } = request
+    let cf = JSON.parse(JSON.stringify(request.cf))
+    delete cf.tlsClientAuth
+    const { hostname, pathname } = new URL(url)
+    // const headers = Object.fromEntries(request.headers)
+    const userAgent = request.headers.get('user-agent')
+    this.ctx.waitUntil(this.send(hostname, 'WebRequest', { method, url, userAgent, cf }))
+    return Response.json(await this.list(hostname))
   }
+
+  async get(ns: string, id: string) {
+    return sql`SELECT * FROM data WHERE ns = ${ns} AND id = ${id}`
+  }
+
+  async list(ns: string) {
+    return sql`SELECT url FROM data WHERE ns = ${ns}`
+  }
+
+  async set(ns: string, id: string, data: any, content?: string) {
+    return clickhouse.insert({
+      table: 'data',
+      values: [{ ns, id, data, content }],
+      format: 'JSONEachRow',
+      clickhouse_settings: {
+
+      }
+    })
+  }
+
+  async send(ns: string, type: string, data: Record<string, any>) {
+    // const type = event.$type ?? event.type ?? 'Action'
+    // // const id = event.$id ??event.id ?? event.url
+    const id = ulid()
+    // const data = event.data ?? event.body
+
+    return clickhouse.insert({
+      table: 'events',
+      values: [{ ns, id, type, data }],
+      format: 'JSONEachRow',
+      clickhouse_settings: {
+        async_insert: 1,
+        
+      }
+    })
+  }
+
+  clickhouse() {
+    return clickhouse
+  }
+
+  async sql(strings: TemplateStringsArray, ...values: unknown[]) {
+    return sql(strings, ...values)
+  }
+
+  async $() {
+    return fetch('https://ctx.do/api')
+  }
+
+  // async delete(ns: string, id: string) {
+  //   return sql`DELETE FROM data WHERE ns = ${ns} AND id = ${id}`
+  // }
 }

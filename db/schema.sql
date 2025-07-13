@@ -198,3 +198,63 @@ ORDER BY (ns, id, ts);
 --     JSONExtractString(data, 'content')                  AS content,
 --     JSONExtractString(data, 'visibility')               AS visibility
 -- FROM eventsPipeline;
+
+-- Stream UpdateAction events into the `versions` table
+SET enable_json_type = 1;
+CREATE OR REPLACE MATERIALIZED VIEW versionEvents TO versions
+AS
+SELECT
+    ns,
+    id,
+    ts,
+    JSONExtractString(data, 'branch')      AS branch,
+    JSONExtractString(data, 'variant')     AS variant,
+    JSONExtractString(data, '$type')       AS type,
+    JSONExtractString(data, 'name')        AS name,
+    data,
+    meta,
+    _e                                     AS event,
+    content,
+    visibility,
+    JSONExtractString(data, 'yaml')        AS yaml,
+    JSONExtractString(data, 'html')        AS html,
+    JSONExtractString(data, 'code')        AS code,
+    JSONExtractString(data, 'jsx')         AS jsx,
+    JSONExtractString(data, 'esm')         AS esm,
+    JSONExtract(data, 'mdast')             AS mdast,
+    JSONExtract(data, 'estree')            AS estree,
+    emptyArrayFloat32()                    AS embedding
+FROM events
+WHERE type = 'UpdateAction';
+
+
+-- Stream all new records from the `versions` table into the canonical `data` table
+SET enable_json_type = 1;
+CREATE OR REPLACE MATERIALIZED VIEW dataVersions TO data
+AS
+SELECT
+    ns,
+    id,
+    concat('https://', ns, '/', id)        AS url,
+    variant,
+    type,
+    name,
+    data,
+    meta,
+    content,
+    ts                                     AS createdAt,
+    'versionsStream'                       AS createdIn,
+    'system'                               AS createdBy,
+    ts                                     AS updatedAt,
+    'versionsStream'                       AS updatedIn,
+    'system'                               AS updatedBy,
+    visibility,
+    yaml,
+    html,
+    code,
+    jsx,
+    esm,
+    mdast,
+    estree,
+    embedding
+FROM versions;

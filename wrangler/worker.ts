@@ -3,7 +3,11 @@ export { Sandbox } from "@cloudflare/sandbox";
 
 export default {
   async fetch(request: Request, env: Env) {
-    const sandbox = getSandbox(env.Sandbox, "my-sandbox");
-    return sandbox.exec("ls", ["-la"]);
+    try {
+      const sandbox = getSandbox(env.Sandbox, "sandbox");
+      return sandbox.exec("ls", ["-la"]);
+    } catch (error: any) {
+      return new Response(error.message, { status: 500 });
+    }
   },
 };

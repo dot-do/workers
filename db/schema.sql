@@ -1,21 +1,26 @@
+-- DROP TABLE events;
+-- DROP TABLE versions;
+-- DROP TABLE data;
+-- DROP TABLE relationships;
+-- DROP TABLE context;
+
+
 SET enable_json_type = 1;
 
-CREATE TABLE eventsPipeline  
-(
-  data JSON,
-  _path   String,
-  _file   String,
-  _time   DateTime
-)
-ENGINE = S3Queue(
-  'https://<ACCOUNT_ID>.r2.cloudflarestorage.com/my-bucket/**/*.ndjson.gz',
-  concat({R2_ACCOUNT_ID: String},':',{R2_ACCOUNT_SECRET: String}),
-  format = 'JSONAsObject'
-)
-SETTINGS
-  mode = 'ordered';
+-- CREATE TABLE eventsPipeline  
+-- (
+--   data JSON,
+--   _path   String,
+--   _file   String,
+--   _time   DateTime
+-- )
+-- ENGINE = S3Queue(
+--   'https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/**/*', 'JSONAsObject', '9c546f5256ac6a8893a5f488eabb8289', {R2_SECRET: string},
+-- )
+-- SETTINGS
+--   mode = 'ordered';
 
-
+SET enable_json_type = 1;
 CREATE TABLE events
 (
   ns         String DEFAULT 'events.do',
@@ -29,23 +34,27 @@ CREATE TABLE events
   status     String DEFAULT 'CompletedActionStatus',
   result     Nullable(JSON),
   error      Nullable(JSON),
-  visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public')
+  visibility LowCardinality(String) DEFAULT if(startsWith(id, '_'), 'private', 'public'),
   nsHash     UInt32 MATERIALIZED xxHash32(ns),
   idHash     UInt32 MATERIALIZED xxHash32(id),
   urlHash    UInt32 MATERIALIZED xxHash32(url),
 
-  _e         String MATERIALIZED sqidEncode(1, nsHash, idHash, ts)
+  _e         String MATERIALIZED sqidEncode(1, nsHash, idHash, toUInt64(toUnixTimestamp64Milli(ts))),
   
-  INDEX bf_eq_hash (nsHash, idHash, urlHash, _e) TYPE bloom_filter(2048, 3, 0) GRANULARITY 4, -- equality on ns, id, url
+  INDEX bf_eq_nsHash (nsHash) TYPE bloom_filter() GRANULARITY 4, -- equality on ns
+  INDEX bf_eq_nidHash (urlHash) TYPE bloom_filter() GRANULARITY 4, -- equality on id
+  INDEX bf_eq_urlHash (urlHash) TYPE bloom_filter() GRANULARITY 4, -- equality on url
+  INDEX bf_eq_eh (_e) TYPE bloom_filter() GRANULARITY 4, -- equality on ns, id, url
   INDEX tk_id (id) TYPE tokenbf_v1(2048, 2, 0) GRANULARITY 4, -- token search on id    
   INDEX ng_url (url) TYPE ngrambf_v1(3, 4096, 2, 0) GRANULARITY 8, -- arbitrary substring on url
-  INDEX bf_status (status) TYPE bloom_filter(1024, 3, 0) GRANULARITY 4 -- equality on JSON status
+  INDEX bf_status (status) TYPE bloom_filter() GRANULARITY 4, -- equality on JSON status
 
 )
 ENGINE = CoalescingMergeTree
-ORDER BY (ns, id);  
+ORDER BY (ns, id);
 
 
+SET enable_json_type = 1;
 CREATE TABLE versions
 (
   ns         String,
@@ -77,15 +86,16 @@ CREATE TABLE versions
   esmHash    UInt32 MATERIALIZED xxHash32(esm),
   hash       UInt32 MATERIALIZED xxHash32(concat(data, content)),
 
-  _e         String MATERIALIZED sqidEncode(1, nsHash, idHash, ts),        -- events._e
-  _v         String MATERIALIZED sqidEncode(2, nsHash, idHash, ts, hash),  -- versions._v
+  _e         String MATERIALIZED sqidEncode(1, nsHash, idHash, toUInt64(toUnixTimestamp64Milli(ts))),        -- events._e
+  _v         String MATERIALIZED sqidEncode(2, nsHash, idHash, toUInt64(toUnixTimestamp64Milli(ts)), hash),  -- versions._v
   _id        String MATERIALIZED sqidEncode(3, nsHash, idHash),            -- data._id
 )
 ENGINE = CoalescingMergeTree
-ORDER BY (ns, id, ts);  
+ORDER BY (ns, id, ts);
 
 
 
+SET enable_json_type = 1;
 CREATE TABLE data
 (
   ns         String,
@@ -119,15 +129,16 @@ CREATE TABLE data
   typeHash   UInt32 MATERIALIZED xxHash32(type),
   hash       UInt32 MATERIALIZED xxHash32(concat(data, content)),
 
-  _e         String MATERIALIZED sqidEncode(1, nsHash, idHash, ts),        -- events._e
-  _v         String MATERIALIZED sqidEncode(2, nsHash, idHash, ts, hash),  -- versions._v
+  _e         String MATERIALIZED sqidEncode(1, nsHash, idHash, toUInt64(toUnixTimestamp64Milli(updatedAt))),        -- events._e
+  _v         String MATERIALIZED sqidEncode(2, nsHash, idHash, toUInt64(toUnixTimestamp64Milli(updatedAt)), hash),  -- versions._v
   _id        String MATERIALIZED sqidEncode(3, nsHash, idHash),            -- data._id
 )
 ENGINE = MergeTree
-ORDER BY (ns, id, ts);  
+ORDER BY (ns, id);
 
 
 
+SET enable_json_type = 1;
 CREATE TABLE relationships
 (
   from        String,
@@ -149,9 +160,10 @@ CREATE TABLE relationships
   _to         String MATERIALIZED sqidEncode(3, nsToHash, idToHash),  --  _to data._id
 )
 ENGINE = MergeTree
-ORDER BY (nsTo, idTo, type);  
+ORDER BY (nsTo, idTo, type);
 
 
+SET enable_json_type = 1;
 CREATE TABLE context
 (
   ns          String,
@@ -172,17 +184,17 @@ CREATE TABLE context
   _id         String MATERIALIZED sqidEncode(3, nsHash, idHash), -- context._id
 )
 ENGINE = MergeTree
-ORDER BY (ns, id, ts);  
+ORDER BY (ns, id, ts);
 
 
--- Stream data from the S3Queue-backed `eventsPipeline` into the canonical `events` table
-CREATE OR REPLACE MATERIALIZED VIEW pipelineStream TO events
-AS
-SELECT
-    JSONExtractString(data, 'ns')                       AS ns,
-    JSONExtractString(data, '$id')                      AS id,
-    JSONExtractString(data, '$type')                    AS type,
-    CAST(jsonMergePatch(data, '{"$id":null,"$type":null}') AS JSON) AS data,
-    JSONExtractString(data, 'content')                  AS content,
-    JSONExtractString(data, 'visibility')               AS visibility
-FROM eventsPipeline; 
+-- -- Stream data from the S3Queue-backed `eventsPipeline` into the canonical `events` table
+-- CREATE OR REPLACE MATERIALIZED VIEW pipelineStream TO events
+-- AS
+-- SELECT
+--     JSONExtractString(data, 'ns')                       AS ns,
+--     JSONExtractString(data, '$id')                      AS id,
+--     JSONExtractString(data, '$type')                    AS type,
+--     CAST(jsonMergePatch(data, '{"$id":null,"$type":null}') AS JSON) AS data,
+--     JSONExtractString(data, 'content')                  AS content,
+--     JSONExtractString(data, 'visibility')               AS visibility
+-- FROM eventsPipeline;

@@ -70,6 +70,4 @@ function inferType(v: unknown): string {
 }
 
 // Re-export the client for advanced usage
-export const clickhouse = {
-  getClient,
-}
+export const clickhouse = getClient()

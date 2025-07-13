@@ -1,18 +1,19 @@
 import { Hono } from 'hono'
 import { stringify } from 'yaml'
 import { clickhouse, sql } from './sql'
+import { WorkerEntrypoint } from 'cloudflare:workers'
 
 const app = new Hono()
 
-app.all('*', async (c, next) => {
-  console.log(c.req.raw.cf?.colo)
-  if (c.req.raw.cf?.colo !== 'IAD') {
-    for (let i = 0; i < 4; i++) {
-      await fetch('https://ast-us-east-1-8a1cce82.s3.us-east-1.amazonaws.com/latency-test.json')
-    }
-  }
-  await next()
-})
+// app.all('*', async (c, next) => {
+//   console.log(c.req.raw.cf?.colo)
+//   if (c.req.raw.cf?.colo !== 'IAD') {
+//     for (let i = 0; i < 4; i++) {
+//       await fetch('https://ast-us-east-1-8a1cce82.s3.us-east-1.amazonaws.com/latency-test.json')
+//     }
+//   }
+//   await next()
+// })
 
 app.get('/', async (c) => {
   const { url } = c.req
@@ -31,6 +32,10 @@ app.get('/:id', async (c) => {
 })
 
 
-
-export default app
-
+// export default app
+export { DB } from './db'
+export default class extends WorkerEntrypoint {
+  async fetch(request: Request) {
+    return app.fetch(request)
+  }
+}

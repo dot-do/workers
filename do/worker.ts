@@ -1,6 +1,14 @@
 import { WorkerEntrypoint } from 'cloudflare:workers'
 export { SDK } from './sdk'
 
+// const modules = (import.meta as any).glob('**/*', { eager: true })
+
+// for (const [path, module] of Object.entries(modules)) {
+//   const { default: fn } = module
+//   console.log(path, fn)
+// }
+
+
 export default class extends WorkerEntrypoint {
   async fetch(request: Request) {
     const { hostname, pathname, searchParams } = new URL(request.url)
@@ -16,6 +24,7 @@ export default class extends WorkerEntrypoint {
       ns,
       fn,
       args,
+      modules: import.meta,
     }
   }
 }

@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { stringify } from 'yaml'
 import { clickhouse, sql } from './sql'
 
 const app = new Hono()
@@ -18,7 +19,7 @@ app.get('/', async (c) => {
   const { hostname } = new URL(url)
   console.log(url)
   const result = await sql`SELECT * from data`
-  return c.json({ ns: hostname, url, ...result })
+  return c.text('---\n' + stringify({ ns: hostname, url, ...result }, { indent: 2, lineWidth: 120 }) + '---')
 })
 
 app.get('/:id', async (c) => {

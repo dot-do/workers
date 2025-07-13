@@ -40,6 +40,22 @@ export default class extends WorkerEntrypoint {
     })
   }
 
+  async insertMany(ns: string, type: string, values: any[]) {
+    values.map(v => {
+      v.ns = ns
+      v.type = type
+    })
+    const results = clickhouse.insert({
+      table: 'data',
+      values,
+      format: 'JSONEachRow',
+      clickhouse_settings: {
+        async_insert: 1,
+      }
+    }).catch(e => ({ error: e.message, stack: e.stack }))
+    return results
+  }
+
   async send(ns: string, type: string, data: Record<string, any>) {
     // const type = event.$type ?? event.type ?? 'Action'
     // // const id = event.$id ??event.id ?? event.url
@@ -52,7 +68,6 @@ export default class extends WorkerEntrypoint {
       format: 'JSONEachRow',
       clickhouse_settings: {
         async_insert: 1,
-        
       }
     })
   }

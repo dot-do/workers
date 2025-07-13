@@ -137,6 +137,22 @@ importers:
         specifier: ^2.8.0
         version: 2.8.0
 
+  load:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20250710.0
+        version: 4.20250710.0
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+      wrangler:
+        specifier: ^4.24.0
+        version: 4.24.0(@cloudflare/workers-types@4.20250710.0)
+
   sdk:
     devDependencies:
       '@cloudflare/workers-types':
@@ -1103,6 +1119,10 @@ packages:
 
   /leb@1.0.0:
     resolution: {integrity: sha512-Y3c3QZfvKWHX60BVOQPhLCvVGmDYWyJEiINE3drOog6KCyN2AOwvuQQzlS3uJg1J85kzpILXIUwRXULWavir+w==}
+    dev: false
+
+  /lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
     dev: false
 
   /marked-gfm-heading-id@4.1.2(marked@16.0.0):

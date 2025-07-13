@@ -7,8 +7,9 @@ import {
   MethodDefinition,
   Identifier,
   ClassBody,
-  Super,
   Expression,
+  FunctionExpression,
+  ArrowFunctionExpression,
 } from 'estree';
 
 /**
@@ -28,42 +29,36 @@ export function convertToRPCClass(ast: Program, clsName = 'Service') {
 
   /** Pass 1 — gather & remove */
   ast.body = ast.body.filter(node => {
-    // `function foo() { … }`
+    // --- function declarations -------------------------------------------
     if (node.type === 'FunctionDeclaration') {
-      classMethods.push(
-        functionDeclToMethod(node as FunctionDeclaration, false),
-      );
-      return false; // remove from Program
+      classMethods.push(functionDeclToMethod(node, false));
+      return false;
     }
-
-    // `const foo = () => {}`  or `const foo = function () {}`
+  
+    // --- var / let / const declarations ----------------------------------
     if (
       node.type === 'VariableDeclaration' &&
-      node.kind === 'const' &&
-      node.declarations.length === 1
+      ['var', 'let', 'const'].includes(node.kind)
     ) {
-      const decl = node.declarations[0] as VariableDeclarator;
-      if (
-        decl.id.type === 'Identifier' &&
-        decl.init &&
-        (decl.init.type === 'ArrowFunctionExpression' ||
-          decl.init.type === 'FunctionExpression')
-      ) {
-        classMethods.push(
-          functionExprToMethod(decl.id as Identifier, decl.init),
-        );
-        return false;
+      for (const decl of node.declarations) {
+        if (decl.id.type !== 'Identifier' || !decl.init) continue;
+  
+        // (1) function-valued → instance method
+        if (
+          decl.init.type === 'ArrowFunctionExpression' ||
+          decl.init.type === 'FunctionExpression'
+        ) {
+          classMethods.push(functionExprToMethod(decl.id, decl.init));
+          continue; // skip adding this declarator back
+        }
+  
+        // (2) anything else → static class field
+        staticFields.push(constToStaticField(decl.id, decl.init));
       }
-
-      // Any other const becomes a static field
-      if (decl.id.type === 'Identifier' && decl.init) {
-        staticFields.push(
-          constToStaticField(decl.id as Identifier, decl.init),
-        );
-        return false;
-      }
+      return false;          // remove the whole VariableDeclaration
     }
-    return true; // keep everything else unchanged
+  
+    return true;             // keep other nodes untouched
   });
 
   /** Nothing to rewrite? bail */
@@ -73,7 +68,8 @@ export function convertToRPCClass(ast: Program, clsName = 'Service') {
   const classNode: ClassDeclaration = {
     type: 'ClassDeclaration',
     id: { type: 'Identifier', name: clsName },
-    superClass: { type: 'Identifier', name: 'RPC' } as Super,
+    // `Identifier` is already an `Expression`, no cast needed
+    superClass: { type: 'Identifier', name: 'RPC' } as Identifier,
     body: {
       type: 'ClassBody',
       body: [...classMethods, ...staticFields] as ClassBody['body'],
@@ -103,7 +99,6 @@ function functionDeclToMethod(
       body: fn.body,
       async: fn.async,
       generator: fn.generator,
-      expression: false,
     },
   };
 }
@@ -132,7 +127,6 @@ function functionExprToMethod(
                  }]},
             async: expr.async,
             generator: false,
-            expression: false,
           }
         : expr,
   };

@@ -1,9 +1,21 @@
-import { Hono } from 'hono'
+// import { Hono } from 'hono'
+import { env } from 'cloudflare:workers'
 
-const app = new Hono()
+const { yaml } = env as any
 
-app.get('/', (c) => {
-  return c.json({ hello: 'world' })
-})
+// const app = new Hono()
 
-export default app
+// app.get('/', async (c) => {
+//   return new Response(await yaml.stringify({ hello: 'world', items: [1, 2, 3] }))
+//   // return c.json({ hello: 'world' })
+// })
+
+// export default app
+
+export default {
+  fetch: async () => {
+    const result = await yaml.testing('123').catch((e: any) => ({ error: e.message, stack: e.stack }))
+    console.log(result)
+    return new Response(await yaml.stringify({ hello: 'world', items: [1, 2, 3], result }))
+  }
+}

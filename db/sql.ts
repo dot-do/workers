@@ -9,6 +9,7 @@ function getClient() {
 
   _client = createClient({
     url: env.CLICKHOUSE_URL,
+    database: env.CLICKHOUSE_DATABASE,
     username: env.CLICKHOUSE_USERNAME,
     password: env.CLICKHOUSE_PASSWORD,
   })

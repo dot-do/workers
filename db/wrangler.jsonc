@@ -10,10 +10,11 @@
 	"observability": { "enabled": true },
 	// "routes": [{ "pattern": "*/*", "zone_name": "dbx.md" }],
 	// "compatibility_flags": ["nodejs_compat"],
-	// "vars": {
-	// 	"CLICKHOUSE_URL": "https://bkkj10mmgz.us-east-1.aws.clickhouse.cloud:8443",
-	// 	"CLICKHOUSE_DATABASE": "default"
-	// }
+	"vars": {
+		"CLICKHOUSE_URL": "https://bkkj10mmgz.us-east-1.aws.clickhouse.cloud:8443",
+		"CLICKHOUSE_DATABASE": "default",
+		"CLICKHOUSE_USERNAME": "default",
+	},
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

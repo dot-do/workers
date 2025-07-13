@@ -1,1 +1,1 @@
-import { query, Session } from 'chdb'
+// import { query, Session } from 'chdb'

@@ -1,5 +1,5 @@
 import { ClickHouseClient, createClient } from '@clickhouse/client-web'
-import { env } from 'cloudflare:workers'
+// import { env } from 'cloudflare:workers'
 
 // Lazy-init a singleton ClickHouse client so we only create it once per worker instance
 let _client: ClickHouseClient | undefined
@@ -8,10 +8,10 @@ function getClient() {
   if (_client) return _client
 
   _client = createClient({
-    url: env.CLICKHOUSE_URL,
-    database: env.CLICKHOUSE_DATABASE,
-    username: env.CLICKHOUSE_USERNAME,
-    password: env.CLICKHOUSE_PASSWORD,
+    url: process.env.CLICKHOUSE_URL,
+    database: process.env.CLICKHOUSE_DATABASE,
+    username: process.env.CLICKHOUSE_USERNAME,
+    password: process.env.CLICKHOUSE_PASSWORD,
   })
   return _client
 }

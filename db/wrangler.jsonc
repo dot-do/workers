@@ -8,6 +8,10 @@
 	"main": "worker.ts",
 	"compatibility_date": "2025-07-08",
 	"observability": { "enabled": true },
+	"compatibility_flags": [
+		"nodejs_compat",
+		"nodejs_compat_populate_process_env"
+	],
 	"routes": [
 		{ "pattern": "*/*", "zone_name": "db.mw" },
 		{ "pattern": "db.apis.do/*", "zone_name": "apis.do" },

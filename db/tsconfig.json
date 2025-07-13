@@ -13,7 +13,7 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2021",
-    "types": ["./worker.d.ts"]
+    "types": ["node", "./worker.d.ts"]
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist", ".wrangler"]

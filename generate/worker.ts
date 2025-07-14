@@ -94,7 +94,7 @@ app.get('*', async (c) => {
 
   const openrouter = createOpenRouter({
     apiKey: env.AI_GATEWAY_TOKEN,
-    baseURL: env.AI_GATEWAY_URL,
+    baseURL: 'https://gateway.ai.cloudflare.com/v1/b6641681fe423910342b9ffa1364c76d/functions-do/openrouter',
     headers: {
       'HTTP-Referer': 'https://do.industries',
       'X-Title': '.do Business-as-Code',

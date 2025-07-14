@@ -70,18 +70,6 @@ CREATE TABLE versions (
 ENGINE = CoalescingMergeTree
 ORDER BY (id, ts);
 
-CREATE TABLE meta (
-  ns String MATERIALIZED domain(id),
-  id String,
-  type String,
-  data JSON,
-  ts DateTime64,
-  ulid String,
-  INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
-)
-ENGINE = CoalescingMergeTree
-ORDER BY (id, ts);
-
 CREATE TABLE data (
   ns String MATERIALIZED domain(id),
   id String,
@@ -96,6 +84,18 @@ CREATE TABLE data (
 ENGINE = CoalescingMergeTree
 ORDER BY (id);
 
+CREATE TABLE meta (
+  ns String MATERIALIZED domain(id),
+  id String,
+  type String,
+  data JSON,
+  ts DateTime64,
+  ulid String,
+  INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
+)
+ENGINE = CoalescingMergeTree
+ORDER BY (id, ts);
+
 CREATE TABLE queue (
   ulid String DEFAULT generateULID(),
   ns String MATERIALIZED domain(id),
@@ -109,7 +109,7 @@ CREATE TABLE queue (
   result Nullable(JSON),
 )
 ENGINE = CoalescingMergeTree
-ORDER BY (id, ts);
+ORDER BY (ulid);
 
 CREATE TABLE embeddings (
   ns String MATERIALIZED domain(id),

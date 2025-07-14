@@ -15,6 +15,7 @@
 	"routes": [
 		// { "pattern": "*/*", "zone_name": "" },
 		{ "pattern": "ai.apis.do/*", "zone_name": "apis.do" },
+		{ "pattern": "generate.apis.do/*", "zone_name": "apis.do" },
 	],
   "rules": [
     {

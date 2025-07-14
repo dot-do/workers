@@ -48,6 +48,8 @@ CREATE TABLE events (
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   ingested DateTime64 DEFAULT now64(),
   source String,
+  INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
+  INDEX bf_eq_id (id) TYPE bloom_filter() GRANULARITY 4,
 )
 ENGINE = MergeTree
 ORDER BY (ulid);

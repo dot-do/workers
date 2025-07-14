@@ -22,6 +22,7 @@ DROP TABLE IF EXISTS embeddings;
 
 CREATE TABLE pipeline (
   data String,
+  concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/', path) as source,
   _path   String,
   _file   String,
   _time   DateTime
@@ -33,10 +34,13 @@ SETTINGS
   mode = 'ordered';
 
 CREATE TABLE events (
-  id String DEFAULT ulid(),
-  ts DateTime64 DEFAULT ULIDStringToDateTime(id, 'America/Chicago'),
+  ulid String DEFAULT ulid(),
+  id Nullable(String),
+  ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   type Nullable(String),
   data JSON,
+  source Nullable(String),
+  ingested DateTime64 DEFAULT now(),
 )
 ENGINE = MergeTree
 ORDER BY (id);
@@ -48,12 +52,17 @@ CREATE TABLE versions (
   content String,
   data Nullable(JSON),
   meta Nullable(JSON),
-  code Nullable(String),
-  estree Nullable(JSON),
-  mdast Nullable(JSON),
-  html Nullable(String),
-  yaml Nullable(String),
-  esm Nullable(String),
+  ulid String,
+)
+ENGINE = CoalescingMergeTree
+ORDER BY (id, ts);
+
+CREATE TABLE meta (
+  id String,
+  ts DateTime64,
+  type String,
+  data JSON,
+  ulid String,
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id, ts);
@@ -65,20 +74,17 @@ CREATE TABLE data (
   content String,
   data Nullable(JSON),
   meta Nullable(JSON),
-  code Nullable(String),
-  estree Nullable(JSON),
-  mdast Nullable(JSON),
-  html Nullable(String),
-  yaml Nullable(String),
-  esm Nullable(String),
+  ulid String,
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id);
 
 CREATE TABLE queue (
   id String DEFAULT ulid(),
-  ts DateTime64 DEFAULT ULIDStringToDateTime(id, 'America/Chicago'),
+  ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
+  type String,
   action String,
+  target String,
   status Nullable(JSON),
   retries UInt16 DEFAULT 0,
   input Nullable(JSON),
@@ -105,7 +111,26 @@ CREATE TABLE relationships (
   ts DateTime64,
 );  
 
-CREATE MATERIALIZED VIEW pipelineEvents TO events (
+CREATE MATERIALIZED VIEW versionEvents TO versions (
+  id,
+  ts,
+  type,
+  content,
+  data,
+  meta
+)
+AS SELECT
+  'data.$id' AS ulid,  -- on events, the $id must be a ulid
+  'data.$type' AS type,
+  'data.$context' AS context,
+  ts,
+  data,
+  source
+FROM events
+WHERE type = 'Upsert' AND 'data.$id' EXISTS;
+
+-- events must be created last because it starts ingesting immediately, so the other materialized views need to be created first
+CREATE MATERIALIZED VIEW eventPipeline TO events (
   id String,
   ts DateTime64,
   type Nullable(String),
@@ -115,9 +140,9 @@ CREATE MATERIALIZED VIEW pipelineEvents TO events (
 AS SELECT
   JSONExtractString(data, '$id') AS id,
   JSONExtractString(data, '$type') AS type,
-  JSONExtractString(data, '$ts') AS ts,
-  JSONExtractString(data, '$data') AS data,
-  JSONExtractString(data, '$meta') AS meta,
+  data,
+  source
+FROM pipeline;
 `
 
 const queries = schema.split(';\n')

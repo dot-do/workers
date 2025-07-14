@@ -47,7 +47,7 @@ export default class extends WorkerEntrypoint<Env> {
       let { $id, id, $context, $meta, meta, $type, type, $content, content, data, ...rest } = value
       if (!id) id = $id ?? ulid
       if (!id.startsWith('https://')) id = 'https://' + opts.ns + '/' + id
-      if (!type) type = $type ?? type
+      if (!type) type = $type ?? type ?? opts.type
       if (!data) data = rest
       if (!content) content = $content ?? content ?? ('---\n' + stringify(data) + '---\n')
       // if (!content.startsWith('---')) content = '---\n' + stringify(data) + '---\n' + content

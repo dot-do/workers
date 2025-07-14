@@ -43,7 +43,7 @@ CREATE TABLE events (
   ingested DateTime64 DEFAULT now(),
 )
 ENGINE = MergeTree
-ORDER BY (id);
+ORDER BY (ulid);
 
 CREATE TABLE versions (
   id String,

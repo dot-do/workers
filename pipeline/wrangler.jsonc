@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "tail",
+	"name": "pipeline",
 	"main": "worker.js",
 	"compatibility_date": "2025-07-08",
 	"observability": { "enabled": true },

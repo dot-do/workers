@@ -12,7 +12,7 @@ export default class extends WorkerEntrypoint {
     const { hostname, pathname } = new URL(url)
     // const headers = Object.fromEntries(request.headers)
     const userAgent = request.headers.get('user-agent')
-    this.ctx.waitUntil(this.send(hostname, 'WebRequest', { method, url, userAgent, cf }))
+    // this.ctx.waitUntil(this.send(hostname, 'WebRequest', { method, url, userAgent, cf }))
     return Response.json(await this.events(hostname))
   }
 
@@ -21,12 +21,12 @@ export default class extends WorkerEntrypoint {
   }
 
   async list(ns: string) {
-    return sql`SELECT url FROM data WHERE ns = ${ns}`
+    return sql`SELECT id FROM data WHERE id LIKE ${'https://' + ns + '%'}`
   }
 
 
   async events(ns: string) {
-    return sql`SELECT url as id, data FROM events WHERE ns = ${ns} ORDER BY id DESC LIMIT 100`
+    return sql`SELECT id, data FROM events WHERE id LIKE ${'https://' + ns + '%'} ORDER BY id DESC LIMIT 100`
   }
 
   async set(ns: string, id: string, data: any, content?: string) {

@@ -1,0 +1,15 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "ast",
+	"main": "worker.ts",
+	"compatibility_date": "2025-07-08",
+	"observability": { "enabled": true },
+	"build": {
+		"command": "",
+		"watch_paths": ["worker.ts"]
+	}
+}

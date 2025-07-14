@@ -50,6 +50,7 @@ CREATE TABLE events (
   ingested DateTime64 DEFAULT now64(),
   source String,
   INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
+  INDEX bf_eq_id (ns) TYPE bloom_filter() GRANULARITY 4,
   INDEX bf_eq_id (id) TYPE bloom_filter() GRANULARITY 4,
 )
 ENGINE = MergeTree
@@ -64,6 +65,7 @@ CREATE TABLE versions (
   meta Nullable(JSON),
   ts DateTime64,
   ulid String,
+  INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id, ts);
@@ -75,6 +77,7 @@ CREATE TABLE meta (
   data JSON,
   ts DateTime64,
   ulid String,
+  INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id, ts);
@@ -88,6 +91,7 @@ CREATE TABLE data (
   meta Nullable(JSON),
   ts DateTime64,
   ulid String,
+  INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id);
@@ -101,10 +105,8 @@ CREATE TABLE queue (
   action String,
   target String,
   status Nullable(JSON),
-  retries UInt16 DEFAULT 0,
   input Nullable(JSON),
   result Nullable(JSON),
-  error Nullable(JSON),
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id, ts);

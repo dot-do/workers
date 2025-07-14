@@ -57,9 +57,15 @@ export default class extends WorkerEntrypoint<Env> {
         object: { id, type, data, content, meta }
       }
     })
-    const results = await this.env.pipeline.send(events)
-    console.log(results)
-    return results
+    let start = 0
+    let items = events.length
+    let results: any[] = []
+    while (start < items) {
+      const batch = await this.env.pipeline.send(events.slice(start, start + 100))
+      results.push(batch)
+      start += 100
+    }
+    return events
   }
 
 

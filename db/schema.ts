@@ -42,7 +42,7 @@ SETTINGS
 
 CREATE TABLE events (
   ulid String DEFAULT generateULID(),
-  type String,
+  type String DEFAULT 'Event',
   ns String MATERIALIZED domain(id),
   id String DEFAULT concat('https://events.do/', ulid),
   data JSON,

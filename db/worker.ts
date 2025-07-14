@@ -1,10 +1,10 @@
-// import { stringify } from 'yaml'
-import { ulid } from 'ulid'
+import { stringify } from 'yaml'
+import { ulid as generateULID } from 'ulid'
 import { clickhouse, sql } from './sql'
 import { WorkerEntrypoint } from 'cloudflare:workers'
 
 
-export default class extends WorkerEntrypoint {
+export default class extends WorkerEntrypoint<Env> {
   
   async fetch(request: Request) {
     const { url, method } = request
@@ -40,40 +40,37 @@ export default class extends WorkerEntrypoint {
     })
   }
 
-  async insertMany(ns: string, type: string, values: any[]) {
-    values.map(v => {
-      v.ns = ns
-      v.type = type
-    })
-    const results = clickhouse.insert({
-      table: 'data',
-      values,
-      format: 'JSONEachRow',
-      clickhouse_settings: {
-        async_insert: 1,
-      }
-    }).catch(e => ({ error: e.message, stack: e.stack }))
-    return results
-  }
-
-  async send(ns: string, type: string, data: Record<string, any>) {
-    // const type = event.$type ?? event.type ?? 'Action'
-    // // const id = event.$id ??event.id ?? event.url
-    const id = ulid()
-    // const data = event.data ?? event.body
-
-    return clickhouse.insert({
-      table: 'events',
-      values: [{ ns, id, type, data }],
-      format: 'JSONEachRow',
-      clickhouse_settings: {
-        async_insert: 1,
+  async insertMany(values: any[], opts: { ns: string, type: string, versioned?: boolean }) {
+    const events = values.map(value => {
+      const ulid = generateULID()
+      let { $id, id, $context, $meta, meta, $type, type, $content, content, data, ...rest } = value
+      if (!id) id = $id ?? ulid
+      if (!id.startsWith('https://')) id = 'https://' + opts.ns + '/' + id
+      if (!type) type = $type ?? type
+      if (!data) data = rest
+      if (!content) content = $content ?? content ?? ('---\n' + stringify(data) + '---\n')
+      if (!content.startsWith('---')) content = '---\n' + stringify(data) + '---\n' + content
+      return { 
+        ulid, 
+        type: opts.versioned ? 'UpsertVersion' : 'Upsert', 
+        object: { id, type, data, content, meta }
       }
     })
+    this.env.pipeline.send(events)
   }
+
 
   clickhouse() {
     return clickhouse
+  }
+
+
+  async insert(args: Parameters<typeof clickhouse.insert>[0]) {
+    return clickhouse.insert(args)
+  }
+
+  query(args: Parameters<typeof clickhouse.query>[0]) {
+    return clickhouse.query(args)
   }
 
   async sql(strings: TemplateStringsArray, ...values: unknown[]) {

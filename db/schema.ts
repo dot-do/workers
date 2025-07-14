@@ -32,13 +32,13 @@ DROP TABLE IF EXISTS embeddings;
 
 
 CREATE TABLE pipeline (
-  line    String,
+  json    JSON,
   _path   String,
   _file   String,
   _time   DateTime
 )
 ENGINE = S3Queue(
-  'https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/**/*', '9c546f5256ac6a8893a5f488eabb8289', '${process.env.R2_SECRET_ACCESS_KEY}', 'LineAsString' --'JSONEachRow'
+  'https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/**/*', '9c546f5256ac6a8893a5f488eabb8289', '${process.env.R2_SECRET_ACCESS_KEY}', 'JSONAsObject' --'JSONEachRow'
 )
 SETTINGS
   mode = 'ordered';
@@ -179,7 +179,7 @@ WHERE type = 'UpsertMeta';
 CREATE MATERIALIZED VIEW eventPipeline TO events
 AS SELECT
   --JSONExtractString(data, '$.ulid') AS ulid,  -- on incoming events, the ulid must be a ulid
-  line as data,
+  json as data,
   --data.ulid AS ulid,
   --data.type AS type,  
   --data.object.id AS id,

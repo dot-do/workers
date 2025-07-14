@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "do-load",
+	"name": "load",
 	"main": "worker.ts",
 	"compatibility_date": "2025-07-08",
 	"observability": { "enabled": true },

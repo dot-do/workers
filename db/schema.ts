@@ -32,7 +32,7 @@ DROP TABLE IF EXISTS embeddings;
 
 
 CREATE TABLE pipeline (
-  payload String,
+  payload JSON,
   _path   String,
   _file   String,
   _time   DateTime
@@ -48,7 +48,7 @@ CREATE TABLE events (
   id Nullable(String),
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   type Nullable(String),
-  payload JSON,
+  data JSON,
   source Nullable(String),
   ingested DateTime64 DEFAULT now(),
 )
@@ -130,11 +130,11 @@ ORDER BY (to, ts);
 
 CREATE MATERIALIZED VIEW versionEvents TO versions
 AS SELECT
-  'payload.object.$id' AS id,  
-  'payload.object.$type' AS type,
-  payload.object.data AS data,
-  payload.object.content AS content,
-  payload.object.meta AS meta,
+  data.object.id AS id,
+  data.object.type AS type,
+  data.object.data AS data,
+  data.object.content AS content,
+  data.object.meta AS meta,
   ts,
   ulid
 FROM events
@@ -143,11 +143,11 @@ WHERE type = 'UpsertVersion';
 
 CREATE MATERIALIZED VIEW dataEvents TO data
 AS SELECT
-  'payload.object.$id' AS id,  
-  'payload.object.$type' AS type,
-  payload.object.data AS data,
-  payload.object.content AS content,
-  payload.object.meta AS meta,
+  data.object.id AS id,
+  data.object.type AS type,
+  data.object.data AS data,
+  data.object.content AS content,
+  data.object.meta AS meta,
   ts,
   ulid
 FROM events
@@ -160,10 +160,11 @@ AS SELECT * FROM versions;
 
 CREATE MATERIALIZED VIEW metaEvents TO meta
 AS SELECT
-  'payload.object.$id' AS id,  
-  'payload.object.$type' AS type,
-  payload.object.data AS data,
-  payload.object.meta AS meta,
+  data.object.id AS id,
+  data.object.type AS type,
+  data.object.data AS data,
+  data.object.content AS content,
+  data.object.meta AS meta,
   ts,
   ulid
 FROM events
@@ -177,9 +178,11 @@ WHERE type = 'UpsertMeta';
 -- events must be created last because it starts ingesting immediately, so the other materialized views need to be created first
 CREATE MATERIALIZED VIEW eventPipeline TO events
 AS SELECT
-  JSONExtractString(payload, '$id') AS ulid,  -- on incoming events, the $id must be a ulid
-  JSONExtractString(payload, '$type') AS type,
-  JSONExtractString(payload, 'data.$id') AS id,  -- on incoming events, the $id must be a ulid
+  -- JSONExtractString(payload, '$id') AS ulid,  -- on incoming events, the $id must be a ulid
+  -- JSONExtractString(payload, '$type') AS type,
+  -- JSONExtractString(payload, 'data.$id') AS id,  -- on incoming events, the $id must be a ulid
+  payload.type AS type,
+  payload.object.id AS id,
   concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/', _path) AS source,
   payload
 FROM pipeline;

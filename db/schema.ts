@@ -12,13 +12,23 @@ const clickhouse = createClient({
 
 const schema = /* sql */ `
 
+DROP VIEW IF EXISTS eventPipeline;
+DROP VIEW IF EXISTS versionEvents;
+DROP VIEW IF EXISTS dataEvents;
+DROP VIEW IF EXISTS dataVersions;
+DROP VIEW IF EXISTS metaEvents;
+DROP VIEW IF EXISTS queueEvents;
+DROP VIEW IF EXISTS embeddingsEvents;
 
 DROP TABLE IF EXISTS pipeline;
 DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS versions;
 DROP TABLE IF EXISTS data;
+DROP TABLE IF EXISTS queue;
+DROP TABLE IF EXISTS meta;
 DROP TABLE IF EXISTS relationships;
 DROP TABLE IF EXISTS embeddings;
+
 
 
 CREATE TABLE pipeline (
@@ -116,32 +126,32 @@ CREATE TABLE relationships (
   ulid String,
 )
 ENGINE = CoalescingMergeTree
-ORDER BY (to, ts); 
+ORDER BY (to, ts);
 
 CREATE MATERIALIZED VIEW versionEvents TO versions
 AS SELECT
   'payload.object.$id' AS id,  
   'payload.object.$type' AS type,
-  'payload.object.data' AS data,
-  'payload.object.content' AS content,
-  'payload.object.meta' AS meta,
+  payload.object.data AS data,
+  payload.object.content AS content,
+  payload.object.meta AS meta,
   ts,
   ulid
 FROM events
-WHERE type = 'UpsertVersion' AND 'payload.object.$id' LIKE 'https://';
+WHERE type = 'UpsertVersion';
 
 
 CREATE MATERIALIZED VIEW dataEvents TO data
 AS SELECT
   'payload.object.$id' AS id,  
   'payload.object.$type' AS type,
-  'payload.object.data' AS data,
-  'payload.object.content' AS content,
-  'payload.object.meta' AS meta,
+  payload.object.data AS data,
+  payload.object.content AS content,
+  payload.object.meta AS meta,
   ts,
   ulid
 FROM events
-WHERE type = 'Upsert' AND 'payload.object.$id' LIKE 'https://';
+WHERE type = 'Upsert';
 
 
 CREATE MATERIALIZED VIEW dataVersions TO data
@@ -157,7 +167,7 @@ AS SELECT
   ts,
   ulid
 FROM events
-WHERE type = 'UpsertMeta' AND payload.object.meta EXISTS;
+WHERE type = 'UpsertMeta';
 
 -- TODO: create a materialized view for the queue
 -- TODO: create a materialized view for the embeddings
@@ -175,10 +185,10 @@ AS SELECT
 FROM pipeline;
 `
 
-const queries = schema.split(';\n')
+const queries = schema.split(';\n').filter(q => q.trim() !== '')
 
 for (const query of queries) {
   console.log(query)
-  const result = await clickhouse.command({ query, clickhouse_settings: { 'enable_json_type': 1 } })
+  const result = await clickhouse.command({ query, clickhouse_settings: { 'enable_json_type': 1, 'receive_timeout': 3600000 } })
   console.log(result)
 }

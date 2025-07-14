@@ -4,13 +4,24 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "yaml",
+	"name": "generate",
 	"main": "worker.ts",
 	"compatibility_date": "2025-07-08",
 	"observability": { "enabled": true },
 	"tail_consumers": [{ "service": "pipeline" }],
+  "placement": { "mode": "smart" },
+  "ai": { "binding": "ai" },
+  "r2_buckets": [{ "binding": "r2", "bucket_name": "mdx" }],
 	"routes": [
 		// { "pattern": "*/*", "zone_name": "" },
-		{ "pattern": "yaml.apis.do/*", "zone_name": "apis.do" },
+		{ "pattern": "ai.apis.do/*", "zone_name": "apis.do" },
 	],
+  "rules": [
+    {
+      "type": "Text",
+      "globs": ["**/*.md"],
+      "fallthrough": true,
+    },
+  ],
+  "services": [{ "binding": "DBX_MD", "service": "dbx-md" }],
 }

@@ -17,8 +17,13 @@
 		// { "binding": "ai", "service": "do-ai" },
 		// { "binding": "api", "service": "do-api" },
 		{ "binding": "db", "service": "db" }
-	]
+	],
 
 	// "dispatch_namespaces": [{ "binding": "workers", "namespace": "do" }]
+	"tail_consumers": [
+    {
+      "service": "tail"
+    }
+  ]
 
 }

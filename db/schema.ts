@@ -38,7 +38,7 @@ CREATE TABLE pipeline (
   _time   DateTime
 )
 ENGINE = S3Queue(
-  'https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/**/*', '9c546f5256ac6a8893a5f488eabb8289', '${process.env.R2_SECRET_ACCESS_KEY}', 'JSONEachRow'
+  'https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/**/*', '9c546f5256ac6a8893a5f488eabb8289', '${process.env.R2_SECRET_ACCESS_KEY}', 'JSONEachRow'
 )
 SETTINGS
   mode = 'ordered';
@@ -180,7 +180,7 @@ AS SELECT
   JSONExtractString(payload, '$id') AS ulid,  -- on incoming events, the $id must be a ulid
   JSONExtractString(payload, '$type') AS type,
   JSONExtractString(payload, 'data.$id') AS id,  -- on incoming events, the $id must be a ulid
-  concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/', _path) AS source,
+  concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/', _path) AS source,
   payload
 FROM pipeline;
 `
@@ -189,6 +189,6 @@ const queries = schema.split(';\n').filter(q => q.trim() !== '')
 
 for (const query of queries) {
   console.log(query)
-  const result = await clickhouse.command({ query, clickhouse_settings: { 'enable_json_type': 1, 'receive_timeout': 3600000 } })
+  const result = await clickhouse.command({ query, clickhouse_settings: { enable_json_type: 1, max_execution_time: 3600000 } })
   console.log(result)
 }

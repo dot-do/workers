@@ -10,10 +10,9 @@ export default class extends WorkerEntrypoint {
 
   async search(domain: string) {
     const headers = { Accept: 'application/json', Authorization: `Bearer ${env.DYNADOT_KEY}` }
-    const $id = `https://api.dynadot.com/restful/v1/domains/${domain}/search`
-    const response = await fetch($id, { headers }).then(res => res.json()) as any
-    response.$id = $id
-    this.ctx.waitUntil(db.upsert(response, { $id, $type: 'Domain.Search' }))
+    const url = `https://api.dynadot.com/restful/v1/domains/${domain}/search`
+    const response = await fetch(url, { headers }).then(res => res.json()) as any
+    this.ctx.waitUntil(db.set(url, response, { $type: 'Domain.Search' }))
     return response
   }
 
@@ -25,6 +24,6 @@ export default class extends WorkerEntrypoint {
 
   async fetch(request: Request) {
     const { pathname } = new URL(request.url)
-    return Response.json(await this.search(pathname.slice(1) as keyof typeof servers & string))
+    return Response.json(await this.search(pathname.slice(1) as any))
   }
 }

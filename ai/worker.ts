@@ -27,7 +27,7 @@ export default class extends WorkerEntrypoint {
 
   async openrouter(opts: any) {
     const gateway = env.ai.gateway('functions-do')
-    const result = await gateway.run({
+    const body = {
       provider: 'openrouter',
       endpoint: 'chat/completions',
       ...opts,
@@ -35,7 +35,8 @@ export default class extends WorkerEntrypoint {
         'Authorization': `Bearer ${env.OPEN_ROUTER_API_KEY}`,
         ...opts.headers,
       },
-    }).then(res => res.json())
+    }
+    const result = await gateway.run(body).then(res => res.json())
     console.log(result)
     return result
   }
@@ -43,9 +44,9 @@ export default class extends WorkerEntrypoint {
   async fetch(request: Request) {
     const { searchParams } = new URL(request.url)
     const query = Object.fromEntries(searchParams) as any
-    query.model = query.model || 'o3'
+    query.model = query.model || 'openai/gpt-4.1-mini'
     query.prompt = query.prompt || 'Hello, world!'
     console.log(query)
-    return Response.json(await this.openai(query))
+    return Response.json(await this.openrouter(query))
   }
 }

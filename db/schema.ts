@@ -32,13 +32,13 @@ DROP TABLE IF EXISTS embeddings;
 
 
 CREATE TABLE pipeline (
-  payload JSON,
+  line    String,
   _path   String,
   _file   String,
   _time   DateTime
 )
 ENGINE = S3Queue(
-  'https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/**/*', '9c546f5256ac6a8893a5f488eabb8289', '${process.env.R2_SECRET_ACCESS_KEY}', 'JSONEachRow'
+  'https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/**/*', '9c546f5256ac6a8893a5f488eabb8289', '${process.env.R2_SECRET_ACCESS_KEY}', 'LineAsString' --'JSONEachRow'
 )
 SETTINGS
   mode = 'ordered';
@@ -178,13 +178,14 @@ WHERE type = 'UpsertMeta';
 -- events must be created last because it starts ingesting immediately, so the other materialized views need to be created first
 CREATE MATERIALIZED VIEW eventPipeline TO events
 AS SELECT
-  -- JSONExtractString(payload, '$id') AS ulid,  -- on incoming events, the $id must be a ulid
-  -- JSONExtractString(payload, '$type') AS type,
-  -- JSONExtractString(payload, 'data.$id') AS id,  -- on incoming events, the $id must be a ulid
-  payload.type AS type,
-  payload.object.id AS id,
-  concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/', _path) AS source,
-  payload
+  --JSONExtractString(data, '$.ulid') AS ulid,  -- on incoming events, the ulid must be a ulid
+  line as data,
+  --data.ulid AS ulid,
+  --data.type AS type,  
+  --data.object.id AS id,
+  --JSONExtractString(data, '$.type') AS type,
+  --JSONExtractString(data, '$.object.id') AS id,  -- on incoming events, the $id must be a ulid
+  concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/', _path) AS source
 FROM pipeline;
 `
 

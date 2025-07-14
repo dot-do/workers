@@ -63,6 +63,7 @@ CREATE TABLE versions (
   content String,
   data Nullable(JSON),
   meta Nullable(JSON),
+  visibility LowCardinality(String) DEFAULT 'private',
   ts DateTime64,
   ulid String,
   INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
@@ -77,6 +78,7 @@ CREATE TABLE data (
   content String,
   data Nullable(JSON),
   meta Nullable(JSON),
+  visibility LowCardinality(String) DEFAULT 'private',
   ts DateTime64,
   ulid String,
   INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
@@ -84,17 +86,18 @@ CREATE TABLE data (
 ENGINE = CoalescingMergeTree
 ORDER BY (id);
 
-CREATE TABLE meta (
+CREATE TABLE builds (
   ns String MATERIALIZED domain(id),
   id String,
   type String,
   data JSON,
+  visibility LowCardinality(String) DEFAULT 'private',
   ts DateTime64,
   ulid String,
   INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
 )
 ENGINE = CoalescingMergeTree
-ORDER BY (id, ts);
+ORDER BY (id, type, ts);
 
 CREATE TABLE queue (
   ulid String DEFAULT generateULID(),
@@ -118,6 +121,7 @@ CREATE TABLE embeddings (
   content String,
   data Nullable(JSON),
   meta Nullable(JSON),
+  visibility LowCardinality(String) DEFAULT 'private',
   embedding Array(Float32),
   ts DateTime64,
   ulid String,
@@ -129,6 +133,7 @@ CREATE TABLE relationships (
   from String,
   type String,
   to String,
+  visibility LowCardinality(String) DEFAULT 'private',
   nsTo String MATERIALIZED domain(to),
   nsFrom String MATERIALIZED domain(from),
   ts DateTime64,
@@ -175,12 +180,10 @@ AS SELECT
   root.object.id AS id,
   root.object.type AS type,
   root.object.data AS data,
-  root.object.content AS content,
-  root.object.meta AS meta,
   ts,
   ulid
 FROM events
-WHERE root.type = 'UpsertMeta';
+WHERE root.type = 'UpsertBuild';
 
 -- TODO: create a materialized view for the queue
 -- TODO: create a materialized view for the embeddings

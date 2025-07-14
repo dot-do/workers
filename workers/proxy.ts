@@ -82,9 +82,9 @@ db('root-call');
 db`tagged template`;
 //  → invoke { path: '', args: [ [ 'tagged template' ] ] }
 
-for await (const user of db.users) {
-  console.log('iter-user', user);
-}
+// for await (const user of db.users) {
+//   console.log('iter-user', user);
+// }
 //  → invoke { path: 'users', args: [] }
 //  iter-user { id: 1, name: 'Ada' }
 //  iter-user { id: 2, name: 'Grace' }

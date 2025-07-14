@@ -44,13 +44,13 @@ CREATE TABLE events (
   ulid String DEFAULT generateULID(),
   type String,
   ns String MATERIALIZED domain(id),
-  id String,
+  id String DEFAULT concat('https://events.do/', ulid),
   data JSON,
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   ingested DateTime64 DEFAULT now64(),
   source String,
   INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
-  INDEX bf_eq_id (ns) TYPE bloom_filter() GRANULARITY 4,
+  INDEX bf_eq_ns (ns) TYPE bloom_filter() GRANULARITY 4,
   INDEX bf_eq_id (id) TYPE bloom_filter() GRANULARITY 4,
 )
 ENGINE = MergeTree
@@ -190,9 +190,9 @@ CREATE MATERIALIZED VIEW eventPipeline TO events
 AS SELECT
   --JSONExtractString(data, '$.ulid') AS ulid,  -- on incoming events, the ulid must be a ulid
   data,
-  --if(isNotNull(data.ulid) AND data.ulid != '', data.ulid, generateULID()) AS ulid,
+  if(isNotNull(data.ulid) AND data.ulid != '', data.ulid, generateULID()) AS ulid,
   data.type AS type,  
-  coalesce(data.object.id, data.request.url) AS id,
+  coalesce(data.object.id, data.event.request.url, concat('https://events.do/', ulid)) AS id,
   --JSONExtractString(data, '$.type') AS type,
   --JSONExtractString(data, '$.object.id') AS id,  -- on incoming events, the $id must be a ulid
   concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/', _path) AS source

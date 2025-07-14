@@ -8,8 +8,9 @@
 	"main": "worker.ts",
 	"compatibility_date": "2025-07-08",
 	"observability": { "enabled": true },
+	"tail_consumers": [{ "service": "pipeline" }],
 	"services": [
-		{ "binding": "db", "service": "do-db" },
-		{ "binding": "yaml", "service": "do-yaml" }
+		{ "binding": "db", "service": "db" },
+		{ "binding": "yaml", "service": "yaml" }
 	]
 }

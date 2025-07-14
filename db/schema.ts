@@ -32,10 +32,7 @@ DROP TABLE IF EXISTS embeddings;
 
 
 CREATE TABLE pipeline (
-  json    JSON,
-  _path   String,
-  _file   String,
-  _time   DateTime
+  data    JSON
 )
 ENGINE = S3Queue(
   'https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/**/*', '9c546f5256ac6a8893a5f488eabb8289', '${process.env.R2_SECRET_ACCESS_KEY}', 'JSONAsObject' --'JSONEachRow'
@@ -44,24 +41,24 @@ SETTINGS
   mode = 'ordered';
 
 CREATE TABLE events (
-  ulid String DEFAULT generateULID(),
-  id Nullable(String),
-  ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
-  type Nullable(String),
+  type String,
+  id String,
   data JSON,
-  source Nullable(String),
-  ingested DateTime64 DEFAULT now(),
+  ulid String DEFAULT generateULID(),
+  ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
+  ingested DateTime64 DEFAULT now64(),
+  source String,
 )
 ENGINE = MergeTree
 ORDER BY (ulid);
 
 CREATE TABLE versions (
   id String,
-  ts DateTime64,
   type String,
   content String,
   data Nullable(JSON),
   meta Nullable(JSON),
+  ts DateTime64,
   ulid String,
 )
 ENGINE = CoalescingMergeTree
@@ -69,9 +66,9 @@ ORDER BY (id, ts);
 
 CREATE TABLE meta (
   id String,
-  ts DateTime64,
   type String,
   data JSON,
+  ts DateTime64,
   ulid String,
 )
 ENGINE = CoalescingMergeTree
@@ -79,11 +76,11 @@ ORDER BY (id, ts);
 
 CREATE TABLE data (
   id String,
-  ts DateTime64,
   type String,
   content String,
   data Nullable(JSON),
   meta Nullable(JSON),
+  ts DateTime64,
   ulid String,
 )
 ENGINE = CoalescingMergeTree
@@ -107,12 +104,12 @@ ORDER BY (id, ts);
 
 CREATE TABLE embeddings (
   id String,
-  ts DateTime64,
   type String,
   content String,
   data Nullable(JSON),
   meta Nullable(JSON),
   embedding Array(Float32),
+  ts DateTime64,
   ulid String,
 )
 ENGINE = CoalescingMergeTree
@@ -138,11 +135,12 @@ AS SELECT
   ts,
   ulid
 FROM events
-WHERE type = 'UpsertVersion';
+WHERE data.type = 'UpsertVersion';
 
 
 CREATE MATERIALIZED VIEW dataEvents TO data
 AS SELECT
+  data as root,
   data.object.id AS id,
   data.object.type AS type,
   data.object.data AS data,
@@ -151,7 +149,7 @@ AS SELECT
   ts,
   ulid
 FROM events
-WHERE type = 'Upsert';
+WHERE data.type = 'Upsert';
 
 
 CREATE MATERIALIZED VIEW dataVersions TO data
@@ -168,7 +166,7 @@ AS SELECT
   ts,
   ulid
 FROM events
-WHERE type = 'UpsertMeta';
+WHERE data.type = 'UpsertMeta';
 
 -- TODO: create a materialized view for the queue
 -- TODO: create a materialized view for the embeddings
@@ -179,10 +177,10 @@ WHERE type = 'UpsertMeta';
 CREATE MATERIALIZED VIEW eventPipeline TO events
 AS SELECT
   --JSONExtractString(data, '$.ulid') AS ulid,  -- on incoming events, the ulid must be a ulid
-  json as data,
-  --data.ulid AS ulid,
-  --data.type AS type,  
-  --data.object.id AS id,
+  data,
+  --if(isNotNull(data.ulid) AND data.ulid != '', data.ulid, generateULID()) AS ulid,
+  data.type AS type,  
+  data.object.id AS id,
   --JSONExtractString(data, '$.type') AS type,
   --JSONExtractString(data, '$.object.id') AS id,  -- on incoming events, the $id must be a ulid
   concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/', _path) AS source

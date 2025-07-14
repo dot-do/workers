@@ -8,12 +8,12 @@ export default class extends WorkerEntrypoint<Env> {
   
   async fetch(request: Request) {
     const { url, method } = request
-    let cf = Object.fromEntries(Object.entries(request.cf ?? {}).filter(([key]) => !key.startsWith('tls')))
+    // let cf = Object.fromEntries(Object.entries(request.cf ?? {}).filter(([key]) => !key.startsWith('tls')))
     const { hostname, pathname } = new URL(url)
     // const headers = Object.fromEntries(request.headers)
     const userAgent = request.headers.get('user-agent')
     // this.ctx.waitUntil(this.send(hostname, 'WebRequest', { method, url, userAgent, cf }))
-    return Response.json(await this.events(hostname))
+    return Response.json(await this.list(hostname))
   }
 
   async get(id: string) {
@@ -21,7 +21,7 @@ export default class extends WorkerEntrypoint<Env> {
   }
 
   async list(ns: string) {
-    return sql`SELECT id FROM data WHERE id LIKE ${'https://' + ns + '%'} AND public = true`
+    return sql`SELECT id FROM data WHERE id LIKE ${'https://' + ns + '%'} FINAL`
   }
 
 

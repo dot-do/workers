@@ -16,12 +16,12 @@ export default class extends WorkerEntrypoint<Env> {
     return Response.json(await this.events(hostname))
   }
 
-  async get(ns: string, id: string) {
-    return sql`SELECT * FROM data WHERE ns = ${ns} AND id = ${id}`
+  async get(id: string) {
+    return sql`SELECT * FROM data WHERE id = ${id}`
   }
 
   async list(ns: string) {
-    return sql`SELECT id FROM data WHERE id LIKE ${'https://' + ns + '%'}`
+    return sql`SELECT id FROM data WHERE id LIKE ${'https://' + ns + '%'} AND public = true`
   }
 
 
@@ -50,14 +50,14 @@ export default class extends WorkerEntrypoint<Env> {
       if (!type) type = $type ?? type
       if (!data) data = rest
       if (!content) content = $content ?? content ?? ('---\n' + stringify(data) + '---\n')
-      if (!content.startsWith('---')) content = '---\n' + stringify(data) + '---\n' + content
+      // if (!content.startsWith('---')) content = '---\n' + stringify(data) + '---\n' + content
       return { 
         ulid, 
         type: opts.versioned ? 'UpsertVersion' : 'Upsert', 
         object: { id, type, data, content, meta }
       }
     })
-    this.env.pipeline.send(events)
+    await this.env.pipeline.send(events)
   }
 
 

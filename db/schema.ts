@@ -43,6 +43,7 @@ SETTINGS
 CREATE TABLE events (
   ulid String DEFAULT generateULID(),
   type String,
+  ns String MATERIALIZED domain(id),
   id String,
   data JSON,
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
@@ -55,6 +56,7 @@ ENGINE = MergeTree
 ORDER BY (ulid);
 
 CREATE TABLE versions (
+  ns String MATERIALIZED domain(id),
   id String,
   type String,
   content String,
@@ -67,6 +69,7 @@ ENGINE = CoalescingMergeTree
 ORDER BY (id, ts);
 
 CREATE TABLE meta (
+  ns String MATERIALIZED domain(id),
   id String,
   type String,
   data JSON,
@@ -77,6 +80,7 @@ ENGINE = CoalescingMergeTree
 ORDER BY (id, ts);
 
 CREATE TABLE data (
+  ns String MATERIALIZED domain(id),
   id String,
   type String,
   content String,
@@ -90,6 +94,7 @@ ORDER BY (id);
 
 CREATE TABLE queue (
   ulid String DEFAULT generateULID(),
+  ns String MATERIALIZED domain(id),
   id String,
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   type String,
@@ -105,6 +110,7 @@ ENGINE = CoalescingMergeTree
 ORDER BY (id, ts);
 
 CREATE TABLE embeddings (
+  ns String MATERIALIZED domain(id),
   id String,
   type String,
   content String,
@@ -121,6 +127,8 @@ CREATE TABLE relationships (
   from String,
   type String,
   to String,
+  nsTo String MATERIALIZED domain(to),
+  nsFrom String MATERIALIZED domain(from),
   ts DateTime64,
   ulid String,
 )

@@ -1,6 +1,7 @@
 {
   "name": "do-db",
   "version": "0.0.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "deploy": "wrangler deploy",
@@ -20,8 +21,9 @@
     "yaml": "^2.8.0"
   },
   "devDependencies": {
+    "@types/node": "^20.12.11",
+    "dotenv": "^17.2.0",
     "typescript": "^5.8.3",
-    "wrangler": "^4.24.0",
-    "@types/node": "^20.12.11"
+    "wrangler": "^4.24.0"
   }
 }

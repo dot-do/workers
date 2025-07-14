@@ -116,6 +116,9 @@ importers:
       '@types/node':
         specifier: ^20.12.11
         version: 20.19.7
+      dotenv:
+        specifier: ^17.2.0
+        version: 17.2.0
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -1284,6 +1287,11 @@ packages:
     dependencies:
       dequal: 2.0.3
     dev: false
+
+  /dotenv@17.2.0:
+    resolution: {integrity: sha512-Q4sgBT60gzd0BB0lSyYD3xM4YxrXA9y4uBDof1JNYGzOXrQdQ6yX+7XIAqoFOGQFOTK1D3Hts5OllpxMDZFONQ==}
+    engines: {node: '>=12'}
+    dev: true
 
   /dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}

@@ -15,7 +15,7 @@ export default {
       
       // Add our custom properties
       serialized.ulid = ulid(traceItem.eventTimestamp || Date.now())
-      serialized.type = 'WorkerExecution'
+      serialized.type = 'WorkerExecution' // TODO: figure out {scriptName}.{functionName} (which could be request, RPC, etc ... )
       serialized.tailInstance = tailInstance
       serialized.tailRetries = retries
       

@@ -139,29 +139,30 @@ ORDER BY (to, ts);
 
 CREATE MATERIALIZED VIEW versionEvents TO versions
 AS SELECT
-  data.object.id AS id,
-  data.object.type AS type,
-  data.object.data AS data,
-  data.object.content AS content,
-  data.object.meta AS meta,
+  data as root,
+  root.object.id AS id,
+  root.object.type AS type,
+  root.object.data AS data,
+  root.object.content AS content,
+  root.object.meta AS meta,
   ts,
   ulid
 FROM events
-WHERE data.type = 'UpsertVersion';
+WHERE root.type = 'UpsertVersion';
 
 
 CREATE MATERIALIZED VIEW dataEvents TO data
 AS SELECT
   data as root,
-  data.object.id AS id,
-  data.object.type AS type,
-  data.object.data AS data,
-  data.object.content AS content,
-  data.object.meta AS meta,
+  root.object.id AS id,
+  root.object.type AS type,
+  root.object.data AS data,
+  root.object.content AS content,
+  root.object.meta AS meta,
   ts,
   ulid
 FROM events
-WHERE data.type = 'Upsert';
+WHERE root.type = 'Upsert';
 
 
 CREATE MATERIALIZED VIEW dataVersions TO data
@@ -170,15 +171,16 @@ AS SELECT * FROM versions;
 
 CREATE MATERIALIZED VIEW metaEvents TO meta
 AS SELECT
-  data.object.id AS id,
-  data.object.type AS type,
-  data.object.data AS data,
-  data.object.content AS content,
-  data.object.meta AS meta,
+  data as root,
+  root.object.id AS id,
+  root.object.type AS type,
+  root.object.data AS data,
+  root.object.content AS content,
+  root.object.meta AS meta,
   ts,
   ulid
 FROM events
-WHERE data.type = 'UpsertMeta';
+WHERE root.type = 'UpsertMeta';
 
 -- TODO: create a materialized view for the queue
 -- TODO: create a materialized view for the embeddings

@@ -1,4 +1,5 @@
 import 'dotenv/config'
+
 console.log(process.env.CLICKHOUSE_URL)
 import { createClient } from '@clickhouse/client-web'
 const clickhouse = createClient({
@@ -22,19 +23,18 @@ DROP TABLE IF EXISTS embeddings;
 
 CREATE TABLE pipeline (
   payload String,
-  concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/', path) as source,
   _path   String,
   _file   String,
   _time   DateTime
 )
 ENGINE = S3Queue(
-  'https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/**/*', 'JSONEachRow', '9c546f5256ac6a8893a5f488eabb8289', ${process.env.R2_SECRET}
+  'https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/**/*', '9c546f5256ac6a8893a5f488eabb8289', '${process.env.R2_SECRET_ACCESS_KEY}', 'JSONEachRow'
 )
 SETTINGS
   mode = 'ordered';
 
 CREATE TABLE events (
-  ulid String DEFAULT ulid(),
+  ulid String DEFAULT generateULID(),
   id Nullable(String),
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   type Nullable(String),
@@ -80,7 +80,7 @@ ENGINE = CoalescingMergeTree
 ORDER BY (id);
 
 CREATE TABLE queue (
-  ulid String DEFAULT ulid(),
+  ulid String DEFAULT generateULID(),
   id String,
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   type String,
@@ -170,8 +170,8 @@ AS SELECT
   JSONExtractString(payload, '$id') AS ulid,  -- on incoming events, the $id must be a ulid
   JSONExtractString(payload, '$type') AS type,
   JSONExtractString(payload, 'data.$id') AS id,  -- on incoming events, the $id must be a ulid
-  payload,
-  source
+  concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/', _path) AS source,
+  payload
 FROM pipeline;
 `
 

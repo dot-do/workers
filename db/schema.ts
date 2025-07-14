@@ -21,7 +21,7 @@ DROP TABLE IF EXISTS embeddings;
 
 
 CREATE TABLE pipeline (
-  data String,
+  payload String,
   concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/', path) as source,
   _path   String,
   _file   String,
@@ -38,7 +38,7 @@ CREATE TABLE events (
   id Nullable(String),
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   type Nullable(String),
-  data JSON,
+  payload JSON,
   source Nullable(String),
   ingested DateTime64 DEFAULT now(),
 )
@@ -80,7 +80,8 @@ ENGINE = CoalescingMergeTree
 ORDER BY (id);
 
 CREATE TABLE queue (
-  id String DEFAULT ulid(),
+  ulid String DEFAULT ulid(),
+  id String,
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   type String,
   action String,
@@ -102,45 +103,74 @@ CREATE TABLE embeddings (
   data Nullable(JSON),
   meta Nullable(JSON),
   embedding Array(Float32),
-);
+  ulid String,
+)
+ENGINE = CoalescingMergeTree
+ORDER BY (id, ts);
 
 CREATE TABLE relationships (
   from String,
   type String,
   to String,
   ts DateTime64,
-);  
-
-CREATE MATERIALIZED VIEW versionEvents TO versions (
-  id,
-  ts,
-  type,
-  content,
-  data,
-  meta
+  ulid String,
 )
+ENGINE = CoalescingMergeTree
+ORDER BY (to, ts); 
+
+CREATE MATERIALIZED VIEW versionEvents TO versions
 AS SELECT
-  'data.$id' AS ulid,  -- on events, the $id must be a ulid
-  'data.$type' AS type,
-  'data.$context' AS context,
+  'payload.object.$id' AS id,  
+  'payload.object.$type' AS type,
+  'payload.object.data' AS data,
+  'payload.object.content' AS content,
+  'payload.object.meta' AS meta,
   ts,
-  data,
-  source
+  ulid
 FROM events
-WHERE type = 'Upsert' AND 'data.$id' EXISTS;
+WHERE type = 'UpsertVersion' AND 'payload.object.$id' LIKE 'https://';
+
+
+CREATE MATERIALIZED VIEW dataEvents TO data
+AS SELECT
+  'payload.object.$id' AS id,  
+  'payload.object.$type' AS type,
+  'payload.object.data' AS data,
+  'payload.object.content' AS content,
+  'payload.object.meta' AS meta,
+  ts,
+  ulid
+FROM events
+WHERE type = 'Upsert' AND 'payload.object.$id' LIKE 'https://';
+
+
+CREATE MATERIALIZED VIEW dataVersions TO data
+AS SELECT * FROM versions;
+
+
+CREATE MATERIALIZED VIEW metaEvents TO meta
+AS SELECT
+  'payload.object.$id' AS id,  
+  'payload.object.$type' AS type,
+  payload.object.data AS data,
+  payload.object.meta AS meta,
+  ts,
+  ulid
+FROM events
+WHERE type = 'UpsertMeta' AND payload.object.meta EXISTS;
+
+-- TODO: create a materialized view for the queue
+-- TODO: create a materialized view for the embeddings
+-- TODO: create a materialized view for the relationships
+
 
 -- events must be created last because it starts ingesting immediately, so the other materialized views need to be created first
-CREATE MATERIALIZED VIEW eventPipeline TO events (
-  id String,
-  ts DateTime64,
-  type Nullable(String),
-  data Nullable(JSON),
-  meta Nullable(JSON),
-)
+CREATE MATERIALIZED VIEW eventPipeline TO events
 AS SELECT
-  JSONExtractString(data, '$id') AS id,
-  JSONExtractString(data, '$type') AS type,
-  data,
+  JSONExtractString(payload, '$id') AS ulid,  -- on incoming events, the $id must be a ulid
+  JSONExtractString(payload, '$type') AS type,
+  JSONExtractString(payload, 'data.$id') AS id,  -- on incoming events, the $id must be a ulid
+  payload,
   source
 FROM pipeline;
 `

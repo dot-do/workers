@@ -40,7 +40,8 @@ export default class extends WorkerEntrypoint<Env> {
     })
   }
 
-  async insertMany(values: any[], opts: { ns: string, type: string, versioned?: boolean }) {
+  async upsert(values: any[], opts: { ns: string, type: string, versioned?: boolean }) {
+    if (!Array.isArray(values)) values = [values]
     const events = values.map(value => {
       const ulid = generateULID()
       let { $id, id, $context, $meta, meta, $type, type, $content, content, data, ...rest } = value

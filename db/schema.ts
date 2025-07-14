@@ -180,7 +180,7 @@ AS SELECT
   data,
   --if(isNotNull(data.ulid) AND data.ulid != '', data.ulid, generateULID()) AS ulid,
   data.type AS type,  
-  data.object.id AS id,
+  coalesce(data.object.id, data.request.url) AS id,
   --JSONExtractString(data, '$.type') AS type,
   --JSONExtractString(data, '$.object.id') AS id,  -- on incoming events, the $id must be a ulid
   concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/', _path) AS source

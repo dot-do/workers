@@ -41,10 +41,10 @@ SETTINGS
   mode = 'ordered';
 
 CREATE TABLE events (
+  ulid String DEFAULT generateULID(),
   type String,
   id String,
   data JSON,
-  ulid String DEFAULT generateULID(),
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   ingested DateTime64 DEFAULT now64(),
   source String,

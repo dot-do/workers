@@ -26,7 +26,7 @@ export default class extends WorkerEntrypoint {
 
 
   async events(ns: string) {
-    return sql`SELECT id, data FROM events WHERE id LIKE ${'https://' + ns + '%'} ORDER BY id DESC LIMIT 100`
+    return sql`SELECT ulid, type, id, data FROM events WHERE id LIKE ${'https://' + ns + '%'} ORDER BY id DESC LIMIT 100`
   }
 
   async set(ns: string, id: string, data: any, content?: string) {

@@ -29,15 +29,9 @@ export default class extends WorkerEntrypoint<Env> {
     return sql`SELECT ulid, type, id, data FROM events WHERE id LIKE ${'https://' + ns + '%'} ORDER BY id DESC LIMIT 100`
   }
 
-  async set(ns: string, id: string, data: any, content?: string) {
-    return clickhouse.insert({
-      table: 'data',
-      values: [{ ns, id, data, content }],
-      format: 'JSONEachRow',
-      clickhouse_settings: {
-
-      }
-    })
+  async set($id: string, data: any, opts: any) {
+    const { $context, context, $type, type, $content, content, ...meta } = opts
+    this.upsert([{ $id, data, meta }], { $context, context, $type, type, $content, content } as any)
   }
 
   async upsert(values: any[], opts: { ns: string, type: string, versioned?: boolean }) {

@@ -172,18 +172,31 @@ export default class extends WorkerEntrypoint {
 
     // Parse MDX/Markdown to AST
     try {
-      // Use mdast to parse markdown/MDX into an AST
+      // First try with MDX extensions (supports JSX)
       const tree = fromMarkdown(actualContent, {
         extensions: [mdxjs()],
         mdastExtensions: [mdxFromMarkdown()]
       })
       
       result.mdxAst = removePositions(tree)
-    } catch (error) {
-      console.error('MDX parse error:', error)
-      result.mdxAst = { 
-        _error: 'Failed to parse MDX',
-        _message: error instanceof Error ? error.message : 'Unknown error'
+    } catch (mdxError) {
+      // If MDX parsing fails, try regular markdown
+      try {
+        const tree = fromMarkdown(actualContent)
+        result.mdxAst = removePositions(tree)
+        
+        // Add a note that we fell back to regular markdown
+        if (result.mdxAst && typeof result.mdxAst === 'object') {
+          result.mdxAst._parsedAs = 'markdown'
+          result.mdxAst._mdxError = mdxError instanceof Error ? mdxError.message : 'MDX parse error'
+        }
+      } catch (markdownError) {
+        console.error('Markdown parse error:', markdownError)
+        result.mdxAst = { 
+          _error: 'Failed to parse content',
+          _mdxError: mdxError instanceof Error ? mdxError.message : 'MDX parse error',
+          _markdownError: markdownError instanceof Error ? markdownError.message : 'Markdown parse error'
+        }
       }
     }
 

@@ -6,9 +6,8 @@ const yaml: any = env.yaml
 export default class extends WorkerEntrypoint {
   async models() {
     const { data } = await fetch('https://prxy.do/openrouter.ai/api/frontend/models/find').then(r => r.json()) as any || {}
-    this.ctx.waitUntil(
-      db.upsert(data.models.map((data: any) => ({ id: data.slug, data, content: `# ${data.name}\n\n${data.description}` })), { ns: 'models.do', type: 'Model' })
-    )
+    const results = await db.upsert(data.models.map((data: any) => ({ id: data.slug, data, content: `# ${data.name}\n\n${data.description}` })), { ns: 'models.do', type: 'Model' })
+    console.log(results)
     return data.models
   }
 

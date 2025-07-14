@@ -57,7 +57,9 @@ export default class extends WorkerEntrypoint<Env> {
         object: { id, type, data, content, meta }
       }
     })
-    await this.env.pipeline.send(events)
+    const results = await this.env.pipeline.send(events)
+    console.log(results)
+    return results
   }
 
 

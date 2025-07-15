@@ -38,8 +38,12 @@ ENGINE = S3Queue(
   'https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/**/*', '9c546f5256ac6a8893a5f488eabb8289', '${process.env.R2_SECRET_ACCESS_KEY}', 'JSONAsObject' --'JSONEachRow'
 )
 SETTINGS
-  mode = 'ordered';
+  mode = 'ordered',
+  s3queue_polling_min_timeout_ms = 1000,
+  s3queue_polling_max_timeout_ms = 1000,
+  s3queue_polling_backoff_ms     = 0;
 
+  
 CREATE TABLE events (
   ulid String DEFAULT generateULID(),
   type String,

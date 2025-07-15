@@ -16,7 +16,7 @@ DROP VIEW IF EXISTS eventPipeline;
 DROP VIEW IF EXISTS versionEvents;
 DROP VIEW IF EXISTS dataEvents;
 DROP VIEW IF EXISTS dataVersions;
-DROP VIEW IF EXISTS metaEvents;
+DROP VIEW IF EXISTS buildEvents;
 DROP VIEW IF EXISTS queueEvents;
 DROP VIEW IF EXISTS embeddingsEvents;
 
@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS versions;
 DROP TABLE IF EXISTS data;
 DROP TABLE IF EXISTS queue;
-DROP TABLE IF EXISTS meta;
+DROP TABLE IF EXISTS builds;
 DROP TABLE IF EXISTS relationships;
 DROP TABLE IF EXISTS embeddings;
 
@@ -174,16 +174,16 @@ CREATE MATERIALIZED VIEW dataVersions TO data
 AS SELECT * FROM versions;
 
 
-CREATE MATERIALIZED VIEW metaEvents TO meta
-AS SELECT
-  data as root,
-  root.object.id AS id,
-  root.object.type AS type,
-  root.object.data AS data,
-  ts,
-  ulid
-FROM events
-WHERE root.type = 'UpsertBuild';
+--CREATE MATERIALIZED VIEW buildEvents TO meta
+--AS SELECT
+--  data as root,
+--  root.object.id AS id,
+--  root.object.type AS type,
+--  root.object.data AS data,
+--  ts,
+--  ulid
+--FROM events
+--WHERE root.type = 'UpsertBuild'
 
 -- TODO: create a materialized view for the queue
 -- TODO: create a materialized view for the embeddings

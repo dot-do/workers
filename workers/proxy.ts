@@ -1,90 +1,76 @@
 // ------------------------------------------------------------------
-// 1. Define what your single handler can return
-//    (value, Promise, or (async) iterable)
+// 1. Callback type: your single place to do real work
 // ------------------------------------------------------------------
-type PathInvoker =
-  (path: string, args: unknown[]) =>
-    | unknown
-    | Promise<unknown>
-    | Iterable<unknown>
-    | AsyncIterable<unknown>;
+type PathInvoker = (path: string, args: any[]) => any | Promise<any>;
 
 // ------------------------------------------------------------------
-// 2. Factory that gives you the magic `db`
+// 2. The builder object returned by every operation
 // ------------------------------------------------------------------
-function createProxyInvoker(invoke: PathInvoker) {
-  // Recursive helper that keeps track of the property chain
-  const build = (segments: string[]): any =>
+interface Builder extends Function, PromiseLike<any> {
+  [key: string | symbol]: any;      // keep it open-ended
+}
+
+// ------------------------------------------------------------------
+// 3. Factory that creates the fully-featured `db`
+// ------------------------------------------------------------------
+function createProxyInvoker(invoke: PathInvoker): Builder {
+  const build = (segments: string[], chain: Promise<any>): Builder =>
     new Proxy(function () {}, {
-      // ---- Property access: db.foo.bar ----
+      // ---- Property access (db.foo.bar) ---------------------------
       get(_target, prop: string | symbol) {
-        // Prevent “thenable” detection (await db)
-        if (prop === 'then') return undefined;
-
-        // ---- Async iteration: for await (const x of db.foo) ----
+        // Async iterator still works
         if (prop === Symbol.asyncIterator) {
-          // Capture the current path once
-          const path = segments.join('.');
           return async function* () {
-            const result = await invoke(path, []);
-            // If user-supplied handler already gave us an (async) iterable → delegate
-            if (result && typeof (result as any)[Symbol.asyncIterator] === 'function') {
-              for await (const v of result as AsyncIterable<unknown>) yield v;
-            } else if (result && typeof (result as any)[Symbol.iterator] === 'function') {
-              for (const v of result as Iterable<unknown>) yield v;
+            const result = await chain;
+            if (result && (result as any)[Symbol.asyncIterator]) {
+              for await (const v of result as AsyncIterable<any>) yield v;
+            } else if (result && (result as any)[Symbol.iterator]) {
+              for (const v of result as Iterable<any>) yield v;
             } else {
-              // otherwise just yield the single value
               yield result;
             }
           };
         }
 
-        // Normal property → just extend the path
-        return build([...segments, prop.toString()]);
+        // ---- Special: .then(...) ---------------------------------
+        if (prop === 'then') {
+          // The engine (await / Promise.resolve) or user code can call this.
+          return (onFulfilled?: any, onRejected?: any) => {
+            const next = chain.then(onFulfilled, onRejected);
+            // Return *another* builder so we can keep chaining (.save etc.)
+            return build([], next);
+          };
+        }
+
+        // Normal property → extend the path
+        return build([...segments, prop.toString()], chain);
       },
 
-      // ---- Function / template-tag invocation ----
+      // ---- Function / template-tag invocation --------------------
       apply(_target, _thisArg, argList) {
-        return invoke(segments.join('.'), argList);
+        const path = segments.join('.');
+        // Sequencing: wait for prior async work before running this piece
+        const next = chain.then(() => invoke(path, argList));
+        return build([], next);   // fresh builder with updated chain
       }
-    });
+    }) as unknown as Builder;
 
-  return build([]); // start with an empty path
+  // Start with *no* path and a resolved promise
+  return build([], Promise.resolve());
 }
 
 // ------------------------------------------------------------------
-// 3. Example: plug in real logic once, use everywhere
+// 4. Example: plug in your own implementation once -----------------
 // ------------------------------------------------------------------
 const db = createProxyInvoker(async (path, args) => {
   console.log('→ invoke', { path, args });
-
-  // Demo data for the example below
-  if (path === 'users') {
-    // pretend this came from a DB/API
-    return [{ id: 1, name: 'Ada' }, { id: 2, name: 'Grace' }];
-  }
-
-  return { ok: true }; // default
+  // demo: pretend each call returns an object with a .test() method
+  return { test() { console.log('test() inside result'); } };
 });
 
 // ------------------------------------------------------------------
-// 4. All the syntaxes now work—including async iteration
+// 5. All syntaxes + the requested chain now work -------------------
 // ------------------------------------------------------------------
-db.this.that.do(123, { testing: true });
-//  → invoke { path: 'this.that.do', args: [ 123, { testing: true } ] }
-
-db.get('this', 'that');
-//  → invoke { path: 'get', args: [ 'this', 'that' ] }
-
-db('root-call');
-//  → invoke { path: '', args: [ 'root-call' ] }
-
-db`tagged template`;
-//  → invoke { path: '', args: [ [ 'tagged template' ] ] }
-
-// for await (const user of db.users) {
-//   console.log('iter-user', user);
-// }
-//  → invoke { path: 'users', args: [] }
-//  iter-user { id: 1, name: 'Ada' }
-//  iter-user { id: 2, name: 'Grace' }
+db.set({ foo: 'bar' })            // → invoke { path: 'set', args: [ { foo: 'bar' } ] }
+  .then(r => r.test())            // test() inside result
+  .save();                        // → invoke { path: 'save', args: [] }

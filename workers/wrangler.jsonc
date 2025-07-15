@@ -12,5 +12,6 @@
 	"tail_consumers": [{ "service": "pipeline" }],
 	"services": [
 		{ "binding": "db", "service": "db" }
-	]
+	],
+	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }]
 }

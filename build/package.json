@@ -1,0 +1,27 @@
+{
+  "name": "build",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npx wrangler deploy --dry-run --outdir dist && tsc --emitDeclarationOnly --declaration --outDir dist",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "do": "wrangler deploy --dispatch-namespace do",
+    "start": "wrangler dev",
+    "test": "vitest",
+    "types": "wrangler types worker.d.ts"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250710.0",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.24.0"
+  },
+  "dependencies": {
+    "@cloudflare/containers": "^0.0.22",
+    "lodash": "^4.17.21",
+    "sqids": "^0.3.0",
+    "ulid": "^3.0.1",
+    "yaml": "^2.8.0"
+  }
+}

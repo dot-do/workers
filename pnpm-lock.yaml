@@ -95,6 +95,34 @@ importers:
         specifier: ^6.0.11
         version: 6.0.11
 
+  build:
+    dependencies:
+      '@cloudflare/containers':
+        specifier: ^0.0.22
+        version: 0.0.22
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      sqids:
+        specifier: ^0.3.0
+        version: 0.3.0
+      ulid:
+        specifier: ^3.0.1
+        version: 3.0.1
+      yaml:
+        specifier: ^2.8.0
+        version: 2.8.0
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20250710.0
+        version: 4.20250710.0
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+      wrangler:
+        specifier: ^4.24.0
+        version: 4.24.0(@cloudflare/workers-types@4.20250710.0)
+
   cloudflare:
     dependencies:
       cloudflare:
@@ -571,6 +599,10 @@ packages:
 
   /@cloudflare/containers@0.0.19:
     resolution: {integrity: sha512-3Atns+EiKk9xW3aHG3KdTMbkCz4vkf71314CDJpc/h6MiCIUW8Ub5tPbCcdR3NxpZe2sgD1v1zEVPQjgZ5bKXw==}
+    dev: false
+
+  /@cloudflare/containers@0.0.22:
+    resolution: {integrity: sha512-/HldChWDtzu9yLTrvGJJjLBYj/oCjXfDUSOP0sewip25dZ4NTT2QYj8aYZk3STDw1oplLEjFLJbksWCuUbAu4Q==}
     dev: false
 
   /@cloudflare/kv-asset-handler@0.4.0:

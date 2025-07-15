@@ -27,7 +27,7 @@ export default class extends WorkerEntrypoint {
     
     // Extract namespace, function name and arguments from pattern like /namespace.functionName(arg1,arg2,key:value)
     // Args are optional, so () can be empty
-    const match = pathname.match(/^\/([^.]+)\.([^(]+)\(([^)]*)\)$/)
+    const match = decodeURIComponent(pathname).match(/^\/([^.]+)\.([^(]+)\(([^)]*)\)$/)
     
     if (!match) {
       // Invalid format - return error
@@ -78,7 +78,7 @@ export default class extends WorkerEntrypoint {
     }
     
     // Call the do method with namespace.functionName format
-    const result = await this.do(request, `${namespace}.${functionName}`, args)
+    const result = await this.do(request, namespace, functionName, args)
     return new Response(JSON.stringify(result), {
       headers: { 'content-type': 'application/json' }
     })

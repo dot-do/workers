@@ -1,17 +1,15 @@
-// worker.js  ──────────────────────────────────────────────────
-import * as utils from './utils.js';
-import { graftModule } from './graft-module.js';
-import { WorkerEntrypoint } from 'cloudflare:workers';
+import { WorkerEntrypoint } from 'cloudflare:workers'
+import def, * as mod from './pkg'
+const pkg = { ...def, ...mod }
 
-class MyService extends WorkerEntrypoint {
-  /* your own RPC methods here */
+class RPC extends WorkerEntrypoint { }
+
+for (const key of Reflect.ownKeys(pkg)) {
+  if (key === 'default') continue;
+  const desc = { enumerable: false, configurable: true, get() { return pkg[key] } };     
+  (typeof pkg[key] === 'function'
+    ? Object.defineProperty(RPC.prototype, key, desc)
+    : Object.defineProperty(RPC, key, desc));
 }
 
-// Optionally keep the helper available as a *named* export.
-export { graftModule };
-
-/**
- * The default export is the class *after* it has been patched.
- * Cloudflare’s runtime sees exactly what it expects: a WorkerEntrypoint subclass.
- */
-export default graftModule(MyService, utils);
+export default RPC

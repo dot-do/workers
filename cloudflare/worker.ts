@@ -8,30 +8,25 @@ const cloudflare = new Cloudflare({
 const worker = /* js */ `
 
 import { WorkerEntrypoint } from 'cloudflare:workers'
-import * as module from './index.mjs'
+import def, * as mod from './index.mjs'
+const pkg = { ...def, ...mod }
 
-class Worker extends WorkerEntrypoint {
-  fetch() {
-    return Response.json(Reflect.ownKeys(module))
-  }
+class RPC extends WorkerEntrypoint { }
+
+for (const key of Reflect.ownKeys(pkg)) {
+  if (key === 'default') continue;
+  const desc = { enumerable: false, configurable: true, get() { return pkg[key] } };     
+  (typeof pkg[key] === 'function'
+    ? Object.defineProperty(RPC.prototype, key, desc)
+    : Object.defineProperty(RPC, key, desc));
 }
 
-for (const key of Reflect.ownKeys(module)) {
-  if (key === 'default') continue;            // skip default export
-  const getter = () => module[key];              // preserves live binding
-
-  if (typeof module[key] === 'function') {
-    Object.defineProperty(Worker.prototype, key, { get: getter });
-  } else {
-    Object.defineProperty(Worker, key, { get: getter });
-  }
-}
-
-export default Worker
+export default RPC
 
 `
 
 export default class extends WorkerEntrypoint {
+  
   deployWorker(name: string, module: string) {
     return cloudflare.workersForPlatforms.dispatch.namespaces.scripts.update(
       'do',

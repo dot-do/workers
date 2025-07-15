@@ -8,12 +8,12 @@
     "lib": ["es2021"],
     "module": "es2022",
     "moduleResolution": "Bundler",
-    "noEmit": true,
+    // "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
     "target": "es2021",
-    "types": ["@cloudflare/workers-types"]
+    "types": ["./worker.d.ts"]
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist", ".wrangler"]

@@ -7,5 +7,6 @@
 	"name": "utils",
 	"main": "worker.ts",
 	"compatibility_date": "2025-07-08",
-	"observability": { "enabled": true }
+	"observability": { "enabled": true },
+	"ai": { "binding": "ai" }
 }

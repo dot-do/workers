@@ -35,8 +35,8 @@ export default class extends WorkerEntrypoint {
       {
         account_id,
         files: {
+          'worker.mjs': new File([worker], 'worker.mjs', { type: 'application/javascript' }),
           'index.mjs': new File([module], 'index.mjs', { type: 'application/javascript' }),
-          'worker.mjs': new File([worker], 'worker.mjs', { type: 'application/javascript' })
         },
         metadata: {
           main_module: 'worker.mjs',
@@ -52,10 +52,14 @@ export default class extends WorkerEntrypoint {
 
   async fetch(request: Request) {
     try {
-    const { pathname } = new URL(request.url)
-    const name = pathname.slice(1)
-      const worker = await this.getWorker(name).then(res => res.json())
-      return Response.json({ name, worker })
+      const { pathname } = new URL(request.url)
+      const name = pathname.slice(1)
+      // const worker = await this.getWorker(name).then(res => res.text())
+      // return new Response(worker, { headers: { 'Content-Type': 'application/javascript' } })
+      const start = Date.now()
+      const worker = await this.deployWorker('test', '') //'export const sum=(a,b)=>a+b')
+      const deployTime = Date.now() - start
+      return Response.json({ name, worker, deployTime })
     }
     catch (error) {
       return Response.json({ error: error instanceof Error ? error.message : 'Unknown error' })

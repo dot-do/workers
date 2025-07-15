@@ -21,6 +21,7 @@ export default class extends WorkerEntrypoint {
 
   async fetch(request: Request) {
     try {
+      const { url, method } = request
       const { origin, hostname, pathname, searchParams } = new URL(request.url)
       const headers = Object.fromEntries(request.headers)
       const query = Object.fromEntries(searchParams)
@@ -32,13 +33,17 @@ export default class extends WorkerEntrypoint {
       catch (error) { }
 
       const event = {
+        $context: origin,
         $type: 'Webhook.Received',
+        timestamp: new Date().toISOString(),
+        url,
+        method,
         origin,
         hostname,
         pathname,
         query,
-        headers,
         body,
+        headers,
       }
       const result = await env.pipeline.send([event])
       return Response.json({ success: true, result })

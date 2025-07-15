@@ -1,0 +1,20 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "eval",
+	"main": "worker.ts",
+	"compatibility_date": "2025-07-08",
+	"observability": { "enabled": true },
+	"tail_consumers": [{ "service": "pipeline" }],
+	"routes": [
+		{ "pattern": "eval.apis.do/*", "zone_name": "apis.do" }
+	],
+  "services": [
+		{ "binding": "cloudflare", "service": "cloudflare" },
+		{ "binding": "yaml", "service": "yaml" }
+	],
+	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }]
+}

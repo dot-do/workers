@@ -4,6 +4,7 @@ import Cloudflare from 'cloudflare'
 const cloudflare = new Cloudflare({
   apiToken: env.CLOUDFLARE_API_TOKEN
 })
+const account_id = 'b6641681fe423910342b9ffa1364c76d'
 
 const worker = /* js */ `
 
@@ -26,13 +27,13 @@ export default RPC
 `
 
 export default class extends WorkerEntrypoint {
-  
+
   deployWorker(name: string, module: string) {
     return cloudflare.workersForPlatforms.dispatch.namespaces.scripts.update(
       'do',
       name,
       {
-        account_id: 'b6641681fe423910342b9ffa1364c76d',
+        account_id,
         files: {
           'index.mjs': new File([module], 'index.mjs', { type: 'application/javascript' }),
           'worker.mjs': new File([worker], 'worker.mjs', { type: 'application/javascript' })
@@ -44,8 +45,15 @@ export default class extends WorkerEntrypoint {
       }
     )
   }
+  
+  getWorker(name: string) {
+    return cloudflare.workersForPlatforms.dispatch.namespaces.scripts.content.get('do', name, { account_id })
+  }
 
-  fetch() {
-    return Response.json({ success: true })
+  async fetch(request: Request) {
+    const { pathname } = new URL(request.url)
+    const name = pathname.slice(1)
+    const worker = await this.getWorker(name).then(res => res.json())
+    return Response.json({ name, worker })
   }
 }

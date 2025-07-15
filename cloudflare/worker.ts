@@ -51,9 +51,14 @@ export default class extends WorkerEntrypoint {
   }
 
   async fetch(request: Request) {
+    try {
     const { pathname } = new URL(request.url)
     const name = pathname.slice(1)
-    const worker = await this.getWorker(name).then(res => res.json())
-    return Response.json({ name, worker })
+      const worker = await this.getWorker(name).then(res => res.json())
+      return Response.json({ name, worker })
+    }
+    catch (error) {
+      return Response.json({ error: error instanceof Error ? error.message : 'Unknown error' })
+    }
   }
 }

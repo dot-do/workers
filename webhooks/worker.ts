@@ -1,4 +1,5 @@
 import { env, WorkerEntrypoint } from 'cloudflare:workers'
+import { ulid as generateULID } from 'ulid'
 
 export default class extends WorkerEntrypoint {
 
@@ -31,10 +32,12 @@ export default class extends WorkerEntrypoint {
         body = JSON.parse(body)
       }
       catch (error) { }
-
+      const ulid = generateULID()
       const event = {
         $context: origin,
+        $id: ulid,
         $type: 'Webhook.Received',
+        type: 'Webhook.Received',
         timestamp: new Date().toISOString(),
         url,
         method,
@@ -44,6 +47,7 @@ export default class extends WorkerEntrypoint {
         query,
         body,
         headers,
+        ulid,
       }
       const result = await env.pipeline.send([event])
       return Response.json({ success: true, result })

@@ -17,6 +17,7 @@
     "wrangler": "^4.24.0"
   },
   "dependencies": {
+    "ulid": "^3.0.1",
     "yaml": "^2.8.0"
   }
 }

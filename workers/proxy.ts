@@ -72,5 +72,5 @@ const db = createProxyInvoker(async (path, args) => {
 // 5. All syntaxes + the requested chain now work -------------------
 // ------------------------------------------------------------------
 db.set({ foo: 'bar' })            // → invoke { path: 'set', args: [ { foo: 'bar' } ] }
-  .then(r => r.test())            // test() inside result
+  .then((r: any) => r.test())     // test() inside result
   .save();                        // → invoke { path: 'save', args: [] }

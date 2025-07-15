@@ -6,6 +6,7 @@
   "scripts": {
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
+    "do": "wrangler deploy --dispatch-namespace do",
     "start": "wrangler dev",
     "test": "vitest",
     "types": "wrangler types worker.d.ts"

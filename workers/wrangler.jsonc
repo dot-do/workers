@@ -11,7 +11,8 @@
 	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
 	"tail_consumers": [{ "service": "pipeline" }],
 	"services": [
-		{ "binding": "db", "service": "db" }
+		{ "binding": "db", "service": "db" },
+		{ "binding": "yaml", "service": "yaml" }
 	],
 	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }]
 }

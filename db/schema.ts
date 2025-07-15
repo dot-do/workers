@@ -39,11 +39,11 @@ ENGINE = S3Queue(
 )
 SETTINGS
   mode = 'ordered',
-  s3queue_polling_min_timeout_ms = 1000,
-  s3queue_polling_max_timeout_ms = 1000,
+  s3queue_polling_min_timeout_ms = 250,
+  s3queue_polling_max_timeout_ms = 250,
   s3queue_polling_backoff_ms     = 0;
 
-  
+
 CREATE TABLE events (
   ulid String DEFAULT generateULID(),
   type String,

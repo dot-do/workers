@@ -203,6 +203,28 @@ importers:
         specifier: ^4.24.0
         version: 4.24.0(@cloudflare/workers-types@4.20250710.0)
 
+  email:
+    dependencies:
+      postal-mime:
+        specifier: ^2.4.4
+        version: 2.4.4
+      ulid:
+        specifier: ^3.0.1
+        version: 3.0.1
+      yaml:
+        specifier: ^2.8.0
+        version: 2.8.0
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20250710.0
+        version: 4.20250710.0
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+      wrangler:
+        specifier: ^4.24.0
+        version: 4.24.0(@cloudflare/workers-types@4.20250710.0)
+
   eval:
     dependencies:
       yaml:
@@ -2675,6 +2697,10 @@ packages:
   /pluralize@8.0.0:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
     engines: {node: '>=4'}
+    dev: false
+
+  /postal-mime@2.4.4:
+    resolution: {integrity: sha512-LDaFIsmGO+uNnPu28H52cubuHrovfewviU8Y8p+KgIKGVF871t/IQxzlO8QwhJMiG0ih2Lk2jTL3aGVoNz3NZQ==}
     dev: false
 
   /prettier@3.6.2:

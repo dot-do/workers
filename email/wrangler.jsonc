@@ -5,14 +5,12 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "email",
-	"main": "worker.ts",
+	"main": "worker.js",
 	"compatibility_date": "2025-07-08",
 	"observability": { "enabled": true },
 	"tail_consumers": [{ "service": "pipeline" }],
 	"routes": [
-		{ "pattern": "webhooks.apis.do/*", "zone_name": "apis.do" },
-		{ "pattern": "*.apis.do/webhooks*", "zone_name": "apis.do" },
-		{ "pattern": "*.webhooks.do/*", "zone_name": "webhooks.do" }
+
 	],
   "services": [
 		{ "binding": "cloudflare", "service": "cloudflare" },

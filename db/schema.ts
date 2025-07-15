@@ -16,7 +16,7 @@ DROP VIEW IF EXISTS eventPipeline;
 DROP VIEW IF EXISTS versionEvents;
 DROP VIEW IF EXISTS dataEvents;
 DROP VIEW IF EXISTS dataVersions;
-DROP VIEW IF EXISTS buildEvents;
+DROP VIEW IF EXISTS metaEvents;
 DROP VIEW IF EXISTS queueEvents;
 DROP VIEW IF EXISTS embeddingsEvents;
 
@@ -25,7 +25,7 @@ DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS versions;
 DROP TABLE IF EXISTS data;
 DROP TABLE IF EXISTS queue;
-DROP TABLE IF EXISTS builds;
+DROP TABLE IF EXISTS meta;
 DROP TABLE IF EXISTS relationships;
 DROP TABLE IF EXISTS embeddings;
 
@@ -42,86 +42,72 @@ SETTINGS
 
 CREATE TABLE events (
   ulid String DEFAULT generateULID(),
-  type String DEFAULT 'Event',
-  ns String MATERIALIZED domain(id),
-  id String DEFAULT concat('https://events.do/', ulid),
+  type String,
+  id String,
   data JSON,
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   ingested DateTime64 DEFAULT now64(),
   source String,
-  INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
-  INDEX bf_eq_ns (ns) TYPE bloom_filter() GRANULARITY 4,
-  INDEX bf_eq_id (id) TYPE bloom_filter() GRANULARITY 4,
 )
 ENGINE = MergeTree
 ORDER BY (ulid);
 
 CREATE TABLE versions (
-  ns String MATERIALIZED domain(id),
   id String,
   type String,
   content String,
   data Nullable(JSON),
   meta Nullable(JSON),
-  visibility LowCardinality(String) DEFAULT 'private',
   ts DateTime64,
   ulid String,
-  INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
+)
+ENGINE = CoalescingMergeTree
+ORDER BY (id, ts);
+
+CREATE TABLE meta (
+  id String,
+  type String,
+  data JSON,
+  ts DateTime64,
+  ulid String,
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id, ts);
 
 CREATE TABLE data (
-  ns String MATERIALIZED domain(id),
   id String,
   type String,
   content String,
   data Nullable(JSON),
   meta Nullable(JSON),
-  visibility LowCardinality(String) DEFAULT 'private',
   ts DateTime64,
   ulid String,
-  INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id);
 
-CREATE TABLE builds (
-  ns String MATERIALIZED domain(id),
-  id String,
-  type String,
-  data JSON,
-  visibility LowCardinality(String) DEFAULT 'private',
-  ts DateTime64,
-  ulid String,
-  INDEX bf_eq_type (type) TYPE bloom_filter() GRANULARITY 4,
-)
-ENGINE = CoalescingMergeTree
-ORDER BY (id, type, ts);
-
 CREATE TABLE queue (
   ulid String DEFAULT generateULID(),
-  ns String MATERIALIZED domain(id),
   id String,
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   type String,
   action String,
   target String,
   status Nullable(JSON),
+  retries UInt16 DEFAULT 0,
   input Nullable(JSON),
   result Nullable(JSON),
+  error Nullable(JSON),
 )
 ENGINE = CoalescingMergeTree
-ORDER BY (ulid);
+ORDER BY (id, ts);
 
 CREATE TABLE embeddings (
-  ns String MATERIALIZED domain(id),
   id String,
   type String,
   content String,
   data Nullable(JSON),
   meta Nullable(JSON),
-  visibility LowCardinality(String) DEFAULT 'private',
   embedding Array(Float32),
   ts DateTime64,
   ulid String,
@@ -133,9 +119,6 @@ CREATE TABLE relationships (
   from String,
   type String,
   to String,
-  visibility LowCardinality(String) DEFAULT 'private',
-  nsTo String MATERIALIZED domain(to),
-  nsFrom String MATERIALIZED domain(from),
   ts DateTime64,
   ulid String,
 )
@@ -144,46 +127,46 @@ ORDER BY (to, ts);
 
 CREATE MATERIALIZED VIEW versionEvents TO versions
 AS SELECT
-  data as root,
-  root.object.id AS id,
-  root.object.type AS type,
-  root.object.data AS data,
-  root.object.content AS content,
-  root.object.meta AS meta,
+  data.object.id AS id,
+  data.object.type AS type,
+  data.object.data AS data,
+  data.object.content AS content,
+  data.object.meta AS meta,
   ts,
   ulid
 FROM events
-WHERE root.type = 'UpsertVersion';
+WHERE data.type = 'UpsertVersion';
 
 
 CREATE MATERIALIZED VIEW dataEvents TO data
 AS SELECT
   data as root,
-  root.object.id AS id,
-  root.object.type AS type,
-  root.object.data AS data,
-  root.object.content AS content,
-  root.object.meta AS meta,
+  data.object.id AS id,
+  data.object.type AS type,
+  data.object.data AS data,
+  data.object.content AS content,
+  data.object.meta AS meta,
   ts,
   ulid
 FROM events
-WHERE root.type = 'Upsert';
+WHERE data.type = 'Upsert';
 
 
 CREATE MATERIALIZED VIEW dataVersions TO data
 AS SELECT * FROM versions;
 
 
---CREATE MATERIALIZED VIEW buildEvents TO meta
---AS SELECT
---  data as root,
---  root.object.id AS id,
---  root.object.type AS type,
---  root.object.data AS data,
---  ts,
---  ulid
---FROM events
---WHERE root.type = 'UpsertBuild'
+CREATE MATERIALIZED VIEW metaEvents TO meta
+AS SELECT
+  data.object.id AS id,
+  data.object.type AS type,
+  data.object.data AS data,
+  data.object.content AS content,
+  data.object.meta AS meta,
+  ts,
+  ulid
+FROM events
+WHERE data.type = 'UpsertMeta';
 
 -- TODO: create a materialized view for the queue
 -- TODO: create a materialized view for the embeddings
@@ -195,9 +178,9 @@ CREATE MATERIALIZED VIEW eventPipeline TO events
 AS SELECT
   --JSONExtractString(data, '$.ulid') AS ulid,  -- on incoming events, the ulid must be a ulid
   data,
-  if(isNotNull(data.ulid) AND data.ulid != '', data.ulid, generateULID()) AS ulid,
+  --if(isNotNull(data.ulid) AND data.ulid != '', data.ulid, generateULID()) AS ulid,
   data.type AS type,  
-  coalesce(data.object.id, data.event.request.url, concat('https://events.do/', ulid)) AS id,
+  coalesce(data.object.id, data.request.url) AS id,
   --JSONExtractString(data, '$.type') AS type,
   --JSONExtractString(data, '$.object.id') AS id,  -- on incoming events, the $id must be a ulid
   concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/', _path) AS source

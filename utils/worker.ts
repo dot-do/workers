@@ -1,6 +1,6 @@
 import { WorkerEntrypoint } from 'cloudflare:workers'
 import def, * as mod from './utils'
-const module = { ...def, ...mod } as any
+const pkg = { ...def, ...mod } as any
 
 class RPC extends WorkerEntrypoint {
   constructor() {
@@ -13,22 +13,22 @@ class RPC extends WorkerEntrypoint {
     
     const fn = pathname.slice(1)
 
-    if (module[fn]) {
+    if (pkg[fn]) {
       try {
-        return Response.json(await module[fn](args))
+        return Response.json(await pkg[fn](args))
       } catch (error) {
         return Response.json({ success: false, error: (error as Error).message })
       }
     }
 
-    return Response.json(Object.keys(module).map(key => origin + '/' + key))
+    return Response.json(Object.keys(pkg).map(key => origin + '/' + key))
   }
 }
 
-for (const key of Reflect.ownKeys(module)) {
+for (const key of Reflect.ownKeys(pkg)) {
   if (key === 'default') continue;
-  const desc = { enumerable: false, configurable: true, get() { return module[key] } };     
-  (typeof module[key] === 'function'
+  const desc = { enumerable: false, configurable: true, get() { return pkg[key] } };     
+  (typeof pkg[key] === 'function'
     ? Object.defineProperty(RPC.prototype, key, desc)
     : Object.defineProperty(RPC, key, desc));
 }

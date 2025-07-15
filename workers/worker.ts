@@ -7,19 +7,17 @@ const yaml: any = env.yaml
 
 export default class extends WorkerEntrypoint {
 
-  async do(request: Request, functionName: string, args: any) {
+  async do(request: Request, ns: string, fn: string, args: any) {
     try {
       // TODO: Implement Auth with WorkOS for RBAC and FGA
-      const { origin, hostname, pathname } = new URL(request.url)
-      const reqId = request.headers.get('cf-ray')
-      const worker = env.do.get(hostname) as any
-      const result = await worker.rpc(functionName, args)
+      const worker = env.do.get(ns) as any
+      if (!Array.isArray(args)) args = [args]
+      const result = await worker[fn](...args)
       console.log(result)
-      this.ctx.waitUntil(db.set(`https://${origin}/_${pathname}`, result))
       return result
     } catch (error) {
       console.error(error)
-      return { error: (error as Error).message }
+      return { error: (error as Error).message, ns, fn, args }
     }
     
   }
@@ -27,23 +25,25 @@ export default class extends WorkerEntrypoint {
   async fetch(request: Request) {
     const { origin, pathname } = new URL(request.url)
     
-    // Extract function name and arguments from pattern like /functionName(arg1,arg2,key:value)
-    const match = pathname.match(/^\/([^(]+)\(([^)]*)\)$/)
+    // Extract namespace, function name and arguments from pattern like /namespace.functionName(arg1,arg2,key:value)
+    // Args are optional, so () can be empty
+    const match = pathname.match(/^\/([^.]+)\.([^(]+)\(([^)]*)\)$/)
     
     if (!match) {
-      // Fallback to original path extraction if not in function call format
-      const [path, ...args] = pathname.match(/^(\/[^/]+)\/([^/]+)(?:\?([^#]*))?(?:#(.*))?$/) || []
-      const result = await this.do(request, path || '', args)
-      return new Response(JSON.stringify(result), {
+      // Invalid format - return error
+      return new Response(JSON.stringify({ 
+        error: 'Invalid format. Expected: /namespace.functionName(args)' 
+      }), {
+        status: 400,
         headers: { 'content-type': 'application/json' }
       })
     }
     
-    const [, functionName, argsString] = match
+    const [, namespace, functionName, argsString] = match
     
     // Parse arguments
     const args: any[] = []
-    if (argsString) {
+    if (argsString && argsString.trim()) {
       // Split by comma but need to handle key:value pairs
       const tokens = argsString.split(',')
       let currentObj: Record<string, any> | null = null
@@ -77,7 +77,8 @@ export default class extends WorkerEntrypoint {
       }
     }
     
-    const result = await this.do(request, `/${functionName}`, args)
+    // Call the do method with namespace.functionName format
+    const result = await this.do(request, `${namespace}.${functionName}`, args)
     return new Response(JSON.stringify(result), {
       headers: { 'content-type': 'application/json' }
     })

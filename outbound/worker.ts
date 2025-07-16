@@ -1,6 +1,16 @@
 export default {
   // this event is fired when the dispatched Workers make a subrequest
   async fetch(request, env, ctx) {
+
+    ctx.waitUntil(
+      env.pipeline.send([{
+        type: 'OutboundRequest.Fetch',
+        url: request.url,
+        env,
+        startTime: new Date().toISOString(),
+      }])
+    )
+
     // env contains the values we set in `dispatcher.get()`
     // const customer_name = env.customer_name;
     // const original_url = env.url;
@@ -31,9 +41,9 @@ export default {
     //   return fetch(new_request)
     // }
 
-    if (request.url === 'https://default') {
+    // if (request.url === 'https://default') {
       return Response.json({ success: true, from: 'outbound', env })
-    }
+    // }
 
     return fetch(request)
   }

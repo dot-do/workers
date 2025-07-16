@@ -8,5 +8,6 @@
 	"main": "worker.ts",
 	"compatibility_date": "2025-07-08",
 	"observability": { "enabled": true },
-	"tail_consumers": [{ "service": "pipeline" }]
+	"tail_consumers": [{ "service": "pipeline" }],
+	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }]
 }

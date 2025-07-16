@@ -1,6 +1,6 @@
 # .do Workers
 
-- [ ] db worker
+- [x] db worker
   - [ ]
 - [ ] ai worker
 - [ ] auth worker

@@ -12,6 +12,8 @@ const clickhouse = createClient({
 
 const schema = /* sql */ `
 
+
+
 DROP VIEW IF EXISTS eventPipeline;
 DROP VIEW IF EXISTS versionEvents;
 DROP VIEW IF EXISTS dataEvents;
@@ -69,6 +71,7 @@ CREATE TABLE events (
   data JSON,
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   ingested DateTime64 DEFAULT now64(),
+  delay IntervalMillisecond  MATERIALIZED dateDiff('millisecond', ts, ingested),
   source String,
 )
 ENGINE = MergeTree
@@ -229,8 +232,9 @@ CREATE MATERIALIZED VIEW eventPipeline TO events
 AS SELECT
   --JSONExtractString(data, '$.ulid') AS ulid,  -- on incoming events, the ulid must be a ulid
   data,
-  --if(isNotNull(data.ulid) AND data.ulid != '', data.ulid, generateULID()) AS ulid,
+  --ulid(substring(data.ulid, 1, 26)) AS ulid,
   --coalesce("data.$type", data.type) AS type,  
+  ulid(substring(_file, 1, 26)) AS ulid,
   data.type AS type,
   coalesce(data.object.id, data.event.request.url, data.url, data.event.rcptTo) AS id,
   --JSONExtractString(data, '$.type') AS type,

@@ -3,17 +3,22 @@ import { ulid as generateULID } from 'ulid'
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 let tailInstance = Math.random().toString(36).substring(2, 10) 
 let tailEvents = 0
-let tailStart = Date.now()
+let tailStart //= Date.now()
 
 export default {
   async tail(events, env) {
+    await env.pipeline.send(events)
     // if (!tailInstance) tailInstance = ulid()
+    if (!tailStart) tailStart = Date.now()
     let retries = 0
     tailEvents ++
     const $ts = Date.now()
     const ulid = generateULID(events[0].eventTimestamp)
     const url = events.map(e => e.event?.request?.url).filter(Boolean)[0]
+    
     const serializableEvents = JSON.parse(JSON.stringify({ type: 'Worker.Executed', $ts, events, tailInstance, tailEvents, tailStart, tailDuration: $ts - tailStart, url, ulid }))
+
+    // const serializableEvents = { type: 'Worker.Executed', $ts, events, tailInstance, tailEvents, tailStart, tailDuration: $ts - tailStart, url, ulid }
 
     // // Convert TraceItem objects to plain serializable objects using JSON
     // const serializableEvents = events.map(traceItem => {

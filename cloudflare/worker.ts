@@ -8,7 +8,11 @@ const account_id = 'b6641681fe423910342b9ffa1364c76d'
 
 const worker = /* js */ `
 
-import { WorkerEntrypoint } from 'cloudflare:workers'
+import { env, WorkerEntrypoint } from 'cloudflare:workers'
+
+globalThis.env = env
+globalThis.$ = env.$
+
 // import * as pkg from './index.mjs'
 
 // import def, * as mod from './index.mjs'
@@ -18,19 +22,30 @@ const pkg = await import('./index.mjs')
 const exports = Object.keys(pkg)
 
 class RPC extends WorkerEntrypoint { 
+  constructor() {
+    super()
+    for (const key of Reflect.ownKeys(pkg)) {
+      const isFunction = typeof pkg[key] === 'function'
+      this[key] = isFunction ? pkg[key].bind(this) : () => pkg[key]
+    }
+  }
   async fetch(request) {
-    return pkg.default?.fetch ? pkg.default.fetch(request) : Response.json({ exports }) // fetch(request)
+    try {
+      return await pkg.default?.fetch ? pkg.default.fetch(request) : Response.json({ exports }) // fetch(request)
+    } catch (error) {
+      return Response.json({ error: error instanceof Error ? error.message : 'Unknown error' })
+    }
     // return Response.json({ exports })
   }
 }
 
-for (const key of Reflect.ownKeys(pkg)) {
-  if (key === 'default') continue;
-  const desc = { enumerable: false, configurable: true, get() { return pkg[key] } };     
-  (typeof pkg[key] === 'function'
-    ? Object.defineProperty(RPC.prototype, key, desc)
-    : Object.defineProperty(RPC, key, desc));
-}
+// for (const key of Reflect.ownKeys(pkg)) {
+//   if (key === 'default') continue;
+//   const desc = { enumerable: false, configurable: true, get() { return pkg[key] } };     
+//   (typeof pkg[key] === 'function'
+//     ? Object.defineProperty(RPC.prototype, key, desc)
+//     : Object.defineProperty(RPC, key, desc));
+// }
 
 export default RPC
 
@@ -52,8 +67,10 @@ export default class extends WorkerEntrypoint {
           main_module: 'worker.mjs',
           compatibility_date: '2025-07-08',
           tail_consumers: [{ service: 'pipeline' }],
-          // bindings: [{ '' }]
-          // services: [{ binding: 'yaml', service: 'yaml' }]
+          bindings: [
+            { type: 'version_metadata', name: 'version' },
+            { type: 'service', name: '$', service: 'do', environment: 'production' },
+          ]
         }
       }
     )
@@ -84,7 +101,13 @@ export default class extends WorkerEntrypoint {
 
 export const sum=(a,b)=>a+b
 // export default { }
-export default { fetch: request => fetch('https://example.com') }
+export default { 
+  fetch: async request => {
+    await $.do('a thing', 'for', { a: 1, b: 2 })
+    await $.do('something', 'else', { a: 1, b: 2 })
+    return fetch('https://example.com') 
+  }
+}
 
       `)
       const deployTime = Date.now() - start

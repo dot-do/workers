@@ -33,19 +33,19 @@ DROP TABLE IF EXISTS embeddings;
 
 DROP FUNCTION IF EXISTS ulid;
 
-
+/* one-size-fits-all helper */
 CREATE FUNCTION ulid
-AS (u Nullable(String)) ->
-    -- If NULL / empty / malformed → brand-new ULID
+AS (u) ->                                     -- parameter name only
     if(
-        isNull(u)
-        OR u = ''
-        OR NOT match(upper(coalesce(u, '')), '^[0-9A-HJKMNP-TV-Z]{26}$'),
+        (u IS NULL)                                  -- explicit NULL
+        OR (u = '')                                  -- empty string
+        OR NOT match(upper(toString(u)), '^[0-9A-HJKMNP-TV-Z]{26}$'),
+        /* fallback branch → brand-new ULID */
         generateULID(),
-        -- otherwise keep the 48-bit time prefix, swap the 80-bit entropy
+        /* timestamp-preserving branch */
         concat(
-            substring(upper(u), 1, 10),
-            substring(generateULID(), 11, 16)
+            substring(upper(toString(u)), 1, 10),    -- keep 48-bit time prefix
+            substring(generateULID(), 11, 16)        -- fresh 80-bit entropy
         )
     );
 

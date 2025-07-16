@@ -18,12 +18,8 @@
 		// { "binding": "api", "service": "do-api" },
 		{ "binding": "db", "service": "db" }
 	],
-
-	// "dispatch_namespaces": [{ "binding": "workers", "namespace": "do" }]
-	"tail_consumers": [
-    {
-      "service": "tail"
-    }
-  ]
+	"dispatch_namespaces": [{ "binding": "workers", "namespace": "do" }],
+	"tail_consumers": [{ "service": "pipeline" }],
+  "pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }]
 
 }

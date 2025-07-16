@@ -1,4 +1,4 @@
-import { WorkerEntrypoint } from 'cloudflare:workers'
+import { env, WorkerEntrypoint } from 'cloudflare:workers'
 export { SDK } from './sdk'
 
 // const modules = (import.meta as any).glob('**/*', { eager: true })
@@ -20,11 +20,13 @@ export default class extends WorkerEntrypoint {
   }
 
   async do(ns: string, fn: string, args: any) {
+    console.log({ ns, fn, args })
+    // this.env.
     return {
       ns,
       fn,
       args,
-      modules: import.meta,
+      // modules: import.meta,
     }
   }
 }

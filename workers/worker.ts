@@ -27,6 +27,7 @@ export default class extends WorkerEntrypoint {
       // parse the URL, read the subdomain
       let workerName = new URL(request.url).host.split('.')[0]
       let userWorker = env.do.get(workerName, 
+        {  }, { }
         // { }, { params_object: { cf: request.cf, url: request.url, method: request.method }} as any 
       )
       return await userWorker.fetch(request)

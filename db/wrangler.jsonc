@@ -29,6 +29,7 @@
 	 */
 	"placement": { "mode": "smart" },
 	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
+	"kv_namespaces": [{ "binding": "kv", "id": "0b51c3f8ea714b48a4c4dd664f7079cc" }],
 	"services": [
 		{ "binding": "yaml", "service": "yaml" }
 	]

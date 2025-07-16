@@ -33,23 +33,11 @@ DROP TABLE IF EXISTS meta;
 DROP TABLE IF EXISTS relationships;
 DROP TABLE IF EXISTS embeddings;
 
-DROP FUNCTION IF EXISTS ulid;
+DROP FUNCTION IF EXISTS isULID;
+DROP FUNCTION IF EXISTS randomizeULID;
 
-/* one-size-fits-all helper */
-CREATE FUNCTION ulid
-AS (u) ->                                     -- parameter name only
-    if(
-        (u IS NULL)                                  -- explicit NULL
-        OR (u = '')                                  -- empty string
-        OR NOT match(upper(toString(u)), '^[0-9A-HJKMNP-TV-Z]{26}$'),
-        /* fallback branch → brand-new ULID */
-        generateULID(),
-        /* timestamp-preserving branch */
-        concat(
-            substring(upper(toString(u)), 1, 10),    -- keep 48-bit time prefix
-            substring(generateULID(), 11, 16)        -- fresh 80-bit entropy
-        )
-    );
+CREATE FUNCTION isULID AS (u) -> match(upper(toString(u)), '^[0-9A-HJKMNP-TV-Z]{26}$');
+CREATE FUNCTION randomizeULID AS (u) -> if(isULID(u), u, concat(substring(u, 1, 10), substring(generateULID(), 11, 16)));
 
 CREATE TABLE pipeline (
   data    JSON
@@ -59,8 +47,8 @@ ENGINE = S3Queue(
 )
 SETTINGS
   mode = 'ordered',
-  s3queue_polling_min_timeout_ms = 250,
-  s3queue_polling_max_timeout_ms = 250,
+  s3queue_polling_min_timeout_ms = 1000, --250,
+  s3queue_polling_max_timeout_ms = 1000, --250,
   s3queue_polling_backoff_ms     = 0;
 
 
@@ -71,7 +59,7 @@ CREATE TABLE events (
   data JSON,
   ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
   ingested DateTime64 DEFAULT now64(),
-  delay IntervalMillisecond  MATERIALIZED dateDiff('millisecond', ts, ingested),
+  -- delay IntervalMillisecond  MATERIALIZED dateDiff('millisecond', ts, ingested),
   source String,
 )
 ENGINE = MergeTree
@@ -196,31 +184,6 @@ AS SELECT
 FROM events
 WHERE data.type = 'UpsertMeta';
 
--- Handle Upsert events with items array
-CREATE MATERIALIZED VIEW dataItemsEvents TO data
-AS SELECT
-  item.id::String AS id,
-  item.type::String AS type,
-  item.content::String AS content,
-  item.data AS data,
-  item.meta AS meta,
-  ts,
-  ulid
-FROM events
-ARRAY JOIN data.items::Array(JSON) AS item
-WHERE data.type = 'Upsert' AND length(data.items::Array(JSON)) > 0;
-
--- Handle UpsertMeta events with items array  
-CREATE MATERIALIZED VIEW metaItemsEvents TO meta
-AS SELECT
-  item.id::String AS id,
-  item.type::String AS type,
-  item.data AS data,
-  ts,
-  ulid
-FROM events
-ARRAY JOIN data.items::Array(JSON) AS item
-WHERE data.type = 'UpsertMeta' AND length(data.items::Array(JSON)) > 0;
 
 -- TODO: create a materialized view for the queue
 -- TODO: create a materialized view for the embeddings
@@ -234,9 +197,13 @@ AS SELECT
   data,
   --ulid(substring(data.ulid, 1, 26)) AS ulid,
   --coalesce("data.$type", data.type) AS type,  
-  coalesce(data.ulid, concat(substring(_file, 1, 10), substring(generateULID(), 11, 16))) AS ulid,
-  coalesce(data.$type, data.type) AS type,
-  coalesce(data.object.id, data.event.request.url, data.url, data.event.rcptTo) AS id,
+  --coalesce(data.ulid, concat(substring(_file, 1, 10), substring(generateULID(), 11, 16))) AS ulid,
+  coalesce(data.ulid, randomizeULID(substring(_file, 1, 26))) AS ulid,
+  --randomizeULID(substring(_file, 1, 26)) AS ulid,
+  --data.ulid AS ulid,
+  --coalesce(data.$type, data.type) AS type,
+  data.type AS type,
+  data.url AS id,
   --JSONExtractString(data, '$.type') AS type,
   --JSONExtractString(data, '$.object.id') AS id,  -- on incoming events, the $id must be a ulid
   concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/', _path) AS source

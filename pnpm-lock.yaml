@@ -405,6 +405,15 @@ importers:
         specifier: ^4.24.0
         version: 4.24.0(@cloudflare/workers-types@4.20250710.0)
 
+  queue:
+    devDependencies:
+      typescript:
+        specifier: ^5.5.2
+        version: 5.8.3
+      wrangler:
+        specifier: ^4.24.3
+        version: 4.24.3
+
   sdk:
     devDependencies:
       '@cloudflare/workers-types':

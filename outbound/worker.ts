@@ -6,9 +6,9 @@ export default {
       env.pipeline.send([{
         type: 'OutboundRequest.Fetch',
         url: request.url,
-        env,
+        // env,
         startTime: new Date().toISOString(),
-      }])
+      }]).catch(console.error)
     )
 
     // env contains the values we set in `dispatcher.get()`
@@ -42,7 +42,12 @@ export default {
     // }
 
     // if (request.url === 'https://default') {
-      return Response.json({ success: true, from: 'outbound', env })
+    try {
+      return Response.json({ success: true, from: 'outbound' })
+    } catch (e) {
+      console.error(e)
+      return Response.json({ success: false, from: 'outbound', error: (e as any).message })
+    }
     // }
 
     return fetch(request)

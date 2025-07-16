@@ -11,13 +11,32 @@ export default {
     // Convert TraceItem objects to plain serializable objects using JSON
     const serializableEvents = events.map(traceItem => {
       // JSON.stringify/parse automatically handles non-serializable properties
+
+
+      // let invocation = traceItem.event.request ? traceItem.event.request : traceItem.event.response
+      let invocation = 'unknown'  // TODO: Figure out all of the possible values for this
+      if (traceItem.event.request) invocation = 'request'
+      if (traceItem.event.rpcMethod) invocation = traceItem.event.rpcMethod
+      if (traceItem.event.rcptTo) invocation =  'email' // traceItem.event.rcptTo
+
+
+      let type = traceItem.scriptName + '.' + invocation + '.' + traceItem.outcome
+      if (traceItem.dispatchNamespace) type = traceItem.dispatchNamespace + '.' + type
+        
+      // let type = 'Worker.Execution'
+      // if (traceItem.event.request) type = 'Worker.Request'
+      
+
       const serialized = JSON.parse(JSON.stringify(traceItem))
       
       // Add our custom properties
       serialized.ulid = ulid(traceItem.eventTimestamp || Date.now())
-      serialized.type = 'WorkerExecution' // TODO: figure out {scriptName}.{functionName} (which could be request, RPC, etc ... )
+      // serialized.type = 'WorkerExecution' // TODO: figure out {scriptName}.{functionName} (which could be request, RPC, etc ... )
       serialized.tailInstance = tailInstance
       serialized.tailRetries = retries
+      serialized.type = type
+
+      // if (traceItem.)
       
       return serialized
     })

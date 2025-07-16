@@ -19,7 +19,7 @@ const exports = Object.keys(pkg)
 
 class RPC extends WorkerEntrypoint { 
   async fetch(request) {
-    return pkg.default?.fetch ? pkg.default.fetch(request) : fetch(request)
+    return pkg.default?.fetch ? pkg.default.fetch(request) : Response.json({ exports }) // fetch(request)
     // return Response.json({ exports })
   }
 }
@@ -53,6 +53,7 @@ export default class extends WorkerEntrypoint {
           compatibility_date: '2025-07-08',
           tail_consumers: [{ service: 'pipeline' }],
           // bindings: [{ '' }]
+          // services: [{ binding: 'yaml', service: 'yaml' }]
         }
       }
     )

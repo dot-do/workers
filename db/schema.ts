@@ -16,6 +16,8 @@ DROP VIEW IF EXISTS eventPipeline;
 DROP VIEW IF EXISTS versionEvents;
 DROP VIEW IF EXISTS dataEvents;
 DROP VIEW IF EXISTS dataVersions;
+DROP VIEW IF EXISTS dataItemsEvents;
+DROP VIEW IF EXISTS metaItemsEvents;
 DROP VIEW IF EXISTS metaEvents;
 DROP VIEW IF EXISTS queueEvents;
 DROP VIEW IF EXISTS embeddingsEvents;
@@ -29,6 +31,19 @@ DROP TABLE IF EXISTS meta;
 DROP TABLE IF EXISTS relationships;
 DROP TABLE IF EXISTS embeddings;
 
+DROP FUNCTION IF EXISTS ulid;
+
+
+CREATE FUNCTION ulid
+AS (u) ->
+    if(
+        match(upper(u), '^[0-9A-HJKMNP-TV-Z]{26}$'),          -- valid ULID?
+        concat(
+            substring(upper(u), 1, 10),                      -- 48-bit time prefix
+            substring(generateULID(), 11, 16)                -- fresh 80-bit entropy
+        ),
+        generateULID()                                       -- fallback
+    );
 
 
 CREATE TABLE pipeline (

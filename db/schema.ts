@@ -190,7 +190,7 @@ AS SELECT
   coalesce(data.object.id, data.request.url) AS id,
   --JSONExtractString(data, '$.type') AS type,
   --JSONExtractString(data, '$.object.id') AS id,  -- on incoming events, the $id must be a ulid
-  concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/do/', _path) AS source
+  concat('https://b6641681fe423910342b9ffa1364c76d.r2.cloudflarestorage.com/events/', _path) AS source
 FROM pipeline;
 `
 

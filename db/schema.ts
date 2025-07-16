@@ -109,12 +109,15 @@ ORDER BY (id, ts);
 CREATE TABLE embeddings (
   id String,
   type String,
+  chunk String,
+  chunkType String,
   content String,
   data Nullable(JSON),
   meta Nullable(JSON),
-  embedding Array(Float32),
+  embeddings Array(Float32),
   ts DateTime64,
   ulid String,
+  INDEX index_embeddings embeddings TYPE vector_similarity('hnsw', 'L2Distance', 1024)
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (id, ts);
@@ -195,6 +198,6 @@ const queries = schema.split(';\n').filter(q => q.trim() !== '')
 
 for (const query of queries) {
   console.log(query)
-  const result = await clickhouse.command({ query, clickhouse_settings: { enable_json_type: 1, max_execution_time: 3600000 } })
+  const result = await clickhouse.command({ query, clickhouse_settings: { enable_json_type: 1, allow_experimental_vector_similarity_index: 1, max_execution_time: 3600000 } })
   console.log(result)
 }

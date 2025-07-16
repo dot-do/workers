@@ -35,16 +35,19 @@ DROP FUNCTION IF EXISTS ulid;
 
 
 CREATE FUNCTION ulid
-AS (u) ->
+AS (u Nullable(String)) ->
+    -- If NULL / empty / malformed → brand-new ULID
     if(
-        match(upper(u), '^[0-9A-HJKMNP-TV-Z]{26}$'),          -- valid ULID?
+        isNull(u)
+        OR u = ''
+        OR NOT match(upper(coalesce(u, '')), '^[0-9A-HJKMNP-TV-Z]{26}$'),
+        generateULID(),
+        -- otherwise keep the 48-bit time prefix, swap the 80-bit entropy
         concat(
-            substring(upper(u), 1, 10),                      -- 48-bit time prefix
-            substring(generateULID(), 11, 16)                -- fresh 80-bit entropy
-        ),
-        generateULID()                                       -- fallback
+            substring(upper(u), 1, 10),
+            substring(generateULID(), 11, 16)
+        )
     );
-
 
 CREATE TABLE pipeline (
   data    JSON

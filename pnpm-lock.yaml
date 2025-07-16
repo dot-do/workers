@@ -386,6 +386,18 @@ importers:
         specifier: ^4.24.0
         version: 4.24.0(@cloudflare/workers-types@4.20250710.0)
 
+  outbound:
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20250710.0
+        version: 4.20250710.0
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+      wrangler:
+        specifier: ^4.24.0
+        version: 4.24.3(@cloudflare/workers-types@4.20250710.0)
+
   pipeline:
     dependencies:
       lodash:
@@ -412,7 +424,7 @@ importers:
         version: 5.8.3
       wrangler:
         specifier: ^4.24.3
-        version: 4.24.3
+        version: 4.24.3(@cloudflare/workers-types@4.20250710.0)
 
   schedule:
     devDependencies:
@@ -421,7 +433,7 @@ importers:
         version: 5.8.3
       wrangler:
         specifier: ^4.24.3
-        version: 4.24.3
+        version: 4.24.3(@cloudflare/workers-types@4.20250710.0)
 
   sdk:
     devDependencies:
@@ -448,7 +460,7 @@ importers:
         version: 3.2.4
       wrangler:
         specifier: ^4.24.3
-        version: 4.24.3
+        version: 4.24.3(@cloudflare/workers-types@4.20250710.0)
 
   types:
     dependencies:
@@ -526,7 +538,7 @@ importers:
         version: 5.8.3
       wrangler:
         specifier: ^4.24.3
-        version: 4.24.3
+        version: 4.24.3(@cloudflare/workers-types@4.20250710.0)
 
   wrangler:
     dependencies:
@@ -758,7 +770,7 @@ packages:
       miniflare: 4.20250709.0
       semver: 7.7.2
       vitest: 3.2.4
-      wrangler: 4.24.3
+      wrangler: 4.24.3(@cloudflare/workers-types@4.20250710.0)
       zod: 3.25.76
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
@@ -3907,7 +3919,7 @@ packages:
       - utf-8-validate
     dev: true
 
-  /wrangler@4.24.3:
+  /wrangler@4.24.3(@cloudflare/workers-types@4.20250710.0):
     resolution: {integrity: sha512-stB1Wfs5NKlspsAzz8SBujBKsDqT5lpCyrL+vSUMy3uueEtI1A5qyORbKoJhIguEbwHfWS39mBsxzm6Vm1J2cg==}
     engines: {node: '>=18.0.0'}
     hasBin: true
@@ -3919,6 +3931,7 @@ packages:
     dependencies:
       '@cloudflare/kv-asset-handler': 0.4.0
       '@cloudflare/unenv-preset': 2.3.3(unenv@2.0.0-rc.17)(workerd@1.20250709.0)
+      '@cloudflare/workers-types': 4.20250710.0
       blake3-wasm: 2.1.5
       esbuild: 0.25.4
       miniflare: 4.20250709.0

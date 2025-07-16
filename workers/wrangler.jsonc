@@ -14,7 +14,14 @@
 		{ "binding": "db", "service": "db" },
 		{ "binding": "yaml", "service": "yaml" }
 	],
-	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }],
+	"dispatch_namespaces": [{ 
+		"binding": "do", 
+		"namespace": "do",
+		"outbound": {
+        "service": "outbound",
+        "parameters": ["params_object"]
+      }
+	}],
 	"routes": [
 		{ "pattern": "*/*", "zone_name": "workers.do" },
 		{ "pattern": "*/*", "zone_name": "api.mw" },

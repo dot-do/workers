@@ -9,15 +9,18 @@ const account_id = 'b6641681fe423910342b9ffa1364c76d'
 const worker = /* js */ `
 
 import { WorkerEntrypoint } from 'cloudflare:workers'
-import * as pkg from './index.mjs'
+// import * as pkg from './index.mjs'
+
+// import def, * as mod from './index.mjs'
 // const pkg = { ...def, ...mod }
+const pkg = await import('./index.mjs')
+
+const exports = Object.keys(pkg)
 
 class RPC extends WorkerEntrypoint { 
   async fetch(request) {
-    if (pkg.fetch) return pkg.fetch(request)
-    const { url } = request
-    const functions = Object.keys(pkg)
-    return Response.json({ success: true, url, ts: new Date().toISOString(), functions })
+    return pkg.default?.fetch ? pkg.default.fetch(request) : fetch(request)
+    // return Response.json({ exports })
   }
 }
 
@@ -35,8 +38,8 @@ export default RPC
 
 export default class extends WorkerEntrypoint {
 
-  deployWorker(name: string, module: string) {
-    return cloudflare.workersForPlatforms.dispatch.namespaces.scripts.update(
+  async deployWorker(name: string, module: string) {
+    const result = await cloudflare.workersForPlatforms.dispatch.namespaces.scripts.update(
       'do',
       name,
       {
@@ -48,10 +51,13 @@ export default class extends WorkerEntrypoint {
         metadata: {
           main_module: 'worker.mjs',
           compatibility_date: '2025-07-08',
-          tail_consumers: [{ service: 'pipeline' }]
+          tail_consumers: [{ service: 'pipeline' }],
+          // bindings: [{ '' }]
         }
       }
     )
+    console.log(result)
+    return result
   }
   
   getWorker(name: string) {
@@ -61,11 +67,18 @@ export default class extends WorkerEntrypoint {
   async fetch(request: Request) {
     try {
       const { pathname } = new URL(request.url)
-      const name = pathname.slice(1)
+      let name = pathname.slice(1)
+      if (name === '') name = 'sum'
       // const worker = await this.getWorker(name).then(res => res.text())
       // return new Response(worker, { headers: { 'Content-Type': 'application/javascript' } })
       const start = Date.now()
-      const worker = await this.deployWorker('test', '') //'export const sum=(a,b)=>a+b')
+      const worker = await this.deployWorker(name, /* js */ `
+
+export const sum=(a,b)=>a+b
+export default { }
+// export default { fetch: request => fetch('https://example.com') }
+
+      `)
       const deployTime = Date.now() - start
       return Response.json({ name, worker, deployTime })
     }

@@ -17,10 +17,10 @@
 	"dispatch_namespaces": [{ 
 		"binding": "do", 
 		"namespace": "do",
-		// "outbound": {
-    //     "service": "outbound",
-    //     // "parameters": ["params_object"]
-    //   }
+		"outbound": {
+        "service": "do",
+        // "parameters": ["params_object"]
+      }
 	}],
 	"routes": [
 		{ "pattern": "*/*", "zone_name": "workers.do" },

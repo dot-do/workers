@@ -175,6 +175,32 @@ AS SELECT
 FROM events
 WHERE data.type = 'UpsertMeta';
 
+-- Handle Upsert events with items array
+CREATE MATERIALIZED VIEW dataItemsEvents TO data
+AS SELECT
+  item.id::String AS id,
+  item.type::String AS type,
+  item.content::String AS content,
+  item.data AS data,
+  item.meta AS meta,
+  ts,
+  ulid
+FROM events
+ARRAY JOIN data.items::Array(JSON) AS item
+WHERE data.type = 'Upsert' AND length(data.items::Array(JSON)) > 0;
+
+-- Handle UpsertMeta events with items array  
+CREATE MATERIALIZED VIEW metaItemsEvents TO meta
+AS SELECT
+  item.id::String AS id,
+  item.type::String AS type,
+  item.data AS data,
+  ts,
+  ulid
+FROM events
+ARRAY JOIN data.items::Array(JSON) AS item
+WHERE data.type = 'UpsertMeta' AND length(data.items::Array(JSON)) > 0;
+
 -- TODO: create a materialized view for the queue
 -- TODO: create a materialized view for the embeddings
 -- TODO: create a materialized view for the relationships

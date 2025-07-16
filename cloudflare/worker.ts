@@ -12,7 +12,13 @@ import { WorkerEntrypoint } from 'cloudflare:workers'
 import def, * as mod from './index.mjs'
 const pkg = { ...def, ...mod }
 
-class RPC extends WorkerEntrypoint { }
+class RPC extends WorkerEntrypoint { 
+  async fetch(request) {
+    if (pkg.fetch) return pkg.fetch(request)
+    const { url } = request
+    return Response.json({ success: true, url, ts: new Date().toISOString() })
+  }
+}
 
 for (const key of Reflect.ownKeys(pkg)) {
   if (key === 'default') continue;

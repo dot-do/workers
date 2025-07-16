@@ -14,5 +14,10 @@
 		{ "binding": "db", "service": "db" },
 		{ "binding": "yaml", "service": "yaml" }
 	],
-	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }]
+	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }],
+	"routes": [
+		{ "pattern": "*/*", "zone_name": "workers.do" },
+		{ "pattern": "*/*", "zone_name": "api.mw" },
+		// { "pattern": "*.apis.do/*", "zone_name": "apis.do" },
+	],
 }

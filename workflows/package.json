@@ -3,6 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
+    "do": "wrangler deploy --dispatch-namespace do",
 		"deploy": "wrangler deploy",
 		"start": "wrangler dev",
 		"dev": "wrangler dev",

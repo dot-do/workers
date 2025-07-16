@@ -9,14 +9,15 @@ const account_id = 'b6641681fe423910342b9ffa1364c76d'
 const worker = /* js */ `
 
 import { WorkerEntrypoint } from 'cloudflare:workers'
-import def, * as mod from './index.mjs'
-const pkg = { ...def, ...mod }
+import * as pkg from './index.mjs'
+// const pkg = { ...def, ...mod }
 
 class RPC extends WorkerEntrypoint { 
   async fetch(request) {
     if (pkg.fetch) return pkg.fetch(request)
     const { url } = request
-    return Response.json({ success: true, url, ts: new Date().toISOString() })
+    const functions = Object.keys(pkg)
+    return Response.json({ success: true, url, ts: new Date().toISOString(), functions })
   }
 }
 
@@ -41,12 +42,13 @@ export default class extends WorkerEntrypoint {
       {
         account_id,
         files: {
-          'worker.mjs': new File([worker], 'worker.mjs', { type: 'application/javascript' }),
-          'index.mjs': new File([module], 'index.mjs', { type: 'application/javascript' }),
+          'worker.mjs': new File([worker], 'worker.mjs', { type: 'application/javascript+module' }),
+          'index.mjs': new File([module], 'index.mjs', { type: 'application/javascript+module' }),
         },
         metadata: {
           main_module: 'worker.mjs',
-          compatibility_date: '2025-07-08'
+          compatibility_date: '2025-07-08',
+          tail_consumers: [{ service: 'pipeline' }]
         }
       }
     )

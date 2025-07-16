@@ -22,6 +22,7 @@
 
 ## Backlog
 
+- [ ] migrate `email` to `pipeline` for clarity
 - [ ] `db` create simple fetch-based public markdown query
 - [ ] `db` setup cloudflare monorepo deployment
 - [ ] `db` add sql variables for r2 / s3 auth

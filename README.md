@@ -1,5 +1,8 @@
 # workers
 
+## Architecture
+
+
 ## URI standards
 
 - pathnames starting with `/_` are private/secure and require auth

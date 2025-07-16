@@ -230,7 +230,8 @@ AS SELECT
   --JSONExtractString(data, '$.ulid') AS ulid,  -- on incoming events, the ulid must be a ulid
   data,
   --if(isNotNull(data.ulid) AND data.ulid != '', data.ulid, generateULID()) AS ulid,
-  data.type AS type,  
+  --coalesce("data.$type", data.type) AS type,  
+  data.type AS type,
   coalesce(data.object.id, data.event.request.url, data.url, data.event.rcptTo) AS id,
   --JSONExtractString(data, '$.type') AS type,
   --JSONExtractString(data, '$.object.id') AS id,  -- on incoming events, the $id must be a ulid

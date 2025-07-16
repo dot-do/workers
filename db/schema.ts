@@ -234,7 +234,7 @@ AS SELECT
   data,
   --ulid(substring(data.ulid, 1, 26)) AS ulid,
   --coalesce("data.$type", data.type) AS type,  
-  coalesce(data.ulid, ulid(substring(_file, 1, 26))) AS ulid,
+  coalesce(data.ulid, concat(substring(_file, 1, 10), substring(generateULID(), 11, 16))) AS ulid,
   coalesce(data.$type, data.type) AS type,
   coalesce(data.object.id, data.event.request.url, data.url, data.event.rcptTo) AS id,
   --JSONExtractString(data, '$.type') AS type,

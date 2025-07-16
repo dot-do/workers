@@ -9,6 +9,7 @@ import { createOpenAI } from '@ai-sdk/openai'
 const servers = {
   context7: 'https://context7.liam.sh/sse',  // 'https://context7.liam.sh/mcp',
   deepwiki: 'https://mcp.deepwiki.com/sse',
+  memory: 'https://mcp.do/memory',
   slack: 'https://mcp.slack.com/sse',
   github: '',
   linear: '',

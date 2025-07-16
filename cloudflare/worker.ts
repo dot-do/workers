@@ -82,8 +82,8 @@ export default class extends WorkerEntrypoint {
       const worker = await this.deployWorker(name, /* js */ `
 
 export const sum=(a,b)=>a+b
-export default { }
-// export default { fetch: request => fetch('https://example.com') }
+// export default { }
+export default { fetch: request => fetch('https://example.com') }
 
       `)
       const deployTime = Date.now() - start

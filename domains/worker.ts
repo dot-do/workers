@@ -1,6 +1,4 @@
 import { env, WorkerEntrypoint } from 'cloudflare:workers'
-import { experimental_createMCPClient } from 'ai'
-import { createOpenAI } from '@ai-sdk/openai'
 
 const db: any = env.db
 

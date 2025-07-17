@@ -16,10 +16,11 @@
 	"services": [
 		// { "binding": "ai", "service": "do-ai" },
 		// { "binding": "api", "service": "do-api" },
-		{ "binding": "db", "service": "db" }
+		{ "binding": "db", "service": "db" },
+		{ "binding": "pipeline", "service": "pipeline" },
+		{ "binding": "yaml", "service": "yaml" },
 	],
 	"dispatch_namespaces": [{ "binding": "workers", "namespace": "do" }],
 	"tail_consumers": [{ "service": "pipeline" }],
-  "pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }]
-
+  // "pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }]
 }

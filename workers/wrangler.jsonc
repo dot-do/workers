@@ -27,4 +27,10 @@
 		{ "pattern": "*/*", "zone_name": "api.mw" },
 		// { "pattern": "*.apis.do/*", "zone_name": "apis.do" },
 	],
+  "assets": {
+    "directory": "./public/",
+    "not_found_handling": "none",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "!/api/docs/*"]
+  }
 }

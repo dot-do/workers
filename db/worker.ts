@@ -21,13 +21,18 @@ export default class extends WorkerEntrypoint<Env> {
     return sql`SELECT * FROM data WHERE id = ${id}`
   }
 
-  async list(ns: string) {
+  async list(ns: string, opts?: Record<string, any>) {
     return sql`SELECT id FROM data WHERE id LIKE ${'https://' + ns + '%'} FINAL`
   }
 
 
   async events(ns: string) {
     return sql`SELECT ulid, type, id, data FROM events WHERE id LIKE ${'https://' + ns + '%'} ORDER BY id DESC LIMIT 100`
+  }
+
+  async put($id: string, data: any, opts: any) {
+    const { $context, context, $type, type, $content, content, ...meta } = opts
+    this.upsert([{ $id, data, meta }], { $context, context, $type, type, $content, content } as any)
   }
 
   async set($id: string, data: any, opts: any) {

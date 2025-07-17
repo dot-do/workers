@@ -1,5 +1,6 @@
 import { env, WorkerEntrypoint } from 'cloudflare:workers'
 export { SDK } from './sdk'
+import * as functions from './functions'
 
 // const modules = (import.meta as any).glob('**/*', { eager: true })
 
@@ -10,6 +11,9 @@ export { SDK } from './sdk'
 
 
 export default class extends WorkerEntrypoint {
+  
+  
+
   async fetch(request: Request) {
     const { hostname, pathname, searchParams } = new URL(request.url)
     const ns = hostname

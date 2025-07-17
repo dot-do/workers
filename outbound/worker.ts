@@ -1,6 +1,7 @@
 export default {
   // this event is fired when the dispatched Workers make a subrequest
   async fetch(request, env, ctx) {
+    // console.log(env)
 
     ctx.waitUntil(
       env.pipeline.send([{

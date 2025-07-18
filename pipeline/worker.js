@@ -7,16 +7,16 @@ let tailStart //= Date.now()
 
 export default {
   async tail(events, env) {
-    await env.pipeline.send(events)
+    // await env.pipeline.send(events)
     // if (!tailInstance) tailInstance = ulid()
     if (!tailStart) tailStart = Date.now()
     let retries = 0
     tailEvents ++
     const $ts = Date.now()
-    const ulid = generateULID(events[0].eventTimestamp)
+    const ulid = generateULID(events[0]?.eventTimestamp)
     const url = events.map(e => e.event?.request?.url).filter(Boolean)[0]
-    
-    const serializableEvents = JSON.parse(JSON.stringify({ type: 'Worker.Executed', $ts, events, tailInstance, tailEvents, tailStart, tailDuration: $ts - tailStart, url, ulid }))
+    const ray = events[0]?.event?.request?.headers?.['cf-ray']
+    const serializableEvents = JSON.parse(JSON.stringify({ type: 'Worker.Executed', $ts, events, tailInstance, tailEvents, tailStart, tailDuration: $ts - tailStart, url, ulid, ray }))
 
     // const serializableEvents = { type: 'Worker.Executed', $ts, events, tailInstance, tailEvents, tailStart, tailDuration: $ts - tailStart, url, ulid }
 

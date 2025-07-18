@@ -54,7 +54,7 @@ export default RPC
 
 export default class extends WorkerEntrypoint {
 
-  async deployWorker(name: string, module: string) {
+  async deployWorker(name: string, module: string, ns: string = 'do') {
     const result = await cloudflare.workersForPlatforms.dispatch.namespaces.scripts.update(
       'do',
       name,
@@ -72,6 +72,9 @@ export default class extends WorkerEntrypoint {
           bindings: [
             { type: 'version_metadata', name: 'version' },
             { type: 'service', name: '$', service: 'do', environment: 'production' },
+            { type: 'plain_text', name: 'name', text: name },
+            { type: 'plain_text', name: 'version', text: '1.0.0' },
+            { type: 'plain_text', name: 'ns', text: ns },
           ]
         }
       }

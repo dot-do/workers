@@ -9,5 +9,8 @@
 	"compatibility_date": "2025-07-08",
 	"observability": { "enabled": true },
 	"tail_consumers": [{ "service": "pipeline" }],
-	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }]
+	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
+	"services": [
+		{ "binding": "do", "service": "do" }
+	]
 }

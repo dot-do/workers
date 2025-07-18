@@ -18,6 +18,7 @@ globalThis.$ = env.$
 // import def, * as mod from './index.mjs'
 // const pkg = { ...def, ...mod }
 const pkg = await import('./index.mjs')
+// import package from './package.json' with { type: 'json' }
 
 const exports = Object.keys(pkg)
 
@@ -62,6 +63,7 @@ export default class extends WorkerEntrypoint {
         files: {
           'worker.mjs': new File([worker], 'worker.mjs', { type: 'application/javascript+module' }),
           'index.mjs': new File([module], 'index.mjs', { type: 'application/javascript+module' }),
+          // 'package.json': new File([JSON.stringify({ test: 123, version: '1.0.0' })], 'package.json', { type: 'application/json' }),
         },
         metadata: {
           main_module: 'worker.mjs',

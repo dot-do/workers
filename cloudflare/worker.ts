@@ -80,13 +80,13 @@ export default class extends WorkerEntrypoint {
       }
     )
     console.log(result)
-    this.ctx.waitUntil(
-      env.pipeline.send([{
+    // this.ctx.waitUntil(
+      await env.pipeline.send([{
         type: 'Worker.Deployed',
         ...result,
         module,
       }])
-    )
+    // )
     return result
   }
   

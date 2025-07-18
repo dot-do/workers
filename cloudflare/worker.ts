@@ -22,8 +22,8 @@ const pkg = await import('./index.mjs')
 const exports = Object.keys(pkg)
 
 class RPC extends WorkerEntrypoint { 
-  constructor() {
-    super()
+  constructor(env, ctx) {
+    super(env, ctx)
     for (const key of Reflect.ownKeys(pkg)) {
       const isFunction = typeof pkg[key] === 'function'
       this[key] = isFunction ? pkg[key].bind(this) : () => pkg[key]

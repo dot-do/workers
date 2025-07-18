@@ -13,11 +13,11 @@ export default {
     const ulid = generateULID(events[0]?.eventTimestamp ?? Date.now())
     const updatedEvents = events.map(e => {
       // @ts-ignore
-      let type = e.event?.scriptName || ''
+      let type = e.scriptName || ''
       // @ts-ignore
       if (e.dispatchNamespace) type = e.dispatchNamespace + '.' + type
       // @ts-ignore
-      if (e.event?.rpcMethod) type = type + '.' + e.event?.rpcMethod
+      if (e.event?.rpcMethod) type = type + '.' + e.event.rpcMethod
       // @ts-ignore
       if (e.event?.request) {
         type = type + '.fetch'
@@ -41,7 +41,7 @@ export default {
       // @ts-ignore
       if (e.event?.queue) type = type + '.queue.' + e.event.queue
       // @ts-ignore
-      if (e.event?.outcome) type = type + '.' + e.event?.outcome
+      if (e.event?.outcome) type = type + '.' + e.event.outcome
       // @ts-ignore
       e.type = type
       // @ts-ignore

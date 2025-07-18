@@ -105,6 +105,7 @@ export default {
   fetch: async request => {
     await $.do('a thing', 'for', { a: 1, b: 2 })
     await $.do('something', 'else', { a: 1, b: 2 })
+    console.log({ testing: 123 })
     return fetch('https://example.com') 
   }
 }

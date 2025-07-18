@@ -26,11 +26,11 @@ export default class extends WorkerEntrypoint {
     try {
       // parse the URL, read the subdomain
       let workerName = new URL(request.url).host.split('.')[0]
-      let userWorker = env.do.get(workerName, 
-        {  }, { user: 'john@example.com' }
+      let userWorker = env.do.get(workerName)
+        //, {}, { outbound: { user: { email: 'john@example.com' }}})
         // { }, { params_object: { cf: request.cf, url: request.url, method: request.method }} as any 
-      )
-      return await userWorker.fetch(request)
+      // )
+      return await userWorker.fetch(request) //, { outbound: { user: 'john@example.com' }})
     } catch (e) {
       if ((e as Error).message.startsWith('Worker not found')) {
         // we tried to get a worker that doesn't exist in our dispatch namespace

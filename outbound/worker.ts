@@ -3,14 +3,14 @@ export default {
   async fetch(request, env, ctx) {
     // console.log(env)
 
-    ctx.waitUntil(
-      env.pipeline.send([{
+    // ctx.waitUntil(
+     await env.pipeline.send([{
         type: 'OutboundRequest.Fetch',
         url: request.url,
         // env,
         startTime: new Date().toISOString(),
-      }]).catch(console.error)
-    )
+      }])//.catch(console.error)
+    // )
 
     // env contains the values we set in `dispatcher.get()`
     // const customer_name = env.customer_name;

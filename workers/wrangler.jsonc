@@ -19,7 +19,7 @@
 		"namespace": "do",
 		"outbound": {
         "service": "do",
-        "parameters": ["user"]
+        // "parameters": ["user"]
       }
 	}],
 	"routes": [

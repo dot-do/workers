@@ -18,8 +18,8 @@
 		"binding": "do", 
 		"namespace": "do",
 		"outbound": {
-        "service": "do",
-        // "parameters": ["user"]
+        "service": "outbound",
+        "parameters": ["user"]
       }
 	}],
 	"routes": [

@@ -12,7 +12,7 @@ import * as functions from './functions'
 
 export default class extends WorkerEntrypoint {
   
-  
+
 
   async fetch(request: Request) {
     const { hostname, pathname, searchParams } = new URL(request.url)
@@ -26,6 +26,7 @@ export default class extends WorkerEntrypoint {
   async do(ns: string, fn: string, args: any) {
     console.log({ ns, fn, args })
     // this.env.
+    console.log(this.env)
     return {
       ns,
       fn,

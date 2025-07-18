@@ -73,7 +73,7 @@ export default class extends WorkerEntrypoint {
             { type: 'version_metadata', name: 'version' },
             { type: 'service', name: '$', service: 'do', environment: 'production' },
             { type: 'plain_text', name: 'name', text: name },
-            { type: 'plain_text', name: 'version', text: '1.0.0' },
+            // { type: 'plain_text', name: 'version', text: '1.0.0' },
             { type: 'plain_text', name: 'ns', text: ns },
           ]
         }

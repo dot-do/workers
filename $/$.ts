@@ -1,7 +1,7 @@
 // ------------------------------------------------------------------
 // 1. Callback type: your single place to do real work
 // ------------------------------------------------------------------
-type PathInvoker = (path: string, args: unknown[]) => unknown | Promise<unknown>;
+type PathInvoker = (path: string, args: unknown[], context?: unknown) => unknown | Promise<unknown>;
 
 // ------------------------------------------------------------------
 // 2. The builder object returned by every operation
@@ -14,7 +14,7 @@ interface Builder extends Function, PromiseLike<unknown> {
 // 3. Factory that creates the fully-featured `db`
 // ------------------------------------------------------------------
 function createProxyInvoker(invoke: PathInvoker): Builder {
-  const build = (segments: string[], chain: Promise<unknown>): Builder =>
+  const build = (segments: string[], chain: Promise<unknown>, context?: unknown): Builder =>
     new Proxy(function () {}, {
       // ---- Property access (db.foo.bar) ---------------------------
       get(_target, prop: string | symbol) {
@@ -38,40 +38,54 @@ function createProxyInvoker(invoke: PathInvoker): Builder {
           return (onFulfilled?: any, onRejected?: any) => {
             const next = chain.then(onFulfilled, onRejected);
             // Return *another* builder so we can keep chaining (.save etc.)
-            return build([], next);
+            return build([], next, context);
           };
         }
 
         // Normal property → extend the path
-        return build([...segments, prop.toString()], chain);
+        return build([...segments, prop.toString()], chain, context);
       },
 
       // ---- Function / template-tag invocation --------------------
       apply(_target, _thisArg, argList) {
         const path = segments.join('.');
         // Sequencing: wait for prior async work before running this piece
-        const next = chain.then(() => invoke(path, argList));
+        const next = chain.then(async (previousResult) => {
+          // Use previous result as context if available, otherwise use the builder's context
+          const currentContext = previousResult !== undefined ? previousResult : context;
+          const result = await invoke(path, argList, currentContext);
+          return result;
+        });
+        // Pass the next promise itself - it will be awaited when needed
         return build([], next);   // fresh builder with updated chain
       }
     }) as unknown as Builder;
 
   // Start with *no* path and a resolved promise
-  return build([], Promise.resolve());
+  return build([], Promise.resolve(), undefined);
 }
 
 // ------------------------------------------------------------------
 // 4. Example: plug in your own implementation once -----------------
 // ------------------------------------------------------------------
 let env
-export const $ = createProxyInvoker(async (path, args) => {
+export const $ = createProxyInvoker(async (path, args, context) => {
   // @ts-ignore - this won't work anywhere except cloudflare workers
   if (!env) env = await import('cloudflare:workers').then(m => m.env as any).catch(() => ({}))
 
-  env.do?.do()
+  // env.do?.do()
 
-  console.log('→ invoke', { path, args });
+  const body = JSON.stringify({ path, args, context })
+  // if (body.length > 10_000) 
+  // https://echo-http-requests.appspot.com/push/test
+  // const result = await fetch(`https://apis.do/${path}(${body})`).then(r => r.json())
+  // const result = await fetch(`https://echo-http-requests.appspot.com/push/test`, { method: 'POST', body }).then(r => r.json())
+
+  // const result = await fetch('https://apis.do/rpc', { method: 'POST', body }).then(r => r.json())
+
+  console.log('→ invoke', { path, args, context });
   // demo: pretend each call returns an object with a .test() method
-  return { test() { console.log('test() inside result'); } };
+  return { test() { console.log('test() inside result'); }, value: `result of ${path || 'root'}` };
 });
 
 export default $
@@ -84,7 +98,27 @@ $.testing.for.this.set({ foo: 'bar' }).do({ something: 'else' })            // �
   .save()
   .then(console.log)
 
+const { ai, api, db, is } = $
+
+db.customers.find({ name: 'John' })
+db.customers.create({ company: 'Acme' })
+
+
+is`${123} is a number`
+
+ai.listBlogPostTitles({ topic: 'Future of AI' })
+
 
 $`Testing ${123}`
 
 $.ai`do something ${456}`
+
+$`https://builder.domains`.get('*')
+
+$.builder.domains
+
+$.builder.domains.search`how are you?`
+
+is`${123} is a number`
+
+ai.listBlogPostTitles({ topic: 'Future of AI' })

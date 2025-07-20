@@ -67,6 +67,12 @@ app.get('*', async (c) => {
     maxTokens,
     topP,
     topK,
+    onFinish: async (result) => {
+      console.log(result)
+      // c.executionCtx.waitUntil(
+      await env.pipeline.send([result])
+      // )
+    }
   })
 
   const url = (options: Record<string, string | number>) => {
@@ -166,7 +172,22 @@ app.get('*', async (c) => {
         }
 
 
-        // await env.pip
+        // await env.pipeline.send([
+        //   {
+        //     ulid: generationId,
+        //     url: c.req.url,
+        //     generationUrl,
+        //     finalPrompt,
+        //     model,
+        //     seed,
+        //     system,
+        //     temperature,
+        //     maxTokens,
+        //     topP,
+        //     topK,
+        //     fullContent,
+        //   },
+        // ])
 
         // await env.r2.put(generationId, fullContent, {
         //   customMetadata: {

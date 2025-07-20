@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { streamText, streamObject } from 'ai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
+import { createOpenAI } from '@ai-sdk/openai'
 import { stringify, parse } from 'yaml'
 import { z } from 'zod'
 import { ulid } from 'ulid'
@@ -15,7 +16,7 @@ const schema = z
   .object({
     q: z.string().optional(),
     seed: z.string().optional(),
-    model: z.string().default('google/gemini-2.5-flash-preview-05-20'),
+    model: z.string().default('google/gemini-2.5-flash'),
     output: z.enum(['markdown', 'json']).default('markdown'),
     system: z.string().optional(),
     prompt: z.string().optional(),
@@ -32,59 +33,15 @@ const schema = z
  *  /stream-text
  *  Responds with YAML + streamed Markdown
  */
+app.get('*', async (c, next) => {
+  await next()
+  if (c.error) return new Response(c.error.message, { status: 400 })
+})
+
 app.get('*', async (c) => {
   const { hostname, origin } = new URL(c.req.url)
 
   const { q, model, output, prompt, seed, system, temperature, maxTokens, topP, topK } = schema.parse(c.req.query())
-
-  const retrievalId = c.req.query('q') || c.req.query('seed')
-  if (retrievalId) {
-    try {
-      const existingObject = await env.r2.get(retrievalId)
-      if (existingObject) {
-        const existingContent = await existingObject.text()
-
-        const yamlMatch = existingContent.match(/^---\n([\s\S]*?)\n---\n\n\n([\s\S]*)$/)
-        if (yamlMatch) {
-          const originalSettings = parse(yamlMatch[1])
-          const contentBody = yamlMatch[2]
-
-          const newId = ulid()
-          const newUrl = new URL(c.req.url)
-          newUrl.pathname = `/${newId}`
-
-          const updatedSettings = {
-            ...originalSettings,
-            $id: newUrl.toString(),
-          }
-
-          if (updatedSettings.actions?.model) {
-            Object.keys(updatedSettings.actions.model).forEach((modelKey) => {
-              const actionUrl = new URL(newUrl)
-              actionUrl.searchParams.set('model', modelKey)
-              updatedSettings.actions.model[modelKey] = actionUrl.toString()
-            })
-          }
-
-          const updatedContent = `---\n${stringify(updatedSettings)}---\n\n\n${contentBody}`
-
-          await env.r2.put(newId, updatedContent, {
-            customMetadata: {
-              originalId: retrievalId,
-              model: originalSettings.model || 'unknown',
-              timestamp: new Date().toISOString(),
-            },
-          })
-
-          return new Response(updatedContent, {
-            headers: { 'Content-Type': 'text/markdown; charset=utf-8' },
-          })
-        }
-      }
-    } catch (error) {
-      console.error('Error retrieving from R2:', error)
-    }
-  }
 
   const generationId = ulid()
   const generationUrl = new URL(c.req.url)
@@ -174,7 +131,7 @@ app.get('*', async (c) => {
           let chunkText = ''
           switch (chunk.type) {
             case 'reasoning':
-              if (!reasoning && !startedReasoning) {
+              if (!startedReasoning) {
                 if (!latency) {
                   latency = Date.now() - start
                 }
@@ -208,38 +165,41 @@ app.get('*', async (c) => {
           }
         }
 
-        await env.r2.put(generationId, fullContent, {
-          customMetadata: {
-            model,
-            prompt: finalPrompt.substring(0, 100), // Truncate for metadata
-            timestamp: new Date().toISOString(),
-          },
-        })
 
-        try {
-          const dbxResponse = await env.DBX_MD.fetch(`https://ai.apis.do/${generationId}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              content: fullContent,
-              type: 'GeneratedContent',
-              visibility: 'public',
-              data: {
-                model,
-                prompt: finalPrompt.substring(0, 100),
-                timestamp: new Date().toISOString(),
-              },
-            }),
-          })
+        // await env.pip
 
-          if (!dbxResponse.ok) {
-            console.error('Failed to save to dbx-md:', await dbxResponse.text())
-          }
-        } catch (error) {
-          console.error('Error saving to dbx-md:', error)
-        }
+        // await env.r2.put(generationId, fullContent, {
+        //   customMetadata: {
+        //     model,
+        //     prompt: finalPrompt.substring(0, 100), // Truncate for metadata
+        //     timestamp: new Date().toISOString(),
+        //   },
+        // })
+
+        // try {
+        //   const dbxResponse = await env.DBX_MD.fetch(`https://ai.apis.do/${generationId}`, {
+        //     method: 'PUT',
+        //     headers: {
+        //       'Content-Type': 'application/json',
+        //     },
+        //     body: JSON.stringify({
+        //       content: fullContent,
+        //       type: 'GeneratedContent',
+        //       visibility: 'public',
+        //       data: {
+        //         model,
+        //         prompt: finalPrompt.substring(0, 100),
+        //         timestamp: new Date().toISOString(),
+        //       },
+        //     }),
+        //   })
+
+        //   if (!dbxResponse.ok) {
+        //     console.error('Failed to save to dbx-md:', await dbxResponse.text())
+        //   }
+        // } catch (error) {
+        //   console.error('Error saving to dbx-md:', error)
+        // }
       } catch (err) {
         console.error('Error while streaming markdown', err)
         controller.error(err as unknown as Error)

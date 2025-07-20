@@ -11,7 +11,8 @@
 	"tail_consumers": [{ "service": "pipeline" }],
   "placement": { "mode": "smart" },
   "ai": { "binding": "ai" },
-  "r2_buckets": [{ "binding": "r2", "bucket_name": "mdx" }],
+  // "r2_buckets": [{ "binding": "r2", "bucket_name": "mdx" }],
+	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
 	"routes": [
 		// { "pattern": "*/*", "zone_name": "" },
 		{ "pattern": "ai.apis.do/*", "zone_name": "apis.do" },
@@ -24,5 +25,7 @@
       "fallthrough": true,
     },
   ],
-  "services": [{ "binding": "DBX_MD", "service": "dbx-md" }],
+  "services": [
+    { "binding": "db", "service": "db" },
+  ],
 }

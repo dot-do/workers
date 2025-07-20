@@ -1,0 +1,19 @@
+{
+  "name": "functions-do",
+  "type": "module",
+  "scripts": {
+    "build": "tsx build && tsc"
+  },
+  "dependencies": {
+    "cloudflare": "^4.4.1",
+    "js-yaml": "^4.1.0",
+    "yaml": "^2.8.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250710.0",
+    "@types/js-yaml": "^4.0.9",
+    "esbuild": "^0.25.8",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

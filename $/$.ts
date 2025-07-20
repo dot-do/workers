@@ -84,8 +84,9 @@ export const $ = createProxyInvoker(async (path, args, context) => {
   // const result = await fetch('https://apis.do/rpc', { method: 'POST', body }).then(r => r.json())
 
   console.log('→ invoke', { path, args, context });
+  return { path, args, context }
   // demo: pretend each call returns an object with a .test() method
-  return { test() { console.log('test() inside result'); }, value: `result of ${path || 'root'}` };
+  // return { test() { console.log('test() inside result'); }, value: `result of ${path || 'root'}` };
 });
 
 export default $
@@ -94,7 +95,7 @@ export default $
 // 5. All syntaxes + the requested chain now work -------------------
 // ------------------------------------------------------------------
 $.testing.for.this.set({ foo: 'bar' }).do({ something: 'else' })            // → invoke { path: 'set', args: [ { foo: 'bar' } ] }
-  .then(r => r.test())            // test() inside result
+  .then(console.log)            // test() inside result
   .save()
   .then(console.log)
 

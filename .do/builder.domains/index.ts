@@ -1,5 +1,6 @@
 // # Open Questions
 // - Do we allow arbitray args in functions, or require a single object like React Props?
+// - How can we enable unit tests & AI dev/test/PR/deploy?
 // - How do we pass context/user/tenant/subscription information into the function?
 // - How do we handle authentication/authorization?
 // - How do we enforce/limit free/paid tiers (like say 3 free subdomains, etc)?

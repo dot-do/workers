@@ -1,7 +1,7 @@
 // # Open Questions
-// - How do we pass context/user/tenant information into the function?
+// - How do we pass context/user/tenant/subscription information into the function?
 // - How do we handle authentication/authorization?
-
+// - How do we enforce/limit free/paid tiers (like say 3 free subdomains, etc)?
 
 export const searchSubdomains = (subdomain: string) => {
   // TODO: figure out API/Syntax/implementation to search for lack of subdomain existence

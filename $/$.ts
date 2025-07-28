@@ -112,6 +112,8 @@ ai.listBlogPostTitles({ topic: 'Future of AI' })
 
 $`Testing ${123}`
 
+$.testing.for.this.set({ foo: 'bar' }).do({ something: 'else' })
+
 $.ai`do something ${456}`
 
 $`https://builder.domains`.get('*')

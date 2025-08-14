@@ -2,6 +2,7 @@
 
 ## Architecture
 
+Everything is Function exposed as an MCP tool or resource.
 
 ## URI standards
 

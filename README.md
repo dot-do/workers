@@ -31,3 +31,8 @@ Everything is Function exposed as an MCP tool or resource.
 - [ ] Calculate ESM, AST, HTML on insert, or on demand?
   - Most things won't use all of the formats, and many are expensive, so will do on demand
 - [ ] We still need to figure out how to manage variants and experiments 
+- [ ] If pipeline latency is too slow for db mutations, we could async insert & send pipeline w/ ReplacingMergeTree
+
+## Northstar priorities
+
+- [ ] Focus on bottoms-up iteration from first principals

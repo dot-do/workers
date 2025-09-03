@@ -35,4 +35,4 @@ Everything is Function exposed as an MCP tool or resource.
 
 ## Northstar priorities
 
-- [ ] Focus on bottoms-up iteration from first principals
+- [ ] Focus on bottoms-up iteration from first principles

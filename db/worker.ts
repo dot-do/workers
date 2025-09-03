@@ -22,7 +22,7 @@ export default class extends WorkerEntrypoint<Env> {
   }
 
   async list(ns: string, opts?: Record<string, any>) {
-    return sql`SELECT id FROM data WHERE id LIKE ${'https://' + ns + '%'} FINAL`
+    return sql`SELECT id, type, content, data, meta FROM data WHERE id LIKE ${'https://' + ns + '%'}`
   }
 
 

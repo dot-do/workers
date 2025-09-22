@@ -9,12 +9,21 @@ export default class extends WorkerEntrypoint<Env> {
   
   async fetch(request: Request) {
     const { url, method } = request
+    const { colo } = request.cf ?? {}
     // let cf = Object.fromEntries(Object.entries(request.cf ?? {}).filter(([key]) => !key.startsWith('tls')))
     const { hostname, pathname } = new URL(url)
     // const headers = Object.fromEntries(request.headers)
     const userAgent = request.headers.get('user-agent')
     // this.ctx.waitUntil(this.send(hostname, 'WebRequest', { method, url, userAgent, cf }))
-    return Response.json(await this.list(pathname.slice(1)))
+
+    const start = Date.now()
+    const result = await this.list(pathname.slice(1))
+    const latency = Date.now() - start
+
+    const data: Record<string, string> = {}
+    result.data.map(({ id }: any) => data[id] = id.replace('https://', 'https://db.mw/'))
+    
+    return Response.json({ latency, colo, data })
   }
 
   async get(id: string) {

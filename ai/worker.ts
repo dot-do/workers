@@ -44,7 +44,7 @@ export default class extends WorkerEntrypoint {
   async fetch(request: Request) {
     const { searchParams } = new URL(request.url)
     const query = Object.fromEntries(searchParams) as any
-    query.model = query.model || 'openai/gpt-4.1-mini'
+    query.model = query.model || 'openai/gpt-5'
     query.prompt = query.prompt || 'Hello, world!'
     console.log(query)
     return Response.json(await this.openrouter(query))

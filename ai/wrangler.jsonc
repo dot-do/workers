@@ -9,10 +9,10 @@
 	"compatibility_date": "2025-07-08",
 	"routes": [
 		{ "pattern": "*/*", "zone_name": "api.mw" },
-		{ "pattern": "ai.apis.do/*", "zone_name": "apis.do" },
+		// { "pattern": "ai.apis.do/*", "zone_name": "apis.do" },
 	],
 	"observability": { "enabled": true },
-	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
+	// "pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
 	"tail_consumers": [{ "service": "pipeline" }],
 	"ai": { "binding": "ai" }
 }

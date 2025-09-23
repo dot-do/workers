@@ -24,7 +24,7 @@
 	}],
 	"routes": [
 		{ "pattern": "*/*", "zone_name": "workers.do" },
-		{ "pattern": "*/*", "zone_name": "api.mw" },
+		// { "pattern": "*/*", "zone_name": "api.mw" },
 		// { "pattern": "*.apis.do/*", "zone_name": "apis.do" },
 	],
   "assets": {

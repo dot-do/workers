@@ -1,18 +1,23 @@
 {
-  "name": "do-ai",
-  "version": "0.0.0",
+  "name": "@do/ai",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
+  "description": "Multi-provider AI generation service with OpenAI, Anthropic, and Workers AI support",
   "scripts": {
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",
-    "test": "vitest",
-    "types": "wrangler types worker.d.ts"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "types": "wrangler types",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.19",
     "@cloudflare/workers-types": "^4.20250710.0",
     "typescript": "^5.8.3",
+    "vitest": "~3.2.0",
     "wrangler": "^4.24.0"
   },
   "dependencies": {

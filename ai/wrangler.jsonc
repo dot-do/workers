@@ -1,18 +1,47 @@
 /**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
+ * Wrangler Configuration for AI Service
+ * Multi-provider AI generation microservice
  */
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "ai",
-	"main": "worker.ts",
-	"compatibility_date": "2025-07-08",
-	"routes": [
-		{ "pattern": "*/*", "zone_name": "api.mw" },
-		// { "pattern": "ai.apis.do/*", "zone_name": "apis.do" },
-	],
-	"observability": { "enabled": true },
-	// "pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
-	"tail_consumers": [{ "service": "pipeline" }],
-	"ai": { "binding": "ai" }
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ai",
+  "main": "worker.ts",
+  "compatibility_date": "2025-07-08",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Routes
+  "routes": [
+    { "pattern": "ai.api.mw/*", "zone_name": "api.mw" },
+    { "pattern": "ai.apis.do/*", "zone_name": "apis.do" }
+  ],
+
+  // Observability
+  "observability": {
+    "enabled": true
+  },
+
+  // Workers AI Binding
+  "ai": {
+    "binding": "AI"
+  },
+
+  // Service Bindings (for RPC to other services)
+  "services": [
+    { "binding": "DB", "service": "db" }
+  ],
+
+  // Tail Consumers (for logging/monitoring)
+  "tail_consumers": [
+    { "service": "pipeline" }
+  ],
+
+  // Environment Variables (secrets via wrangler secret put)
+  "vars": {
+    "CLOUDFLARE_ACCOUNT_ID": "YOUR_ACCOUNT_ID"
+  }
+
+  // Required secrets (set via: wrangler secret put <NAME>):
+  // - OPENAI_API_KEY: OpenAI API key
+  // - ANTHROPIC_API_KEY: Anthropic API key (or use OPENROUTER_API_KEY)
+  // - OPENROUTER_API_KEY: OpenRouter API key (alternative to Anthropic direct)
 }

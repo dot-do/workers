@@ -1,2 +1,7 @@
 packages:
-  - '*/'
+  - 'packages/*'
+  # Services will be added here by create-service script
+  # Example:
+  # - 'agents'
+  # - 'workflows'
+  # - 'stripe'

@@ -1,0 +1,32 @@
+{
+  "name": "{{SERVICE_NAME}}",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-03-07",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  // Service bindings (RPC)
+  "services": [
+    // { "binding": "DB_SERVICE", "service": "db" }
+  ],
+  // Database bindings
+  // "d1_databases": [
+  //   { "binding": "DB", "database_name": "production", "database_id": "xxx" }
+  // ],
+  // KV namespaces
+  // "kv_namespaces": [
+  //   { "binding": "KV", "id": "xxx" }
+  // ],
+  // R2 buckets
+  // "r2_buckets": [
+  //   { "binding": "BUCKET", "bucket_name": "production" }
+  // ],
+  // Queue consumers
+  // "queues": {
+  //   "consumers": [
+  //     { "queue": "{{NAMESPACE}}-queue", "max_batch_size": 10, "max_batch_timeout": 30 }
+  //   ]
+  // }
+}

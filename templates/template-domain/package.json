@@ -1,0 +1,28 @@
+{
+  "name": "{{SERVICE_NAME}}",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@dot-do/worker-types": "workspace:*",
+    "@dot-do/worker-utils": "workspace:*",
+    "@dot-do/worker-middleware": "workspace:*",
+    "@dot-do/worker-schemas": "workspace:*",
+    "hono": "^4.6.14",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250106.0",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8",
+    "wrangler": "^4.5.0",
+    "prettier": "^3.5.3"
+  }
+}

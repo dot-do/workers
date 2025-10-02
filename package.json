@@ -1,12 +1,31 @@
 {
-  "name": "md",
+  "name": "@dot-do/workers",
+  "version": "0.1.0",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@8.15.2",
   "scripts": {
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,mdx,css,html,yml,yaml}\""
+    "create-service": "tsx scripts/create-service.ts",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,mdx,css,html,yml,yaml}\"",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run --run unit",
+    "test:integration": "vitest run --run integration",
+    "test:e2e": "playwright test",
+    "test:coverage": "vitest run --coverage",
+    "build": "pnpm -r build",
+    "dev": "pnpm -r dev"
   },
   "devDependencies": {
-    "prettier": "^3.5.3"
+    "@cloudflare/vitest-pool-workers": "^0.8.19",
+    "@cloudflare/workers-types": "^4.20250106.0",
+    "@playwright/test": "^1.48.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "prettier": "^3.5.3",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
   },
   "prettier": {
     "semi": false,

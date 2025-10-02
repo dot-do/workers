@@ -1,0 +1,52 @@
+{
+  "name": "embeddings",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db"
+    }
+  ],
+
+  // Workers AI binding
+  "ai": {
+    "binding": "AI"
+  },
+
+  // Queue consumer for async embedding generation
+  "queues": {
+    "consumers": [
+      {
+        "queue": "embeddings",
+        "max_batch_size": 10,
+        "max_batch_timeout": 30
+      }
+    ],
+    "producers": [
+      {
+        "queue": "embeddings",
+        "binding": "EMBEDDINGS_QUEUE"
+      }
+    ]
+  },
+
+  // Environment-specific configuration
+  "env": {
+    "production": {
+      "name": "embeddings-prod",
+      "routes": [
+        {
+          "pattern": "embeddings.do/*",
+          "zone_name": "do"
+        }
+      ]
+    },
+    "staging": {
+      "name": "embeddings-staging"
+    }
+  }
+}

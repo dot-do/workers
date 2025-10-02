@@ -1,0 +1,16 @@
+name = "claude-code"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Service bindings
+[[services]]
+binding = "DB"
+service = "db"
+environment = "production"
+
+# Secrets (set via: wrangler secret put ANTHROPIC_API_KEY)
+# ANTHROPIC_API_KEY
+
+[observability]
+enabled = true

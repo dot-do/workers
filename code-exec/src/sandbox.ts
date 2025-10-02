@@ -99,23 +99,63 @@ export class CodeSandbox {
   }
 
   /**
-   * Execute JavaScript code
+   * Execute JavaScript code using Workers for Platforms
    */
   private async executeJavaScript(code: string, context: ExecutionContext, runtime: any): Promise<any> {
-    // Wrap code in async IIFE
-    const wrappedCode = `
-      'use strict';
-      return (async () => {
-        ${code}
-      })();
+    // Use Workers for Platforms to spawn an isolated worker for code execution
+    // This requires the DISPATCHER binding (Workers for Platforms)
+    if (!this.env.DISPATCHER) {
+      throw new Error('Workers for Platforms DISPATCHER binding is required for code execution')
+    }
+
+    // Wrap code in worker script that has runtime API injected
+    const workerScript = `
+      export default {
+        async fetch(request, env) {
+          try {
+            const { code, context, runtime } = await request.json();
+
+            // Create runtime API proxy
+            const ai = runtime.ai;
+            const api = runtime.api;
+            const db = runtime.db;
+            const console = runtime.console;
+
+            // Execute user code in async IIFE
+            const result = await (async () => {
+              ${code}
+            })();
+
+            return Response.json({
+              success: true,
+              result,
+              logs: runtime.logs
+            });
+          } catch (error) {
+            return Response.json({
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+              logs: runtime.logs
+            });
+          }
+        }
+      }
     `
 
-    // Create async function with runtime API
-    const AsyncFunction = async function () {}.constructor as any
-    const fn = new AsyncFunction('ai', 'api', 'db', 'console', 'context', wrappedCode)
+    // Dispatch to isolated worker
+    const response = await this.env.DISPATCHER.fetch('https://worker.internal/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, context, runtime }),
+    })
 
-    // Execute with timeout
-    return await this.executeWithTimeout(fn, runtime, context)
+    const result = await response.json()
+
+    if (!result.success) {
+      throw new Error(result.error)
+    }
+
+    return result.result
   }
 
   /**

@@ -55,16 +55,16 @@ export const createRelationshipSchema = z.object({
   fromId: z.string().min(1),
   toNs: z.string().min(1),
   toId: z.string().min(1),
-  data: z.record(z.any()).optional().default({}),
+  data: z.record(z.string(), z.any()).optional(),
   code: z.string().optional(),
-  visibility: z.enum(['public', 'private', 'unlisted']).optional().default('public'),
+  visibility: z.enum(['public', 'private', 'unlisted']).optional(),
 })
 
 export const relationshipOptionsSchema = z.object({
   type: z.string().optional(),
-  limit: z.number().min(1).max(100).optional().default(10),
-  offset: z.number().min(0).optional().default(0),
-  includeTo: z.boolean().optional().default(false),
+  limit: z.number().min(1).max(100).optional(),
+  offset: z.number().min(0).optional(),
+  includeTo: z.boolean().optional(),
 })
 
 // ==================== Service Logic ====================
@@ -73,7 +73,13 @@ export class RelationshipsServiceLogic {
   constructor(private db: DB) {}
 
   async getRelationships(fromNs: string, fromId: string, options?: RelationshipOptions): Promise<Relationship[]> {
-    const opts = relationshipOptionsSchema.parse(options || {})
+    const validated = relationshipOptionsSchema.parse(options || {})
+    const opts = {
+      type: validated.type,
+      limit: validated.limit || 10,
+      offset: validated.offset || 0,
+      includeTo: validated.includeTo || false,
+    }
 
     let sql = `SELECT * FROM relationships WHERE fromNs = ? AND fromId = ?`
     const params: any[] = [fromNs, fromId]
@@ -99,7 +105,13 @@ export class RelationshipsServiceLogic {
   }
 
   async getIncomingRelationships(toNs: string, toId: string, options?: RelationshipOptions): Promise<Relationship[]> {
-    const opts = relationshipOptionsSchema.parse(options || {})
+    const validated = relationshipOptionsSchema.parse(options || {})
+    const opts = {
+      type: validated.type,
+      limit: validated.limit || 10,
+      offset: validated.offset || 0,
+      includeTo: validated.includeTo || false,
+    }
 
     let sql = `SELECT * FROM relationships WHERE toNs = ? AND toId = ?`
     const params: any[] = [toNs, toId]
@@ -117,7 +129,12 @@ export class RelationshipsServiceLogic {
   }
 
   async createRelationship(data: CreateRelationshipInput): Promise<Relationship> {
-    const validated = createRelationshipSchema.parse(data)
+    const parsed = createRelationshipSchema.parse(data)
+    const validated = {
+      ...parsed,
+      data: parsed.data || {},
+      visibility: parsed.visibility || ('public' as const),
+    }
 
     const from = await this.db.get(`https://${validated.fromNs}/${validated.fromId}`)
     const to = await this.db.get(`https://${validated.toNs}/${validated.toId}`)

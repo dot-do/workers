@@ -6,6 +6,7 @@ export interface CodeExecEnv {
   AI: Ai
   DB: any // DB service binding
   EXECUTIONS_DB: D1Database
+  DISPATCHER: DispatchNamespace // Workers for Platforms - Dynamic worker spawning
 }
 
 /**

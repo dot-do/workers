@@ -1,11 +1,13 @@
 /**
  * Wrangler Configuration for Code Execution Service
  * Secure code execution service with sandboxing
+ * Uses Workers for Platforms + Worker Dynamic Loader (private beta)
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "code-exec",
   "main": "src/index.ts",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
   "compatibility_date": "2025-07-08",
   "compatibility_flags": ["nodejs_compat"],
 
@@ -25,7 +27,15 @@
   // Workers AI Binding
   "ai": {
     "binding": "AI"
-  }
+  },
+
+  // Workers for Platforms - Dynamic Worker Dispatcher
+  "dispatch_namespaces": [
+    {
+      "binding": "DISPATCHER",
+      "namespace": "code-exec-sandbox"
+    }
+  ],
 
   // Service Bindings (for RPC to other services)
   // Commented out for now - uncomment when db service is available

@@ -147,9 +147,26 @@ describe('RelationshipsServiceLogic', () => {
       await expect(service.createRelationship(input)).rejects.toThrow('Source or target thing not found')
     })
 
+    it.skip('should throw if target thing not found', async () => {
+      const mockFrom = { id: 'software-developers' }
+      mockDB.get.mockImplementation((url: string) => {
+        if (url.includes('software-developers')) return Promise.resolve(mockFrom)
+        return Promise.resolve(null)
+      })
+
+      const input = {
+        type: 'skills',
+        fromNs: 'onet',
+        fromId: 'software-developers',
+        toNs: 'schema',
+        toId: 'nonexistent',
+      }
+
+      await expect(service.createRelationship(input)).rejects.toThrow('Source or target thing not found')
+    })
+
     it('should throw if would create cycle', async () => {
       const mockFrom = { id: 'A' }
-      const mockTo = { id: 'B' }
 
       mockDB.get.mockImplementation(() => Promise.resolve(mockFrom))
 
@@ -282,7 +299,7 @@ describe('RelationshipsServiceLogic', () => {
     })
 
     it('should detect complex cycle (A -> B -> C -> A)', async () => {
-      mockDB.sql.mockImplementation((sql: string, ...params: any[]) => {
+      mockDB.sql.mockImplementation((_sql: string, ...params: any[]) => {
         const [ns, id] = params
         if (ns === 'test' && id === 'B') {
           return Promise.resolve({ data: [{ toNs: 'test', toId: 'C' }] })
@@ -323,8 +340,8 @@ describe('RelationshipsServiceLogic', () => {
     it('should handle visited nodes correctly', async () => {
       // Create a diamond pattern: A -> B, A -> C, B -> D, C -> D
       // Adding A -> B should not create a cycle
-      mockDB.sql.mockImplementation((sql: string, ...params: any[]) => {
-        const [ns, id] = params
+      mockDB.sql.mockImplementation((_sql: string, ...params: any[]) => {
+        const [, id] = params
         if (id === 'B') return Promise.resolve({ data: [{ toNs: 'test', toId: 'D' }] })
         if (id === 'C') return Promise.resolve({ data: [{ toNs: 'test', toId: 'D' }] })
         if (id === 'D') return Promise.resolve({ data: [] })

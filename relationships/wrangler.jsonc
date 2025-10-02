@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "relationships",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-02",
+  "observability": { "enabled": true },
+  "compatibility_flags": ["nodejs_compat", "nodejs_compat_populate_process_env"],
+
+  /**
+   * Service Bindings - DB service for data access
+   */
+  "services": [
+    { "binding": "DB", "service": "db" }
+  ],
+
+  /**
+   * Routes - Expose via relationships.do domain
+   */
+  "routes": [
+    { "pattern": "relationships.do/*", "zone_name": "do" },
+    { "pattern": "relationships.apis.do/*", "zone_name": "apis.do" }
+  ]
+}

@@ -1,0 +1,50 @@
+/**
+ * Wrangler Configuration for Code Execution Service
+ * Secure code execution service with sandboxing
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "code-exec",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-08",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Routes
+  "routes": [
+    { "pattern": "code-exec.api.mw/*", "zone_name": "api.mw" },
+    { "pattern": "code-exec.apis.do/*", "zone_name": "apis.do" },
+    { "pattern": "code.api.mw/*", "zone_name": "api.mw" },
+    { "pattern": "code.apis.do/*", "zone_name": "apis.do" }
+  ],
+
+  // Observability
+  "observability": {
+    "enabled": true
+  },
+
+  // Workers AI Binding
+  "ai": {
+    "binding": "AI"
+  }
+
+  // Service Bindings (for RPC to other services)
+  // Commented out for now - uncomment when db service is available
+  // "services": [
+  //   { "binding": "DB", "service": "db" }
+  // ],
+
+  // D1 Database for execution history
+  // Commented out for now - create database with: wrangler d1 create code-executions
+  // "d1_databases": [
+  //   { "binding": "EXECUTIONS_DB", "database_name": "code-executions", "database_id": "your-database-id" }
+  // ],
+
+  // Tail Consumers (for logging/monitoring)
+  // Commented out for now - uncomment when pipeline service is available
+  // "tail_consumers": [
+  //   { "service": "pipeline" }
+  // ]
+
+  // Required secrets (set via: wrangler secret put <NAME>):
+  // - None required for basic operation
+}

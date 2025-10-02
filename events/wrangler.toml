@@ -1,0 +1,35 @@
+name = "events"
+main = "src/index.ts"
+compatibility_date = "2025-10-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Service bindings
+[[services]]
+binding = "DB"
+service = "db"
+
+# Durable Objects
+[[durable_objects.bindings]]
+name = "EVENT_STREAM"
+class_name = "EventStream"
+
+# Queue for webhook delivery
+[[queues.producers]]
+queue = "events-webhooks"
+binding = "WEBHOOK_QUEUE"
+
+[[queues.consumers]]
+queue = "events-webhooks"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "events-webhooks-dlq"
+
+# Analytics Engine for event tracking
+[[analytics_engine_datasets]]
+binding = "EVENTS_ANALYTICS"
+
+# Durable Object migrations
+[[migrations]]
+tag = "v1"
+new_classes = ["EventStream"]

@@ -1,0 +1,43 @@
+# Things Service Configuration
+name = "things"
+main = "src/index.ts"
+compatibility_date = "2025-01-10"
+compatibility_flags = ["nodejs_compat"]
+
+# Service bindings - RPC connections to other workers
+[[services]]
+binding = "DB"
+service = "db"
+environment = "production"
+
+# Routes - will be configured via gateway
+# For now, testing routes:
+# routes = [
+#   { pattern = "things.apis.do/*", zone_name = "apis.do" }
+# ]
+
+# Observability
+[observability]
+enabled = true
+
+# Smart placement for optimal latency
+[placement]
+mode = "smart"
+
+# Development overrides
+[env.development]
+name = "things-dev"
+
+[[env.development.services]]
+binding = "DB"
+service = "db"
+environment = "development"
+
+# Staging environment
+[env.staging]
+name = "things-staging"
+
+[[env.staging.services]]
+binding = "DB"
+service = "db"
+environment = "staging"

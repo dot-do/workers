@@ -1,0 +1,25 @@
+{
+  "name": "@dot-do/batch",
+  "version": "0.1.0",
+  "description": "Batch processing service for bulk imports, exports, and transformations",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.7.13"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.53",
+    "@cloudflare/workers-types": "^4.20241022.0",
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5",
+    "wrangler": "^4.40.3"
+  }
+}

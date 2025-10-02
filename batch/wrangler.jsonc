@@ -1,0 +1,37 @@
+{
+  "name": "batch",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-02",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB",
+      "service": "things"
+    },
+    {
+      "binding": "EMBEDDINGS",
+      "service": "embeddings"
+    }
+  ],
+
+  // Queue configuration
+  "queues": {
+    "consumers": [
+      {
+        "queue": "batch-queue",
+        "max_batch_size": 100,
+        "max_batch_timeout": 30,
+        "max_retries": 3,
+        "dead_letter_queue": "batch-dlq"
+      }
+    ],
+    "producers": [
+      {
+        "binding": "BATCH_QUEUE",
+        "queue": "batch-queue"
+      }
+    ]
+  }
+}

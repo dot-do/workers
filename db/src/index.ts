@@ -1,6 +1,8 @@
 import { WorkerEntrypoint } from 'cloudflare:workers'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import type { RpcRequest, RpcResponse, RpcContext, RpcMethod, RpcService } from './rpc-types'
+import { createRpcMethod } from './rpc-types'
 import * as things from './queries/things'
 import * as relationships from './queries/relationships'
 import * as search from './queries/search'
@@ -13,7 +15,7 @@ import { getPostgresClient, checkPostgresHealth } from './postgres'
  * Handles ALL data access for the platform (PostgreSQL + ClickHouse)
  *
  * Interfaces:
- * - RPC: WorkerEntrypoint methods for service-to-service calls
+ * - RPC: WorkerEntrypoint methods for service-to-service calls (via apis.do types)
  * - HTTP: Hono routes for health checks and debugging
  * - MCP: Tools for AI agent integration (TODO)
  */
@@ -249,5 +251,105 @@ export default class DatabaseService extends WorkerEntrypoint<Env> {
     })
 
     return app.fetch(request, this.env, this.ctx)
+  }
+
+  // ============================================================================
+  // RPC SERVER CONFIGURATION
+  // ============================================================================
+
+  /**
+   * Get RPC service definition for this service
+   */
+  static getRpcService(): RpcService {
+    return {
+      name: 'database',
+      version: '1.0.0',
+      methods: [
+        createRpcMethod('get', async (request: RpcRequest, context: RpcContext) => {
+          const [ns, id, options = {}] = request.args
+          const result = await things.get(ns, id, options)
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('list', async (request: RpcRequest, context: RpcContext) => {
+          const [ns, options = {}] = request.args
+          const result = await things.list(ns, options)
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('search', async (request: RpcRequest, context: RpcContext) => {
+          const [query, embedding, options = {}] = request.args
+          const result = embedding
+            ? await search.hybridSearch(query, embedding, options)
+            : await search.fullTextSearch(query, options)
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('vectorSearch', async (request: RpcRequest, context: RpcContext) => {
+          const [embedding, options = {}] = request.args
+          const result = await search.vectorSearch(embedding, options)
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('upsert', async (request: RpcRequest, context: RpcContext) => {
+          const [thing] = request.args
+          const result = await things.upsert(thing)
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('delete', async (request: RpcRequest, context: RpcContext) => {
+          const [ns, id] = request.args
+          const result = await things.del(ns, id)
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('count', async (request: RpcRequest, context: RpcContext) => {
+          const [ns, filters] = request.args
+          const result = await things.count(ns, filters)
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('getRelationships', async (request: RpcRequest, context: RpcContext) => {
+          const [ns, id, options = {}] = request.args
+          const result = await relationships.getRelationships(ns, id, options)
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('getIncomingRelationships', async (request: RpcRequest, context: RpcContext) => {
+          const [ns, id, options = {}] = request.args
+          const result = await relationships.getIncomingRelationships(ns, id, options)
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('upsertRelationship', async (request: RpcRequest, context: RpcContext) => {
+          const [relationship] = request.args
+          const result = await relationships.upsert(relationship)
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('deleteRelationship', async (request: RpcRequest, context: RpcContext) => {
+          const [ns, id] = request.args
+          const result = await relationships.del(ns, id)
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('listRelationships', async (request: RpcRequest, context: RpcContext) => {
+          const [ns, options = {}] = request.args
+          const result = await relationships.list(ns, options)
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('stats', async (request: RpcRequest, context: RpcContext) => {
+          const result = await analytics.getDatabaseStats()
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('typeDistribution', async (request: RpcRequest, context: RpcContext) => {
+          const [ns] = request.args
+          const result = await analytics.getTypeDistribution(ns)
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('clickhouseStats', async (request: RpcRequest, context: RpcContext) => {
+          const result = await analytics.getClickHouseStats()
+          return { data: result, requestId: request.requestId }
+        }),
+        createRpcMethod('recentActivity', async (request: RpcRequest, context: RpcContext) => {
+          const [limit] = request.args
+          const result = await analytics.getRecentActivity(limit)
+          return { data: result, requestId: request.requestId }
+        }),
+      ],
+      metadata: {
+        description: 'Comprehensive database abstraction layer for the platform',
+        interfaces: ['rpc', 'http', 'mcp'],
+      },
+    }
   }
 }

@@ -8,6 +8,7 @@
     "dev": "wrangler dev",
     "start": "wrangler dev",
     "test": "vitest",
+    "typecheck": "tsc --noEmit",
     "types": "wrangler types worker.d.ts"
   },
   "dependencies": {

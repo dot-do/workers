@@ -8,15 +8,18 @@
     "dev": "wrangler dev",
     "do": "wrangler deploy --dispatch-namespace do",
     "start": "wrangler dev",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "types": "wrangler types worker.d.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250710.0",
     "typescript": "^5.8.3",
+    "vitest": "^2.1.8",
     "wrangler": "^4.24.0"
   },
   "dependencies": {
+    "hono": "^4.6.14",
     "postal-mime": "^2.4.4",
     "ulid": "^3.0.1",
     "yaml": "^2.8.0"

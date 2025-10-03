@@ -9,6 +9,7 @@
 	"name": "do-gateway",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
 	"observability": { "enabled": true },
 
 	/**
@@ -30,27 +31,20 @@
 	 * Each binding provides a typed RPC interface to call methods directly
 	 */
 	"services": [
-		// Core services
-		{ "binding": "DB", "service": "do-db" },
-		{ "binding": "AI", "service": "do-ai" },
-		{ "binding": "AUTH", "service": "do-auth" },
-
-		// Data services
-		{ "binding": "RELATIONSHIPS", "service": "do-relationships" },
-		{ "binding": "EMBEDDINGS", "service": "do-embeddings" },
-
-		// Processing services
-		{ "binding": "QUEUE", "service": "do-queue" },
-		{ "binding": "BATCH", "service": "do-batch" },
-		{ "binding": "SCHEDULE", "service": "do-schedule" },
-		{ "binding": "WORKFLOWS", "service": "do-workflows" },
-
-		// Execution services
-		{ "binding": "CODE_EXEC", "service": "do-code-exec" },
-		{ "binding": "CLAUDE_CODE", "service": "do-claude-code" },
-
-		// Durable Object services
-		{ "binding": "EVENTS", "service": "do-events" }
+		// Core services - using actual deployed names
+		{ "binding": "DB", "service": "db" }
+		// Other services will be added as they're deployed
+		// { "binding": "AI", "service": "ai" },
+		// { "binding": "AUTH", "service": "auth" },
+		// { "binding": "RELATIONSHIPS", "service": "relationships" },
+		// { "binding": "EMBEDDINGS", "service": "embeddings" },
+		// { "binding": "QUEUE", "service": "queue" },
+		// { "binding": "BATCH", "service": "batch" },
+		// { "binding": "SCHEDULE", "service": "schedule" },
+		// { "binding": "WORKFLOWS", "service": "workflows" },
+		// { "binding": "CODE_EXEC", "service": "code-exec" },
+		// { "binding": "CLAUDE_CODE", "service": "claude-code" },
+		// { "binding": "EVENTS", "service": "events" }
 	],
 
 	/**
@@ -59,9 +53,7 @@
 	"kv_namespaces": [
 		{
 			"binding": "GATEWAY_KV",
-			"id": "placeholder-kv-namespace-id"
-			// Update with actual KV namespace ID after creation:
-			// wrangler kv:namespace create "GATEWAY_KV"
+			"id": "48289a56146d470f97ca98401f30c7d7"
 		}
 	],
 

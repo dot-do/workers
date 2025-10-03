@@ -1,20 +1,21 @@
 /**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
+ * Email Service Configuration
+ *
+ * Transactional email delivery via Resend, WorkOS, and other providers
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "email",
-	"main": "worker.js",
+	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
 	"observability": { "enabled": true },
 	"tail_consumers": [{ "service": "pipeline" }],
 	"routes": [
-
+		{ "pattern": "email.services.do/*", "custom_domain": true }
 	],
   "services": [
-		{ "binding": "cloudflare", "service": "cloudflare" },
-		{ "binding": "yaml", "service": "yaml" }
+		{ "binding": "DB", "service": "do-db" }
 	],
 	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
 	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }]

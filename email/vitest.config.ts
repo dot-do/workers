@@ -1,0 +1,21 @@
+import { defineConfig } from 'vitest/config'
+import path from 'path'
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: ['node_modules/', 'tests/', '*.config.ts', 'worker.js', 'worker.d.ts'],
+    },
+  },
+  resolve: {
+    alias: {
+      'cloudflare:workers': path.resolve(__dirname, 'tests/mocks/cloudflare-workers.ts'),
+      hono: path.resolve(__dirname, 'tests/mocks/hono.ts'),
+      'hono/cors': path.resolve(__dirname, 'tests/mocks/hono.ts'),
+    },
+  },
+})

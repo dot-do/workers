@@ -148,9 +148,25 @@ pnpm deploy
 
 ## Documentation
 
+### Getting Started
+- **[QUICK-START.md](./QUICK-START.md)** - 5-minute deployment guide ⚡
+- **[CONFIGURATION-STATUS.md](./CONFIGURATION-STATUS.md)** - Current configuration status
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Detailed deployment guide
+- **[INTEGRATION.md](./INTEGRATION.md)** - Integration testing guide
+
+### Development
 - **[CLAUDE.md](./CLAUDE.md)** - Developer guide and architecture
-- **[Creating Services](./docs/creating-services.md)** - Step-by-step service creation
-- **[Service Patterns](./docs/service-patterns.md)** - Best practices (coming soon)
+- **[STATUS.md](./STATUS.md)** - Current implementation status
+- **[TESTING.md](./TESTING.md)** - Testing guidelines
+
+### Service Documentation
+- **[Gateway](./gateway/README.md)** - API routing and traffic management
+- **[Database](./db/README.md)** - Data access layer (PostgreSQL + ClickHouse)
+- **[Auth](./auth/README.md)** - Authentication and authorization
+- **[Schedule](./schedule/README.md)** - Cron jobs and scheduled tasks
+- **[Webhooks](./webhooks/README.md)** - External webhook processing
+- **[Email](./email/README.md)** - Transactional email delivery
+- **[MCP](./mcp/README.md)** - Model Context Protocol server
 
 ## Standards
 

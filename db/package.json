@@ -13,7 +13,7 @@
   "dependencies": {
     "@clickhouse/client-web": "^1.11.2",
     "@cloudflare/workers-types": "^4.20250710.0",
-    "@neondatabase/serverless": "^0.10.5",
+    "@neondatabase/serverless": "^1.0.2",
     "drizzle-orm": "^0.44.5",
     "hono": "^4.8.4",
     "lodash-es": "^4.17.21",

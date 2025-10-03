@@ -210,10 +210,11 @@ AS SELECT
 FROM pipeline;
 `
 
-const queries = schema.split(';\n').filter(q => q.trim() !== '')
-
-for (const query of queries) {
-  console.log(query)
-  const result = await clickhouse.command({ query, clickhouse_settings: { enable_json_type: 1, allow_experimental_vector_similarity_index: 1, max_execution_time: 3600000 } })
-  console.log(result)
-}
+// Schema initialization - run manually via migration script, not at deploy time
+// const queries = schema.split(';\n').filter(q => q.trim() !== '')
+//
+// for (const query of queries) {
+//   console.log(query)
+//   const result = await clickhouse.command({ query, clickhouse_settings: { enable_json_type: 1, allow_experimental_vector_similarity_index: 1, max_execution_time: 3600000 } })
+//   console.log(result)
+// }

@@ -1,6 +1,7 @@
 name = "events"
 main = "src/index.ts"
 compatibility_date = "2025-10-01"
+account_id = "b6641681fe423910342b9ffa1364c76d"
 compatibility_flags = ["nodejs_compat"]
 
 # Service bindings

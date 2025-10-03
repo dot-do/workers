@@ -7,6 +7,7 @@
 	"name": "db",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
 	"observability": { "enabled": true },
 	"tail_consumers": [{ "service": "pipeline" }],
 	"compatibility_flags": [
@@ -22,12 +23,7 @@
 		"CLICKHOUSE_DATABASE": "default",
 		"CLICKHOUSE_USERNAME": "default"
 	},
-	"placement": { "mode": "smart" },
-	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
-	"kv_namespaces": [{ "binding": "kv", "id": "0b51c3f8ea714b48a4c4dd664f7079cc" }],
-	"services": [
-		{ "binding": "yaml", "service": "yaml" }
-	]
+	"placement": { "mode": "smart" }
 
 	/**
 	 * Bindings

@@ -1,0 +1,31 @@
+{
+  "name": "@dot-do/analytics",
+  "version": "1.0.0",
+  "description": "Real-time analytics service for Services.Delivery using Cloudflare Analytics Engine",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest",
+    "test:integration": "vitest --config vitest.integration.config.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.8.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250108.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.3",
+    "wrangler": "^3.99.0"
+  },
+  "keywords": [
+    "analytics",
+    "cloudflare",
+    "workers",
+    "real-time",
+    "dashboard"
+  ],
+  "author": "dot-do",
+  "license": "MIT"
+}

@@ -1,0 +1,52 @@
+/**
+ * Wrangler Configuration for Analytics Service
+ * Real-time analytics with Cloudflare Analytics Engine
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "do-analytics",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-08",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Routes
+  "routes": [
+    { "pattern": "analytics.api.mw/*", "zone_name": "api.mw" },
+    { "pattern": "analytics.apis.do/*", "zone_name": "apis.do" }
+  ],
+
+  // Observability
+  "observability": {
+    "enabled": true
+  },
+
+  // Analytics Engine Datasets
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS",
+      "dataset": "services_delivery_analytics"
+    }
+  ],
+
+  // Service Bindings
+  "services": [
+    { "binding": "DB", "service": "do-db" }
+  ],
+
+  // KV for real-time aggregation cache
+  "kv_namespaces": [
+    {
+      "binding": "ANALYTICS_KV",
+      "id": "analytics-realtime-cache"
+    }
+  ],
+
+  // Environment Variables
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+
+  // Required secrets (set via: wrangler secret put <NAME>):
+  // - API_TOKEN: For SQL API queries
+}

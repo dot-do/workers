@@ -1,23 +1,27 @@
 /**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
+ * Webhooks Service Configuration
+ * Receives and processes webhooks from external services
  */
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "email",
-	"main": "worker.ts",
-	"compatibility_date": "2025-07-08",
-	"observability": { "enabled": true },
-	"tail_consumers": [{ "service": "pipeline" }],
-	"routes": [
-		{ "pattern": "webhooks.apis.do/*", "zone_name": "apis.do" },
-		{ "pattern": "*.apis.do/webhooks*", "zone_name": "apis.do" },
-		{ "pattern": "*.webhooks.do/*", "zone_name": "webhooks.do" }
-	],
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "webhooks",
+  "main": "worker.ts",
+  "compatibility_date": "2025-07-08",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "tail_consumers": [{ "service": "pipeline" }],
+
+  // Routes for webhook endpoints
+  "routes": [
+    { "pattern": "webhooks.apis.do/*", "zone_name": "apis.do" },
+    { "pattern": "*.apis.do/webhooks/*", "zone_name": "apis.do" },
+    { "pattern": "*.webhooks.do/*", "zone_name": "webhooks.do" }
+  ],
+
+  // Service bindings
   "services": [
-		{ "binding": "cloudflare", "service": "cloudflare" },
-		{ "binding": "yaml", "service": "yaml" }
-	],
-	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
-	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }]
+    { "binding": "DB", "service": "do-db" },
+    { "binding": "QUEUE", "service": "do-queue" }
+  ]
 }

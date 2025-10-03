@@ -1,20 +1,21 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "allowSyntheticDefaultImports": true,
-    "checkJs": false,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "lib": ["es2021"],
-    "module": "es2022",
-    "moduleResolution": "Bundler",
-    "noEmit": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "lib": ["ES2022"],
+    "moduleResolution": "bundler",
+    "types": ["@cloudflare/workers-types/2023-07-01"],
     "strict": true,
-    "target": "es2021",
-    "types": ["./worker.d.ts"]
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["**/*.ts", "worker.ts"],
-  "exclude": ["node_modules", "dist", ".wrangler"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "worker.d.ts"]
 }

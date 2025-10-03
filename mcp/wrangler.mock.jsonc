@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "do-mcp-mock",
+  "main": "src/mock-server.ts",
+  "compatibility_date": "2025-07-08",
+  "observability": {
+    "enabled": true
+  },
+  "ai": {
+    "binding": "AI"
+  },
+  "vars": {
+    "ENVIRONMENT": "development",
+    "AI_GATEWAY_URL": "https://gateway.ai.cloudflare.com/v1/YOUR_ACCOUNT_ID/YOUR_GATEWAY_ID/workers-ai",
+    "AI_GATEWAY_TOKEN": ""
+  }
+}

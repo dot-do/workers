@@ -1,0 +1,46 @@
+/**
+ * Wrangler Configuration for Numerics Dashboard Service
+ * Real-time metrics for Apple ecosystem (TV, Watch, iPhone, Mac)
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "do-numerics",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-08",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Routes
+  "routes": [
+    { "pattern": "numerics.api.mw/*", "zone_name": "api.mw" },
+    { "pattern": "numerics.apis.do/*", "zone_name": "apis.do" }
+  ],
+
+  // Observability
+  "observability": {
+    "enabled": true
+  },
+
+  // Service Bindings for data access
+  "services": [
+    { "binding": "DB", "service": "do-db" },
+    { "binding": "ANALYTICS", "service": "do-analytics" }
+  ],
+
+  // KV for caching metric calculations (5min TTL)
+  "kv_namespaces": [
+    {
+      "binding": "METRICS_KV",
+      "id": "numerics-metrics-cache"
+    }
+  ],
+
+  // Environment Variables
+  "vars": {
+    "ENVIRONMENT": "production",
+    "CACHE_TTL": "300"
+  }
+
+  // Required secrets (set via: wrangler secret put <NAME>)
+  // - NUMERICS_API_KEY: For authenticating Numerics app requests
+}

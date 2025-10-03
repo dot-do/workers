@@ -9,6 +9,7 @@ packages:
   - 'dns-tools'
   - 'domain-monitor'
   - 'analytics'
+  - 'numerics'
   # SDK packages (foundation packages)
   - '../sdk/packages/ai-generation'
   - '../sdk/packages/ai-embeddings'

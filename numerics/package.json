@@ -1,0 +1,21 @@
+{
+  "name": "@dot-do/numerics",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.8.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250104.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4",
+    "wrangler": "^3.102.0"
+  }
+}

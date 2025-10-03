@@ -1,0 +1,21 @@
+{
+  "name": "dns-tools",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-12-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  // Service bindings for RPC communication
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db",
+      "environment": "production"
+    }
+  ],
+  // Environment variables
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+}

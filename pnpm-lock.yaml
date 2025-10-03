@@ -210,6 +210,15 @@ importers:
       ai:
         specifier: ^5.0.0
         version: 5.0.60(zod@3.25.76)
+      ai-chat:
+        specifier: workspace:*
+        version: link:../ai-chat
+      ai-embeddings:
+        specifier: workspace:*
+        version: link:../ai-embeddings
+      ai-generation:
+        specifier: workspace:*
+        version: link:../ai-generation
       graphdl:
         specifier: workspace:*
         version: link:../graphdl

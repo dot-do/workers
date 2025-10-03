@@ -11,12 +11,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "ai-embeddings": "workspace:*",
     "hono": "^4.7.15",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250110.0",
-    "@cloudflare/vitest-pool-workers": "^0.7.11",
+    "@cloudflare/vitest-pool-workers": "^0.8.53",
     "typescript": "^5.7.3",
     "vitest": "^3.2.0",
     "wrangler": "^3.100.0"

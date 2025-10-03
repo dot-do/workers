@@ -1,12 +1,13 @@
 packages:
   - 'packages/*'
-  # Services will be added here by create-service script
-  # Example:
-  # - 'agents'
-  # - 'workflows'
-  # - 'stripe'
+  # All worker services
+  - 'embeddings'
   - 'auth'
   - 'things'
   - 'domains'
-  # SDK packages (for domains.do types)
+  # SDK packages (foundation packages)
+  - '../sdk/packages/ai-embeddings'
+  - '../sdk/packages/ai-chat'
+  - '../sdk/packages/ai-agents'
+  - '../sdk/packages/ai-tools'
   - '../sdk/packages/*'

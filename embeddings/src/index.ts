@@ -1,6 +1,8 @@
 import { WorkerEntrypoint } from 'cloudflare:workers'
 import { Hono } from 'hono'
 import { z } from 'zod'
+import type { EmbeddingProvider, EmbeddingResponse, BatchEmbeddingResponse, EmbeddingUsage } from 'ai-embeddings'
+import { cosineSimilarity, calculateEmbeddingCost, estimateTokens } from 'ai-embeddings'
 
 /**
  * Embeddings Service - RPC + HTTP + Queue Interface
@@ -11,6 +13,8 @@ import { z } from 'zod'
  * - Batch processing via queue
  * - Automatic backfill for missing embeddings
  * - Cosine similarity comparison
+ *
+ * Uses ai-embeddings foundation package for types and utilities
  */
 
 // Environment bindings
@@ -24,7 +28,7 @@ export interface Env {
 // Zod schemas for validation
 const generateEmbeddingSchema = z.object({
   text: z.string().min(1).max(8000),
-  model: z.enum(['openai', 'workers-ai']).default('workers-ai'),
+  model: z.enum(['openai', 'workers-ai'] as const).default('workers-ai'),
 })
 
 const embedThingSchema = z.object({
@@ -35,7 +39,7 @@ const embedThingSchema = z.object({
 const backfillOptionsSchema = z.object({
   ns: z.string().optional(),
   limit: z.number().int().min(1).max(1000).default(100),
-  model: z.enum(['openai', 'workers-ai']).default('workers-ai'),
+  model: z.enum(['openai', 'workers-ai'] as const).default('workers-ai'),
 })
 
 const compareEmbeddingsSchema = z.object({
@@ -176,29 +180,11 @@ export class EmbeddingsService extends WorkerEntrypoint<Env> {
 
   /**
    * Compare two embeddings using cosine similarity
+   * Uses ai-embeddings cosineSimilarity utility
    */
   compareEmbeddings(emb1: number[], emb2: number[]): number {
     const validated = compareEmbeddingsSchema.parse({ embedding1: emb1, embedding2: emb2 })
-
-    if (validated.embedding1.length !== validated.embedding2.length) {
-      throw new Error('Embeddings must have same length')
-    }
-
-    let dotProduct = 0
-    let norm1 = 0
-    let norm2 = 0
-
-    for (let i = 0; i < validated.embedding1.length; i++) {
-      dotProduct += validated.embedding1[i] * validated.embedding2[i]
-      norm1 += validated.embedding1[i] * validated.embedding1[i]
-      norm2 += validated.embedding2[i] * validated.embedding2[i]
-    }
-
-    if (norm1 === 0 || norm2 === 0) {
-      return 0
-    }
-
-    return dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2))
+    return cosineSimilarity(validated.embedding1, validated.embedding2)
   }
 
   /**

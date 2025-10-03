@@ -11,9 +11,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run --run unit",
-    "test:integration": "vitest run --run integration",
+    "test:integration": "vitest run --config tests/integration/vitest.config.ts",
+    "test:integration:watch": "vitest watch --config tests/integration/vitest.config.ts",
     "test:e2e": "playwright test",
     "test:coverage": "vitest run --coverage",
+    "test:all": "pnpm test:unit && pnpm test:integration && pnpm test:e2e",
     "build": "pnpm -r build",
     "dev": "pnpm -r dev"
   },

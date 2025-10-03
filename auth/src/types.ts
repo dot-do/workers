@@ -4,6 +4,98 @@
 
 import type { User as WorkOSUser } from '@workos-inc/node'
 
+// ============================================================================
+// RPC Types (from apis.do package)
+// ============================================================================
+
+/**
+ * Base RPC Context - Available to RPC handlers
+ */
+export interface BaseRpcContext {
+  /** Request ID */
+  requestId: string
+  /** Environment bindings */
+  env: any
+  /** Execution context */
+  executionCtx?: any
+  /** Authentication info */
+  auth?: {
+    userId?: string
+    roles?: string[]
+    metadata?: Record<string, any>
+  }
+  /** Request metadata */
+  metadata?: Record<string, any>
+}
+
+/**
+ * RPC Method Definition
+ */
+export interface RpcMethod {
+  /** Method name */
+  name: string
+  /** Handler function */
+  handler: RpcHandler
+  /** Input schema (optional, for validation) */
+  inputSchema?: any
+  /** Output schema (optional, for validation) */
+  outputSchema?: any
+  /** Whether authentication is required */
+  requiresAuth?: boolean
+  /** Required roles */
+  requiredRoles?: string[]
+}
+
+/**
+ * RPC Request
+ */
+export interface RpcRequest {
+  /** Method name or path segments */
+  method: string | any[]
+  /** Method arguments */
+  args: any[]
+  /** Request ID for tracing */
+  requestId?: string
+  /** Metadata */
+  metadata?: Record<string, any>
+}
+
+/**
+ * RPC Response
+ */
+export interface RpcResponse<T = any> {
+  /** Response data */
+  data?: T
+  /** Error information */
+  error?: RpcError
+  /** Request ID (for correlation) */
+  requestId?: string
+  /** Metadata */
+  metadata?: Record<string, any>
+}
+
+/**
+ * RPC Error
+ */
+export interface RpcError {
+  /** Error code */
+  code: string
+  /** Error message */
+  message: string
+  /** Error details */
+  details?: any
+  /** Stack trace (development only) */
+  stack?: string
+}
+
+/**
+ * RPC Handler - Function that handles RPC requests
+ */
+export type RpcHandler<T = any> = (
+  request: RpcRequest,
+  context: RpcContext
+) => Promise<RpcResponse<T>>
+
 // Environment bindings
 export interface AuthServiceEnv {
   // WorkOS credentials
@@ -24,6 +116,11 @@ export interface AuthServiceEnv {
 
   // Rate limiting KV
   RATE_LIMIT_KV?: KVNamespace
+}
+
+// RPC Context - extends base RpcContext with auth-specific env
+export interface RpcContext extends BaseRpcContext {
+  env: AuthServiceEnv
 }
 
 // User types

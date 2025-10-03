@@ -16,7 +16,7 @@
 
 import { WorkerEntrypoint } from 'cloudflare:workers'
 import { Hono } from 'hono'
-import type { AuthServiceEnv, User, Session, ApiKeyCreateInput, ApiKeyResponse, PermissionCheck, Role, ValidateTokenResponse, CreateApiKeyResponse } from './types'
+import type { AuthServiceEnv, User, Session, ApiKeyCreateInput, ApiKeyResponse, PermissionCheck, Role, ValidateTokenResponse, CreateApiKeyResponse, RpcContext, RpcMethod } from './types'
 import { UnauthorizedError, ForbiddenError, InvalidTokenError, TokenExpiredError, RateLimitError, AuthError } from './types'
 import { success, error, getClientIP, getUserAgent } from './utils'
 
@@ -29,10 +29,18 @@ import * as middleware from './middleware'
 
 /**
  * Auth Service RPC Interface
+ *
+ * All methods implement RpcMethod interface from apis.do
+ * and can be called via:
+ * - RPC (WorkerEntrypoint) - Direct service bindings
+ * - HTTP - REST API via Hono routes
+ * - MCP - AI agent integration (future)
  */
 export default class AuthService extends WorkerEntrypoint<AuthServiceEnv> {
   /**
    * Validate bearer token (API key or JWT)
+   *
+   * @implements RpcMethod
    */
   async validateToken(token: string): Promise<ValidateTokenResponse> {
     try {
@@ -173,6 +181,19 @@ export default class AuthService extends WorkerEntrypoint<AuthServiceEnv> {
    */
   async exchangeWorkOSCode(code: string): Promise<any> {
     return await workos.exchangeCodeForToken(this.env, code)
+  }
+
+  /**
+   * Create RPC context from service instance
+   * Useful for converting between RPC and HTTP interfaces
+   */
+  createRpcContext(requestId?: string, metadata?: Record<string, any>): RpcContext {
+    return {
+      requestId: requestId || crypto.randomUUID(),
+      env: this.env,
+      executionCtx: this.ctx,
+      metadata,
+    }
   }
 }
 

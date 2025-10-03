@@ -5,4 +5,5 @@ packages:
   # - 'agents'
   # - 'workflows'
   # - 'stripe'
+  - 'auth'
   - 'things'

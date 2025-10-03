@@ -6,12 +6,13 @@
 
 import { Hono } from 'hono'
 import { WorkerEntrypoint } from 'cloudflare:workers'
-import type { Env, DNSRecordType, LookupRequest, LookupResponse, BulkLookupRequest, BulkLookupResponse } from './types'
+import type { Env, DNSRecordType, LookupRequest, LookupResponse, BulkLookupRequest, BulkLookupResponse, SPFRecord, DKIMRecord, DMARCRecord, EmailAuthValidation } from './types'
 import { dnsLookup, dnsLookupAll } from './dns'
 import { ipLookup, ipLookupBatch, getIPFromRequest } from './ip'
 import { asnLookup, getASNFromIP } from './asn'
 import { hostnameLookup, hostnameLookupBatch } from './hostname'
 import { whoisLookup, whoisLookupBatch } from './whois'
+import { generateSPFRecord, validateSPFRecord, generateDKIMRecord, validateDKIMRecord, generateDMARCRecord, validateDMARCRecord, validateEmailAuth } from './email-auth'
 
 /**
  * RPC Interface - Service Bindings
@@ -134,6 +135,62 @@ export class DNSToolsService extends WorkerEntrypoint<Env> {
       errorCount,
     }
   }
+
+  /**
+   * Email Authentication - SPF
+   */
+  generateSPF(config: {
+    ipv4?: string[]
+    ipv6?: string[]
+    includes?: string[]
+    a?: boolean
+    mx?: boolean
+    qualifier?: '~' | '-' | '?' | '+'
+  }): SPFRecord {
+    return generateSPFRecord(config)
+  }
+
+  async validateSPF(domain: string): Promise<SPFRecord> {
+    return await validateSPFRecord(domain)
+  }
+
+  /**
+   * Email Authentication - DKIM
+   */
+  async generateDKIM(config: { domain: string; selector?: string; keySize?: 1024 | 2048 }): Promise<DKIMRecord> {
+    return await generateDKIMRecord(config)
+  }
+
+  async validateDKIM(domain: string, selector?: string): Promise<DKIMRecord> {
+    return await validateDKIMRecord(domain, selector)
+  }
+
+  /**
+   * Email Authentication - DMARC
+   */
+  generateDMARC(config: {
+    domain: string
+    policy: 'none' | 'quarantine' | 'reject'
+    subdomainPolicy?: 'none' | 'quarantine' | 'reject'
+    percentage?: number
+    rua?: string[]
+    ruf?: string[]
+    adkim?: 'r' | 's'
+    aspf?: 'r' | 's'
+  }): DMARCRecord {
+    return generateDMARCRecord(config)
+  }
+
+  async validateDMARC(domain: string): Promise<DMARCRecord> {
+    return await validateDMARCRecord(domain)
+  }
+
+  /**
+   * Complete Email Authentication Validation
+   */
+  async validateEmailAuth(domain: string, dkimSelector?: string): Promise<EmailAuthValidation> {
+    return await validateEmailAuth(domain, dkimSelector)
+  }
 }
 
 /**
@@ -245,6 +302,61 @@ app.post('/lookup/bulk', async (c) => {
   const request = await c.req.json<BulkLookupRequest>()
   const service = new DNSToolsService({} as any, c.env)
   const result = await service.bulkLookup(request)
+  return c.json(result)
+})
+
+// Email Authentication - SPF
+app.post('/email-auth/spf/generate', async (c) => {
+  const config = await c.req.json()
+  const service = new DNSToolsService({} as any, c.env)
+  const result = service.generateSPF(config)
+  return c.json(result)
+})
+
+app.get('/email-auth/spf/:domain', async (c) => {
+  const domain = c.req.param('domain')
+  const service = new DNSToolsService({} as any, c.env)
+  const result = await service.validateSPF(domain)
+  return c.json(result)
+})
+
+// Email Authentication - DKIM
+app.post('/email-auth/dkim/generate', async (c) => {
+  const config = await c.req.json()
+  const service = new DNSToolsService({} as any, c.env)
+  const result = await service.generateDKIM(config)
+  return c.json(result)
+})
+
+app.get('/email-auth/dkim/:domain', async (c) => {
+  const domain = c.req.param('domain')
+  const selector = c.req.query('selector') || 'default'
+  const service = new DNSToolsService({} as any, c.env)
+  const result = await service.validateDKIM(domain, selector)
+  return c.json(result)
+})
+
+// Email Authentication - DMARC
+app.post('/email-auth/dmarc/generate', async (c) => {
+  const config = await c.req.json()
+  const service = new DNSToolsService({} as any, c.env)
+  const result = service.generateDMARC(config)
+  return c.json(result)
+})
+
+app.get('/email-auth/dmarc/:domain', async (c) => {
+  const domain = c.req.param('domain')
+  const service = new DNSToolsService({} as any, c.env)
+  const result = await service.validateDMARC(domain)
+  return c.json(result)
+})
+
+// Complete Email Authentication Validation
+app.get('/email-auth/validate/:domain', async (c) => {
+  const domain = c.req.param('domain')
+  const selector = c.req.query('selector')
+  const service = new DNSToolsService({} as any, c.env)
+  const result = await service.validateEmailAuth(domain, selector)
   return c.json(result)
 })
 

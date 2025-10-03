@@ -1,0 +1,58 @@
+{
+  "name": "seo-content",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "node_compat": true,
+
+  // KV Namespaces for content analysis cache
+  "kv_namespaces": [
+    {
+      "binding": "CONTENT_CACHE",
+      "id": "content-cache-kv",
+      "preview_id": "content-cache-kv-preview"
+    },
+    {
+      "binding": "EEAT_SCORES",
+      "id": "eeat-scores-kv",
+      "preview_id": "eeat-scores-kv-preview"
+    }
+  ],
+
+  // Analytics Engine for content metrics
+  "analytics_engine_datasets": [
+    {
+      "binding": "CONTENT_ANALYTICS"
+    }
+  ],
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db",
+      "environment": "production"
+    },
+    {
+      "binding": "AI",
+      "service": "ai",
+      "environment": "production"
+    }
+  ],
+
+  // Queue for async analysis
+  "queues": {
+    "producers": [
+      {
+        "binding": "CONTENT_QUEUE",
+        "queue": "content-analysis"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "content-analysis",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5
+      }
+    ]
+  }
+}

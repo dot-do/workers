@@ -2196,7 +2196,45 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9
 
+  seo-content:
+    dependencies:
+      '@dot-do/seo-types':
+        specifier: workspace:*
+        version: link:../../sdk/packages/seo-types
+      hono:
+        specifier: ^4.7.10
+        version: 4.9.9
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20241127.0
+        version: 4.20251003.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      wrangler:
+        specifier: ^3.105.0
+        version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
+
   seo-crawler:
+    dependencies:
+      '@dot-do/seo-types':
+        specifier: workspace:*
+        version: link:../../sdk/packages/seo-types
+      hono:
+        specifier: ^4.7.10
+        version: 4.9.9
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20241127.0
+        version: 4.20251003.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      wrangler:
+        specifier: ^3.105.0
+        version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
+
+  seo-performance:
     dependencies:
       '@dot-do/seo-types':
         specifier: workspace:*
@@ -5334,6 +5372,7 @@ packages:
 
   /is-arrayish@0.3.4:
     resolution: {integrity: sha512-m6UrgzFVUYawGBh1dUsWR5M2Clqic9RVXC/9f8ceNlv2IcO9j9J/z8UoCLPqtsPBFNzEpfR3xftohbfqDx8EQA==}
+    requiresBuild: true
     dev: true
 
   /is-core-module@2.16.1:
@@ -6121,6 +6160,7 @@ packages:
 
   /simple-swizzle@0.2.4:
     resolution: {integrity: sha512-nAu1WFPQSMNr2Zn9PGSZK9AGn4t/y97lEm+MXTtUDwfP0ksAIX4nO+6ruD9Jwut4C49SB1Ws+fbXsm/yScWOHw==}
+    requiresBuild: true
     dependencies:
       is-arrayish: 0.3.4
     dev: true

@@ -164,3 +164,50 @@ export interface BulkLookupResponse {
   successCount: number
   errorCount: number
 }
+
+/**
+ * Email Authentication Types (SPF, DKIM, DMARC)
+ */
+
+export interface SPFRecord {
+  record: string
+  valid: boolean
+  domain: string
+  mechanisms: string[]
+  qualifier: 'pass' | 'fail' | 'softfail' | 'neutral' | 'none'
+  error?: string
+}
+
+export interface DKIMRecord {
+  domain: string
+  selector: string
+  publicKey: string
+  privateKey: string
+  dnsRecord: string
+  dnsName: string
+  valid: boolean
+  error?: string
+}
+
+export interface DMARCRecord {
+  domain: string
+  record: string
+  policy: 'none' | 'quarantine' | 'reject'
+  subdomainPolicy: 'none' | 'quarantine' | 'reject'
+  percentage: number
+  rua: string[]
+  ruf: string[]
+  valid: boolean
+  error?: string
+}
+
+export interface EmailAuthValidation {
+  domain: string
+  spf: SPFRecord
+  dkim: DKIMRecord
+  dmarc: DMARCRecord
+  score: number
+  valid: boolean
+  issues: string[]
+  recommendation: string
+}

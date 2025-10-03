@@ -1,0 +1,61 @@
+{
+  "name": "seo-performance",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "node_compat": true,
+
+  // KV Namespaces for vitals data
+  "kv_namespaces": [
+    {
+      "binding": "VITALS_CACHE",
+      "id": "vitals-cache-kv",
+      "preview_id": "vitals-cache-kv-preview"
+    },
+    {
+      "binding": "VITALS_HISTORY",
+      "id": "vitals-history-kv",
+      "preview_id": "vitals-history-kv-preview"
+    }
+  ],
+
+  // Analytics Engine for vitals tracking
+  "analytics_engine_datasets": [
+    {
+      "binding": "VITALS_ANALYTICS"
+    }
+  ],
+
+  // R2 for vitals snapshots
+  "r2_buckets": [
+    {
+      "binding": "VITALS_BUCKET",
+      "bucket_name": "vitals-snapshots"
+    }
+  ],
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db",
+      "environment": "production"
+    }
+  ],
+
+  // Queue for async monitoring
+  "queues": {
+    "producers": [
+      {
+        "binding": "VITALS_QUEUE",
+        "queue": "vitals-monitoring"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "vitals-monitoring",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5
+      }
+    ]
+  }
+}

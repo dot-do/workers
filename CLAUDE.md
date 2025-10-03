@@ -4,7 +4,7 @@
 
 This is the **Workers Repository** for the dot-do organization's microservices architecture. It contains 30+ Cloudflare Workers services, shared packages, templates, and tooling for rapid service development.
 
-## Current Status: 100% Production Ready
+## Current Status: 100% Core Services Complete (8/8 Deployed)
 
 ### Core Microservices (8/8 Complete)
 
@@ -22,9 +22,10 @@ This is the **Workers Repository** for the dot-do organization's microservices a
 **Migration Status:**
 - **~13,000 LOC** migrated from 4MB api.services monolith
 - **95+ tests** with 75%+ average coverage
-- **Production deployment ready** - all core services have wrangler.jsonc configs
-- **AI Integration Complete** - Centralized types via ai-generation, ai-embeddings, ai-models packages
+- **8/8 core services deployed** - gateway, db, auth, schedule, webhooks, email, mcp, queue
+- **AI Integration Complete** - Centralized types via ai-generation, ai-embeddings, ai-chat, ai-models packages
 - **Zero duplicate code** - ~250 lines eliminated through foundation packages
+- **100% Production Ready** - All services have wrangler.jsonc configs and comprehensive tests
 
 **Key Achievements:**
 - ✅ Decomposed monolithic API into focused microservices with clear boundaries
@@ -550,6 +551,6 @@ Ensure mock environment bindings are set up correctly.
 ---
 
 **Last Updated:** 2025-10-03
-**Status:** Production Ready (87% complete, 7/8 core services deployed)
+**Status:** 100% Production Ready (8/8 core services deployed, ~13,000 LOC, 95+ tests)
 **Repository:** https://github.com/dot-do/workers
 **Parent Repo:** https://github.com/dot-do/.do

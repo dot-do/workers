@@ -12,16 +12,16 @@
   "observability": { "enabled": true },
   "tail_consumers": [{ "service": "pipeline" }],
 
-  // Routes for webhook endpoints
-  "routes": [
-    { "pattern": "webhooks.apis.do/*", "zone_name": "apis.do" },
-    { "pattern": "*.apis.do/webhooks/*", "zone_name": "apis.do" },
-    { "pattern": "*.webhooks.do/*", "zone_name": "webhooks.do" }
-  ],
+  // Routes for webhook endpoints (commented out - conflicts with eval service)
+  // "routes": [
+  //   { "pattern": "webhooks.apis.do/*", "zone_name": "apis.do" },
+  //   { "pattern": "*.apis.do/webhooks/*", "zone_name": "apis.do" },
+  //   { "pattern": "*.webhooks.do/*", "zone_name": "webhooks.do" }
+  // ],
 
-  // Service bindings
+  // Service bindings - using actual deployed names
   "services": [
-    { "binding": "DB", "service": "do-db" },
-    { "binding": "QUEUE", "service": "do-queue" }
+    { "binding": "DB", "service": "db" },
+    { "binding": "QUEUE", "service": "queue" }
   ]
 }

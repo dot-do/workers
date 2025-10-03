@@ -7,27 +7,14 @@
   "observability": {
     "enabled": true
   },
+  // Service bindings - using actual deployed names
   "services": [
-    {
-      "binding": "DB",
-      "service": "do-db"
-    },
-    {
-      "binding": "AI",
-      "service": "do-ai"
-    },
-    {
-      "binding": "AUTH",
-      "service": "do-auth"
-    },
-    {
-      "binding": "QUEUE",
-      "service": "do-queue"
-    },
-    {
-      "binding": "WORKFLOWS",
-      "service": "do-workflows"
-    }
+    { "binding": "DB", "service": "db" }
+    // Other services commented out until deployed
+    // { "binding": "AI", "service": "ai" },
+    // { "binding": "AUTH", "service": "auth" },
+    // { "binding": "QUEUE", "service": "queue" },
+    // { "binding": "WORKFLOWS", "service": "workflows" }
   ],
   "kv_namespaces": [
     {

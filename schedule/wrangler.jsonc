@@ -13,15 +13,16 @@
     "crons": [
       "*/5 * * * *",  // Every 5 minutes (monitoring tasks)
       "0 * * * *",    // Every hour (cleanup, analytics)
-      "0 0 * * *",    // Every day at midnight (backups, maintenance)
-      "0 0 * * 0"     // Every Sunday at midnight (weekly cleanup)
+      "0 0 * * *"     // Every day at midnight (backups, maintenance)
+      // Weekly cron disabled for now - Cloudflare Workers doesn't support day-of-week in cron
     ]
   },
 
-  // Service Bindings - connect to other workers
+  // Service Bindings - connect to other workers (using actual deployed names)
   "services": [
-    { "binding": "DB", "service": "do-db" },
-    { "binding": "AI", "service": "do-ai" },
-    { "binding": "QUEUE", "service": "do-queue" }
+    { "binding": "DB", "service": "db" }
+    // Other services commented out until deployed
+    // { "binding": "AI", "service": "ai" },
+    // { "binding": "QUEUE", "service": "queue" }
   ]
 }

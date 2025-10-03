@@ -14,6 +14,8 @@ import type { Env, AnalyticsEvent, QueryParams } from './types'
 import { writeEvent, batchWriteEvents } from './writers'
 import { getServiceMetrics, getRevenueMetrics, getMarketplaceMetrics, getExperimentMetrics, getUserMetrics } from './queries'
 import { updateRealtimeCounters } from './aggregators/real-time'
+import { executeR2Query, resultToCSV, resultToJSON, listTables, getTableStats, DomainQueries } from './r2-sql'
+import { trackDomainEvent, getDomainAnalyticsSummary, type DomainAnalyticsEvent } from './domain-analytics'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -244,5 +246,133 @@ async function getRealtimeCounters(kv: KVNamespace) {
     counters,
   }
 }
+
+/**
+ * Domain Analytics Endpoints
+ */
+
+// Track domain event
+app.post('/track/domain', async (c) => {
+  try {
+    const event: DomainAnalyticsEvent = await c.req.json()
+    await trackDomainEvent(event, c.env)
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('Error tracking domain event:', error)
+    return c.json({ error: 'Failed to track domain event' }, 500)
+  }
+})
+
+// Get domain analytics summary
+app.get('/domains/summary', async (c) => {
+  try {
+    const timeRange = (c.req.query('range') as '1h' | '24h' | '7d' | '30d') || '24h'
+    const summary = await getDomainAnalyticsSummary(timeRange, c.env)
+    return c.json({ data: summary })
+  } catch (error) {
+    console.error('Error getting domain summary:', error)
+    return c.json({ error: 'Failed to get domain summary' }, 500)
+  }
+})
+
+/**
+ * R2 SQL Endpoints
+ */
+
+// Execute SQL query against R2 data
+app.post('/sql/query', async (c) => {
+  try {
+    const { sql } = await c.req.json<{ sql: string }>()
+
+    if (!sql) {
+      return c.json({ error: 'SQL query required' }, 400)
+    }
+
+    const result = await executeR2Query(sql, c.env)
+    return c.json({ data: result })
+  } catch (error) {
+    console.error('Error executing R2 query:', error)
+    return c.json({ error: 'Failed to execute query' }, 500)
+  }
+})
+
+// Export query results as CSV
+app.post('/sql/export/csv', async (c) => {
+  try {
+    const { sql } = await c.req.json<{ sql: string }>()
+    const result = await executeR2Query(sql, c.env)
+    const csv = resultToCSV(result)
+
+    return new Response(csv, {
+      headers: {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': 'attachment; filename="export.csv"',
+      },
+    })
+  } catch (error) {
+    console.error('Error exporting CSV:', error)
+    return c.json({ error: 'Failed to export CSV' }, 500)
+  }
+})
+
+// Export query results as JSON
+app.post('/sql/export/json', async (c) => {
+  try {
+    const { sql } = await c.req.json<{ sql: string }>()
+    const result = await executeR2Query(sql, c.env)
+    const json = resultToJSON(result)
+
+    return new Response(json, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Disposition': 'attachment; filename="export.json"',
+      },
+    })
+  } catch (error) {
+    console.error('Error exporting JSON:', error)
+    return c.json({ error: 'Failed to export JSON' }, 500)
+  }
+})
+
+// List available tables in R2 catalog
+app.get('/sql/tables', async (c) => {
+  try {
+    const tables = await listTables(c.env)
+    return c.json({ data: tables })
+  } catch (error) {
+    console.error('Error listing tables:', error)
+    return c.json({ error: 'Failed to list tables' }, 500)
+  }
+})
+
+// Get table statistics
+app.get('/sql/tables/:table/stats', async (c) => {
+  try {
+    const table = c.req.param('table')
+    const stats = await getTableStats(table, c.env)
+    return c.json({ data: stats })
+  } catch (error) {
+    console.error('Error getting table stats:', error)
+    return c.json({ error: 'Failed to get table stats' }, 500)
+  }
+})
+
+// Execute pre-built domain queries
+app.get('/sql/queries/:queryName', async (c) => {
+  try {
+    const queryName = c.req.param('queryName') as keyof typeof DomainQueries
+
+    if (!DomainQueries[queryName]) {
+      return c.json({ error: 'Query not found' }, 404)
+    }
+
+    const sql = DomainQueries[queryName]
+    const result = await executeR2Query(sql, c.env)
+    return c.json({ data: result })
+  } catch (error) {
+    console.error('Error executing pre-built query:', error)
+    return c.json({ error: 'Failed to execute query' }, 500)
+  }
+})
 
 export default app

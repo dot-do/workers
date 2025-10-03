@@ -1478,12 +1478,33 @@ importers:
 
   ../sdk/packages/sdk.do:
     dependencies:
+      ai-chat:
+        specifier: workspace:*
+        version: link:../ai-chat
+      ai-embeddings:
+        specifier: workspace:*
+        version: link:../ai-embeddings
+      ai-generation:
+        specifier: workspace:*
+        version: link:../ai-generation
+      ai-models:
+        specifier: workspace:*
+        version: link:../ai-models
       apis.do:
         specifier: workspace:*
         version: link:../apis.do
+      embeddings.do:
+        specifier: workspace:*
+        version: link:../embeddings.do
       graphdl:
         specifier: workspace:*
         version: link:../graphdl
+      llm.do:
+        specifier: workspace:*
+        version: link:../llm.do
+      models.do:
+        specifier: workspace:*
+        version: link:../models.do
       openai:
         specifier: ^4.77.0
         version: 4.104.0(zod@3.25.76)
@@ -1936,6 +1957,25 @@ importers:
       wrangler:
         specifier: ^4.24.0
         version: 4.42.0(@cloudflare/workers-types@4.20251003.0)
+
+  analytics:
+    dependencies:
+      hono:
+        specifier: ^4.8.0
+        version: 4.9.9
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20250108.0
+        version: 4.20251003.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.3
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+      wrangler:
+        specifier: ^3.99.0
+        version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
 
   auth:
     dependencies:

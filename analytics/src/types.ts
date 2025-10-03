@@ -6,9 +6,15 @@
 export interface Env {
   ANALYTICS: AnalyticsEngineDataset
   ANALYTICS_KV: KVNamespace
+  ANALYTICS_BUCKET: R2Bucket
+  ANALYTICS_QUEUE: Queue
   DB: any
+  DOMAINS?: any // Domain search service
+  DNS_TOOLS?: any // DNS tools service
+  DOMAIN_MONITOR?: any // Domain monitoring service
   ACCOUNT_ID: string
   API_TOKEN: string
+  ENVIRONMENT: string
 }
 
 /**

@@ -29,9 +29,21 @@
     }
   ],
 
+  // R2 Buckets for long-term storage and R2 SQL
+  "r2_buckets": [
+    {
+      "binding": "ANALYTICS_BUCKET",
+      "bucket_name": "analytics-data",
+      "jurisdiction": "us"
+    }
+  ],
+
   // Service Bindings
   "services": [
-    { "binding": "DB", "service": "do-db" }
+    { "binding": "DB", "service": "do-db" },
+    { "binding": "DOMAINS", "service": "domains" },
+    { "binding": "DNS_TOOLS", "service": "dns-tools" },
+    { "binding": "DOMAIN_MONITOR", "service": "domain-monitor" }
   ],
 
   // KV for real-time aggregation cache
@@ -41,6 +53,23 @@
       "id": "analytics-realtime-cache"
     }
   ],
+
+  // Queue for async analytics processing
+  "queues": {
+    "producers": [
+      {
+        "queue": "analytics-events",
+        "binding": "ANALYTICS_QUEUE"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "analytics-events",
+        "max_batch_size": 100,
+        "max_batch_timeout": 30
+      }
+    ]
+  },
 
   // Environment Variables
   "vars": {

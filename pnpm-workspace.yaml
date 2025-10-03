@@ -6,6 +6,8 @@ packages:
   - 'auth'
   - 'things'
   - 'domains'
+  - 'dns-tools'
+  - 'domain-monitor'
   # SDK packages (foundation packages)
   - '../sdk/packages/ai-generation'
   - '../sdk/packages/ai-embeddings'

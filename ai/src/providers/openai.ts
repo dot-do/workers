@@ -3,8 +3,10 @@
  * Supports GPT-5, GPT-4o, and embedding models via Cloudflare AI Gateway
  */
 
-import type { AIProviderInterface, GenerateOptions, EmbeddingOptions, AIServiceEnv, ModelPricing } from '../types'
-import { MODEL_PRICING } from '../types'
+import type { AIProviderInterface, GenerateOptions } from 'ai-generation'
+import type { EmbeddingOptions } from 'ai-embeddings'
+import { calculateCost } from 'ai-models'
+import type { AIServiceEnv } from '../types'
 
 export class OpenAIProvider implements AIProviderInterface {
   private env: AIServiceEnv
@@ -25,13 +27,7 @@ export class OpenAIProvider implements AIProviderInterface {
   }
 
   calculateCost(usage: { promptTokens: number; completionTokens: number }, model: string): number {
-    const pricing = MODEL_PRICING[model]
-    if (!pricing) return 0
-
-    const inputCost = (usage.promptTokens / 1_000_000) * pricing.input
-    const outputCost = (usage.completionTokens / 1_000_000) * pricing.output
-
-    return inputCost + outputCost
+    return calculateCost(usage, model)
   }
 
   /**

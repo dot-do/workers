@@ -3,7 +3,9 @@
  * Uses Cloudflare's native Workers AI (free/low-cost models)
  */
 
-import type { AIProviderInterface, GenerateOptions, EmbeddingOptions, AIServiceEnv } from '../types'
+import type { AIProviderInterface, GenerateOptions } from 'ai-generation'
+import type { EmbeddingOptions } from 'ai-embeddings'
+import type { AIServiceEnv } from '../types'
 
 export class WorkersAIProvider implements AIProviderInterface {
   private env: AIServiceEnv

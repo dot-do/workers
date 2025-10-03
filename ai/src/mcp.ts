@@ -4,7 +4,8 @@
  */
 
 import type AIService from './index'
-import type { GenerateOptions, EmbeddingOptions } from './types'
+import type { GenerateOptions } from 'ai-generation'
+import type { EmbeddingOptions } from 'ai-embeddings'
 
 /**
  * MCP Tool Definition

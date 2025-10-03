@@ -1,13 +1,16 @@
 packages:
   - 'packages/*'
   # All worker services
+  - 'ai'
   - 'embeddings'
   - 'auth'
   - 'things'
   - 'domains'
   # SDK packages (foundation packages)
+  - '../sdk/packages/ai-generation'
   - '../sdk/packages/ai-embeddings'
   - '../sdk/packages/ai-chat'
+  - '../sdk/packages/ai-models'
   - '../sdk/packages/ai-agents'
   - '../sdk/packages/ai-tools'
   - '../sdk/packages/*'

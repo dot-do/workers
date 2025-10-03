@@ -3,8 +3,10 @@
  * Supports Claude models via OpenRouter + Cloudflare AI Gateway
  */
 
-import type { AIProviderInterface, GenerateOptions, EmbeddingOptions, AIServiceEnv } from '../types'
-import { MODEL_PRICING } from '../types'
+import type { AIProviderInterface, GenerateOptions } from 'ai-generation'
+import type { EmbeddingOptions } from 'ai-embeddings'
+import { calculateCost as calcCost } from 'ai-models'
+import type { AIServiceEnv } from '../types'
 
 export class AnthropicProvider implements AIProviderInterface {
   private env: AIServiceEnv
@@ -28,12 +30,7 @@ export class AnthropicProvider implements AIProviderInterface {
   calculateCost(usage: { promptTokens: number; completionTokens: number }, model: string): number {
     // Map OpenRouter model names to our pricing keys
     const pricingKey = model.replace('anthropic/', '')
-    const pricing = MODEL_PRICING[pricingKey] || MODEL_PRICING['claude-sonnet-4.5']
-
-    const inputCost = (usage.promptTokens / 1_000_000) * pricing.input
-    const outputCost = (usage.completionTokens / 1_000_000) * pricing.output
-
-    return inputCost + outputCost
+    return calcCost(usage, pricingKey) || calcCost(usage, 'claude-sonnet-4.5')
   }
 
   /**

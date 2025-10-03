@@ -19,7 +19,7 @@ import type {
   AnalysisResult,
   AIProviderInterface,
 } from './types'
-import { calculateCost } from './types'
+import { calculateCost } from 'ai-models'
 
 export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
   private providers: Map<AIProvider, AIProviderInterface>
@@ -28,7 +28,7 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
     super(ctx, env)
 
     // Initialize providers
-    this.providers = new Map([
+    this.providers = new Map<AIProvider, AIProviderInterface>([
       ['openai', new OpenAIProvider(env)],
       ['anthropic', new AnthropicProvider(env)],
       ['workers-ai', new WorkersAIProvider(env)],
@@ -172,16 +172,17 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
     const latency = Date.now() - startTime
 
     const usage = {
-      promptTokens: Math.ceil(text.length / 4),
-      totalTokens: Math.ceil(text.length / 4),
+      tokens: Math.ceil(text.length / 4),
+      requests: 1,
     }
 
-    const cost = calculateCost({ promptTokens: usage.promptTokens, completionTokens: 0 }, model)
+    const cost = calculateCost({ promptTokens: usage.tokens, completionTokens: 0 }, model)
 
     return {
       embedding,
       model,
       provider,
+      dimensions: embedding.length,
       usage,
       cost,
       latency,

@@ -6,6 +6,8 @@ import { stringify, parse } from 'yaml'
 import { z } from 'zod'
 import { ulid } from 'ulid'
 import { env } from 'cloudflare:workers'
+import type { TokenUsage } from 'ai-generation'
+import { calculateCost, MODEL_PRICING } from 'ai-generation'
 // import { url } from './lib/url'
 // import { markdownStreamResponse, fencedMarkdownStream } from './lib/streams'
 
@@ -161,7 +163,15 @@ app.get('*', async (c) => {
             case 'finish':
               const totalTime = Date.now() - start
               const tokensPerSecond = Math.round(chunk.usage.totalTokens / (totalTime / 1000))
-              chunkText = `\n\n<usage>\n${stringify({ latency, thinkingTime, totalTime, tokensPerSecond, ...chunk.usage })}</usage>`
+              // Calculate cost using ai-generation package
+              const usage: TokenUsage = {
+                promptTokens: chunk.usage.promptTokens,
+                completionTokens: chunk.usage.completionTokens,
+                totalTokens: chunk.usage.totalTokens,
+              }
+              const cost = calculateCost(usage, model)
+              const costFormatted = cost > 0 ? `$${cost.toFixed(6)}` : 'N/A'
+              chunkText = `\n\n<usage>\n${stringify({ latency, thinkingTime, totalTime, tokensPerSecond, cost: costFormatted, ...chunk.usage })}</usage>`
               break
           }
 

@@ -2,6 +2,56 @@
  * Gateway Service Types
  */
 
+// ============================================================================
+// RPC Types (from apis.do)
+// ============================================================================
+
+/**
+ * RPC Request
+ */
+export interface RpcRequest {
+  /** Method name or path segments */
+  method: string | any[]
+  /** Method arguments */
+  args: any[]
+  /** Request ID for tracing */
+  requestId?: string
+  /** Metadata */
+  metadata?: Record<string, any>
+}
+
+/**
+ * RPC Response
+ */
+export interface RpcResponse<T = any> {
+  /** Response data */
+  data?: T
+  /** Error information */
+  error?: RpcError
+  /** Request ID (for correlation) */
+  requestId?: string
+  /** Metadata */
+  metadata?: Record<string, any>
+}
+
+/**
+ * RPC Error
+ */
+export interface RpcError {
+  /** Error code */
+  code: string
+  /** Error message */
+  message: string
+  /** Error details */
+  details?: any
+  /** Stack trace (development only) */
+  stack?: string
+}
+
+// ============================================================================
+// Gateway Service Types
+// ============================================================================
+
 export interface GatewayEnv {
   // Service bindings (RPC)
   DB: any
@@ -58,7 +108,10 @@ export interface GatewayContext {
   executionCtx: ExecutionContext
 }
 
-export interface GatewayResponse {
+/**
+ * Gateway Response (extends RpcResponse for compatibility)
+ */
+export interface GatewayResponse extends Omit<RpcResponse, 'data' | 'error'> {
   body: any
   status: number
   headers?: Record<string, string>

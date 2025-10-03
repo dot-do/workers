@@ -28,7 +28,7 @@ export class GatewayService extends WorkerEntrypoint<GatewayEnv> {
    */
   async route(url: string, options?: RequestInit): Promise<GatewayResponse> {
     const request = new Request(url, options)
-    const response = await this.fetch(request)
+    const response = await this.fetch!(request)
 
     return {
       body: await response.json().catch(() => response.text()),
@@ -51,7 +51,14 @@ export class GatewayService extends WorkerEntrypoint<GatewayEnv> {
 
 // ==================== HTTP Interface ====================
 
-const app = new Hono<{ Bindings: GatewayEnv }>()
+type HonoEnv = {
+  Bindings: GatewayEnv
+  Variables: {
+    ctx: GatewayContext
+  }
+}
+
+const app = new Hono<HonoEnv>()
 
 // Global CORS middleware
 app.use('*', cors())

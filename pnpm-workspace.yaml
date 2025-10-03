@@ -7,3 +7,6 @@ packages:
   # - 'stripe'
   - 'auth'
   - 'things'
+  - 'domains'
+  # SDK packages (for domains.do types)
+  - '../sdk/packages/*'

@@ -1,0 +1,27 @@
+# Domain Search & Pricing API - Environment Variables
+# Copy this file to .dev.vars and add your actual API keys
+
+# Dynadot Reseller API Key
+# Get from: https://www.dynadot.com/account/domain/setting/api.html
+DYNADOT_KEY=your_dynadot_api_key_here
+
+# Porkbun API Credentials
+# Get from: https://porkbun.com/account/api
+PORKBUN_API_KEY=pk1_your_porkbun_api_key_here
+PORKBUN_SECRET_KEY=sk1_your_porkbun_secret_key_here
+
+# Netim Reseller API Key
+# Get from: https://www.netim.com/en/my-account/api
+NETIM_API_KEY=your_netim_api_key_here
+
+# SAV (Start A Venture) API Key
+# Get from: https://sav.com/api
+SAV_API_KEY=your_sav_api_key_here
+
+# TLD-List API Key (Enterprise subscription required)
+# Get from: https://tld-list.com/api
+TLDLIST_API_KEY=your_tldlist_api_key_here
+
+# WhoisXML API Key (optional, for enhanced WHOIS)
+# Get from: https://whoisxmlapi.com/
+WHOISXML_API_KEY=your_whoisxml_api_key_here

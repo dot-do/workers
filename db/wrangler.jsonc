@@ -5,7 +5,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "db",
-	"main": "worker.ts",
+	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
 	"observability": { "enabled": true },
 	"tail_consumers": [{ "service": "pipeline" }],
@@ -15,18 +15,13 @@
 	],
 	"routes": [
 		{ "pattern": "*/*", "zone_name": "db.mw" },
-		{ "pattern": "db.apis.do/*", "zone_name": "apis.do" },
+		{ "pattern": "db.apis.do/*", "zone_name": "apis.do" }
 	],
-	// "compatibility_flags": ["nodejs_compat"],
 	"vars": {
 		"CLICKHOUSE_URL": "https://bkkj10mmgz.us-east-1.aws.clickhouse.cloud:8443",
 		"CLICKHOUSE_DATABASE": "default",
-		"CLICKHOUSE_USERNAME": "default",
+		"CLICKHOUSE_USERNAME": "default"
 	},
-	/**
-	 * Smart Placement
-	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-	 */
 	"placement": { "mode": "smart" },
 	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
 	"kv_namespaces": [{ "binding": "kv", "id": "0b51c3f8ea714b48a4c4dd664f7079cc" }],

@@ -1,0 +1,53 @@
+{
+  "name": "seo-crawler",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "node_compat": true,
+
+  // KV Namespaces for bot rules and activity
+  "kv_namespaces": [
+    {
+      "binding": "BOT_RULES",
+      "id": "bot-rules-kv",
+      "preview_id": "bot-rules-kv-preview"
+    },
+    {
+      "binding": "BOT_ACTIVITY",
+      "id": "bot-activity-kv",
+      "preview_id": "bot-activity-kv-preview"
+    }
+  ],
+
+  // Analytics Engine for bot tracking
+  "analytics_engine_datasets": [
+    {
+      "binding": "BOT_ANALYTICS"
+    }
+  ],
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db",
+      "environment": "production"
+    }
+  ],
+
+  // Queue for async processing
+  "queues": {
+    "producers": [
+      {
+        "binding": "BOT_QUEUE",
+        "queue": "bot-events"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "bot-events",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5
+      }
+    ]
+  }
+}

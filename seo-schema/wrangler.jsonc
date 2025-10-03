@@ -1,0 +1,41 @@
+{
+  "name": "seo-schema",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "node_compat": true,
+
+  // KV Namespace for schema cache
+  "kv_namespaces": [
+    {
+      "binding": "SCHEMA_CACHE",
+      "id": "schema-cache-kv",
+      "preview_id": "schema-cache-kv-preview"
+    }
+  ],
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db",
+      "environment": "production"
+    }
+  ],
+
+  // Queue for async generation
+  "queues": {
+    "producers": [
+      {
+        "binding": "SCHEMA_QUEUE",
+        "queue": "schema-generation"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "schema-generation",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5
+      }
+    ]
+  }
+}

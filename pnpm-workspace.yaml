@@ -10,6 +10,8 @@ packages:
   - 'domain-monitor'
   - 'analytics'
   - 'numerics'
+  - 'seo-crawler'
+  - 'seo-schema'
   # SDK packages (foundation packages)
   - '../sdk/packages/ai-generation'
   - '../sdk/packages/ai-embeddings'

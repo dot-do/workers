@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:mock": "./test-mock.sh",
+    "test:mock:vitest": "vitest run --config vitest.mock.config.ts",
     "test:rest": "./test-rest.sh",
     "inspect:mock": "node inspect-mock.mjs",
     "types": "wrangler types",

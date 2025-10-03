@@ -1,0 +1,45 @@
+{
+  "name": "email-validation",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // KV namespace for caching validation results
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "email_validation_cache"
+    }
+  ],
+
+  // Queue for async bulk validation
+  "queues": {
+    "producers": [
+      {
+        "binding": "QUEUE",
+        "queue": "email-validation-jobs"
+      }
+    ]
+  },
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db"
+    }
+  ],
+
+  // Environment variables (secrets via wrangler secret put)
+  "vars": {
+    "ENVIRONMENT": "production"
+  },
+
+  // Routes
+  "routes": [
+    {
+      "pattern": "validation.email.do/*",
+      "zone_name": "do"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "name": "esp-gateway",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // KV namespace for caching configs and health
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "esp_gateway_cache"
+    }
+  ],
+
+  // Queue for async sending
+  "queues": {
+    "producers": [
+      {
+        "binding": "QUEUE",
+        "queue": "email-sending-jobs"
+      }
+    ]
+  },
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db"
+    }
+  ],
+
+  // Environment variables (ESP API keys via wrangler secret put)
+  "vars": {
+    "ENVIRONMENT": "production"
+  },
+
+  // Routes
+  "routes": [
+    {
+      "pattern": "esp.email.do/*",
+      "zone_name": "do"
+    }
+  ]
+}

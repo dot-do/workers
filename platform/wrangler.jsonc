@@ -1,0 +1,41 @@
+{
+  "name": "platform-deployer",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-10",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Workers for Platforms deployer
+  // Manages dispatch namespaces and worker deployments
+
+  "vars": {
+    "PLATFORM_DOMAIN": "services.delivery"
+  },
+
+  // Bindings
+  "services": [
+    {
+      "binding": "DB_SERVICE",
+      "service": "db"
+    }
+  ],
+
+  // Durable Objects for tenant databases
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "TENANT_DATABASE",
+        "class_name": "TenantDatabase",
+        "script_name": "tenant-database"
+      }
+    ]
+  },
+
+  // Secrets (set with wrangler secret put)
+  // - CLOUDFLARE_ACCOUNT_ID
+  // - CLOUDFLARE_API_TOKEN
+
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1
+  }
+}

@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { ResendProvider } from './providers/resend'
 import { WorkOSProvider } from './providers/workos'
+import { SESProvider } from './providers/ses'
 import type { EmailMessage, EmailResult, EmailStatus, EmailProvider, SendTemplateOptions, ListEmailsOptions, EmailLog } from './types'
 import { renderTemplate, listTemplates, getTemplate } from './templates'
 import { generateEmailId, formatEmailLog, isValidEmail, success, error } from './utils'
@@ -311,6 +312,16 @@ export default class EmailService extends WorkerEntrypoint<Env> {
           throw new Error('WORKOS_API_KEY not configured')
         }
         return new WorkOSProvider(this.env.WORKOS_API_KEY)
+
+      case 'ses':
+        if (!this.env.AWS_ACCESS_KEY_ID || !this.env.AWS_SECRET_ACCESS_KEY) {
+          throw new Error('AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY not configured')
+        }
+        return new SESProvider({
+          accessKeyId: this.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: this.env.AWS_SECRET_ACCESS_KEY,
+          region: this.env.AWS_REGION || 'us-east-1',
+        })
 
       default:
         throw new Error(`Unknown email provider: ${providerName}`)

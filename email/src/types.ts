@@ -167,7 +167,7 @@ export interface EmailLog {
 // ============================================================================
 
 export interface SendOptions {
-  provider?: 'resend' | 'sendgrid' | 'workos' | 'cloudflare'
+  provider?: 'resend' | 'sendgrid' | 'workos' | 'cloudflare' | 'ses'
   userId?: string
   trackOpens?: boolean
   trackClicks?: boolean

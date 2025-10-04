@@ -2,20 +2,58 @@
  * Code execution logic using Dynamic Worker Loader
  */
 
-import type { Env, ExecuteCodeRequest, ExecuteCodeResponse, WorkerCode, RequestLog } from './types'
+import type { Env, ExecuteCodeRequest, ExecuteCodeResponse, WorkerCode, RequestLog, ServiceContext } from './types'
+import { authorizeCodeExecution, getCodePermissions, checkRateLimit } from './authorization'
 
 /**
  * Execute TypeScript code in a secure V8 isolate
  */
 export async function executeCode(
   request: ExecuteCodeRequest,
-  env: Env
+  env: Env,
+  context?: ServiceContext
 ): Promise<ExecuteCodeResponse> {
   const startTime = Date.now()
   const logs: string[] = []
   const requests: RequestLog[] = []
 
   try {
+    // ========== AUTHORIZATION ==========
+    // If context provided, check authorization
+    if (context) {
+      // Check rate limit
+      const rateLimitResult = checkRateLimit(context)
+      if (!rateLimitResult.allowed) {
+        return {
+          success: false,
+          error: {
+            message: rateLimitResult.error || 'Rate limit exceeded'
+          },
+          logs,
+          executionTime: Date.now() - startTime
+        }
+      }
+
+      // Check code execution authorization
+      const authResult = authorizeCodeExecution(request, context)
+      if (!authResult.authorized) {
+        return {
+          success: false,
+          error: {
+            message: authResult.error || 'Authorization failed'
+          },
+          logs,
+          executionTime: Date.now() - startTime
+        }
+      }
+
+      // Apply tier-based timeout limit
+      const permissions = getCodePermissions(context)
+      const requestedTimeout = request.timeout || parseInt(env.MAX_EXECUTION_TIME || '30000')
+      if (requestedTimeout > permissions.maxExecutionTime) {
+        request.timeout = permissions.maxExecutionTime
+      }
+    }
     // Generate unique ID for this execution
     const executionId = request.cacheKey || `exec-${Date.now()}-${Math.random().toString(36).substring(7)}`
 
@@ -30,9 +68,6 @@ export async function executeCode(
       }
     }
 
-    // Build bindings for the code
-    const bindings = buildBindings(request.bindings || [], env, logs, requests)
-
     // Load the worker with the code
     const worker = env.LOADER.get(executionId, async () => {
       const workerCode: WorkerCode = {
@@ -41,7 +76,21 @@ export async function executeCode(
         modules: {
           'main.js': wrapCode(request.code, request.captureConsole ?? true)
         },
-        env: bindings
+        env: {
+          // Provide DO binding - SDK will use this
+          DO: env.DO || { fetch: () => Promise.resolve(new Response('DO service not available', { status: 503 })) },
+          // Provide logging utilities
+          __logRequest: (log: RequestLog) => { requests.push(log) },
+          // Provide read-only context
+          __context: context ? {
+            user: context.auth.user,
+            namespace: context ? getCodePermissions(context).namespace : '*',
+            authenticated: context.auth.authenticated,
+            requestId: context.requestId
+          } : undefined
+        },
+        // Outbound handler - inject context into all service calls
+        globalOutbound: context ? createOutboundHandler(context, env, requests) : undefined
       }
       return workerCode
     })
@@ -167,38 +216,88 @@ export default {
 }
 
 /**
- * Build bindings object for the dynamic worker
+ * Create outbound handler to intercept fetch calls from user code
+ * This proxies requests through the DO service with user context injected
  */
-function buildBindings(
-  requestedBindings: string[],
+function createOutboundHandler(
+  context: ServiceContext,
   env: Env,
-  logs: string[],
   requests: RequestLog[]
-): Record<string, any> {
-  const bindings: Record<string, any> = {}
+) {
+  return async (request: Request) => {
+    const url = new URL(request.url)
 
-  // Add requested service bindings
-  if (requestedBindings.includes('db') && env.DB) {
-    bindings.DB = env.DB
-  }
-  if (requestedBindings.includes('mcp') && env.MCP) {
-    bindings.MCP = env.MCP
-  }
-  // Add more bindings as services are requested
-  if (requestedBindings.includes('auth') && env.AUTH) {
-    bindings.AUTH = env.AUTH
-  }
-  if (requestedBindings.includes('email') && env.EMAIL) {
-    bindings.EMAIL = env.EMAIL
-  }
-  if (requestedBindings.includes('queue') && env.QUEUE) {
-    bindings.QUEUE = env.QUEUE
-  }
-
-  // Add logging utilities
-  bindings.__logRequest = (log: RequestLog) => {
+    // Log the request
+    const log: RequestLog = {
+      url: request.url,
+      method: request.method,
+      timestamp: Date.now()
+    }
     requests.push(log)
-  }
 
-  return bindings
+    // Check if this is an internal service call
+    // Internal services use http:// with service names as hostnames
+    const isInternalService = url.protocol === 'http:' && [
+      'db', 'auth', 'gateway', 'schedule',
+      'webhooks', 'email', 'mcp', 'queue'
+    ].includes(url.hostname)
+
+    if (isInternalService) {
+      // Route through DO worker with context headers
+      const headers = new Headers(request.headers)
+      headers.set('X-Request-ID', context.requestId)
+      headers.set('X-User-ID', context.auth.user?.id || '')
+      headers.set('X-User-Email', context.auth.user?.email || '')
+      headers.set('X-Authenticated', String(context.auth.authenticated))
+
+      if (context.auth.user?.role) {
+        headers.set('X-User-Role', context.auth.user.role)
+      }
+
+      if (context.auth.user?.permissions) {
+        headers.set('X-User-Permissions', context.auth.user.permissions.join(','))
+      }
+
+      // Get the service binding from env
+      const serviceName = url.hostname.toUpperCase()
+      const serviceBinding = env[serviceName as keyof Env] as any
+
+      if (!serviceBinding || !serviceBinding.fetch) {
+        return new Response(
+          JSON.stringify({ error: `Service ${serviceName} not available` }),
+          { status: 503, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+
+      // Proxy to service with context
+      try {
+        const newRequest = new Request(request.url, {
+          method: request.method,
+          headers,
+          body: request.body
+        })
+
+        return await serviceBinding.fetch(newRequest)
+      } catch (error) {
+        return new Response(
+          JSON.stringify({
+            error: `Service ${serviceName} error: ${error instanceof Error ? error.message : 'Unknown error'}`
+          }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+
+    // External request - pass through
+    try {
+      return await fetch(request)
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          error: `External fetch error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+  }
 }

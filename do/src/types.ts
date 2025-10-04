@@ -15,6 +15,7 @@ export interface Env {
   EMAIL: Fetcher
   MCP: Fetcher
   QUEUE: Fetcher
+  DO?: Fetcher // Self-reference for recursive calls (optional)
 
   // KV for caching
   CODE_CACHE?: KVNamespace

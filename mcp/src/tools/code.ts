@@ -100,7 +100,7 @@ export function getTools(): MCPTool[] {
 }
 
 /**
- * Execute TypeScript code in V8 isolate
+ * Execute TypeScript code in V8 isolate (with authorization)
  */
 export async function code_execute(
   args: {
@@ -121,7 +121,24 @@ export async function code_execute(
     throw new Error('Code execution service not available')
   }
 
-  // Call DO service via RPC
+  // Build service context for authorization
+  const context = user ? {
+    auth: {
+      authenticated: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role || 'public',
+        permissions: []
+      }
+    },
+    requestId: crypto.randomUUID(),
+    timestamp: Date.now(),
+    metadata: {}
+  } : undefined
+
+  // Call DO service via RPC with context for authorization
   const result = await env.DO.execute({
     code: args.code,
     bindings: args.bindings || [],
@@ -129,7 +146,7 @@ export async function code_execute(
     cacheKey: args.cacheKey,
     captureConsole: args.captureConsole ?? true,
     captureFetch: args.captureFetch ?? false
-  })
+  }, context)
 
   return result
 }
@@ -195,7 +212,7 @@ Use return to return a value. Console.log is captured.`
 }
 
 /**
- * Test code execution with expected output
+ * Test code execution with expected output (with authorization)
  */
 export async function code_test(
   args: {
@@ -212,13 +229,30 @@ export async function code_test(
     throw new Error('Code execution service not available')
   }
 
-  // Execute the code
+  // Build service context for authorization
+  const context = user ? {
+    auth: {
+      authenticated: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role || 'public',
+        permissions: []
+      }
+    },
+    requestId: crypto.randomUUID(),
+    timestamp: Date.now(),
+    metadata: {}
+  } : undefined
+
+  // Execute the code with context
   const result = await env.DO.execute({
     code: args.code,
     bindings: args.bindings || [],
     timeout: 30000,
     captureConsole: true
-  })
+  }, context)
 
   // Compare output
   const passed = JSON.stringify(result.result) === JSON.stringify(args.expectedOutput)

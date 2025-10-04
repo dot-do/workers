@@ -80,11 +80,12 @@ export class DO extends WorkerEntrypoint<Env> {
     })
 
     /**
-     * Execute code endpoint
+     * Execute code endpoint (with authorization)
      */
     app.post('/execute', async (c) => {
       try {
         const body = await c.req.json<ExecuteCodeRequest>()
+        const context = c.get('serviceContext')
 
         if (!body.code || typeof body.code !== 'string') {
           return c.json({
@@ -95,7 +96,8 @@ export class DO extends WorkerEntrypoint<Env> {
           }, 400)
         }
 
-        const result = await executeCode(body, c.env)
+        // Execute with authorization context
+        const result = await executeCode(body, c.env, context)
         return c.json(result, result.success ? 200 : 500)
       } catch (error) {
         return c.json({
@@ -105,6 +107,22 @@ export class DO extends WorkerEntrypoint<Env> {
           }
         }, 500)
       }
+    })
+
+    /**
+     * Authorization info endpoint
+     * Returns user's tier, namespace, and permissions
+     */
+    app.get('/auth', (c) => {
+      const context = c.get('serviceContext')
+      const { getTierSummary } = require('./authorization')
+      const summary = getTierSummary(context)
+
+      return c.json({
+        authenticated: context.auth.authenticated,
+        user: context.auth.user?.email || 'anonymous',
+        ...summary
+      })
     })
 
     /**
@@ -214,7 +232,7 @@ export class DO extends WorkerEntrypoint<Env> {
   }
 
   async execute(request: ExecuteCodeRequest, context?: ServiceContext): Promise<any> {
-    return await executeCode(request, this.env)
+    return await executeCode(request, this.env, context)
   }
 
   // ========== Private Helper ==========

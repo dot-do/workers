@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "do-deploy",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-15",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "observability": {
+    "enabled": true
+  },
+
+  // Service Bindings - connect to auth and db services
+  "services": [
+    { "binding": "AUTH_SERVICE", "service": "auth" },
+    { "binding": "DB_SERVICE", "service": "db" }
+  ],
+
+  // Environment variables - namespace names
+  "vars": {
+    "PRODUCTION_NAMESPACE": "dotdo-production",
+    "STAGING_NAMESPACE": "dotdo-staging",
+    "DEV_NAMESPACE": "dotdo-development"
+  }
+
+  // Secrets (set via `wrangler secret put <NAME>`):
+  // - CLOUDFLARE_ACCOUNT_ID: Cloudflare account ID
+  // - CLOUDFLARE_API_TOKEN: Cloudflare API token with Workers dispatch permissions
+}

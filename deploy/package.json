@@ -1,0 +1,25 @@
+{
+  "name": "deploy",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "cf-typegen": "wrangler types",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@vitest/ui": "^3.2.4",
+    "typescript": "^5.5.2",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.24.3"
+  },
+  "dependencies": {
+    "hono": "^4.9.9",
+    "zod": "^3.24.1"
+  }
+}

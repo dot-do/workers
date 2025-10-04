@@ -16,7 +16,7 @@
 		"@vitest/ui": "^3.2.4",
 		"typescript": "^5.5.2",
 		"vitest": "^3.2.4",
-		"wrangler": "^4.24.3"
+		"wrangler": "^4.41.0"
 	},
 	"dependencies": {
 		"cron-parser": "^5.4.0",

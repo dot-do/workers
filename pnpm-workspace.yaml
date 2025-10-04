@@ -1,6 +1,15 @@
 packages:
   - 'packages/*'
   # All worker services
+  # Core services (Wave 2E migration)
+  - 'gateway'
+  - 'db'
+  - 'schedule'
+  - 'webhooks'
+  - 'email'
+  - 'mcp'
+  - 'queue'
+  # Other services
   - 'ai'
   - 'embeddings'
   - 'auth'

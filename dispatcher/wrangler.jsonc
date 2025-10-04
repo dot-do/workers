@@ -1,0 +1,40 @@
+{
+  "name": "dispatcher",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+
+  // Dispatch namespace bindings
+  // These will be created by Subagent A in Wave 1
+  "dispatch_namespaces": [
+    {
+      "binding": "PRODUCTION",
+      "namespace": "dotdo-production"
+    },
+    {
+      "binding": "STAGING",
+      "namespace": "dotdo-staging"
+    },
+    {
+      "binding": "DEVELOPMENT",
+      "namespace": "dotdo-development"
+    }
+  ],
+
+  // Environment configuration
+  "vars": {
+    "ENVIRONMENT": "production"
+  },
+
+  // Routes configuration (not deployed yet - Wave 2)
+  // These will route all *.do/* traffic through this dispatcher
+  "routes": [
+    {
+      "pattern": "*.do/*",
+      "zone_name": "do"
+    },
+    {
+      "pattern": "api.do/*",
+      "zone_name": "do"
+    }
+  ]
+}

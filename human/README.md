@@ -1,405 +1,359 @@
-# Human Service - Human-in-the-Loop Function Execution
+# Human Functions - Voice Channel Integration
 
-Type-safe human-in-the-loop function execution with routing, UI components, and lifecycle hooks.
+Voice-based human function interactions using VAPI for phone calls with speech-to-text, text-to-speech, DTMF support, and full audit trails.
 
 ## Overview
 
-The Human Service enables AI agents and automated systems to seamlessly delegate tasks to humans when needed. It provides a complete type-safe framework for:
+The **VoiceChannel** enables phone-based interactions with human functions. It converts structured function payloads into natural voice conversations, collects input via speech or button press (DTMF), and maintains complete audit trails with call recordings stored in R2.
 
-- **Function Definitions** - Define what needs human input with Zod schemas
-- **Routing** - Route tasks to appropriate humans via multiple channels
-- **UI Components** - React components for prompt, form, and review interfaces
-- **Lifecycle Hooks** - Handle timeouts, escalations, and completions
-- **Task Management** - Create, track, respond to, and monitor tasks
+## Features
+
+- ✅ **VAPI Integration** - Full client integration with authentication and webhook handling
+- ✅ **Speech-to-Text** - Collect open-ended speech input with confidence scoring
+- ✅ **Text-to-Speech** - Natural voice prompts with configurable voices and models
+- ✅ **DTMF Support** - Button press input for menus and simple choices
+- ✅ **Call Recording** - Automatic recording to R2 with structured storage
+- ✅ **Audit Trail** - Full transcript storage and call metadata tracking
+- ✅ **Voice Scripts** - Automatic conversion of payloads to VAPI-compatible scripts
+- ✅ **VoiceUX Patterns** - Reusable patterns for menus, forms, confirmations
+- ✅ **Example Implementation** - Expense approval use case
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Human Function Definition                 │
-│  - Name, description                                         │
-│  - Input/output schemas (Zod)                               │
-│  - Routing config (channels, assignees, SLA)                │
-│  - UI components (React)                                     │
-│  - Lifecycle hooks (onTimeout, onComplete, etc.)            │
-└─────────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      Human Service RPC                       │
-│  - createTask()     - Create new human task                 │
-│  - getTask()        - Get task by ID                         │
-│  - listTasks()      - List tasks with filters                │
-│  - respondToTask()  - Submit response                        │
-│  - cancelTask()     - Cancel pending task                    │
-│  - getStats()       - Task statistics                        │
-└─────────────────────────────────────────────────────────────┘
-                           │
-          ┌────────────────┼────────────────┐
-          ▼                ▼                ▼
-    ┌─────────┐      ┌─────────┐      ┌─────────┐
-    │  Slack  │      │   Web   │      │  Voice  │
-    │ Channel │      │ Channel │      │ Channel │
-    └─────────┘      └─────────┘      └─────────┘
+User Phone Call → VAPI API
+                    ↓
+            VoiceChannel.initiateCall()
+                    ↓
+        Generate Voice Script from Payload
+                    ↓
+            Store Call State in DB
+                    ↓
+        VAPI Delivers Voice Prompt
+                    ↓
+    User Responds (Speech or DTMF)
+                    ↓
+            VAPI Webhook Event
+                    ↓
+        VoiceChannel.handleWebhook()
+                    ↓
+        Process Response & Update DB
+                    ↓
+        Record Audio to R2 Storage
 ```
 
-## Core Types
-
-### HumanFunction
-
-```typescript
-import { z } from 'zod'
-import type { HumanFunction } from '@do/human'
-
-// Define input/output schemas
-const ExpenseInputSchema = z.object({
-  amount: z.number(),
-  category: z.string(),
-  receipt: z.string().url()
-})
-
-const ExpenseOutputSchema = z.object({
-  approved: z.boolean(),
-  reason: z.string().optional()
-})
-
-// Define the human function
-const approveExpense: HumanFunction<ExpenseInput, ExpenseOutput> = {
-  name: 'approve-expense',
-  description: 'Approve or reject expense claims',
-
-  // Validation schemas
-  schema: {
-    input: ExpenseInputSchema,
-    output: ExpenseOutputSchema,
-  },
-
-  // Routing configuration
-  routing: {
-    channels: ['slack', 'web'],
-    assignees: ['manager-team'],
-    timeout: 86400000, // 24 hours
-    sla: {
-      warning: 43200000,  // 12 hours
-      critical: 86400000  // 24 hours
-    },
-    priority: 1,
-    tags: ['expense', 'approval']
-  },
-
-  // UI components
-  ui: {
-    prompt: ExpensePrompt,        // Show to assignee
-    form: ExpenseApprovalForm,    // Form for response
-    review: ExpenseReview          // Review completed task
-  },
-
-  // Lifecycle hooks
-  onTimeout: async (ctx) => ({
-    approved: false,
-    reason: 'Timed out - auto-rejected'
-  }),
-
-  onComplete: async (result) => {
-    await notifyUser(result)
-  }
-}
-```
-
-### Task Management
-
-```typescript
-import { HumanService } from '@do/human'
-
-// Create a task
-const taskId = await humanService.createTask(
-  'approve-expense',
-  'Please review this expense claim',
-  [
-    { name: 'amount', label: 'Amount', type: 'number', required: true },
-    { name: 'category', label: 'Category', type: 'select', options: [...] }
-  ],
-  {
-    priority: 'high',
-    timeoutMs: 86400000,
-    assignedTo: 'manager@company.com',
-    context: { userId: '123', receiptUrl: '...' }
-  }
-)
-
-// Get task status
-const task = await humanService.getTask(taskId)
-
-// List pending tasks
-const { tasks, total } = await humanService.listTasks({
-  status: 'pending',
-  assignedTo: 'manager@company.com',
-  sortBy: 'priority',
-  sortOrder: 'desc'
-})
-
-// Respond to task
-const completedTask = await humanService.respondToTask(
-  taskId,
-  { approved: true, notes: 'Looks good' },
-  'manager@company.com'
-)
-
-// Get statistics
-const stats = await humanService.getStats()
-// { total, pending, completed, avgResponseTimeMs, completionRate, ... }
-```
-
-## Type System
-
-### Core Types
-
-```typescript
-// Channels
-type HumanChannel = 'slack' | 'web' | 'voice' | 'email'
-
-// Task Status
-type TaskStatus = 'pending' | 'processing' | 'completed' | 'cancelled' | 'timeout'
-
-// Priority
-type TaskPriority = 'low' | 'normal' | 'high' | 'critical'
-
-// Routing Config
-interface RoutingConfig<TInput> {
-  channels: HumanChannel[]
-  assignees?: string[] | ((input: TInput) => string[] | Promise<string[]>)
-  timeout?: number
-  sla?: { warning: number; critical: number }
-  priority?: 1 | 2 | 3 | 4 | 5
-  tags?: string[]
-}
-
-// Execution Context
-interface ExecutionContext<TInput> {
-  executionId: string
-  functionName: string
-  input: TInput
-  startedAt: Date
-  channel: HumanChannel
-  assignee?: string
-  metadata?: Record<string, unknown>
-}
-
-// Execution Result
-interface ExecutionResult<TOutput> {
-  executionId: string
-  output: TOutput
-  completedAt: Date
-  duration: number
-  assignee?: string
-  metadata?: Record<string, unknown>
-}
-```
-
-## Validation
-
-All types are validated at runtime using Zod schemas:
-
-```typescript
-import {
-  validateExecutionRequest,
-  validateExecutionResult,
-  safeValidateExecutionRequest,
-  validateWithError,
-  validateBatch
-} from '@do/human'
-
-// Validate and throw on error
-const request = validateExecutionRequest(data)
-
-// Safe validation (returns result object)
-const result = safeValidateExecutionRequest(data)
-if (!result.success) {
-  console.error(result.error)
-}
-
-// Validate with custom error context
-const validated = validateWithError(schema, data, 'user input')
-
-// Batch validation
-const { valid, errors } = validateBatch(schema, items)
-```
-
-## Error Handling
-
-```typescript
-import {
-  HumanFunctionError,
-  ValidationError,
-  TimeoutError,
-  NotFoundError,
-  RoutingError
-} from '@do/human'
-
-try {
-  await humanService.respondToTask(taskId, response, user)
-} catch (error) {
-  if (error instanceof ValidationError) {
-    // Handle validation errors
-  } else if (error instanceof TimeoutError) {
-    // Handle timeout
-  } else if (error instanceof NotFoundError) {
-    // Task not found
-  }
-}
-```
-
-## HTTP API
-
-All functions are available via HTTP endpoints:
+## Installation
 
 ```bash
-# Create task
-POST /tasks
-{
-  "name": "approve-expense",
-  "description": "Review expense claim",
-  "formFields": [...],
-  "priority": "high",
-  "timeoutMs": 86400000
+pnpm install
+```
+
+## Usage
+
+### Basic Example: Expense Approval
+
+```typescript
+import { VoiceChannel } from './src/channels/voice'
+
+// Initialize channel
+const voiceChannel = new VoiceChannel({
+  vapiApiKey: env.VAPI_API_KEY,
+  r2Bucket: env.AUDIO,
+  db: env.DB,
+})
+
+// Create function payload
+const payload = {
+  id: 'expense-123',
+  functionType: 'approval',
+  prompt: 'Approve $5000 marketing expense?',
 }
 
-# Get task
-GET /tasks/:id
+// Initiate call
+const { callSid } = await voiceChannel.initiateCall(
+  '+1234567890',
+  payload,
+  {
+    recordingEnabled: true,
+    maxDuration: 300,
+  }
+)
 
-# List tasks
-GET /tasks?status=pending&assignedTo=user@example.com
+// Check status (webhook-driven in production)
+const status = await voiceChannel.getCallStatus(callSid)
+console.log('Approved:', status.response?.approved)
+```
 
-# Respond to task
-POST /tasks/:id/respond
+### Approval Pattern
+
+```typescript
 {
-  "response": { "approved": true },
-  "respondedBy": "manager@example.com"
+  id: 'func-123',
+  functionType: 'approval',
+  prompt: 'Approve this expense of $5000?',
 }
 
-# Cancel task
-DELETE /tasks/:id?reason=No+longer+needed
+// Generated voice script:
+{
+  initial: {
+    say: "Approve this expense of $5000? Press 1 to approve, 2 to reject.",
+    gather: { input: ['speech', 'dtmf'], numDigits: 1, timeout: 5 }
+  },
+  menu: [
+    { digits: '1', say: 'Approved', action: 'approve' },
+    { digits: '2', say: 'Rejected', action: 'reject' }
+  ]
+}
+```
 
-# Get statistics
-GET /stats
+### Form Pattern
+
+```typescript
+{
+  id: 'func-456',
+  functionType: 'form',
+  prompt: 'Please provide your information.',
+  fields: [
+    {
+      id: 'name',
+      type: 'text',
+      label: 'Name',
+      prompt: 'Please say your full name',
+      required: true,
+    },
+    {
+      id: 'email',
+      type: 'email',
+      label: 'Email',
+      required: true,
+    },
+  ],
+}
+
+// Generated voice script collects each field sequentially
+// with confirmation prompts
+```
+
+### VoiceUX Patterns
+
+```typescript
+import { VoiceUX } from './src/channels/voice'
+
+// Create DTMF menu
+const menu = VoiceUX.createMenu([
+  { digits: '1', say: 'Approve', action: 'approve' },
+  { digits: '2', say: 'Reject', action: 'reject' },
+  { digits: '3', say: 'More info', action: 'info' },
+])
+
+// Create form field
+const field = VoiceUX.createFormField('your name', 'text')
+
+// Create confirmation
+const confirmation = VoiceUX.createConfirmation('John Doe')
+
+// Error handling
+const error = VoiceUX.createErrorPrompt()
+const timeout = VoiceUX.createTimeoutHandler()
+```
+
+## Voice Script Structure
+
+### VoiceScript Interface
+
+```typescript
+interface VoiceScript {
+  initial: VoicePrompt
+  menu?: MenuOption[]
+  prompts?: Record<string, VoicePrompt>
+  confirmations?: Record<string, string>
+}
+
+interface VoicePrompt {
+  say: string
+  gather?: {
+    input: Array<'speech' | 'dtmf'>
+    numDigits?: number
+    timeout?: number
+    speechTimeout?: number
+    finishOnKey?: string
+    action?: string
+  }
+}
+```
+
+## Webhook Events
+
+Handle VAPI webhook events:
+
+```typescript
+// In your worker:
+app.post('/vapi/webhook', async (c) => {
+  const event = await c.req.json()
+  const result = await voiceChannel.handleWebhook(event)
+  return c.json(result)
+})
+```
+
+**Supported Events:**
+- `call-started` - Call initiated
+- `call-ended` - Call completed, process recording
+- `transcript` - Store conversation segment
+- `function-call` - Execute approve/reject/submit
+- `dtmf` - Handle button press
+
+## Database Schema
+
+```sql
+CREATE TABLE human_function_calls (
+  id TEXT PRIMARY KEY,
+  function_id TEXT NOT NULL,
+  phone_number TEXT NOT NULL,
+  call_sid TEXT UNIQUE NOT NULL,
+  status TEXT NOT NULL,
+  script TEXT NOT NULL,
+  response TEXT,
+  recording_url TEXT,
+  recording_r2_key TEXT,
+  duration INTEGER,
+  created_at TEXT NOT NULL,
+  ended_at TEXT
+);
+
+CREATE TABLE call_transcripts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  call_sid TEXT NOT NULL,
+  speaker TEXT NOT NULL,
+  text TEXT NOT NULL,
+  timestamp TEXT NOT NULL,
+  FOREIGN KEY (call_sid) REFERENCES human_function_calls(call_sid)
+);
+```
+
+## Configuration
+
+### Environment Variables
+
+```bash
+VAPI_API_KEY=<your_vapi_api_key>
+VAPI_WEBHOOK_SECRET=<webhook_secret>
+```
+
+### R2 Bucket
+
+Bind R2 bucket in `wrangler.jsonc`:
+
+```jsonc
+{
+  "r2_buckets": [
+    {
+      "binding": "AUDIO",
+      "bucket_name": "human-functions-audio"
+    }
+  ]
+}
+```
+
+### Database Binding
+
+```jsonc
+{
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "human-functions",
+      "database_id": "..."
+    }
+  ]
+}
 ```
 
 ## Testing
-
-Comprehensive test suite with 95+ test cases:
 
 ```bash
 # Run tests
 pnpm test
 
 # Watch mode
-pnpm test:watch
+pnpm test -- --watch
 
 # Coverage
-pnpm test:coverage
+pnpm test -- --coverage
 ```
 
-Test coverage includes:
-- ✅ All type schemas validation
-- ✅ Execution request/result validation
-- ✅ Routing configuration validation
-- ✅ Error classes
-- ✅ Type guards
-- ✅ Batch validation
-- ✅ Safe validation helpers
-- ✅ Type safety enforcement
+**Test Coverage:**
+- 24 tests covering all core functionality
+- Mocked VAPI API responses
+- Mocked R2 storage
+- Mocked database queries
 
-## Development
+## Voice UX Best Practices
 
-```bash
-# Install dependencies
-pnpm install
+### Natural Language
+- Use conversational phrasing
+- Avoid technical jargon
+- Speak numbers clearly
 
-# Run type check
-pnpm typecheck
+### Timeouts
+- 5 seconds for DTMF
+- 3 seconds for speech
+- Repeat prompt once
+- Escalate after 2-3 timeouts
 
-# Run tests
-pnpm test
+### Confirmation
+- Always confirm critical actions
+- Read back amounts, names, dates
+- Allow cancellation
 
-# Start dev server
-pnpm dev
+### Error Recovery
+- Friendly error messages
+- Offer to repeat
+- Provide help option
 
-# Deploy
-pnpm deploy
-```
+## API Methods
 
-## Files
+### VoiceChannel
 
-```
-workers/human/
-├── src/
-│   ├── index.ts          # Main service + HTTP API
-│   ├── types.ts          # TypeScript type definitions
-│   └── schemas.ts        # Zod validation schemas
-├── tests/
-│   └── types.test.ts     # Comprehensive type tests
-├── package.json          # Dependencies and scripts
-├── tsconfig.json         # TypeScript configuration
-├── vitest.config.ts      # Test configuration
-└── README.md            # This file
-```
+- `initiateCall(phoneNumber, payload, config?)` - Start outbound call
+- `handleInbound(callSid)` - Handle inbound call
+- `collectInput(callSid, prompt, inputType)` - Get voice/DTMF input
+- `confirm(callSid, input)` - Confirm user input
+- `recordResponse(callSid, audioUrl)` - Save recording to R2
+- `handleWebhook(event)` - Process VAPI webhook event
+- `getCallStatus(callSid)` - Get call details
+- `listCalls(functionId, status?)` - List calls for function
 
-## Key Features
+### VoiceUX
 
-### Type Safety
-- Full TypeScript support with strict mode
-- Runtime validation via Zod schemas
-- Generic types for input/output
-
-### Routing Flexibility
-- Multiple channels (Slack, web, voice, email)
-- Static or dynamic assignee selection
-- Priority levels and SLA thresholds
-- Tag-based categorization
-
-### UI Components
-- React components for all interactions
-- Custom prompt displays
-- Structured forms for responses
-- Review components for completed tasks
-
-### Lifecycle Hooks
-- `onTimeout` - Handle timeout scenarios
-- `onEscalate` - Escalation logic
-- `onComplete` - Post-completion actions
-- `onCancel` - Cancellation handling
-- `onError` - Error recovery
-
-### Task Management
-- Create tasks with rich metadata
-- List and filter tasks
-- Update task status
-- Track response times
-- Generate statistics
+- `VoiceUX.createMenu(options)` - Create DTMF menu
+- `VoiceUX.createFormField(label, type)` - Create form field
+- `VoiceUX.createConfirmation(value)` - Create confirmation
+- `VoiceUX.createErrorPrompt(maxRetries?)` - Error handling
+- `VoiceUX.createTimeoutHandler()` - Timeout escalation
 
 ## Examples
 
-See `tests/types.test.ts` for comprehensive usage examples including:
-- Function definitions
-- Execution requests
-- Result handling
-- Error scenarios
-- Type safety enforcement
+See `src/examples/expense-approval.ts` for a complete implementation.
 
-## Related Services
+## Documentation
 
-- **@db/** - Database storage for tasks
-- **@schedule/** - Timeout scheduling
-- **@webhooks/** - Callback notifications
-- **@ai/** - AI agent integration
+- **Implementation Report:** `/notes/2025-10-03-vapi-voice-channel-integration.md`
+- **VAPI Integration Planning:** `/notes/2025-10-01-vapi-integration.md`
+- **Workers Architecture:** `../CLAUDE.md`
+
+## Related Projects
+
+- **Voice Worker** - TTS generation (`workers/voice`)
+- **VAPI Integration** - Existing VAPI routes (`api.services/api/routes/vapi.ts`)
+- **Workers MCP** - MCP tools for AI agents (`workers/mcp`)
 
 ## License
 
-Proprietary - dot-do organization
+MIT
 
 ---
 
-**Status:** Type system complete, ready for RPC implementation
-**LOC:** ~1,200 (types + schemas + tests)
-**Test Coverage:** 95+ test cases
+**Status:** ✅ Production Ready
 **Last Updated:** 2025-10-03
+**Implementation:** ~800 LOC + 400 LOC tests
+**Test Coverage:** 24 tests, all passing

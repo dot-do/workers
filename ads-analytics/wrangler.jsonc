@@ -1,0 +1,35 @@
+{
+  "name": "ads-analytics",
+  "compatibility_date": "2024-11-01",
+  "main": "src/index.ts",
+  "observability": {
+    "enabled": true
+  },
+  "kv_namespaces": [
+    {
+      "binding": "ANALYTICS_KV",
+      "id": "ads_analytics_kv",
+      "preview_id": "ads_analytics_kv_preview"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dotdo",
+      "database_id": "dotdo"
+    }
+  ],
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "ANALYTICS_QUEUE",
+        "queue": "ads-analytics-queue"
+      }
+    ]
+  }
+}

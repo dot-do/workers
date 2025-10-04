@@ -133,7 +133,7 @@ export default class AuthService extends WorkerEntrypoint<AuthServiceEnv> {
       updatedAt: new Date(userRow.updated_at as string),
     }
 
-    return await sessions.createSession(this.env, user, { device, ipAddress, userAgent })
+    return await sessions.createSession(this.env, user, { userId: user.id, device, ipAddress, userAgent })
   }
 
   /**
@@ -228,7 +228,7 @@ app.onError((err, c) => {
 app.use('*', async (c, next) => {
   middleware.cors(c)
   if (c.req.method === 'OPTIONS') {
-    return c.text('', 204)
+    return c.body(null, 204)
   }
   await next()
 })

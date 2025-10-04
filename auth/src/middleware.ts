@@ -14,11 +14,11 @@ import { parseBearerToken, parseSessionCookie, getClientIP } from './utils'
 /**
  * Authenticate request (try session cookie, then bearer token)
  */
-export async function authenticate(c: Context<{ Bindings: AuthServiceEnv }>): Promise<{ user: User; session?: Session } | null> {
+export async function authenticate(c: Context<{ Bindings: AuthServiceEnv; Variables: { user?: User; session?: Session } }>): Promise<{ user: User; session?: Session } | null> {
   const env = c.env
 
   // Try session cookie first
-  const sessionCookie = parseSessionCookie(c.req.header('cookie'))
+  const sessionCookie = parseSessionCookie(c.req.header('cookie') || null)
   if (sessionCookie) {
     try {
       const { user, session } = await validateToken(env, sessionCookie)
@@ -29,7 +29,7 @@ export async function authenticate(c: Context<{ Bindings: AuthServiceEnv }>): Pr
   }
 
   // Try bearer token (API key or JWT)
-  const bearerToken = parseBearerToken(c.req.header('authorization'))
+  const bearerToken = parseBearerToken(c.req.header('authorization') || null)
   if (bearerToken) {
     // Check if it's an API key
     if (bearerToken.startsWith('sk_')) {

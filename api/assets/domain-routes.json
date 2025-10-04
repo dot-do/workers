@@ -1,47 +1,27 @@
 [
   {
-    "domain": "api.do",
-    "service": "gateway",
-    "binding": "GATEWAY_SERVICE",
-    "requiresAuth": false,
-    "requiresAdmin": false,
-    "metadata": {
-      "description": "Main API gateway"
-    },
-    "updatedAt": "2025-10-04T00:00:00Z"
-  },
-  {
-    "domain": "db.do",
-    "service": "db",
-    "binding": "DB_SERVICE",
+    "domain": "action.do",
+    "service": "action",
+    "binding": "ACTION_SERVICE",
     "requiresAuth": true,
     "requiresAdmin": false,
     "metadata": {
-      "description": "Database service"
+      "description": "Atomic action in workflows or automation",
+      "category": "Action"
     },
-    "updatedAt": "2025-10-04T00:00:00Z"
+    "updatedAt": "2025-10-04T19:27:39.451Z"
   },
   {
-    "domain": "auth.do",
-    "service": "auth",
-    "binding": "AUTH_SERVICE",
-    "requiresAuth": false,
-    "requiresAdmin": false,
-    "metadata": {
-      "description": "Authentication service"
-    },
-    "updatedAt": "2025-10-04T00:00:00Z"
-  },
-  {
-    "domain": "ai.do",
-    "service": "ai",
-    "binding": "AI_SERVICE",
+    "domain": "actions.do",
+    "service": "actions",
+    "binding": "ACTIONS_SERVICE",
     "requiresAuth": true,
     "requiresAdmin": false,
     "metadata": {
-      "description": "AI generation service"
+      "description": "Perform tasks and operations within workflows",
+      "category": "Action"
     },
-    "updatedAt": "2025-10-04T00:00:00Z"
+    "updatedAt": "2025-10-04T19:27:39.451Z"
   },
   {
     "domain": "agents.do",
@@ -50,9 +30,1233 @@
     "requiresAuth": true,
     "requiresAdmin": false,
     "metadata": {
-      "description": "AI agents service"
+      "description": "Platform for deploying/managing autonomous digital workers",
+      "category": "Agent"
     },
-    "updatedAt": "2025-10-04T00:00:00Z"
+    "updatedAt": "2025-10-04T19:27:39.450Z"
+  },
+  {
+    "domain": "agi.do",
+    "service": "agi",
+    "binding": "AGI_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous General Intelligence agent",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "amy.do",
+    "service": "amy",
+    "binding": "AMY_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital worker named Amy",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "analytics.do",
+    "service": "analytics",
+    "binding": "ANALYTICS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Measure and validate workflow/business outcomes",
+      "category": "Analytics"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "apis.do",
+    "service": "gateway",
+    "binding": "GATEWAY_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Unified Application Programming Interface (API) gateway for all services",
+      "category": "Application Programming Interface (API) Gateway"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "ari.do",
+    "service": "ari",
+    "binding": "ARI_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital worker named Ari",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "barcode.do",
+    "service": "barcode",
+    "binding": "BARCODE_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Barcode generation and recognition",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "bdr.do",
+    "service": "bdr",
+    "binding": "BDR_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital BDR)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "benchmarks.do",
+    "service": "benchmarks",
+    "binding": "BENCHMARKS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Benchmarks for evaluating models, workflows, or agents",
+      "category": "Experimentation"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "blogs.do",
+    "service": "blogs",
+    "binding": "BLOGS_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Blog content and publishing platform",
+      "category": "Content/Resource"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "bots.do",
+    "service": "bots",
+    "binding": "BOTS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital worker (bot/agent)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "browse.do",
+    "service": "browse",
+    "binding": "BROWSE_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Browsing and web navigation automation",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "browser.do",
+    "service": "browser",
+    "binding": "BROWSER_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Web browser automation and control",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "browsers.do",
+    "service": "browsers",
+    "binding": "BROWSERS_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Collection of browser agents/utilities",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "careers.do",
+    "service": "careers",
+    "binding": "CAREERS_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Careers and jobs portal",
+      "category": "Content/Resource"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "cfo.do",
+    "service": "cfo",
+    "binding": "CFO_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital Chief Financial Officer (CFO)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "clickhouse.do",
+    "service": "clickhouse",
+    "binding": "CLICKHOUSE_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Cloud-native analytical database",
+      "category": "Data/Infra"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "cmo.do",
+    "service": "cmo",
+    "binding": "CMO_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital Chief Marketing Officer (CMO)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "coach.do",
+    "service": "coach",
+    "binding": "COACH_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital Coach)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "colo.do",
+    "service": "colo",
+    "binding": "COLO_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Colocation and infrastructure services",
+      "category": "Infra/Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "context.do",
+    "service": "context",
+    "binding": "CONTEXT_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Context management and enrichment",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "coo.do",
+    "service": "coo",
+    "binding": "COO_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital Chief Operating Officer (COO)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "cpo.do",
+    "service": "cpo",
+    "binding": "CPO_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital Chief Product Officer (CPO)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "cro.do",
+    "service": "cro",
+    "binding": "CRO_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital Chief Revenue Officer (CRO)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "cto.do",
+    "service": "cto",
+    "binding": "CTO_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital Chief Technology Officer (CTO)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "ctx.do",
+    "service": "ctx",
+    "binding": "CTX_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Contextual data or services",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "dara.do",
+    "service": "dara",
+    "binding": "DARA_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital worker named Dara",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "dash.do",
+    "service": "dash",
+    "binding": "DASH_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Dashboards and data visualization",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "dashboard.do",
+    "service": "dashboard",
+    "binding": "DASHBOARD_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Dashboard and analytics interface",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "database.do",
+    "service": "database",
+    "binding": "DATABASE_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "AI-native data access (search, Create, Read, Update, Delete (CRUD), resources)",
+      "category": "Data Layer"
+    },
+    "updatedAt": "2025-10-04T19:27:39.450Z"
+  },
+  {
+    "domain": "databases.do",
+    "service": "db",
+    "binding": "DB_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Collections of data resources (see database.do)",
+      "category": "Data Layer"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "do.com.ai",
+    "service": "docomai",
+    "binding": "DOCOMAI_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "AI Primitives platform (business-as-code)",
+      "category": "Platform/Brand"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "emails.do",
+    "service": "email",
+    "binding": "EMAIL_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Email sending and management",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "embeddings.do",
+    "service": "ai",
+    "binding": "AI_SERVICE",
+    "method": "embed_*",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Vector embeddings for search and retrieval",
+      "category": "Utility",
+      "type": "alias"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "esbuild.do",
+    "service": "esbuild",
+    "binding": "ESBUILD_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "JavaScript bundler and build tool",
+      "category": "Dev Tool"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "evals.do",
+    "service": "evals",
+    "binding": "EVALS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Evaluate performance of functions, workflows, and agents",
+      "category": "Evaluation"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "events.do",
+    "service": "events",
+    "binding": "EVENTS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Business or system event tracking",
+      "category": "Event/Trigger"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "experiments.do",
+    "service": "experiments",
+    "binding": "EXPERIMENTS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Test and iterate functions, workflows, and agents",
+      "category": "Experimentation"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "extract.do",
+    "service": "extract",
+    "binding": "EXTRACT_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Data extraction and transformation",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "function.do",
+    "service": "function",
+    "binding": "FUNCTION_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Atomic/composable function (see functions.do)",
+      "category": "Function"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "functions.do",
+    "service": "functions",
+    "binding": "FUNCTIONS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Typesafe, composable business logic and automation",
+      "category": "Function"
+    },
+    "updatedAt": "2025-10-04T19:27:39.448Z"
+  },
+  {
+    "domain": "gpt.do",
+    "service": "gpt",
+    "binding": "GPT_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "OpenAI GPT model integrations",
+      "category": "Model"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "graph.do",
+    "service": "graph",
+    "binding": "GRAPH_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Graph data and relationships",
+      "category": "Data/Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "humans.do",
+    "service": "humans",
+    "binding": "HUMANS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Human worker management and assignment",
+      "category": "Human"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "integrations.do",
+    "service": "integrations",
+    "binding": "INTEGRATIONS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Connect external Application Programming Interface (API)s and systems to business processes",
+      "category": "Integration"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "issues.do",
+    "service": "issues",
+    "binding": "ISSUES_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Issue and bug tracking",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "ivy.do",
+    "service": "ivy",
+    "binding": "IVY_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital worker named Ivy",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "kpis.do",
+    "service": "kpis",
+    "binding": "KPIS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Key Performance Indicators (KPIs)",
+      "category": "Business Metric"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "lena.do",
+    "service": "lena",
+    "binding": "LENA_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital worker named Lena",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "lexi.do",
+    "service": "lexi",
+    "binding": "LEXI_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital worker named Lexi",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "lists.do",
+    "service": "lists",
+    "binding": "LISTS_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "List management and operations",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "llm.do",
+    "service": "ai",
+    "binding": "AI_SERVICE",
+    "method": "llm_*",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Unified gateway for large language models (Large Language Models (LLMs)",
+      "category": "Gateway",
+      "type": "alias"
+    },
+    "updatedAt": "2025-10-04T19:27:39.450Z"
+  },
+  {
+    "domain": "llms.do",
+    "service": "ai",
+    "binding": "AI_SERVICE",
+    "method": "llm_*",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Collection of large language models (see llm.do)",
+      "category": "Gateway",
+      "type": "alias"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "lodash.do",
+    "service": "lodash",
+    "binding": "LODASH_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "JavaScript utility library",
+      "category": "Dev Tool"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "mcp.do",
+    "service": "mcp",
+    "binding": "MCP_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital Master Control Program (MCP)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "mdx.do",
+    "service": "mdx",
+    "binding": "MDX_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Markdown + JSX content (MDX)",
+      "category": "Content/Resource"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "models.do",
+    "service": "models",
+    "binding": "MODELS_SERVICE",
+    "method": "models_*",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Select and manage AI/ML models",
+      "category": "Model Management",
+      "type": "database-view"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "nat.do",
+    "service": "nat",
+    "binding": "NAT_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital worker named Nat",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "nats.do",
+    "service": "nats",
+    "binding": "NATS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "NATS messaging and streaming",
+      "category": "Infra/Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "nouns.do",
+    "service": "nouns",
+    "binding": "NOUNS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Types of entities: people, places, things, ideas",
+      "category": "Data Model"
+    },
+    "updatedAt": "2025-10-04T19:27:39.450Z"
+  },
+  {
+    "domain": "oauth.do",
+    "service": "auth",
+    "binding": "AUTH_SERVICE",
+    "method": "oauth_*",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "OAuth authentication and authorization",
+      "category": "Security/Auth"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "objects.do",
+    "service": "objects",
+    "binding": "OBJECTS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Generic data objects and records",
+      "category": "Data Model"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "okrs.do",
+    "service": "okrs",
+    "binding": "OKRS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Objectives and Key Results (Objectives and Key Results (OKR) management",
+      "category": "Business Goal"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "payload.do",
+    "service": "payload",
+    "binding": "PAYLOAD_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Payload Content Management System (CMS) integration",
+      "category": "Admin UI"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "pdm.do",
+    "service": "pdm",
+    "binding": "PDM_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital Product Data Management (PDM)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "perf.do",
+    "service": "perf",
+    "binding": "PERF_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Performance monitoring and analytics",
+      "category": "Analytics"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "photos.do",
+    "service": "photos",
+    "binding": "PHOTOS_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Photo storage and management",
+      "category": "Content/Resource"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "pkg.do",
+    "service": "pkg",
+    "binding": "PKG_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Package management and utilities",
+      "category": "Dev Tool"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "programmers.do",
+    "service": "programmers",
+    "binding": "PROGRAMMERS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital Programmer)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "qrcode.do",
+    "service": "qrcode",
+    "binding": "QRCODE_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "QR code generation and scanning",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "queue.do",
+    "service": "queue",
+    "binding": "QUEUE_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Task and job queue management",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "repo.do",
+    "service": "repo",
+    "binding": "REPO_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Repository management and code hosting",
+      "category": "Dev Tool"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "requests.do",
+    "service": "requests",
+    "binding": "REQUESTS_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "HTTP/Application Programming Interface (API) request management",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "research.do",
+    "service": "research",
+    "binding": "RESEARCH_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Research and information retrieval",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "resources.do",
+    "service": "resources",
+    "binding": "RESOURCES_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Structured data records (instances of nouns)",
+      "category": "Data Model"
+    },
+    "updatedAt": "2025-10-04T19:27:39.450Z"
+  },
+  {
+    "domain": "responses.do",
+    "service": "responses",
+    "binding": "RESPONSES_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Response formatting and handling",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "scraper.do",
+    "service": "scraper",
+    "binding": "SCRAPER_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Web scraping and data extraction",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "sdk.do",
+    "service": "sdk",
+    "binding": "SDK_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Software Development Kit (Software Development Kit (SDK)",
+      "category": "Dev Tool"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "sdr.do",
+    "service": "sdr",
+    "binding": "SDR_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital Sales Development Representative (SDR)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "searches.do",
+    "service": "searches",
+    "binding": "SEARCHES_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Query and retrieve structured or unstructured data",
+      "category": "Query/Search"
+    },
+    "updatedAt": "2025-10-04T19:27:39.450Z"
+  },
+  {
+    "domain": "services.do",
+    "service": "services",
+    "binding": "SERVICES_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Service registry and management",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "sites.do",
+    "service": "sites",
+    "binding": "SITES_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Website and landing page management",
+      "category": "Content/Resource"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "speak.do",
+    "service": "speak",
+    "binding": "SPEAK_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Speech synthesis and recognition",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "state.do",
+    "service": "state",
+    "binding": "STATE_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "State management and persistence",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "studio.do",
+    "service": "studio",
+    "binding": "STUDIO_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Custom-branded Payload Content Management System (CMS) for admin and content",
+      "category": "Content Management System (CMS)/Admin UI"
+    },
+    "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "svc.do",
+    "service": "svc",
+    "binding": "SVC_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Service abstraction and orchestration",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "swe.do",
+    "service": "swe",
+    "binding": "SWE_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital Software Engineer (SWE)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "tasks.do",
+    "service": "tasks",
+    "binding": "TASKS_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Task management and assignment",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "tom.do",
+    "service": "tom",
+    "binding": "TOM_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital worker named Tom",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "trace.do",
+    "service": "trace",
+    "binding": "TRACE_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Tracing and observability",
+      "category": "Analytics"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "traces.do",
+    "service": "traces",
+    "binding": "TRACES_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Trace collection and analysis",
+      "category": "Analytics"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "trigger.do",
+    "service": "trigger",
+    "binding": "TRIGGER_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Trigger for workflows or actions",
+      "category": "Event/Trigger"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "triggers.do",
+    "service": "triggers",
+    "binding": "TRIGGERS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Initiate workflows based on business or system events",
+      "category": "Event/Trigger"
+    },
+    "updatedAt": "2025-10-04T19:27:39.450Z"
+  },
+  {
+    "domain": "vectors.do",
+    "service": "ai",
+    "binding": "AI_SERVICE",
+    "method": "vectors_*",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Vector database and search",
+      "category": "Utility",
+      "type": "alias"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "vehicle.do",
+    "service": "vehicle",
+    "binding": "VEHICLE_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Vehicle data and management",
+      "category": "Content/Resource"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "vera.do",
+    "service": "vera",
+    "binding": "VERA_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital worker named Vera",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "verbs.do",
+    "service": "verbs",
+    "binding": "VERBS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Actions performed by or to nouns",
+      "category": "Data Model"
+    },
+    "updatedAt": "2025-10-04T19:27:39.450Z"
+  },
+  {
+    "domain": "waitlist.do",
+    "service": "waitlist",
+    "binding": "WAITLIST_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Waitlist and signup management",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "webhook.do",
+    "service": "webhooks",
+    "binding": "WEBHOOKS_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Webhook event receiver/sender",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "webhooks.do",
+    "service": "webhooks",
+    "binding": "WEBHOOKS_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Webhook management and automation",
+      "category": "Utility"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "worker.do",
+    "service": "worker",
+    "binding": "WORKER_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Autonomous digital Worker",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
+  },
+  {
+    "domain": "workers.do",
+    "service": "workers",
+    "binding": "WORKERS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Collection of autonomous digital workers",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T19:27:39.452Z"
   },
   {
     "domain": "workflows.do",
@@ -61,19 +1265,9 @@
     "requiresAuth": true,
     "requiresAdmin": false,
     "metadata": {
-      "description": "Workflow orchestration"
+      "description": "Declarative orchestration of business processes",
+      "category": "Workflow"
     },
-    "updatedAt": "2025-10-04T00:00:00Z"
-  },
-  {
-    "domain": "*.waitlist.do",
-    "service": "waitlist",
-    "binding": "WAITLIST_SERVICE",
-    "requiresAuth": false,
-    "requiresAdmin": false,
-    "metadata": {
-      "description": "Waitlist landing pages (wildcard)"
-    },
-    "updatedAt": "2025-10-04T00:00:00Z"
+    "updatedAt": "2025-10-04T19:27:39.450Z"
   }
 ]

@@ -20,6 +20,7 @@
     "wrangler": "^4.24.0"
   },
   "dependencies": {
+    "@octokit/rest": "^22.0.0",
     "hono": "^4.8.4",
     "ulid": "^3.0.1"
   }

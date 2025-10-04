@@ -1,0 +1,25 @@
+/**
+ * Imagen AI Image Generation Service
+ *
+ * AI image generation using Google Imagen 3 and OpenAI DALL-E 3 with R2 storage
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "imagen",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-07-08",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"observability": { "enabled": true },
+	"tail_consumers": [{ "service": "pipeline" }],
+	"routes": [
+		{ "pattern": "imagen.services.do/*", "custom_domain": true }
+	],
+  "services": [
+		{ "binding": "DB", "service": "do-db" }
+	],
+	"r2_buckets": [
+		{ "binding": "IMAGES", "bucket_name": "imagen-images" }
+	],
+	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
+	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }]
+}

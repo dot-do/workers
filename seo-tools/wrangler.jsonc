@@ -1,0 +1,32 @@
+{
+  "name": "seo-tools",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "node_compat": true,
+
+  // KV Namespaces for caching
+  "kv_namespaces": [
+    {
+      "binding": "TOOLS_CACHE",
+      "id": "tools-cache-kv",
+      "preview_id": "tools-cache-kv-preview"
+    }
+  ],
+
+  // R2 for sitemap/llms.txt storage
+  "r2_buckets": [
+    {
+      "binding": "SEO_BUCKET",
+      "bucket_name": "seo-files"
+    }
+  ],
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db",
+      "environment": "production"
+    }
+  ]
+}

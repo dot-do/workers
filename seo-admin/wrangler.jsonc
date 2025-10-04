@@ -1,0 +1,49 @@
+{
+  "name": "seo-admin",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "node_compat": true,
+
+  // KV Namespaces for admin data
+  "kv_namespaces": [
+    {
+      "binding": "ADMIN_CACHE",
+      "id": "admin-cache-kv",
+      "preview_id": "admin-cache-kv-preview"
+    }
+  ],
+
+  // Service bindings to all SEO workers
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db",
+      "environment": "production"
+    },
+    {
+      "binding": "SEO_CRAWLER",
+      "service": "seo-crawler",
+      "environment": "production"
+    },
+    {
+      "binding": "SEO_SCHEMA",
+      "service": "seo-schema",
+      "environment": "production"
+    },
+    {
+      "binding": "SEO_CONTENT",
+      "service": "seo-content",
+      "environment": "production"
+    },
+    {
+      "binding": "SEO_PERFORMANCE",
+      "service": "seo-performance",
+      "environment": "production"
+    },
+    {
+      "binding": "SEO_TOOLS",
+      "service": "seo-tools",
+      "environment": "production"
+    }
+  ]
+}

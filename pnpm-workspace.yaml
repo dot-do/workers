@@ -14,6 +14,12 @@ packages:
   - 'seo-schema'
   - 'seo-content'
   - 'seo-performance'
+  - 'seo-tools'
+  - 'seo-admin'
+  - 'veo'
+  - 'imagen'
+  - 'email-validation'
+  - 'esp-gateway'
   # SDK packages (foundation packages)
   - '../sdk/packages/ai-generation'
   - '../sdk/packages/ai-embeddings'

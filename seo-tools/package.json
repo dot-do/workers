@@ -1,0 +1,21 @@
+{
+  "name": "@dot-do/seo-tools",
+  "version": "1.0.0",
+  "description": "SEO utilities and tools (llms.txt, sitemap, meta tags, robots.txt parser)",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.7.10",
+    "@dot-do/seo-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "typescript": "^5.7.3",
+    "wrangler": "^3.105.0"
+  }
+}

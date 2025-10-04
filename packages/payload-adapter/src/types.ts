@@ -7,7 +7,7 @@ export interface PayloadAdapterConfig {
   /**
    * Database backend type
    */
-  type: 'sqlite' | 'd1' | 'rpc'
+  type: 'sqlite' | 'd1' | 'durable' | 'rpc'
 
   /**
    * SQLite-specific configuration
@@ -23,6 +23,14 @@ export interface PayloadAdapterConfig {
    */
   d1?: {
     binding: any // D1Database
+  }
+
+  /**
+   * Durable Objects configuration (Cloudflare-native SQLite)
+   */
+  durable?: {
+    binding: any // DurableObjectNamespace
+    namespace?: string // Default: 'default'
   }
 
   /**

@@ -4,6 +4,7 @@
  * Payload CMS database adapter package with support for:
  * - D1 (Cloudflare serverless SQLite)
  * - SQLite (libSQL/Turso)
+ * - Durable Objects (Cloudflare-native SQLite)
  * - RPC (connects to db worker)
  * - Dynamic collection loading from MDX files
  */
@@ -20,6 +21,7 @@ export { parseCollectionMDX, scanCollectionDirectory, loadCollectionsFromMDX } f
 
 export { createD1Adapter } from './d1-adapter'
 export { createSqliteAdapter, addVectorToCollection } from './sqlite-adapter'
+export { createDurableAdapter, PayloadDurableObject, addVectorSupport } from './durable-adapter'
 export { createRpcAdapter } from './rpc-adapter'
 
 /**
@@ -28,6 +30,7 @@ export { createRpcAdapter } from './rpc-adapter'
 import type { PayloadAdapterConfig } from './types'
 import { createD1Adapter } from './d1-adapter'
 import { createSqliteAdapter } from './sqlite-adapter'
+import { createDurableAdapter } from './durable-adapter'
 import { createRpcAdapter } from './rpc-adapter'
 
 export function createPayloadAdapter(config: PayloadAdapterConfig) {
@@ -36,6 +39,8 @@ export function createPayloadAdapter(config: PayloadAdapterConfig) {
       return createD1Adapter(config)
     case 'sqlite':
       return createSqliteAdapter(config)
+    case 'durable':
+      return createDurableAdapter(config)
     case 'rpc':
       return createRpcAdapter(config)
     default:

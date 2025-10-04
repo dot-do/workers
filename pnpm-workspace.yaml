@@ -20,6 +20,8 @@ packages:
   - 'imagen'
   - 'email-validation'
   - 'esp-gateway'
+  - 'email-sender'
+  - 'email-campaigns'
   # SDK packages (foundation packages)
   - '../sdk/packages/ai-generation'
   - '../sdk/packages/ai-embeddings'

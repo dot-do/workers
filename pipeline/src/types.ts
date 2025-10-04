@@ -58,11 +58,19 @@ export interface EnrichedLogEvent {
   timestamp: number
   eventTimestamp: number
 
+  // Event Classification
+  eventType: string
+  mutationType?: 'create' | 'update' | 'delete' | null
+
+  // Entity Reference
+  entityNs?: string | null
+  entityId?: string | null
+  entityType?: string | null
+
   // Source
   scriptName: string
   dispatchNamespace: string | null
   workerName: string
-  eventType: string
 
   // Request info
   url: string | null
@@ -87,6 +95,19 @@ export interface EnrichedLogEvent {
   // Scheduled info
   scheduledTime: number | null
   cron: string | null
+
+  // Web Content (5 formats) ⭐
+  contentJson?: string | null
+  contentCode?: string | null
+  contentMarkdown?: string | null
+  contentHtml?: string | null
+  contentAst?: string | null
+
+  // Content Metadata
+  contentLength?: number
+  contentHash?: string
+  contentLanguage?: string | null
+  contentFormat?: string | null
 
   // Error information
   severity: 'critical' | 'error' | 'warning' | 'info'

@@ -14,6 +14,11 @@ export const TEST_ENV = {
   TEST_API_KEY: process.env.TEST_API_KEY || 'test-api-key',
   TEST_DB: 'test',
   TIMEOUT: 30000, // 30 seconds
+  // Workers for Platforms configuration
+  DISPATCH_NAMESPACE: process.env.DISPATCH_NAMESPACE || 'dotdo-development',
+  USE_DISPATCH: process.env.USE_DISPATCH === 'true',
+  DEPLOY_API_URL: process.env.DEPLOY_API_URL || 'https://deploy.do',
+  DEPLOY_API_KEY: process.env.DEPLOY_API_KEY || 'test-deploy-api-key',
 }
 
 /**
@@ -121,7 +126,12 @@ export async function waitForService(
 ): Promise<boolean> {
   for (let i = 0; i < maxAttempts; i++) {
     try {
-      const response = await fetch(`${TEST_ENV.BASE_URL}/health/${serviceName}`)
+      // If using dispatch namespaces, check service at its subdomain
+      const url = TEST_ENV.USE_DISPATCH
+        ? `https://${serviceName}.do/health`
+        : `${TEST_ENV.BASE_URL}/health/${serviceName}`
+
+      const response = await fetch(url)
       if (response.ok) return true
     } catch (error) {
       // Service not ready yet
@@ -129,6 +139,71 @@ export async function waitForService(
     await new Promise((resolve) => setTimeout(resolve, delayMs))
   }
   return false
+}
+
+/**
+ * Wait for worker to be deployed in dispatch namespace
+ */
+export async function waitForWorkerDeployed(
+  workerName: string,
+  namespace: string = TEST_ENV.DISPATCH_NAMESPACE,
+  maxAttempts = 10,
+  delayMs = 2000
+): Promise<boolean> {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const response = await fetch(`https://${workerName}.do/health`)
+      if (response.ok) return true
+    } catch (error) {
+      // Worker not deployed yet
+    }
+    await new Promise((resolve) => setTimeout(resolve, delayMs))
+  }
+  return false
+}
+
+/**
+ * Deploy worker to namespace via Deploy API
+ */
+export async function deployWorker(
+  serviceName: string,
+  namespace: string = TEST_ENV.DISPATCH_NAMESPACE,
+  script: string = '',
+  metadata?: Record<string, any>
+): Promise<Response> {
+  return fetch(`${TEST_ENV.DEPLOY_API_URL}/deploy`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${TEST_ENV.DEPLOY_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      service: serviceName,
+      environment: namespace,
+      script, // Base64-encoded worker script
+      metadata: metadata || {
+        commit: 'test-commit',
+        branch: 'test',
+        author: 'test@example.com',
+        version: '1.0.0',
+      },
+    }),
+  })
+}
+
+/**
+ * Check if worker is deployed in namespace
+ */
+export async function isWorkerDeployed(
+  serviceName: string,
+  namespace: string = TEST_ENV.DISPATCH_NAMESPACE
+): Promise<boolean> {
+  try {
+    const response = await fetch(`https://${serviceName}.do/health`)
+    return response.ok
+  } catch (error) {
+    return false
+  }
 }
 
 /**

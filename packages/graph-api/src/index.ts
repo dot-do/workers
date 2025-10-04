@@ -28,4 +28,8 @@ export {
 } from './relationships.js'
 
 // Re-export types
-export type * from '@do/graph-types'
+export type * from '@dot-do/graph-types'
+
+// Export database adapters
+export { createR2SQLDatabase, initR2SQLSchemas, R2SQLDatabase } from './adapters/r2sql.js'
+export { createClickHouseDatabase, initClickHouseSchemas, ClickHouseDatabase } from './adapters/clickhouse.js'

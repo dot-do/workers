@@ -143,6 +143,100 @@ GitHub Actions
 - `dotdo-public` - Public APIs (rate-limited)
 - `dotdo-tenant` - Tenant deployments (tenant-scoped)
 
+### MDX Workers - Simplified Architecture
+
+**Business-as-Code for Cloudflare Workers using `.mdx` files**
+
+Workers can now be defined as single `.mdx` files where:
+- **YAML frontmatter** (`$type: Worker`) contains wrangler configuration
+- **TypeScript code blocks** contain the worker implementation
+- **Markdown content** is the documentation
+
+This massively simplifies the worker architecture by combining:
+- Configuration (formerly `wrangler.jsonc`)
+- Implementation (formerly `src/index.ts`)
+- Documentation (formerly `README.md`)
+
+All in a single, maintainable `.mdx` file!
+
+**Example Structure:**
+
+```mdx
+---
+$type: Worker
+$id: hello-world
+name: hello-world
+main: src/index.ts
+compatibility_date: "2025-01-01"
+
+# Service bindings
+services:
+  - binding: DB_SERVICE
+    service: db
+---
+
+# Hello World Worker
+
+Documentation here...
+
+## Code
+
+\```typescript
+import { WorkerEntrypoint } from 'cloudflare:workers'
+import { Hono } from 'hono'
+
+export class HelloWorldService extends WorkerEntrypoint<Env> {
+  async getGreeting(name?: string): Promise<string> {
+    return `Hello, ${name || 'World'}!`
+  }
+}
+
+const app = new Hono()
+app.get('/', async (c) => {
+  // Implementation...
+})
+
+export default { fetch: app.fetch }
+\```
+```
+
+**Build Script:**
+
+```bash
+# Build single .mdx worker
+pnpm build-mdx workers/examples/hello-world.mdx
+
+# Build all .mdx workers
+pnpm build-mdx:all
+```
+
+**Generated Output:**
+
+```
+workers/hello-world/
+├── wrangler.jsonc      # Extracted from frontmatter
+├── src/
+│   └── index.ts        # Extracted from code blocks
+└── README.md           # Extracted from markdown
+```
+
+**Benefits:**
+- ✅ **Single Source of Truth** - Everything in one file
+- ✅ **Zero Config** - Uses `mdxe` runtime (already has wrangler dependency)
+- ✅ **TypeScript Intellisense** - Full autocomplete in VS Code
+- ✅ **Self-Documenting** - Code and docs together
+- ✅ **Version Control Friendly** - One file per worker
+- ✅ **Easy to Review** - See config, code, and docs at once
+
+**File Location:**
+- Simple workers: `workers/examples/*.mdx`
+- Complex workers: Still use traditional `workers/<service>/` structure
+
+**See Also:**
+- [hello-world.mdx](workers/examples/hello-world.mdx) - Example .mdx worker
+- [build-mdx-worker.ts](scripts/build-mdx-worker.ts) - Build script
+- [mdxe](../mdx/packages/mdxe) - Zero-config MDX development environment
+
 ### Service Types
 
 1. **Domain Services** (e.g., agents, workflows, business)

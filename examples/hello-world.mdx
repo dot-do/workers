@@ -1,0 +1,200 @@
+---
+$type: Worker
+$id: hello-world
+name: hello-world
+
+# Wrangler Configuration
+main: src/index.ts
+compatibility_date: "2025-01-01"
+observability:
+  enabled: true
+
+# Service Bindings
+services:
+  - binding: DB_SERVICE
+    service: db
+  - binding: AUTH_SERVICE
+    service: auth
+
+# Environment Variables
+vars:
+  ENVIRONMENT: production
+  LOG_LEVEL: info
+---
+
+# Hello World Worker
+
+A simple Cloudflare Worker that demonstrates the .mdx worker pattern.
+
+## What This Worker Does
+
+This worker provides a simple HTTP endpoint that returns "Hello World" along with the current timestamp and request metadata.
+
+## Endpoints
+
+- `GET /` - Returns hello world message
+- `GET /health` - Health check endpoint
+- `GET /metadata` - Returns worker metadata
+
+## Features
+
+- **TypeScript**: Full type safety with Cloudflare Workers types
+- **RPC Interface**: Can be called by other workers via service bindings
+- **HTTP API**: Standard REST endpoints via Hono
+- **Service Bindings**: Can call DB and AUTH services
+- **Observability**: Automatic metrics and logging
+
+## Code
+
+The default export below is the worker implementation:
+
+```typescript
+import { WorkerEntrypoint } from 'cloudflare:workers'
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+
+interface Env {
+  // Service bindings
+  DB_SERVICE: any
+  AUTH_SERVICE: any
+
+  // Environment variables
+  ENVIRONMENT: string
+  LOG_LEVEL: string
+}
+
+// ============================================================================
+// RPC INTERFACE - For service-to-service communication
+// ============================================================================
+
+export class HelloWorldService extends WorkerEntrypoint<Env> {
+  /**
+   * Get a greeting message (RPC method)
+   */
+  async getGreeting(name?: string): Promise<string> {
+    const greeting = name ? `Hello, ${name}!` : 'Hello, World!'
+    const timestamp = new Date().toISOString()
+
+    console.log(`[HelloWorld] Greeting requested: ${greeting}`)
+
+    return `${greeting} (${timestamp})`
+  }
+
+  /**
+   * Get worker metadata (RPC method)
+   */
+  async getMetadata(): Promise<Record<string, any>> {
+    return {
+      service: 'hello-world',
+      version: '1.0.0',
+      environment: this.env.ENVIRONMENT,
+      timestamp: new Date().toISOString(),
+    }
+  }
+}
+
+// ============================================================================
+// HTTP INTERFACE - For direct HTTP access
+// ============================================================================
+
+const app = new Hono<{ Bindings: Env }>()
+
+app.use('/*', cors())
+
+/**
+ * GET / - Hello world endpoint
+ */
+app.get('/', async (c) => {
+  const name = c.req.query('name')
+  const service = new HelloWorldService(c.executionCtx, c.env)
+  const greeting = await service.getGreeting(name)
+
+  return c.json({
+    success: true,
+    message: greeting,
+    metadata: await service.getMetadata(),
+  })
+})
+
+/**
+ * GET /health - Health check
+ */
+app.get('/health', (c) => {
+  return c.json({
+    status: 'ok',
+    service: 'hello-world',
+    timestamp: new Date().toISOString(),
+  })
+})
+
+/**
+ * GET /metadata - Worker metadata
+ */
+app.get('/metadata', async (c) => {
+  const service = new HelloWorldService(c.executionCtx, c.env)
+  const metadata = await service.getMetadata()
+
+  return c.json({
+    success: true,
+    metadata,
+  })
+})
+
+// ============================================================================
+// WORKER EXPORT
+// ============================================================================
+
+export default {
+  fetch: app.fetch,
+}
+```
+
+## Usage
+
+### Via HTTP
+
+```bash
+# Simple greeting
+curl https://hello-world.do/
+
+# Personalized greeting
+curl https://hello-world.do/?name=Alice
+
+# Health check
+curl https://hello-world.do/health
+
+# Metadata
+curl https://hello-world.do/metadata
+```
+
+### Via RPC (from another worker)
+
+```typescript
+// In another worker
+const greeting = await env.HELLO_WORLD_SERVICE.getGreeting('Alice')
+console.log(greeting) // "Hello, Alice! (2025-10-04T...)"
+
+const metadata = await env.HELLO_WORLD_SERVICE.getMetadata()
+console.log(metadata) // { service: 'hello-world', ... }
+```
+
+## Building and Deploying
+
+With the .mdx worker approach, you can:
+
+1. **Write everything in one file**: Configuration + Code + Documentation
+2. **Build automatically**: `mdxe build workers/hello-world.mdx`
+3. **Deploy with wrangler**: Extracted wrangler.jsonc is ready to use
+
+This simplifies the worker architecture by combining:
+- Configuration (formerly wrangler.jsonc)
+- Implementation (formerly src/index.ts)
+- Documentation (formerly README.md)
+
+All in a single, maintainable .mdx file!
+
+## Related
+
+- [[gateway.mdx|Gateway Worker]] - API routing and traffic management
+- [[db.mdx|Database Worker]] - Data access layer
+- [[auth.mdx|Auth Worker]] - Authentication and authorization

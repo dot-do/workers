@@ -8,7 +8,52 @@ This repository contains 30+ Cloudflare Workers services that power the dot-do p
 
 ## Quick Start
 
-### Create a New Service
+### Create a New Worker (MDX Approach - Simplified!)
+
+**For simple workers**, create a single `.mdx` file:
+
+```bash
+# Create worker.mdx file in workers/examples/
+cat > workers/examples/my-worker.mdx << 'EOF'
+---
+$type: Worker
+name: my-worker
+compatibility_date: "2025-01-01"
+---
+
+# My Worker
+
+Documentation here...
+
+## Code
+
+\```typescript
+import { WorkerEntrypoint } from 'cloudflare:workers'
+
+export class MyWorker extends WorkerEntrypoint<Env> {
+  async fetch() {
+    return new Response('Hello!')
+  }
+}
+\```
+EOF
+
+# Build worker from .mdx
+pnpm build-mdx workers/examples/my-worker.mdx
+
+# Deploy
+cd workers/my-worker && wrangler deploy
+```
+
+**Benefits:**
+- ✅ Single file for config + code + docs
+- ✅ TypeScript intellisense in VS Code
+- ✅ Zero configuration with mdxe
+- ✅ Self-documenting
+
+### Create a New Service (Traditional Approach)
+
+**For complex workers**, use the service generator:
 
 ```bash
 # Domain service (for core business logic)

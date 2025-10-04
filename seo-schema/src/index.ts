@@ -51,7 +51,7 @@ export class SEOSchemaService extends WorkerEntrypoint<Env> {
       '@type': data['@type'] || SchemaType.Article,
       headline: data.headline || '',
       datePublished: data.datePublished || new Date().toISOString(),
-      author: data.author || { '@type': SchemaType.Person, name: 'Anonymous' },
+      author: data.author || { '@context': 'https://schema.org', '@type': SchemaType.Person, name: 'Anonymous' },
       ...data,
     }
   }

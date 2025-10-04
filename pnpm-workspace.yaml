@@ -36,6 +36,7 @@ packages:
   - 'ads-creatives'
   - 'ads-analytics'
   - 'ads-automation'
+  - 'ads-integrations'
   # SDK packages (foundation packages)
   - '../sdk/packages/ai-generation'
   - '../sdk/packages/ai-embeddings'

@@ -1,0 +1,29 @@
+{
+  "name": "deliverability",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-11-27",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Service bindings
+  "services": [
+    { "binding": "DB", "service": "db", "entrypoint": "DatabaseService" }
+  ],
+
+  // KV namespace for caching
+  "kv_namespaces": [
+    { "binding": "KV", "id": "deliverability_cache" }
+  ],
+
+  // Environment variables
+  "vars": {
+    "ENVIRONMENT": "production"
+  },
+
+  // Cron triggers (optional - for scheduled reputation checks)
+  "triggers": {
+    "crons": [
+      // Check reputation for all active domains daily at 2am UTC
+      "0 2 * * *"
+    ]
+  }
+}

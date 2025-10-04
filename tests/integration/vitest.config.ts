@@ -26,11 +26,7 @@ export default defineConfig({
         '**/setup.ts',
       ],
     },
-    reporters: ['verbose', 'json', 'html'],
-    outputFile: {
-      json: './test-results/integration-results.json',
-      html: './test-results/integration-results.html',
-    },
+    reporters: ['verbose'],
     bail: 0, // Don't bail on first failure
     retry: 1, // Retry flaky tests once
     sequence: {

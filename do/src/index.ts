@@ -89,14 +89,14 @@ export class CodeExecutionService extends WorkerEntrypoint<Env> {
       }
     })
 
-    /**
-     * RPC method for direct service-to-service calls
-     */
-    async execute(request: ExecuteCodeRequest): Promise<any> {
-      return await executeCode(request, this.env)
-    }
-
     return app.fetch(request, this.env)
+  }
+
+  /**
+   * RPC method for direct service-to-service calls
+   */
+  async execute(request: ExecuteCodeRequest): Promise<any> {
+    return await executeCode(request, this.env)
   }
 }
 

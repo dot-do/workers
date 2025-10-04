@@ -9,6 +9,7 @@ export interface GetOptions {
 export interface ListOptions {
   limit?: number
   offset?: number
+  page?: number
   type?: string
   visibility?: 'public' | 'private' | 'unlisted'
   orderBy?: 'createdAt' | 'updatedAt'
@@ -22,8 +23,8 @@ export interface SearchOptions extends ListOptions {
 /**
  * Get a single thing by namespace and ID
  */
-export async function get(ns: string, id: string, options: GetOptions = {}) {
-  const db = getPostgresClient()
+export async function get(ns: string, id: string, options: GetOptions = {}, env?: any) {
+  const db = getPostgresClient(env)
   const { things } = db.query
 
   const result = await db
@@ -49,12 +50,13 @@ export async function get(ns: string, id: string, options: GetOptions = {}) {
 /**
  * List things with pagination and filters
  */
-export async function list(ns: string, options: ListOptions = {}) {
-  const db = getPostgresClient()
+export async function list(ns: string, options: ListOptions = {}, env?: any) {
+  const db = getPostgresClient(env)
   const { things } = db.query
 
-  const limit = Math.min(options.limit || 100, 1000) // Max 1000
-  const offset = options.offset || 0
+  const limit = Math.min(options.limit || 20, 1000) // Max 1000
+  const page = options.page || 1
+  const offset = options.offset || (page - 1) * limit
   const order = options.order || 'desc'
   const orderByField = options.orderBy || 'createdAt'
 
@@ -72,13 +74,22 @@ export async function list(ns: string, options: ListOptions = {}) {
   const orderByColumn = things[orderByField as keyof typeof things] as PgColumn
   query = query.orderBy(order === 'desc' ? desc(orderByColumn) : orderByColumn)
 
-  // Apply pagination
-  query = query.limit(limit).offset(offset)
+  // Fetch one more than limit to check if there are more results
+  query = query.limit(limit + 1).offset(offset)
 
   const results = await query
+  const hasMore = results.length > limit
+  const data = hasMore ? results.slice(0, limit) : results
+
+  // Get total count (approximate - could be expensive for large datasets)
+  const countQuery = db.select({ count: sql`count(*)` }).from(things).where(eq(things.ns, ns))
+  const countResult = await countQuery
+  const total = Number(countResult[0]?.count || 0)
+
   return {
-    data: results,
-    pagination: { limit, offset, total: results.length },
+    data,
+    total,
+    hasMore,
   }
 }
 

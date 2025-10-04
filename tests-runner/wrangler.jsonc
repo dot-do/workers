@@ -1,0 +1,32 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tests-runner",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "observability": {
+    "enabled": true
+  },
+
+  /**
+   * Service Bindings - All core services
+   */
+  "services": [
+    { "binding": "GATEWAY_SERVICE", "service": "gateway" },
+    { "binding": "DB_SERVICE", "service": "db" },
+    { "binding": "AUTH_SERVICE", "service": "auth" },
+    { "binding": "SCHEDULE_SERVICE", "service": "schedule" },
+    { "binding": "WEBHOOKS_SERVICE", "service": "webhooks" },
+    { "binding": "EMAIL_SERVICE", "service": "email" },
+    { "binding": "MCP_SERVICE", "service": "mcp" },
+    { "binding": "QUEUE_SERVICE", "service": "queue" }
+  ],
+
+  /**
+   * Environment Variables
+   */
+  "vars": {
+    "ENVIRONMENT": "test"
+  }
+}

@@ -66,6 +66,9 @@ export interface GatewayEnv {
   SCHEDULE: any
   CODE_EXEC: any
   CLAUDE_CODE: any
+  AGENT: any
+  FN: any
+  APP: any
 
   // D1 Database (optional, for caching/config)
   GATEWAY_DB?: D1Database

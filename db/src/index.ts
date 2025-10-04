@@ -149,7 +149,7 @@ export default class DatabaseService extends WorkerEntrypoint<Env> {
    * List things with pagination and filters
    */
   async list(ns: string, options: things.ListOptions = {}) {
-    return things.list(ns, options)
+    return things.list(ns, options, this.env)
   }
 
   /**
@@ -1141,17 +1141,20 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
 
         // Add HATEOAS links
         const baseUrl = getBaseUrl(c)
-        const path = '/things'
+        const path = c.req.path // Use actual request path
+        const total = result?.total || 0
+        const hasMore = result?.hasMore || false
         const links = generateHateoasLinks(baseUrl, path, { ns, type, visibility }, {
           page,
           limit,
-          total: result.total || 0,
-          hasMore: result.hasMore || false,
+          total,
+          hasMore,
         })
 
-        return c.json(withHateoas(result.data, links, { page, limit, total: result.total, hasMore: result.hasMore }))
+        return c.json(withHateoas(result?.data || result, links, { page, limit, total, hasMore }))
       } catch (error: any) {
-        return c.json({ error: error.message }, 500)
+        console.error('handleListThings error:', error)
+        return c.json({ error: error.message, stack: error.stack }, 500)
       }
     }
 

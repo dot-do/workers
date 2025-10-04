@@ -5,22 +5,13 @@
   "compatibility_flags": ["nodejs_compat"],
   "account_id": "b6641681fe423910342b9ffa1364c76d",
 
-  // Service bindings (all other workers via RPC)
+  // Service bindings (core workers only - add more as they're deployed)
   "services": [
     { "binding": "DB_SERVICE", "service": "db" },
     { "binding": "AUTH_SERVICE", "service": "auth" },
-    { "binding": "GATEWAY_SERVICE", "service": "gateway" },
-    { "binding": "SCHEDULE_SERVICE", "service": "schedule" },
-    { "binding": "WEBHOOKS_SERVICE", "service": "webhooks" },
-    { "binding": "EMAIL_SERVICE", "service": "email" },
-    { "binding": "MCP_SERVICE", "service": "mcp" },
-    { "binding": "QUEUE_SERVICE", "service": "queue" },
-    { "binding": "WAITLIST_SERVICE", "service": "waitlist-beta-management" },
-    { "binding": "DO_SERVICE", "service": "do" },
-    { "binding": "AI_SERVICE", "service": "ai" },
-    { "binding": "EMBEDDINGS_SERVICE", "service": "embeddings" },
     { "binding": "AGENT_SERVICE", "service": "agent" },
-    { "binding": "FN_SERVICE", "service": "fn" }
+    { "binding": "FN_SERVICE", "service": "fn" },
+    { "binding": "GATEWAY_SERVICE", "service": "gateway" }
   ],
 
   // Dispatch namespaces (Workers for Platforms)
@@ -34,10 +25,12 @@
   "kv_namespaces": [
     {
       "binding": "KV",
-      "id": "YOUR_KV_NAMESPACE_ID",
-      "preview_id": "YOUR_PREVIEW_KV_NAMESPACE_ID"
+      "id": "fda17266fb2a4c5491e1ae00e2ab89ce"
     }
   ],
+
+  // Routes - Managed via Cloudflare Custom Domains for SaaS
+  // No explicit routes needed - domains point to api.drivly.workers.dev via DNS
 
   // Workers Assets for domain routing config
   // Note: In production, upload domain-routes.json via Assets API

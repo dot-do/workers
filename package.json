@@ -30,15 +30,15 @@
     "dev": "pnpm -r dev"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.8.19",
+    "@cloudflare/vitest-pool-workers": "^0.9.10",
     "@cloudflare/workers-types": "^4.20250106.0",
     "@playwright/test": "^1.48.0",
-    "@vitest/coverage-v8": "^2.1.8",
+    "@vitest/coverage-v8": "^3.2.0",
     "esbuild-wasm": "^0.24.2",
     "prettier": "^3.5.3",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "vitest": "^2.1.8",
+    "vitest": "~3.2.0",
     "wrangler": "^3.99.0",
     "yaml": "^2.7.0"
   },

@@ -1,232 +1,166 @@
 # API Worker - Single HTTP Entry Point
 
-The **API Worker** is the ONLY worker in the system with a public fetch handler. It serves as the single entry point for all HTTP traffic and provides comprehensive routing, authentication, and request management.
+The API worker is the **only** worker with public HTTP access. All other workers are accessed via RPC (service bindings).
 
 ## Architecture
 
 ```
-Internet
-  ↓
-API Worker (ONLY public fetch handler)
-  ├─ Domain routing (Workers Assets with SWR cache)
-  ├─ Path routing (/api/service/*)
-  ├─ Auth checking (anon vs authenticated)
-  ├─ Rate limiting
-  ├─ Request logging
-  └─ Routes to:
-      ├─ Internal services (via service bindings)
-      ├─ User workers (via WFP dispatch namespaces)
-      └─ Waitlist (for unmatched domains)
+External Request → Cloudflare DNS → API Worker → Service Binding (RPC) → Target Worker
 ```
 
-## Key Features
+All workers have `workers.dev` disabled and no direct routes. Only the API worker handles HTTP traffic.
 
-### 1. Single Fetch Handler
-- **Only** the API worker has a public fetch handler
-- All other workers expose RPC interfaces only
-- Simplifies routing and security
+## Current Configuration
 
-### 2. Multi-Strategy Routing
+**Deployed:** https://api.drivly.workers.dev
 
-**Priority order:**
-1. **Path-based routing** (/api/service/*)
-2. **Domain-based routing** (service.do, custom domains from Workers Assets)
-3. **Waitlist fallback** (unmatched domains generate waitlist pages)
+**Service Bindings:**
+- `DB_SERVICE` → db
+- `AUTH_SERVICE` → auth
+- `AGENT_SERVICE` → agent
+- `FN_SERVICE` → fn
+- `GATEWAY_SERVICE` → gateway
 
-### 3. Domain Routing with SWR Cache
+## Routing Strategy
 
-Domain routes are stored in **Workers Assets** as `domain-routes.json`:
-- In-memory cache with **10-second expiration**
-- KV cache for cross-instance sharing
-- Stale-while-revalidate (SWR) strategy
-- Updates propagate within 10 seconds
+The API worker uses **three routing layers**:
 
-### 4. Authentication & Authorization
+### 1. Special Domain Routing (Highest Priority)
 
-- Bearer tokens (JWT)
-- API keys
-- Session cookies
-- Route-based requirements (anon, authenticated, admin)
+**Subdomain Routing (*.apis.do):**
+- `agents.apis.do` → agent service
+- `db.apis.do` → db service
+- `fn.apis.do` → fn service
+- `auth.apis.do` → auth service
+- `gateway.apis.do` → gateway service
 
-### 5. Rate Limiting
+**Path Routing (sites.do):**
+- `sites.do/api.management` → gateway service (path metadata)
+- `api.management.sites.do` → gateway service (subdomain metadata)
 
-- Per-user rate limiting (authenticated)
-- Per-IP rate limiting (anonymous)
-- Configurable limits per route
-- Rate limit headers in responses
+### 2. Path-Based Routing
 
-### 6. Workers for Platforms Support
+- `/api/db/*` → db service
+- `/api/auth/*` → auth service
+- `/api/agents/*` → agents service
+- `/api/workflows/*` → workflows service
+- `/mcp/*` → mcp service
 
-Distinguishes between:
-- **Internal services** (db, auth, ai, etc.) via service bindings
-- **User workers** (customer-deployed) via dispatch namespaces
+### 3. Domain-Based Routing (domain-routes.json)
 
-### 7. Request Logging & Analytics
-
-- Structured JSON logs
-- Request/response timing
-- User tracking
-- Async analytics via queue
-
-## Routing Examples
-
-### Path-based routing
-```
-GET /api/db/users/123
-  → Routes to DB_SERVICE
-
-GET /api/ai/generate
-  → Routes to AI_SERVICE
-
-GET /api/auth/login
-  → Routes to AUTH_SERVICE
-```
-
-### Domain-based routing
-```
-GET https://db.do/users/123
-  → Routes to DB_SERVICE (from domain-routes.json)
-
-GET https://custom-domain.com/
-  → Routes to configured service (from domain-routes.json)
-```
-
-### User worker routing (WFP)
-```
-GET https://myapp.do/
-  → Routes to 'myapp' user worker in PRODUCTION namespace
-
-GET https://staging-app.staging.do/
-  → Routes to 'staging-app' user worker in STAGING namespace
-```
-
-### Waitlist fallback
-```
-GET https://unknown-domain.com/
-  → Routes to WAITLIST_SERVICE
-  → Generates waitlist page + blog for SEO
-```
-
-## Configuration
-
-### Service Bindings
-
-All internal services are configured as service bindings in `wrangler.jsonc`:
-
-```jsonc
-"services": [
-  { "binding": "DB_SERVICE", "service": "db" },
-  { "binding": "AUTH_SERVICE", "service": "auth" },
-  { "binding": "AI_SERVICE", "service": "ai" }
-  // ... etc
-]
-```
-
-### Dispatch Namespaces (WFP)
-
-User workers are accessed via dispatch namespaces:
-
-```jsonc
-"dispatch_namespaces": [
-  { "binding": "PRODUCTION", "namespace": "dotdo-production" },
-  { "binding": "STAGING", "namespace": "dotdo-staging" },
-  { "binding": "DEVELOPMENT", "namespace": "dotdo-development" }
-]
-```
-
-### Domain Routes (Workers Assets)
-
-Create `assets/domain-routes.json`:
+1,273 domain mappings stored in `assets/domain-routes.json`:
 
 ```json
-[
-  {
-    "domain": "db.do",
-    "service": "db",
-    "binding": "DB_SERVICE",
-    "requiresAuth": true,
-    "requiresAdmin": false
-  },
-  {
-    "domain": "*.myapp.do",
-    "service": "myapp",
-    "binding": "MYAPP_SERVICE",
-    "requiresAuth": false
-  }
-]
+{
+  "domain": "agent.do",
+  "service": "agent",
+  "binding": "AGENT_SERVICE",
+  "requiresAuth": false
+}
 ```
+
+## Adding Domains
+
+### Method 1: Zone Routes (Cloudflare Dashboard)
+
+1. Go to Cloudflare Dashboard → Zone → DNS
+2. Add CNAME record: `@ → api.drivly.workers.dev`
+3. Go to Workers & Pages → api → Triggers → Routes
+4. Add route: `yourdomain.com/*` (zone: yourdomain.com)
+
+### Method 2: Custom Domains for SaaS
+
+1. Go to Cloudflare Dashboard → SSL/TLS → Custom Hostnames
+2. Add custom hostname: `customer.yourdomain.com`
+3. Point to: `api.drivly.workers.dev`
+4. No wrangler.jsonc changes needed
+
+### Method 3: DNS CNAME
+
+For domains already in your Cloudflare account:
+
+1. Add CNAME record: `subdomain → api.drivly.workers.dev`
+2. No additional configuration needed
+3. API worker automatically routes based on domain-routes.json
+
+## Testing Routes
+
+```bash
+# Test via workers.dev URL
+curl -s https://api.drivly.workers.dev/health
+
+# Test subdomain routing (*.apis.do)
+curl -s https://agents.apis.do/health
+
+# Test sites.do path routing
+curl -s https://sites.do/api.management
+
+# Test custom domain (after DNS setup)
+curl -s https://yourdomain.com/health
+```
+
+## Adding Service Bindings
+
+To add a new service:
+
+1. Deploy the service worker
+2. Add binding to `wrangler.jsonc`:
+   ```jsonc
+   "services": [
+     { "binding": "NEW_SERVICE", "service": "new-service" }
+   ]
+   ```
+3. Update routing logic in `src/index.ts` (if needed)
+4. Redeploy: `npx wrangler deploy`
+
+## Domain Routing Configuration
+
+Add domains to `assets/domain-routes.json`:
+
+```json
+{
+  "domain": "newservice.do",
+  "service": "newservice",
+  "binding": "NEWSERVICE_SERVICE",
+  "requiresAuth": false,
+  "requiresAdmin": false,
+  "metadata": {
+    "description": "New service description",
+    "category": "Service"
+  },
+  "updatedAt": "2025-10-04T20:00:00.000Z"
+}
+```
+
+Changes to domain-routes.json are cached with SWR (10s refresh).
 
 ## Development
 
 ```bash
-# Install dependencies
-pnpm install
-
-# Run locally
+# Local development
 pnpm dev
 
-# Type check
-pnpm typecheck
-
 # Deploy
-pnpm deploy
+npx wrangler deploy
+
+# View logs
+npx wrangler tail api --format pretty
+
+# Check deployments
+npx wrangler deployments list
 ```
 
-## File Structure
+## Architecture Benefits
 
-```
-api/
-├── src/
-│   ├── index.ts              # Main entry point + routing
-│   ├── types.ts              # TypeScript types
-│   ├── utils.ts              # Utility functions
-│   ├── middleware/
-│   │   ├── auth.ts           # Authentication logic
-│   │   ├── ratelimit.ts      # Rate limiting
-│   │   └── logging.ts        # Request/response logging
-│   └── routing/
-│       ├── paths.ts          # Path-based routes
-│       ├── domains.ts        # Domain routes (Workers Assets)
-│       └── wfp.ts            # WFP routing (internal vs user)
-├── assets/
-│   └── domain-routes.json    # Domain routing config
-├── wrangler.jsonc            # Cloudflare Workers config
-├── package.json
-├── tsconfig.json
-└── README.md
-```
+✅ **Single Entry Point** - One worker handles all HTTP traffic
+✅ **Flexible Routing** - DNS, zones, or custom domains
+✅ **No Route Limits** - No wrangler.jsonc route limits
+✅ **Dynamic Configuration** - domain-routes.json updates without redeploy
+✅ **Custom Domains for SaaS** - Easy tenant-specific domains
 
-## Environment Variables
+## Related Documentation
 
-Set in `wrangler.jsonc` under `vars`:
-
-```jsonc
-"vars": {
-  "ENVIRONMENT": "production"  // or "staging", "development"
-}
-```
-
-## Related Services
-
-- **DO Worker** - RPC proxy for calling services
-- **Gateway** - Legacy routing (being replaced)
-- **Dispatcher** - WFP namespace routing (complementary)
-
-## Migration Notes
-
-This worker replaces the pattern where every worker had its own fetch handler. Now:
-
-**Before:**
-- Each worker has: `export default { fetch }`
-- Gateway routes to each worker via HTTP
-
-**After:**
-- Only API worker has: `export default { fetch }`
-- All workers expose: `class Service extends WorkerEntrypoint`
-- API routes to services via RPC (service bindings)
-
-## See Also
-
-- [DO Worker README](../do/README.md) - RPC proxy
-- [Dispatcher README](../dispatcher/README.md) - WFP routing
-- [CLAUDE.md](../CLAUDE.md) - Architecture overview
+- [workers/CLAUDE.md](../CLAUDE.md) - Workers architecture
+- [Root CLAUDE.md](../../CLAUDE.md) - Multi-repo structure
+- `assets/domain-routes.json` - Domain mappings (1,273 domains)
+- `src/index.ts` - Routing logic

@@ -142,11 +142,18 @@ app.get('/health', c => {
  * Determine which route to use based on domain and path
  *
  * Priority:
- * 1. Path-based routes (/api/service/*)
- * 2. Domain-based routes (service.do, custom.domain.com)
- * 3. Waitlist for unmatched domains
+ * 1. Special routing (*.apis.do subdomains, sites.do paths)
+ * 2. Path-based routes (/api/service/*)
+ * 3. Domain-based routes (service.do, custom.domain.com)
+ * 4. Waitlist for unmatched domains
  */
 async function determineRoute(url: URL, ctx: ApiContext): Promise<RouteConfig> {
+  // Strategy 0: Special subdomain/path routing
+  const specialRoute = handleSpecialRouting(url)
+  if (specialRoute) {
+    return specialRoute
+  }
+
   // Strategy 1: Path-based routing
   const pathRoute = matchPathRoute(url.pathname, url.hostname)
   if (pathRoute) {
@@ -178,6 +185,82 @@ async function determineRoute(url: URL, ctx: ApiContext): Promise<RouteConfig> {
       generatedWaitlist: true,
     },
   }
+}
+
+/**
+ * Handle special routing patterns
+ *
+ * *.apis.do → Extract subdomain and route to service
+ *   agents.apis.do → agent service
+ *   db.apis.do → db service
+ *   fn.apis.do → fn service
+ *
+ * sites.do/* → Extract path and route to service
+ *   sites.do/api.management → path-based routing
+ */
+function handleSpecialRouting(url: URL): RouteConfig | null {
+  const hostname = url.hostname
+
+  // Handle *.apis.do subdomains
+  if (hostname.endsWith('.apis.do')) {
+    const subdomain = hostname.replace('.apis.do', '')
+
+    // Map subdomain to service
+    const serviceMap: Record<string, { service: string; binding: string }> = {
+      'agents': { service: 'agent', binding: 'AGENT_SERVICE' },
+      'agent': { service: 'agent', binding: 'AGENT_SERVICE' },
+      'db': { service: 'db', binding: 'DB_SERVICE' },
+      'database': { service: 'db', binding: 'DB_SERVICE' },
+      'fn': { service: 'fn', binding: 'FN_SERVICE' },
+      'functions': { service: 'fn', binding: 'FN_SERVICE' },
+      'auth': { service: 'auth', binding: 'AUTH_SERVICE' },
+      'gateway': { service: 'gateway', binding: 'GATEWAY_SERVICE' },
+    }
+
+    const mapping = serviceMap[subdomain]
+    if (mapping) {
+      return {
+        service: mapping.service,
+        binding: mapping.binding,
+        path: url.pathname,
+        requiresAuth: false,
+        requiresAdmin: false,
+      }
+    }
+  }
+
+  // Handle sites.do/* path-based routing
+  if (hostname === 'sites.do' || hostname.endsWith('.sites.do')) {
+    // Extract first path segment as service name (for main domain)
+    // Or use subdomain (for subdomains)
+    let sitesPath: string | undefined
+
+    if (hostname.endsWith('.sites.do')) {
+      // For subdomains like api.management.sites.do, extract the full subdomain
+      sitesPath = hostname.replace('.sites.do', '')
+    } else {
+      // For sites.do/api.management, extract the first path segment
+      const pathParts = url.pathname.split('/').filter(Boolean)
+      if (pathParts.length > 0) {
+        sitesPath = pathParts[0]
+      }
+    }
+
+    // Route to gateway for sites.do handling
+    return {
+      service: 'gateway',
+      binding: 'GATEWAY_SERVICE',
+      path: url.pathname,
+      requiresAuth: false,
+      requiresAdmin: false,
+      metadata: {
+        sitesPath,
+        isSitesDomain: true,
+      },
+    }
+  }
+
+  return null
 }
 
 /**

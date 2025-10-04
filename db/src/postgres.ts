@@ -7,15 +7,26 @@ import * as schema from '../schema'
  * Lazy-initialized singleton to reuse connections across requests
  */
 let _client: ReturnType<typeof drizzle<typeof schema>> | undefined
+let _connectionString: string | undefined
 
-export function getPostgresClient(connectionString?: string) {
-  if (_client) return _client
+export function getPostgresClient(connectionString?: string | any) {
+  // Handle env object (from Cloudflare Workers)
+  if (connectionString && typeof connectionString === 'object' && 'DATABASE_URL' in connectionString) {
+    connectionString = connectionString.DATABASE_URL
+  }
+
+  // If client exists and connection string matches, return cached client
+  if (_client && connectionString === _connectionString) return _client
 
   const connStr = connectionString || process.env.DATABASE_URL
-  if (!connStr) throw new Error('DATABASE_URL not configured')
+  if (!connStr) {
+    console.error('DATABASE_URL not configured. Pass as parameter or set in environment.')
+    throw new Error('DATABASE_URL not configured')
+  }
 
   const sql = neon(connStr)
   _client = drizzle(sql, { schema })
+  _connectionString = connStr
   return _client
 }
 

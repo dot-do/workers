@@ -1,0 +1,16 @@
+{
+  "totalDomains": 76,
+  "byTld": {
+    "do": 76
+  },
+  "byRegistrar": {
+    "Registrar": 75
+  },
+  "byStatus": {
+    "working": 51,
+    "notWorking": 25,
+    "activeInCloudflare": 75,
+    "nameserverMismatch": 1
+  },
+  "expiringSoon": 14
+}

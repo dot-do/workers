@@ -1,0 +1,27 @@
+{
+  "domain": "datasets.do",
+  "tld": "do",
+  "name": "datasets",
+  "dnsProvider": "cloudflare",
+  "expirationDate": "2026-04-16T14:41:02.618Z",
+  "daysUntilExpiration": 195,
+  "registrar": "Registrar NIC .DO (midominio.do)",
+  "httpStatus": 200,
+  "httpWorking": true,
+  "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+  "cloudflareAccountName": "Driv.ly",
+  "activeInCloudflare": true,
+  "nameserverMismatch": false,
+  "html": "\n# datasets.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-16T14:41:02.618Z (195 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+  "metadata": {
+    "assignedNameservers": [
+      "ernest.ns.cloudflare.com",
+      "gina.ns.cloudflare.com"
+    ],
+    "actualNameservers": [
+      "gina.ns.cloudflare.com",
+      "ernest.ns.cloudflare.com"
+    ],
+    "httpContentType": "text/html; charset=utf-8"
+  }
+}

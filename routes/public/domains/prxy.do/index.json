@@ -1,0 +1,30 @@
+{
+  "domain": "prxy.do",
+  "tld": "do",
+  "name": "prxy",
+  "dnsProvider": "cloudflare",
+  "expirationDate": "2026-08-01T08:04:17.956Z",
+  "daysUntilExpiration": 301,
+  "registrar": "Registrar NIC .DO (midominio.do)",
+  "httpStatus": 200,
+  "httpWorking": true,
+  "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+  "cloudflareAccountName": "Driv.ly",
+  "activeInCloudflare": true,
+  "nameserverMismatch": false,
+  "html": "\n# prxy.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-08-01T08:04:17.956Z (301 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n### Workers Routes\n\n- `clickhouse.prxy.do/*`\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `application/json`\n",
+  "metadata": {
+    "assignedNameservers": [
+      "ernest.ns.cloudflare.com",
+      "gina.ns.cloudflare.com"
+    ],
+    "actualNameservers": [
+      "gina.ns.cloudflare.com",
+      "ernest.ns.cloudflare.com"
+    ],
+    "httpContentType": "application/json",
+    "workersRoutes": [
+      "clickhouse.prxy.do/*"
+    ]
+  }
+}

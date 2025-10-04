@@ -1,0 +1,19 @@
+{
+  "domain": "dara.do",
+  "tld": "do",
+  "name": "dara",
+  "dnsProvider": "cloudflare",
+  "httpStatus": 404,
+  "httpWorking": false,
+  "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+  "cloudflareAccountName": "Driv.ly",
+  "activeInCloudflare": true,
+  "html": "\n# dara.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Unknown\n- **Expiration:** Unknown\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+  "metadata": {
+    "assignedNameservers": [
+      "dayana.ns.cloudflare.com",
+      "sean.ns.cloudflare.com"
+    ],
+    "httpContentType": "text/plain; charset=utf-8"
+  }
+}

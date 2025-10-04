@@ -1,0 +1,30 @@
+{
+  "domain": "extract.do",
+  "tld": "do",
+  "name": "extract",
+  "dnsProvider": "cloudflare",
+  "expirationDate": "2026-03-29T09:29:28.890Z",
+  "daysUntilExpiration": 176,
+  "registrar": "Registrar NIC .DO (midominio.do)",
+  "httpStatus": 404,
+  "httpWorking": false,
+  "expectedBehavior": "Content extraction utility - extracts data from provided URL",
+  "testPath": "/example.com",
+  "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+  "cloudflareAccountName": "Driv.ly",
+  "activeInCloudflare": true,
+  "nameserverMismatch": false,
+  "html": "\n# extract.do\n\n> 💡 **Purpose:** Content extraction utility - extracts data from provided URL\n\n> 🚨 **HTTP check failed!** status 404 (tested at `/example.com`)\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-29T09:29:28.890Z (176 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404) - tested at `/example.com`\n- Content-Type: `text/html; charset=utf-8`\n- Expected Status: 200\n",
+  "metadata": {
+    "assignedNameservers": [
+      "dayana.ns.cloudflare.com",
+      "sean.ns.cloudflare.com"
+    ],
+    "actualNameservers": [
+      "sean.ns.cloudflare.com",
+      "dayana.ns.cloudflare.com"
+    ],
+    "httpContentType": "text/html; charset=utf-8",
+    "expectedStatus": 200
+  }
+}

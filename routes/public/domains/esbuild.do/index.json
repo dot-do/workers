@@ -1,0 +1,27 @@
+{
+  "domain": "esbuild.do",
+  "tld": "do",
+  "name": "esbuild",
+  "dnsProvider": "cloudflare",
+  "expirationDate": "2025-12-17T10:37:24.194Z",
+  "daysUntilExpiration": 74,
+  "registrar": "Registrar NIC .DO (midominio.do)",
+  "httpStatus": 200,
+  "httpWorking": true,
+  "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+  "cloudflareAccountName": "Driv.ly",
+  "activeInCloudflare": true,
+  "nameserverMismatch": false,
+  "html": "\n# esbuild.do\n\n> ⚠️ **Expiring soon:** 74 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-12-17T10:37:24.194Z (74 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+  "metadata": {
+    "assignedNameservers": [
+      "ernest.ns.cloudflare.com",
+      "gina.ns.cloudflare.com"
+    ],
+    "actualNameservers": [
+      "gina.ns.cloudflare.com",
+      "ernest.ns.cloudflare.com"
+    ],
+    "httpContentType": "text/html; charset=utf-8"
+  }
+}

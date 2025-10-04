@@ -1,0 +1,27 @@
+{
+  "domain": "thinking.do",
+  "tld": "do",
+  "name": "thinking",
+  "dnsProvider": "cloudflare",
+  "expirationDate": "2026-04-22T09:58:34.250Z",
+  "daysUntilExpiration": 200,
+  "registrar": "Registrar NIC .DO (midominio.do)",
+  "httpStatus": 200,
+  "httpWorking": true,
+  "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+  "cloudflareAccountName": "Driv.ly",
+  "activeInCloudflare": true,
+  "nameserverMismatch": false,
+  "html": "\n# thinking.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-22T09:58:34.250Z (200 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+  "metadata": {
+    "assignedNameservers": [
+      "dayana.ns.cloudflare.com",
+      "sean.ns.cloudflare.com"
+    ],
+    "actualNameservers": [
+      "sean.ns.cloudflare.com",
+      "dayana.ns.cloudflare.com"
+    ],
+    "httpContentType": "text/html; charset=utf-8"
+  }
+}

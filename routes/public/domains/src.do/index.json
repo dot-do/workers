@@ -1,0 +1,30 @@
+{
+  "domain": "src.do",
+  "tld": "do",
+  "name": "src",
+  "dnsProvider": "cloudflare",
+  "expirationDate": "2025-12-17T14:36:49.643Z",
+  "daysUntilExpiration": 75,
+  "registrar": "Registrar NIC .DO (midominio.do)",
+  "httpStatus": 401,
+  "httpWorking": false,
+  "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+  "cloudflareAccountName": "Driv.ly",
+  "activeInCloudflare": true,
+  "nameserverMismatch": false,
+  "html": "\n# src.do\n\n> 🚨 **HTTP check failed!** status 401\n\n> ⚠️ **Expiring soon:** 75 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-12-17T14:36:49.643Z (75 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n### Workers Routes\n\n- `src.do/login*`\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (401)\n- Content-Type: `application/json; charset=UTF-8`\n",
+  "metadata": {
+    "assignedNameservers": [
+      "ernest.ns.cloudflare.com",
+      "gina.ns.cloudflare.com"
+    ],
+    "actualNameservers": [
+      "gina.ns.cloudflare.com",
+      "ernest.ns.cloudflare.com"
+    ],
+    "httpContentType": "application/json; charset=UTF-8",
+    "workersRoutes": [
+      "src.do/login*"
+    ]
+  }
+}

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun run ../../scripts/build-domain-routes.ts",
+    "build": "bun run ../../scripts/build-domain-routes-simple.ts",
     "dev": "wrangler dev",
     "deploy": "bun run build && wrangler deploy",
     "deploy:production": "bun run build && wrangler deploy --env production"

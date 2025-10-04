@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domain Routes - 76 Domains</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #f5f5f5;
+    }
+    h1 { margin-bottom: 1rem; color: #333; }
+    h2 { margin-top: 2rem; margin-bottom: 1rem; color: #555; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .stat-value { font-size: 2rem; font-weight: bold; color: #333; }
+    .stat-label { color: #666; font-size: 0.9rem; }
+    .domain-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .domain-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border-left: 4px solid #ddd;
+    }
+    .domain-card.working { border-left-color: #22c55e; }
+    .domain-card.not-working { border-left-color: #ef4444; }
+    .domain-card.expiring { border-left-color: #f59e0b; }
+    .domain-name {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+    .domain-name a {
+      color: #333;
+      text-decoration: none;
+    }
+    .domain-name a:hover {
+      color: #2563eb;
+      text-decoration: underline;
+    }
+    .domain-meta {
+      font-size: 0.85rem;
+      color: #666;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 0.5rem;
+    }
+    .status-working { background: #dcfce7; color: #166534; }
+    .status-not-working { background: #fee2e2; color: #991b1b; }
+    .status-expiring { background: #fef3c7; color: #92400e; }
+    code {
+      background: #f1f5f9;
+      padding: 0.125rem 0.25rem;
+      border-radius: 3px;
+      font-size: 0.85em;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌐 Domain Routes</h1>
+  <p>Static domain inventory served from Workers Assets</p>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-value">76</div>
+      <div class="stat-label">Total Domains</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">51</div>
+      <div class="stat-label">Working</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">25</div>
+      <div class="stat-label">Not Working</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">14</div>
+      <div class="stat-label">Expiring Soon</div>
+    </div>
+  </div>
+
+  <h2>✅ Working Domains (51)</h2>
+  <div class="domain-grid">
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://research.do" target="_blank">research.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 170 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://agi.do" target="_blank">agi.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 148 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://mdx.do" target="_blank">mdx.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 65 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://bots.do" target="_blank">bots.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 165 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://database.do" target="_blank">database.do</a>
+        </div>
+        <div class="domain-meta">
+          <div>💡 Database proxy/query service</div>
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 326 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://startups.do" target="_blank">startups.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 200 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://studio.do" target="_blank">studio.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 301 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://documentation.do" target="_blank">documentation.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 200 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://databases.do" target="_blank">databases.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 42 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://evals.do" target="_blank">evals.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 65 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://businesses.do" target="_blank">businesses.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 195 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://tasks.do" target="_blank">tasks.do</a>
+        </div>
+        <div class="domain-meta">
+          <div>💡 Task queue and scheduling service</div>
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 176 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://trace.do" target="_blank">trace.do</a>
+        </div>
+        <div class="domain-meta">
+          <div>💡 Distributed tracing utility</div>
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 165 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://devs.do" target="_blank">devs.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 197 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://ivy.do" target="_blank">ivy.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 76 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://goals.do" target="_blank">goals.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 200 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://lists.do" target="_blank">lists.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 165 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://plans.do" target="_blank">plans.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 182 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://rpa.do" target="_blank">rpa.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 200 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://experiments.do" target="_blank">experiments.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 74 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://projects.do" target="_blank">projects.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 182 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://resources.do" target="_blank">resources.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 179 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://datasets.do" target="_blank">datasets.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 195 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://graph.do" target="_blank">graph.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 177 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://summarize.do" target="_blank">summarize.do</a>
+        </div>
+        <div class="domain-meta">
+          <div>💡 Content summarization utility</div>
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 197 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://kpis.do" target="_blank">kpis.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 173 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://agents.do" target="_blank">agents.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 180 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://mcp.do" target="_blank">mcp.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 152 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://models.do" target="_blank">models.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 168 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://cli.do" target="_blank">cli.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 195 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://function.do" target="_blank">function.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 333 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://gcp.do" target="_blank">gcp.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 29 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://lena.do" target="_blank">lena.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 77 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://careers.do" target="_blank">careers.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 354 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://integrations.do" target="_blank">integrations.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 165 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://browser.do" target="_blank">browser.do</a>
+        </div>
+        <div class="domain-meta">
+          <div>💡 Browser rendering utility</div>
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 170 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://thinking.do" target="_blank">thinking.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 200 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://nouns.do" target="_blank">nouns.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 168 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://prxy.do" target="_blank">prxy.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 301 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://sdk.do" target="_blank">sdk.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 349 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://benchmarks.do" target="_blank">benchmarks.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 173 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://functions.do" target="_blank">functions.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 31 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://verbs.do" target="_blank">verbs.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 168 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://browse.do" target="_blank">browse.do</a>
+        </div>
+        <div class="domain-meta">
+          <div>💡 Browser automation utility</div>
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 176 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://esbuild.do" target="_blank">esbuild.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 74 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://webhooks.do" target="_blank">webhooks.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 31 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://lexi.do" target="_blank">lexi.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 77 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://issues.do" target="_blank">issues.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 178 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://transform.do" target="_blank">transform.do</a>
+        </div>
+        <div class="domain-meta">
+          <div>💡 Data transformation utility</div>
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 197 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://reference.do" target="_blank">reference.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 200 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+      <div class="domain-card working">
+        <div class="domain-name">
+          <a href="https://analytics.do" target="_blank">analytics.do</a>
+        </div>
+        <div class="domain-meta">
+          
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 74 days</div>
+          <div>🔧 Status: <code>200</code></div>
+        </div>
+        <span class="status-badge status-working">✓ Working</span>
+      </div>
+    
+  </div>
+
+  <h2>⚠️ Not Working (25)</h2>
+  <div class="domain-grid">
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">traces.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 173 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">products.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 197 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">context.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 195 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">okrs.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 173 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">sdr.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 173 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">dara.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Unknown</div>
+          <div>📅 Expires in undefined days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">bdr.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 173 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">ari.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 76 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">cfo.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 173 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">coo.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 173 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">humans.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 176 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">coach.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 182 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">svc.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 183 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">sites.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 173 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">browsers.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 176 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">okr.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 195 days</div>
+          <div>🔧 Status: <code>Connection failed</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">action.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 179 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">amy.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 180 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">queue.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 176 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">cro.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 173 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">scrapers.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 180 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">extract.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 176 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">402.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 365 days</div>
+          <div>🔧 Status: <code>Connection failed</code></div>
+          <div>⚠️ Nameserver mismatch</div>
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">companies.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 200 days</div>
+          <div>🔧 Status: <code>404</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+      <div class="domain-card not-working">
+        <div class="domain-name">src.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in 75 days</div>
+          <div>🔧 Status: <code>401</code></div>
+          
+        </div>
+        <span class="status-badge status-not-working">✗ Not Working</span>
+      </div>
+    
+  </div>
+
+  
+  <h2>🚨 Expiring Soon (14)</h2>
+  <div class="domain-grid">
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">mdx.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>65 days</strong></div>
+          <div>🗓️ 12/7/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">databases.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>42 days</strong></div>
+          <div>🗓️ 11/15/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">evals.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>65 days</strong></div>
+          <div>🗓️ 12/7/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">ivy.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>76 days</strong></div>
+          <div>🗓️ 12/19/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">experiments.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>74 days</strong></div>
+          <div>🗓️ 12/17/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">ari.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>76 days</strong></div>
+          <div>🗓️ 12/19/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">gcp.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>29 days</strong></div>
+          <div>🗓️ 11/2/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">lena.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>77 days</strong></div>
+          <div>🗓️ 12/20/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">functions.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>31 days</strong></div>
+          <div>🗓️ 11/4/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">esbuild.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>74 days</strong></div>
+          <div>🗓️ 12/17/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">webhooks.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>31 days</strong></div>
+          <div>🗓️ 11/4/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">lexi.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>77 days</strong></div>
+          <div>🗓️ 12/20/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">analytics.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>74 days</strong></div>
+          <div>🗓️ 12/17/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+      <div class="domain-card expiring">
+        <div class="domain-name">src.do</div>
+        <div class="domain-meta">
+          <div>📡 cloudflare / Registrar</div>
+          <div>📅 Expires in <strong>75 days</strong></div>
+          <div>🗓️ 12/17/2025</div>
+        </div>
+        <span class="status-badge status-expiring">⚠ Expiring</span>
+      </div>
+    
+  </div>
+  
+
+  <h2>📊 API Access</h2>
+  <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <p><strong>All domains:</strong> <code>GET /domains/index.json</code></p>
+    <p><strong>Individual domain:</strong> <code>GET /domains/{domain}/index.json</code></p>
+    <p><strong>Statistics:</strong> <code>GET /domains/stats.json</code></p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "domain": "lexi.do",
+  "tld": "do",
+  "name": "lexi",
+  "dnsProvider": "cloudflare",
+  "expirationDate": "2025-12-20T08:23:17.498Z",
+  "daysUntilExpiration": 77,
+  "registrar": "Registrar NIC .DO (midominio.do)",
+  "httpStatus": 200,
+  "httpWorking": true,
+  "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+  "cloudflareAccountName": "Driv.ly",
+  "activeInCloudflare": true,
+  "nameserverMismatch": false,
+  "html": "\n# lexi.do\n\n> ⚠️ **Expiring soon:** 77 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-12-20T08:23:17.498Z (77 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+  "metadata": {
+    "assignedNameservers": [
+      "ernest.ns.cloudflare.com",
+      "gina.ns.cloudflare.com"
+    ],
+    "actualNameservers": [
+      "gina.ns.cloudflare.com",
+      "ernest.ns.cloudflare.com"
+    ],
+    "httpContentType": "text/html; charset=utf-8"
+  }
+}

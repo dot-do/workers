@@ -1,0 +1,2071 @@
+[
+  {
+    "domain": "research.do",
+    "tld": "do",
+    "name": "research",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-22T15:25:53.837Z",
+    "daysUntilExpiration": 170,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# research.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-22T15:25:53.837Z (170 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "agi.do",
+    "tld": "do",
+    "name": "agi",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-01T08:39:47.882Z",
+    "daysUntilExpiration": 148,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# agi.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-01T08:39:47.882Z (148 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "mdx.do",
+    "tld": "do",
+    "name": "mdx",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-12-07T15:18:45.433Z",
+    "daysUntilExpiration": 65,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# mdx.do\n\n> ⚠️ **Expiring soon:** 65 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-12-07T15:18:45.433Z (65 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "bots.do",
+    "tld": "do",
+    "name": "bots",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-18T09:14:08.935Z",
+    "daysUntilExpiration": 165,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# bots.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-18T09:14:08.935Z (165 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "database.do",
+    "tld": "do",
+    "name": "database",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-08-26T07:56:02.781Z",
+    "daysUntilExpiration": 326,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "expectedBehavior": "Database proxy/query service",
+    "testPath": "/",
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# database.do\n\n> 💡 **Purpose:** Database proxy/query service\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-08-26T07:56:02.781Z (326 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200) - tested at `/`\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "startups.do",
+    "tld": "do",
+    "name": "startups",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-22T09:58:34.265Z",
+    "daysUntilExpiration": 200,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# startups.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-22T09:58:34.265Z (200 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "studio.do",
+    "tld": "do",
+    "name": "studio",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-08-01T08:04:17.929Z",
+    "daysUntilExpiration": 301,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# studio.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-08-01T08:04:17.929Z (301 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "traces.do",
+    "tld": "do",
+    "name": "traces",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-26T09:28:13.495Z",
+    "daysUntilExpiration": 173,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# traces.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-26T09:28:13.495Z (173 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "documentation.do",
+    "tld": "do",
+    "name": "documentation",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-22T09:58:34.265Z",
+    "daysUntilExpiration": 200,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# documentation.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-22T09:58:34.265Z (200 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "databases.do",
+    "tld": "do",
+    "name": "databases",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-11-15T10:35:36.427Z",
+    "daysUntilExpiration": 42,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# databases.do\n\n> ⚠️ **Expiring soon:** 42 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-11-15T10:35:36.427Z (42 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "evals.do",
+    "tld": "do",
+    "name": "evals",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-12-07T15:18:44.539Z",
+    "daysUntilExpiration": 65,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# evals.do\n\n> ⚠️ **Expiring soon:** 65 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-12-07T15:18:44.539Z (65 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "businesses.do",
+    "tld": "do",
+    "name": "businesses",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-16T14:41:01.557Z",
+    "daysUntilExpiration": 195,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# businesses.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-16T14:41:01.557Z (195 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "tasks.do",
+    "tld": "do",
+    "name": "tasks",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-29T09:29:28.953Z",
+    "daysUntilExpiration": 176,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "expectedBehavior": "Task queue and scheduling service",
+    "testPath": "/",
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# tasks.do\n\n> 💡 **Purpose:** Task queue and scheduling service\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-29T09:29:28.953Z (176 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200) - tested at `/`\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "products.do",
+    "tld": "do",
+    "name": "products",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-18T13:47:37.554Z",
+    "daysUntilExpiration": 197,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# products.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-18T13:47:37.554Z (197 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "context.do",
+    "tld": "do",
+    "name": "context",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-16T14:41:02.618Z",
+    "daysUntilExpiration": 195,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# context.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-16T14:41:02.618Z (195 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "trace.do",
+    "tld": "do",
+    "name": "trace",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-18T09:14:09.605Z",
+    "daysUntilExpiration": 165,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "expectedBehavior": "Distributed tracing utility",
+    "testPath": "/",
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# trace.do\n\n> 💡 **Purpose:** Distributed tracing utility\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-18T09:14:09.605Z (165 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200) - tested at `/`\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "devs.do",
+    "tld": "do",
+    "name": "devs",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-18T13:47:36.834Z",
+    "daysUntilExpiration": 197,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# devs.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-18T13:47:36.834Z (197 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "okrs.do",
+    "tld": "do",
+    "name": "okrs",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-26T12:25:20.95Z",
+    "daysUntilExpiration": 173,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# okrs.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-26T12:25:20.95Z (173 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "ivy.do",
+    "tld": "do",
+    "name": "ivy",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-12-19T10:44:08.585Z",
+    "daysUntilExpiration": 76,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# ivy.do\n\n> ⚠️ **Expiring soon:** 76 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-12-19T10:44:08.585Z (76 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "sdr.do",
+    "tld": "do",
+    "name": "sdr",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-26T12:09:28.841Z",
+    "daysUntilExpiration": 173,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# sdr.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-26T12:09:28.841Z (173 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "goals.do",
+    "tld": "do",
+    "name": "goals",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-22T09:58:34.264Z",
+    "daysUntilExpiration": 200,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# goals.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-22T09:58:34.264Z (200 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "lists.do",
+    "tld": "do",
+    "name": "lists",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-18T09:14:08.892Z",
+    "daysUntilExpiration": 165,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# lists.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-18T09:14:08.892Z (165 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "plans.do",
+    "tld": "do",
+    "name": "plans",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-04T07:14:24.314Z",
+    "daysUntilExpiration": 182,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# plans.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-04T07:14:24.314Z (182 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "rpa.do",
+    "tld": "do",
+    "name": "rpa",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-22T09:58:34.246Z",
+    "daysUntilExpiration": 200,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# rpa.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-22T09:58:34.246Z (200 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "dara.do",
+    "tld": "do",
+    "name": "dara",
+    "dnsProvider": "cloudflare",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "html": "\n# dara.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Unknown\n- **Expiration:** Unknown\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "experiments.do",
+    "tld": "do",
+    "name": "experiments",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-12-17T10:37:24.194Z",
+    "daysUntilExpiration": 74,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# experiments.do\n\n> ⚠️ **Expiring soon:** 74 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-12-17T10:37:24.194Z (74 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "projects.do",
+    "tld": "do",
+    "name": "projects",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-04T07:14:24.317Z",
+    "daysUntilExpiration": 182,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# projects.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-04T07:14:24.317Z (182 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "resources.do",
+    "tld": "do",
+    "name": "resources",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-01T08:04:37.204Z",
+    "daysUntilExpiration": 179,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# resources.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-01T08:04:37.204Z (179 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "bdr.do",
+    "tld": "do",
+    "name": "bdr",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-26T12:09:28.835Z",
+    "daysUntilExpiration": 173,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# bdr.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-26T12:09:28.835Z (173 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "ari.do",
+    "tld": "do",
+    "name": "ari",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-12-19T10:44:08.576Z",
+    "daysUntilExpiration": 76,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# ari.do\n\n> 🚨 **HTTP check failed!** status 404\n\n> ⚠️ **Expiring soon:** 76 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-12-19T10:44:08.576Z (76 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "datasets.do",
+    "tld": "do",
+    "name": "datasets",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-16T14:41:02.618Z",
+    "daysUntilExpiration": 195,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# datasets.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-16T14:41:02.618Z (195 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "graph.do",
+    "tld": "do",
+    "name": "graph",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-29T14:25:10.585Z",
+    "daysUntilExpiration": 177,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# graph.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-29T14:25:10.585Z (177 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "summarize.do",
+    "tld": "do",
+    "name": "summarize",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-18T13:47:37.555Z",
+    "daysUntilExpiration": 197,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "expectedBehavior": "Content summarization utility",
+    "testPath": "/",
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# summarize.do\n\n> 💡 **Purpose:** Content summarization utility\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-18T13:47:37.555Z (197 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200) - tested at `/`\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "kpis.do",
+    "tld": "do",
+    "name": "kpis",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-26T12:25:21.63Z",
+    "daysUntilExpiration": 173,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# kpis.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-26T12:25:21.63Z (173 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "agents.do",
+    "tld": "do",
+    "name": "agents",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-01T14:12:35.860Z",
+    "daysUntilExpiration": 180,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# agents.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-01T14:12:35.860Z (180 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "cfo.do",
+    "tld": "do",
+    "name": "cfo",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-26T12:09:28.835Z",
+    "daysUntilExpiration": 173,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# cfo.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-26T12:09:28.835Z (173 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "mcp.do",
+    "tld": "do",
+    "name": "mcp",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-05T09:12:07.716Z",
+    "daysUntilExpiration": 152,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# mcp.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-05T09:12:07.716Z (152 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "models.do",
+    "tld": "do",
+    "name": "models",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-20T14:01:23.265Z",
+    "daysUntilExpiration": 168,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# models.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-20T14:01:23.265Z (168 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "coo.do",
+    "tld": "do",
+    "name": "coo",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-26T12:25:21.63Z",
+    "daysUntilExpiration": 173,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# coo.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-26T12:25:21.63Z (173 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "humans.do",
+    "tld": "do",
+    "name": "humans",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-29T09:29:28.943Z",
+    "daysUntilExpiration": 176,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# humans.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-29T09:29:28.943Z (176 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "cli.do",
+    "tld": "do",
+    "name": "cli",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-16T14:41:02.658Z",
+    "daysUntilExpiration": 195,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# cli.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-16T14:41:02.658Z (195 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "function.do",
+    "tld": "do",
+    "name": "function",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-09-02T07:21:08.912Z",
+    "daysUntilExpiration": 333,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# function.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-09-02T07:21:08.912Z (333 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "gcp.do",
+    "tld": "do",
+    "name": "gcp",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-11-02T08:03:43.206Z",
+    "daysUntilExpiration": 29,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# gcp.do\n\n> ⚠️ **Expiring soon:** 29 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-11-02T08:03:43.206Z (29 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `application/json; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "application/json; charset=utf-8"
+    }
+  },
+  {
+    "domain": "lena.do",
+    "tld": "do",
+    "name": "lena",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-12-20T08:25:46.477Z",
+    "daysUntilExpiration": 77,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# lena.do\n\n> ⚠️ **Expiring soon:** 77 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-12-20T08:25:46.477Z (77 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "careers.do",
+    "tld": "do",
+    "name": "careers",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-09-23T07:17:37.581Z",
+    "daysUntilExpiration": 354,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# careers.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-09-23T07:17:37.581Z (354 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "coach.do",
+    "tld": "do",
+    "name": "coach",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-04T07:14:24.313Z",
+    "daysUntilExpiration": 182,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# coach.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-04T07:14:24.313Z (182 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "svc.do",
+    "tld": "do",
+    "name": "svc",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-05T07:05:18.44Z",
+    "daysUntilExpiration": 183,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# svc.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-05T07:05:18.44Z (183 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=UTF-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=UTF-8"
+    }
+  },
+  {
+    "domain": "integrations.do",
+    "tld": "do",
+    "name": "integrations",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-18T09:14:08.943Z",
+    "daysUntilExpiration": 165,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# integrations.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-18T09:14:08.943Z (165 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "sites.do",
+    "tld": "do",
+    "name": "sites",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-25T14:25:51.597Z",
+    "daysUntilExpiration": 173,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# sites.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-25T14:25:51.597Z (173 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "browsers.do",
+    "tld": "do",
+    "name": "browsers",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-29T09:29:27.975Z",
+    "daysUntilExpiration": 176,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "expectedBehavior": "Multi-browser testing utility",
+    "testPath": "/",
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# browsers.do\n\n> 💡 **Purpose:** Multi-browser testing utility\n\n> 🚨 **HTTP check failed!** status 404 (tested at `/`)\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-29T09:29:27.975Z (176 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404) - tested at `/`\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "browser.do",
+    "tld": "do",
+    "name": "browser",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-22T15:25:53.870Z",
+    "daysUntilExpiration": 170,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "expectedBehavior": "Browser rendering utility",
+    "testPath": "/",
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# browser.do\n\n> 💡 **Purpose:** Browser rendering utility\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-22T15:25:53.870Z (170 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200) - tested at `/`\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "okr.do",
+    "tld": "do",
+    "name": "okr",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-16T14:41:01.524Z",
+    "daysUntilExpiration": 195,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# okr.do\n\n> 🚨 **HTTP check failed!** Connection failed on both HTTP and HTTPS\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-16T14:41:01.524Z (195 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpError": "Connection failed on both HTTP and HTTPS"
+    }
+  },
+  {
+    "domain": "action.do",
+    "tld": "do",
+    "name": "action",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-01T08:04:36.564Z",
+    "daysUntilExpiration": 179,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# action.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-01T08:04:36.564Z (179 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "amy.do",
+    "tld": "do",
+    "name": "amy",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-01T14:12:34.921Z",
+    "daysUntilExpiration": 180,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# amy.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-01T14:12:34.921Z (180 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "thinking.do",
+    "tld": "do",
+    "name": "thinking",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-22T09:58:34.250Z",
+    "daysUntilExpiration": 200,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# thinking.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-22T09:58:34.250Z (200 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "nouns.do",
+    "tld": "do",
+    "name": "nouns",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-20T14:01:23.249Z",
+    "daysUntilExpiration": 168,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# nouns.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-20T14:01:23.249Z (168 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "prxy.do",
+    "tld": "do",
+    "name": "prxy",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-08-01T08:04:17.956Z",
+    "daysUntilExpiration": 301,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# prxy.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-08-01T08:04:17.956Z (301 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n### Workers Routes\n\n- `clickhouse.prxy.do/*`\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `application/json`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "application/json",
+      "workersRoutes": [
+        "clickhouse.prxy.do/*"
+      ]
+    }
+  },
+  {
+    "domain": "sdk.do",
+    "tld": "do",
+    "name": "sdk",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-09-17T13:23:03.625Z",
+    "daysUntilExpiration": 349,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# sdk.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-09-17T13:23:03.625Z (349 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "benchmarks.do",
+    "tld": "do",
+    "name": "benchmarks",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-26T09:28:12.764Z",
+    "daysUntilExpiration": 173,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# benchmarks.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-26T09:28:12.764Z (173 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "queue.do",
+    "tld": "do",
+    "name": "queue",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-29T09:29:28.953Z",
+    "daysUntilExpiration": 176,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "expectedBehavior": "Message queue service",
+    "testPath": "/",
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# queue.do\n\n> 💡 **Purpose:** Message queue service\n\n> 🚨 **HTTP check failed!** status 404 (tested at `/`)\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-29T09:29:28.953Z (176 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404) - tested at `/`\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "functions.do",
+    "tld": "do",
+    "name": "functions",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-11-04T12:27:09.130Z",
+    "daysUntilExpiration": 31,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# functions.do\n\n> ⚠️ **Expiring soon:** 31 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-11-04T12:27:09.130Z (31 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "cro.do",
+    "tld": "do",
+    "name": "cro",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-26T12:25:20.95Z",
+    "daysUntilExpiration": 173,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# cro.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-26T12:25:20.95Z (173 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "scrapers.do",
+    "tld": "do",
+    "name": "scrapers",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-02T09:55:04.31Z",
+    "daysUntilExpiration": 180,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# scrapers.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-02T09:55:04.31Z (180 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "extract.do",
+    "tld": "do",
+    "name": "extract",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-29T09:29:28.890Z",
+    "daysUntilExpiration": 176,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "expectedBehavior": "Content extraction utility - extracts data from provided URL",
+    "testPath": "/example.com",
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# extract.do\n\n> 💡 **Purpose:** Content extraction utility - extracts data from provided URL\n\n> 🚨 **HTTP check failed!** status 404 (tested at `/example.com`)\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-29T09:29:28.890Z (176 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404) - tested at `/example.com`\n- Content-Type: `text/html; charset=utf-8`\n- Expected Status: 200\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8",
+      "expectedStatus": 200
+    }
+  },
+  {
+    "domain": "402.do",
+    "tld": "do",
+    "name": "402",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-10-04T08:05:56.311Z",
+    "daysUntilExpiration": 365,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": false,
+    "nameserverMismatch": true,
+    "html": "\n# 402.do\n\n> 🚨 **HTTP check failed!** Connection failed on both HTTP and HTTPS\n\n> ⚠️ **Nameserver mismatch detected!** Domain may not be activating properly.\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-10-04T08:05:56.311Z (365 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ❌ Not active\n- HTTP: ❌ Not working\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpError": "Connection failed on both HTTP and HTTPS"
+    }
+  },
+  {
+    "domain": "verbs.do",
+    "tld": "do",
+    "name": "verbs",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-20T14:01:23.253Z",
+    "daysUntilExpiration": 168,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# verbs.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-20T14:01:23.253Z (168 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "browse.do",
+    "tld": "do",
+    "name": "browse",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-29T09:29:28.960Z",
+    "daysUntilExpiration": 176,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "expectedBehavior": "Browser automation utility",
+    "testPath": "/",
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# browse.do\n\n> 💡 **Purpose:** Browser automation utility\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-29T09:29:28.960Z (176 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200) - tested at `/`\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "esbuild.do",
+    "tld": "do",
+    "name": "esbuild",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-12-17T10:37:24.194Z",
+    "daysUntilExpiration": 74,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# esbuild.do\n\n> ⚠️ **Expiring soon:** 74 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-12-17T10:37:24.194Z (74 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "webhooks.do",
+    "tld": "do",
+    "name": "webhooks",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-11-04T10:28:59.66Z",
+    "daysUntilExpiration": 31,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# webhooks.do\n\n> ⚠️ **Expiring soon:** 31 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-11-04T10:28:59.66Z (31 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "lexi.do",
+    "tld": "do",
+    "name": "lexi",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-12-20T08:23:17.498Z",
+    "daysUntilExpiration": 77,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# lexi.do\n\n> ⚠️ **Expiring soon:** 77 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-12-20T08:23:17.498Z (77 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "issues.do",
+    "tld": "do",
+    "name": "issues",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-03-31T07:07:27.956Z",
+    "daysUntilExpiration": 178,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# issues.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-31T07:07:27.956Z (178 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "transform.do",
+    "tld": "do",
+    "name": "transform",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-18T13:47:36.831Z",
+    "daysUntilExpiration": 197,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "expectedBehavior": "Data transformation utility",
+    "testPath": "/",
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# transform.do\n\n> 💡 **Purpose:** Data transformation utility\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-18T13:47:36.831Z (197 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200) - tested at `/`\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "companies.do",
+    "tld": "do",
+    "name": "companies",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-22T09:42:05.899Z",
+    "daysUntilExpiration": 200,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 404,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# companies.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-22T09:42:05.899Z (200 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/plain; charset=utf-8"
+    }
+  },
+  {
+    "domain": "reference.do",
+    "tld": "do",
+    "name": "reference",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2026-04-22T09:58:34.263Z",
+    "daysUntilExpiration": 200,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# reference.do\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-04-22T09:58:34.263Z (200 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- dayana.ns.cloudflare.com\n- sean.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- sean.ns.cloudflare.com\n- dayana.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "dayana.ns.cloudflare.com",
+        "sean.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "sean.ns.cloudflare.com",
+        "dayana.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "analytics.do",
+    "tld": "do",
+    "name": "analytics",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-12-17T10:37:24.137Z",
+    "daysUntilExpiration": 74,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 200,
+    "httpWorking": true,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# analytics.do\n\n> ⚠️ **Expiring soon:** 74 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-12-17T10:37:24.137Z (74 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ✅ Working (200)\n- Content-Type: `text/html; charset=utf-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "text/html; charset=utf-8"
+    }
+  },
+  {
+    "domain": "src.do",
+    "tld": "do",
+    "name": "src",
+    "dnsProvider": "cloudflare",
+    "expirationDate": "2025-12-17T14:36:49.643Z",
+    "daysUntilExpiration": 75,
+    "registrar": "Registrar NIC .DO (midominio.do)",
+    "httpStatus": 401,
+    "httpWorking": false,
+    "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+    "cloudflareAccountName": "Driv.ly",
+    "activeInCloudflare": true,
+    "nameserverMismatch": false,
+    "html": "\n# src.do\n\n> 🚨 **HTTP check failed!** status 401\n\n> ⚠️ **Expiring soon:** 75 days until expiration\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2025-12-17T14:36:49.643Z (75 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n### Workers Routes\n\n- `src.do/login*`\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (401)\n- Content-Type: `application/json; charset=UTF-8`\n",
+    "metadata": {
+      "assignedNameservers": [
+        "ernest.ns.cloudflare.com",
+        "gina.ns.cloudflare.com"
+      ],
+      "actualNameservers": [
+        "gina.ns.cloudflare.com",
+        "ernest.ns.cloudflare.com"
+      ],
+      "httpContentType": "application/json; charset=UTF-8",
+      "workersRoutes": [
+        "src.do/login*"
+      ]
+    }
+  }
+]

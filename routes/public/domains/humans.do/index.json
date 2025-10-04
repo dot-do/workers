@@ -1,0 +1,27 @@
+{
+  "domain": "humans.do",
+  "tld": "do",
+  "name": "humans",
+  "dnsProvider": "cloudflare",
+  "expirationDate": "2026-03-29T09:29:28.943Z",
+  "daysUntilExpiration": 176,
+  "registrar": "Registrar NIC .DO (midominio.do)",
+  "httpStatus": 404,
+  "httpWorking": false,
+  "cloudflareAccountId": "b6641681fe423910342b9ffa1364c76d",
+  "cloudflareAccountName": "Driv.ly",
+  "activeInCloudflare": true,
+  "nameserverMismatch": false,
+  "html": "\n# humans.do\n\n> 🚨 **HTTP check failed!** status 404\n\n## Configuration\n\n- **DNS Provider:** cloudflare (Driv.ly)\n- **Registrar:** Registrar NIC .DO (midominio.do)\n- **Expiration:** 2026-03-29T09:29:28.943Z (176 days)\n\n### Nameservers\n\n**Assigned by cloudflare:**\n- ernest.ns.cloudflare.com\n- gina.ns.cloudflare.com\n\n**Actual (from WHOIS):**\n- gina.ns.cloudflare.com\n- ernest.ns.cloudflare.com\n\n\n## Status\n\n- Cloudflare: ✅ Active\n- HTTP: ❌ Not working (404)\n- Content-Type: `text/plain; charset=utf-8`\n",
+  "metadata": {
+    "assignedNameservers": [
+      "ernest.ns.cloudflare.com",
+      "gina.ns.cloudflare.com"
+    ],
+    "actualNameservers": [
+      "gina.ns.cloudflare.com",
+      "ernest.ns.cloudflare.com"
+    ],
+    "httpContentType": "text/plain; charset=utf-8"
+  }
+}

@@ -1939,6 +1939,31 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
 
+  ads-campaigns:
+    dependencies:
+      '@dot-do/ads-types':
+        specifier: workspace:*
+        version: link:../../sdk/packages/ads-types
+      hono:
+        specifier: ^4.6.14
+        version: 4.9.9
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20250110.0
+        version: 4.20251003.0
+      '@types/node':
+        specifier: ^22.10.5
+        version: 22.18.8
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.18.8)
+      wrangler:
+        specifier: ^3.102.0
+        version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
+
   ai:
     dependencies:
       '@ai-sdk/anthropic':
@@ -2028,6 +2053,59 @@ importers:
       wrangler:
         specifier: ^4.40.3
         version: 4.42.0(@cloudflare/workers-types@4.20251003.0)
+
+  blacklist-monitor:
+    dependencies:
+      hono:
+        specifier: ^4.6.14
+        version: 4.9.9
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20241127.0
+        version: 4.20251003.0
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.18.8
+      '@vitest/coverage-v8':
+        specifier: ^2.1.8
+        version: 2.1.9(vitest@2.1.9)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.18.8)
+      wrangler:
+        specifier: ^3.96.0
+        version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
+
+  deliverability:
+    dependencies:
+      hono:
+        specifier: ^4.6.14
+        version: 4.9.9
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20241127.0
+        version: 4.20251003.0
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.18.8
+      '@vitest/coverage-v8':
+        specifier: ^2.1.8
+        version: 2.1.9(vitest@2.1.9)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.18.8)
+      wrangler:
+        specifier: ^3.96.0
+        version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
 
   dns-tools:
     dependencies:
@@ -2287,6 +2365,31 @@ importers:
       wrangler:
         specifier: ^4.24.0
         version: 4.42.0(@cloudflare/workers-types@4.20251003.0)
+
+  lead-enrichment:
+    dependencies:
+      hono:
+        specifier: ^4.7.12
+        version: 4.9.9
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@cloudflare/vitest-pool-workers':
+        specifier: ^0.5.28
+        version: 0.5.41(@cloudflare/workers-types@4.20251003.0)(@vitest/runner@2.1.9)(@vitest/snapshot@2.1.9)(vitest@2.1.9)
+      '@cloudflare/workers-types':
+        specifier: ^4.20241231.0
+        version: 4.20251003.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.18.8)
+      wrangler:
+        specifier: ^3.102.0
+        version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
 
   numerics:
     dependencies:

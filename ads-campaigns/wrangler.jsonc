@@ -1,0 +1,65 @@
+{
+  "name": "ads-campaigns",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // KV namespace for campaign caching
+  "kv_namespaces": [
+    {
+      "binding": "CAMPAIGNS_KV",
+      "id": "TBD", // Replace with actual KV namespace ID
+      "preview_id": "TBD"
+    }
+  ],
+
+  // D1 database for campaign storage
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "production",
+      "database_id": "TBD" // Replace with actual D1 database ID
+    }
+  ],
+
+  // Queue for async campaign operations
+  "queues": {
+    "producers": [
+      {
+        "binding": "CAMPAIGN_QUEUE",
+        "queue": "campaign-operations"
+      }
+    ]
+  },
+
+  // Analytics Engine for event tracking
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS"
+    }
+  ],
+
+  // Service bindings for other ad services
+  "services": [
+    {
+      "binding": "ADS_AUDIENCES",
+      "service": "ads-audiences",
+      "environment": "production"
+    },
+    {
+      "binding": "ADS_CREATIVES",
+      "service": "ads-creatives",
+      "environment": "production"
+    },
+    {
+      "binding": "ADS_ANALYTICS",
+      "service": "ads-analytics",
+      "environment": "production"
+    }
+  ],
+
+  // Observability
+  "observability": {
+    "enabled": true
+  }
+}

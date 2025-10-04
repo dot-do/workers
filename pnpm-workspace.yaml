@@ -28,6 +28,7 @@ packages:
   - 'deliverability'
   - 'blacklist-monitor'
   - 'lead-enrichment'
+  - 'ads-campaigns'
   # SDK packages (foundation packages)
   - '../sdk/packages/ai-generation'
   - '../sdk/packages/ai-embeddings'

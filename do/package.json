@@ -21,6 +21,8 @@
     "wrangler": "^4.42.0"
   },
   "dependencies": {
-    "hono": "^4.6.15"
+    "apis.do": "link:../../sdk/packages/apis.do",
+    "hono": "^4.6.15",
+    "sdk.do": "link:../../sdk/packages/sdk.do"
   }
 }

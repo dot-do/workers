@@ -4,6 +4,8 @@
 
 import type { Env, ExecuteCodeRequest, ExecuteCodeResponse, WorkerCode, RequestLog, ServiceContext } from './types'
 import { authorizeCodeExecution, getCodePermissions, checkRateLimit } from './authorization'
+import { createRpcClient } from 'apis.do'
+import { createBusinessRuntime } from 'sdk.do'
 
 /**
  * Execute TypeScript code in a secure V8 isolate
@@ -19,6 +21,10 @@ export async function executeCode(
 
   try {
     // Check if Worker Loader is available
+    console.log('env.LOADER type:', typeof env.LOADER)
+    console.log('env.LOADER:', env.LOADER)
+    console.log('env.LOADER keys:', env.LOADER ? Object.keys(env.LOADER) : 'null')
+
     if (!env.LOADER) {
       return {
         success: false,
@@ -81,7 +87,34 @@ export async function executeCode(
     }
 
     // Load the worker with the code
-    const worker = await env.LOADER.get(executionId, async () => {
+    console.log('Calling env.LOADER.get...')
+    const worker = env.LOADER.get(executionId, async () => {
+      console.log('Inside LOADER.get callback')
+
+      // Create RPC client with service bindings for $ runtime
+      const rpcClient = createRpcClient({
+        services: {
+          ai: env.AI,
+          db: env.DB,
+          auth: env.AUTH,
+          api: env.GATEWAY,
+          schedule: env.SCHEDULE,
+          webhooks: env.WEBHOOKS,
+          email: env.EMAIL,
+          queue: env.QUEUE,
+        }
+      })
+
+      // Create Business-as-Code runtime with RPC client
+      const runtimeContext = context ? {
+        user: context.auth.user,
+        namespace: getCodePermissions(context).namespace,
+        authenticated: context.auth.authenticated,
+        requestId: context.requestId
+      } : undefined
+
+      const $ = createBusinessRuntime(rpcClient, runtimeContext)
+
       const workerCode: WorkerCode = {
         compatibilityDate: env.DEFAULT_COMPATIBILITY_DATE || '2025-07-08',
         mainModule: 'main.js',
@@ -89,23 +122,28 @@ export async function executeCode(
           'main.js': wrapCode(request.code, request.captureConsole ?? true)
         },
         env: {
+          // Spread all primitives from $ runtime (ai, db, api, on, send, every, decide, user)
+          ...$,
+          // Also provide $ itself
+          $,
           // Provide DO binding - SDK will use this
           DO: env.DO || { fetch: () => Promise.resolve(new Response('DO service not available', { status: 503 })) },
           // Provide logging utilities
           __logRequest: (log: RequestLog) => { requests.push(log) },
           // Provide read-only context
-          __context: context ? {
-            user: context.auth.user,
-            namespace: context ? getCodePermissions(context).namespace : '*',
-            authenticated: context.auth.authenticated,
-            requestId: context.requestId
-          } : undefined
-        }
-        // TODO: Re-enable globalOutbound once we fix the Fetcher type issue
+          __context: runtimeContext
+        },
+        // Outbound handler - inject context into all service calls
+        // TEMPORARILY DISABLED: Testing if LOADER.get() works without globalOutbound
         // globalOutbound: context ? createOutboundHandler(context, env, requests) : undefined
       }
+      console.log('Returning workerCode:', Object.keys(workerCode))
       return workerCode
     })
+    console.log('env.LOADER.get returned')
+    console.log('worker type:', typeof worker)
+    console.log('worker keys:', Object.keys(worker || {}))
+    console.log('worker.fetch:', typeof (worker as any)?.fetch)
 
     // Execute the code with timeout
     const timeout = request.timeout || parseInt(env.MAX_EXECUTION_TIME || '30000')
@@ -113,12 +151,6 @@ export async function executeCode(
     const timeoutId = setTimeout(() => controller.abort(), timeout)
 
     try {
-      // Debug: Check what worker object contains
-      console.log('Worker object type:', typeof worker)
-      console.log('Worker keys:', Object.keys(worker || {}))
-      console.log('Worker.fetch type:', typeof (worker as any)?.fetch)
-      console.log('Has fetch:', 'fetch' in (worker || {}))
-
       // Execute by calling the worker's fetch handler
       const fetchRequest = new Request('http://execute', { signal: controller.signal })
       const response = await worker.fetch(fetchRequest)
@@ -256,7 +288,7 @@ function createOutboundHandler(
   context: ServiceContext,
   env: Env,
   requests: RequestLog[]
-): Fetcher {
+): any {
   return {
     fetch: async (request: Request) => {
       const url = new URL(request.url)

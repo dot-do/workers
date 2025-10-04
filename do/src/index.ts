@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { executeCode } from './executor'
 import { DOService, createServiceContext, extractAuthContext } from './services'
+import { getTierSummary } from './authorization'
 import type { Env, ExecuteCodeRequest, ServiceContext } from './types'
 
 /**
@@ -115,7 +116,6 @@ export class DO extends WorkerEntrypoint<Env> {
      */
     app.get('/auth', (c) => {
       const context = c.get('serviceContext')
-      const { getTierSummary } = require('./authorization')
       const summary = getTierSummary(context)
 
       return c.json({

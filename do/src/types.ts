@@ -7,6 +7,7 @@ export interface Env {
   LOADER: WorkerLoader
 
   // Service bindings - all core services
+  AI: Fetcher
   DB: Fetcher
   AUTH: Fetcher
   GATEWAY: Fetcher
@@ -36,6 +37,7 @@ export interface AuthContext {
     name?: string
     role?: string
     permissions?: string[]
+    metadata?: Record<string, any>
   }
   session?: {
     id: string

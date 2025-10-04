@@ -1,17 +1,39 @@
 /**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
+ * load Worker Configuration
+ * Generated from load.mdx
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "load",
-	"main": "worker.ts",
+	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
-	"observability": { "enabled": true },
-	"tail_consumers": [{ "service": "pipeline" }],
+	"observability": {
+		"enabled": true
+	},
 	"services": [
-		{ "binding": "db", "service": "db" },
-		{ "binding": "yaml", "service": "yaml" }
+		{
+			"binding": "DEPLOY_SERVICE",
+			"service": "do-deploy"
+		},
+		{
+			"binding": "db",
+			"service": "db"
+		},
+		{
+			"binding": "yaml",
+			"service": "yaml"
+		}
+	],
+	"routes": [
+		{
+			"pattern": "load.apis.do/*",
+			"zone_name": "apis.do"
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
 	]
 }

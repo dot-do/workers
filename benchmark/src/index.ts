@@ -38,12 +38,18 @@ app.get('/health', (c) => {
  *
  * POST /generate
  * Body: { count: number, avgSizeKB?: number }
+ *
+ * NOTE: Currently writes JSON to R2 as temporary solution.
+ * TODO: Write Parquet files for R2 SQL compatibility once Pipeline is configured
+ * or Parquet library is added.
  */
 app.post('/generate', async (c) => {
   const { count = 1000, avgSizeKB = 225 } = await c.req.json()
 
   const startTime = Date.now()
   const events: ContentEvent[] = []
+  let batchCount = 0
+  let totalEvents = 0
 
   // Generate content events
   for (let i = 0; i < count; i++) {
@@ -116,26 +122,72 @@ app.post('/generate', async (c) => {
       cron: null,
     })
 
-    // Send in batches of 100 to avoid memory issues
+    totalEvents++
+
+    // Write to R2 in batches of 100
     if (events.length >= 100) {
-      await c.env.PIPELINE.send(events)
+      const batchId = ulid()
+      const date = new Date()
+      const year = date.getUTCFullYear()
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+      const day = String(date.getUTCDate()).padStart(2, '0')
+
+      // Write as newline-delimited JSON (NDJSON)
+      // TODO: Convert to Parquet for R2 SQL compatibility
+      const ndjson = events.map((e) => JSON.stringify(e)).join('\n')
+      const key = `events/${year}/${month}/${day}/batch-${batchId}.ndjson`
+
+      await c.env.R2_BUCKET.put(key, ndjson, {
+        httpMetadata: {
+          contentType: 'application/x-ndjson',
+        },
+        customMetadata: {
+          batchId,
+          eventCount: String(events.length),
+          generatedAt: new Date().toISOString(),
+        },
+      })
+
+      batchCount++
       events.length = 0
     }
   }
 
-  // Send remaining events
+  // Write remaining events
   if (events.length > 0) {
-    await c.env.PIPELINE.send(events)
+    const batchId = ulid()
+    const date = new Date()
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(date.getUTCDate()).padStart(2, '0')
+
+    const ndjson = events.map((e) => JSON.stringify(e)).join('\n')
+    const key = `events/${year}/${month}/${day}/batch-${batchId}.ndjson`
+
+    await c.env.R2_BUCKET.put(key, ndjson, {
+      httpMetadata: {
+        contentType: 'application/x-ndjson',
+      },
+      customMetadata: {
+        batchId,
+        eventCount: String(events.length),
+        generatedAt: new Date().toISOString(),
+      },
+    })
+
+    batchCount++
   }
 
   const duration = Date.now() - startTime
 
   return c.json({
     success: true,
-    generated: count,
+    generated: totalEvents,
+    batches: batchCount,
     duration,
-    throughput: Math.round((count / duration) * 1000),
+    throughput: Math.round((totalEvents / duration) * 1000),
     avgSizeKB,
+    note: 'Events written as NDJSON. Parquet conversion required for R2 SQL queries.',
   })
 })
 
@@ -153,6 +205,32 @@ app.get('/benchmark', async (c) => {
     success: true,
     results,
     passed: results.every((r: BenchmarkResult) => r.passed),
+  })
+})
+
+/**
+ * List R2 objects (for debugging)
+ *
+ * GET /r2/list?prefix=events/&limit=10
+ */
+app.get('/r2/list', async (c) => {
+  const prefix = c.req.query('prefix') || ''
+  const limit = parseInt(c.req.query('limit') || '100')
+
+  const listed = await c.env.R2_BUCKET.list({
+    prefix,
+    limit,
+  })
+
+  return c.json({
+    objects: listed.objects.map((obj) => ({
+      key: obj.key,
+      size: obj.size,
+      uploaded: obj.uploaded.toISOString(),
+      customMetadata: obj.customMetadata,
+    })),
+    truncated: listed.truncated,
+    cursor: listed.cursor,
   })
 })
 

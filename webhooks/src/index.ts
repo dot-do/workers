@@ -1,13 +1,15 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { WorkerEntrypoint } from 'cloudflare:workers'
 import type { Env } from './types'
 import { verifyStripeSignature, verifyWorkOSSignature, verifyGitHubSignature, verifyResendSignature } from './verification'
 import { handleStripeWebhook } from './handlers/stripe'
 import { handleWorkOSWebhook } from './handlers/workos'
-import { handleGitHubWebhook } from './handlers/github'
+import { handleGitHubWebhook, syncToGitHub } from './handlers/github'
 import { handleResendWebhook } from './handlers/resend'
 import { storeWebhookEvent, checkIdempotency } from './utils'
 import { handleQueueMessage } from './queue'
+import { resolveConflict } from './conflicts'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -299,6 +301,25 @@ app.post('/events/:provider/:eventId/retry', async (c) => {
     return c.json({ error: error instanceof Error ? error.message : 'Retry failed' }, 500)
   }
 })
+
+/**
+ * RPC interface for service-to-service calls
+ */
+export class WebhooksService extends WorkerEntrypoint<Env> {
+  /**
+   * Sync entity to GitHub (Database → GitHub)
+   */
+  async syncToGitHub(options: any): Promise<any> {
+    return await syncToGitHub(options, this.env)
+  }
+
+  /**
+   * Resolve a sync conflict
+   */
+  async resolveConflict(conflictId: string, strategy: string): Promise<any> {
+    return await resolveConflict(conflictId, strategy as any, this.env)
+  }
+}
 
 // Export both HTTP handler and queue handler
 export default {

@@ -1,5 +1,6 @@
 import type { Env, GitHubPushEvent, GitHubPullRequestEvent, GitHubIssueEvent, GitHubReleaseEvent } from '../types'
 import { Octokit } from '@octokit/rest'
+import { detectConflict as detectConflictUtil } from '../conflicts'
 
 /**
  * GitHub API client configuration
@@ -259,10 +260,10 @@ export async function syncToGitHub(options: SyncToGitHubOptions, env: Env): Prom
         console.log(`[GITHUB] File exists with SHA: ${currentSha}`)
 
         // Check for conflicts (if file was modified since last sync)
-        const conflict = await detectConflict(octokit, owner, repo, path, branch, currentSha, env)
+        const conflict = await detectConflictUtil(octokit, owner, repo, path, branch, currentSha, env)
         if (conflict) {
-          console.warn(`[GITHUB] Conflict detected: ${conflict.reason}`)
-          throw new Error(`Conflict detected: ${conflict.reason}`)
+          console.warn(`[GITHUB] Conflict detected and stored: ${conflict.id}`)
+          throw new Error(`Conflict detected: Database SHA ${conflict.databaseSha} != GitHub SHA ${conflict.githubSha}. Conflict ID: ${conflict.id}`)
         }
       }
     } catch (error: any) {
@@ -438,48 +439,5 @@ async function createPullRequest(
   }
 }
 
-/**
- * Detect conflicts between database and GitHub
- *
- * Checks if file was modified on GitHub since last sync
- */
-async function detectConflict(
-  octokit: Octokit,
-  owner: string,
-  repo: string,
-  path: string,
-  branch: string,
-  currentSha: string,
-  env: Env
-): Promise<{ conflict: boolean; reason?: string } | null> {
-  // Get last known SHA from database
-  const result = await env.DB.query({
-    sql: `SELECT github_sha, last_synced_at
-          FROM things
-          WHERE github_url = ? AND github_path = ?`,
-    params: [`https://github.com/${owner}/${repo}`, path],
-  })
-
-  if (!result.results || result.results.length === 0) {
-    // No sync history, no conflict
-    return null
-  }
-
-  const dbRecord = result.results[0] as any
-  const lastKnownSha = dbRecord.github_sha
-
-  if (!lastKnownSha) {
-    // No previous sync, no conflict
-    return null
-  }
-
-  if (currentSha !== lastKnownSha) {
-    // File changed on GitHub since last sync - CONFLICT!
-    return {
-      conflict: true,
-      reason: `File modified on GitHub (current: ${currentSha}, expected: ${lastKnownSha})`,
-    }
-  }
-
-  return null
-}
+// Old detectConflict function removed - now using the improved version from conflicts.ts
+// The new version creates conflict records in the database and provides detailed information

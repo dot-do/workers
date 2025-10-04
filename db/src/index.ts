@@ -184,20 +184,26 @@ export default class DatabaseService extends WorkerEntrypoint<Env> {
 
     // Health check endpoint
     app.get('/health', async (c) => {
-      const pgHealth = await checkPostgresHealth()
-      const clickhouseHealth = { status: 'ok' } // ClickHouse is optional
+      // PostgreSQL is deprecated - only check if DATABASE_URL is set
+      let pgHealth: any = { status: 'deprecated', message: 'PostgreSQL deprecated - using ClickHouse only' }
+      if (process.env.DATABASE_URL) {
+        pgHealth = await checkPostgresHealth()
+      }
+
+      const clickhouseHealth: any = { status: 'ok' }
 
       try {
         await clickhouse.query({ query: 'SELECT 1', format: 'JSON' })
       } catch (error: any) {
         clickhouseHealth.status = 'error'
-        ;(clickhouseHealth as any).message = error.message
+        clickhouseHealth.message = error.message
       }
 
       return c.json({
-        status: pgHealth.status === 'ok' && clickhouseHealth.status === 'ok' ? 'ok' : 'degraded',
-        postgres: pgHealth,
+        status: clickhouseHealth.status === 'ok' ? 'ok' : 'degraded',
         clickhouse: clickhouseHealth,
+        postgres: pgHealth,
+        architecture: 'ClickHouse primary, Vectorize (future)',
         timestamp: new Date().toISOString(),
       })
     })

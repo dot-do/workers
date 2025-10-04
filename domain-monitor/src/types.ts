@@ -19,9 +19,13 @@ export interface Env {
   // Service bindings
   DOMAINS?: any // DomainsService
   DNS_TOOLS?: any // DNSToolsService
+  DELIVERABILITY?: any // DeliverabilityService
 
   // Queue binding
   MONITORING_QUEUE: Queue
+
+  // KV namespace for caching
+  REPUTATION_CACHE?: KVNamespace
 }
 
 /**
@@ -177,4 +181,95 @@ export interface AlertChannel {
     apiKey?: string
     recipients?: string[]
   }
+}
+
+/**
+ * Email Domain Reputation
+ */
+export interface EmailDomainReputation {
+  domainId: string
+  domain: string
+  senderScore: number // 0-100
+  ipReputation: number // 0-100
+  domainReputation: number // 0-100
+  blacklistCount: number
+  blacklists: string[]
+  spfStatus: 'pass' | 'fail' | 'neutral' | 'unknown'
+  dkimStatus: 'pass' | 'fail' | 'unknown'
+  dmarcStatus: 'pass' | 'fail' | 'none' | 'unknown'
+  warmupStatus: 'not_started' | 'in_progress' | 'paused' | 'completed'
+  deliverabilityStatus: 'excellent' | 'good' | 'warning' | 'critical'
+  lastChecked: string
+}
+
+/**
+ * Email Deliverability Metrics
+ */
+export interface EmailDeliverabilityMetrics {
+  domainId: string
+  domain: string
+  period: string
+  sent: number
+  delivered: number
+  bounced: number
+  complained: number
+  deliveryRate: number
+  bounceRate: number
+  complaintRate: number
+  openRate: number
+  clickRate: number
+  status: 'excellent' | 'good' | 'warning' | 'critical'
+  issues: string[]
+  recommendations: string[]
+  timestamp: string
+}
+
+/**
+ * Email Reputation Summary
+ */
+export interface EmailReputationSummary {
+  domain: string
+  domainId: string
+  overallScore: number // 0-100
+  status: 'excellent' | 'good' | 'warning' | 'critical'
+  reputation: EmailDomainReputation
+  metrics: EmailDeliverabilityMetrics
+  criticalIssues: string[]
+  warnings: string[]
+  recommendations: string[]
+  lastUpdated: string
+}
+
+/**
+ * Reputation Tracking Config
+ */
+export interface ReputationTrackingConfig {
+  domainId: string
+  enabled: boolean
+  checkInterval: number // minutes (default: 60)
+  alertThresholds: {
+    bounceRate: number // default: 0.05
+    complaintRate: number // default: 0.001
+    senderScore: number // default: 70
+  }
+  autoAlerts: {
+    enabled: boolean
+    onCritical: boolean
+    onWarning: boolean
+    channels: ('email' | 'slack' | 'webhook')[]
+  }
+}
+
+/**
+ * Reputation Alert
+ */
+export interface ReputationAlert {
+  domainId: string
+  domain: string
+  severity: 'critical' | 'warning' | 'info'
+  category: 'bounce_rate' | 'complaint_rate' | 'blacklist' | 'dns_auth' | 'sender_score' | 'delivery_rate'
+  message: string
+  recommendation: string
+  timestamp: string
+  acknowledged: boolean
 }

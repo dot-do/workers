@@ -17,6 +17,17 @@ import type {
 import { checkDomainHealth } from './health'
 import { checkExpiration, sendExpirationAlert, getExpiringDomains } from './expiration'
 import { performScreenshotCheck } from './screenshot'
+import {
+  getEmailReputation,
+  getEmailMetrics,
+  getReputationSummary,
+  checkReputationThresholds,
+  storeReputationCheck,
+  storeReputationAlert,
+  sendReputationAlert,
+  getDefaultReputationConfig,
+} from './reputation'
+import type { EmailDomainReputation, EmailDeliverabilityMetrics, EmailReputationSummary, ReputationAlert } from './types'
 
 /**
  * RPC Interface - Service Bindings
@@ -58,6 +69,35 @@ export class DomainMonitorService extends WorkerEntrypoint<Env> {
       checksToday: 0,
       alertsSentToday: 0,
     }
+  }
+
+  /**
+   * Get email reputation for a domain
+   */
+  async getEmailReputation(domainId: string, domain: string, refresh = false): Promise<EmailDomainReputation> {
+    return await getEmailReputation(domainId, domain, refresh, this.env)
+  }
+
+  /**
+   * Get email deliverability metrics for a domain
+   */
+  async getEmailMetrics(domainId: string, domain: string, period = 'week'): Promise<EmailDeliverabilityMetrics> {
+    return await getEmailMetrics(domainId, domain, period, this.env)
+  }
+
+  /**
+   * Get comprehensive reputation summary for a domain
+   */
+  async getReputationSummary(domainId: string, domain: string, refresh = false): Promise<EmailReputationSummary> {
+    return await getReputationSummary(domainId, domain, refresh, this.env)
+  }
+
+  /**
+   * Check reputation thresholds and generate alerts
+   */
+  async checkReputationAlerts(domainId: string, domain: string): Promise<ReputationAlert[]> {
+    const config = getDefaultReputationConfig(domainId)
+    return await checkReputationThresholds(domainId, domain, config, this.env)
   }
 
   /**
@@ -108,6 +148,10 @@ app.get('/', (c) => {
       expiringDomains: 'GET /domains/expiring?days=30',
       healthCheck: 'POST /health/:domain',
       screenshot: 'POST /screenshot/:domain',
+      reputation: 'GET /reputation/:domainId',
+      reputationSummary: 'GET /reputation/:domainId/summary',
+      metrics: 'GET /reputation/:domainId/metrics',
+      alerts: 'GET /reputation/:domainId/alerts',
     },
   })
 })
@@ -164,6 +208,77 @@ app.post('/monitor', async (c) => {
   await stmt.bind(domain, registrar, expirationDate).run()
 
   return c.json({ success: true, message: `Monitoring enabled for ${domain}` })
+})
+
+// Get email reputation for a domain
+app.get('/reputation/:domainId', async (c) => {
+  const domainId = c.req.param('domainId')
+  const refresh = c.req.query('refresh') === 'true'
+
+  // Get domain from database
+  const domainRecord = await c.env.DB.prepare('SELECT domain FROM email_domains WHERE id = ?').bind(domainId).first()
+
+  if (!domainRecord) {
+    return c.json({ error: 'Domain not found' }, 404)
+  }
+
+  const service = new DomainMonitorService({} as any, c.env)
+  const reputation = await service.getEmailReputation(domainId, domainRecord.domain as string, refresh)
+
+  return c.json(reputation)
+})
+
+// Get comprehensive reputation summary
+app.get('/reputation/:domainId/summary', async (c) => {
+  const domainId = c.req.param('domainId')
+  const refresh = c.req.query('refresh') === 'true'
+
+  // Get domain from database
+  const domainRecord = await c.env.DB.prepare('SELECT domain FROM email_domains WHERE id = ?').bind(domainId).first()
+
+  if (!domainRecord) {
+    return c.json({ error: 'Domain not found' }, 404)
+  }
+
+  const service = new DomainMonitorService({} as any, c.env)
+  const summary = await service.getReputationSummary(domainId, domainRecord.domain as string, refresh)
+
+  return c.json(summary)
+})
+
+// Get email deliverability metrics
+app.get('/reputation/:domainId/metrics', async (c) => {
+  const domainId = c.req.param('domainId')
+  const period = c.req.query('period') || 'week'
+
+  // Get domain from database
+  const domainRecord = await c.env.DB.prepare('SELECT domain FROM email_domains WHERE id = ?').bind(domainId).first()
+
+  if (!domainRecord) {
+    return c.json({ error: 'Domain not found' }, 404)
+  }
+
+  const service = new DomainMonitorService({} as any, c.env)
+  const metrics = await service.getEmailMetrics(domainId, domainRecord.domain as string, period)
+
+  return c.json(metrics)
+})
+
+// Check reputation and get alerts
+app.get('/reputation/:domainId/alerts', async (c) => {
+  const domainId = c.req.param('domainId')
+
+  // Get domain from database
+  const domainRecord = await c.env.DB.prepare('SELECT domain FROM email_domains WHERE id = ?').bind(domainId).first()
+
+  if (!domainRecord) {
+    return c.json({ error: 'Domain not found' }, 404)
+  }
+
+  const service = new DomainMonitorService({} as any, c.env)
+  const alerts = await service.checkReputationAlerts(domainId, domainRecord.domain as string)
+
+  return c.json({ alerts, count: alerts.length })
 })
 
 /**
@@ -232,6 +347,38 @@ async function handleQueue(batch: MessageBatch, env: Env): Promise<void> {
         }
       }
 
+      // Check email reputation (for email domains)
+      const emailDomain = await getEmailDomainRecord(task.domain, env)
+      if (emailDomain) {
+        try {
+          // Get reputation summary
+          const reputationSummary = await getReputationSummary(emailDomain.id, task.domain, false, env)
+          await storeReputationCheck(emailDomain.id, reputationSummary, env)
+
+          // Check for alerts
+          const reputationConfig = getDefaultReputationConfig(emailDomain.id)
+          const alerts = await checkReputationThresholds(emailDomain.id, task.domain, reputationConfig, env)
+
+          // Process and store alerts
+          for (const alert of alerts) {
+            await storeReputationAlert(alert, env)
+
+            // Send alert notification if configured
+            const sent = await sendReputationAlert(alert, reputationConfig, env)
+            if (sent) {
+              console.log(`Sent reputation alert for ${task.domain}: ${alert.message}`)
+            }
+          }
+
+          // Log critical issues
+          if (reputationSummary.status === 'critical') {
+            console.warn(`Domain ${task.domain} has critical reputation issues:`, reputationSummary.criticalIssues)
+          }
+        } catch (error) {
+          console.error(`Error checking reputation for ${task.domain}:`, error)
+        }
+      }
+
       // Check expiration
       if (config.alerts.enabled) {
         const domainRecord = await getDomainRecord(task.domain, env)
@@ -296,6 +443,11 @@ async function getMonitoringConfigFromDB(domain: string, env: Env): Promise<Moni
 
 async function getDomainRecord(domain: string, env: Env): Promise<any> {
   const stmt = env.DB.prepare('SELECT * FROM monitoring WHERE domain = ?')
+  return await stmt.bind(domain).first()
+}
+
+async function getEmailDomainRecord(domain: string, env: Env): Promise<any> {
+  const stmt = env.DB.prepare('SELECT * FROM email_domains WHERE domain = ?')
   return await stmt.bind(domain).first()
 }
 

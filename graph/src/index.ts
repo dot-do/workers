@@ -351,6 +351,9 @@ app.post('/relationships/bulk', async (c) => {
   return c.json(result)
 })
 
+// Export Durable Object
+export { GraphDO } from './do.js'
+
 // Export both RPC and HTTP interfaces
 export default {
   fetch: app.fetch,

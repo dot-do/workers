@@ -6,7 +6,11 @@ Utility scripts for development, testing, and deployment.
 
 ### setup-graph-db.sh
 
-Creates and initializes the graph database (D1) with Things & Relationships schemas.
+Creates and initializes the graph database with Things & Relationships schemas.
+
+**Supports Multiple Backends:**
+- **D1 Database** - Cloudflare's distributed SQLite (global read replicas, best for large datasets)
+- **Durable Object SQLite** - Strongly consistent single-region SQLite (best for per-user/per-tenant graphs)
 
 ```bash
 # Run from workers/ directory
@@ -29,6 +33,10 @@ chmod +x scripts/setup-graph-db.sh
 ### test-onet-import.ts
 
 End-to-end test of ONET importer with sample data. Validates parser and graph API without requiring deployed services.
+
+### test-onet-import-with-do.ts
+
+Comprehensive test comparing D1 and Durable Object SQLite backends with performance characteristics and recommendations.
 
 ```bash
 # Run from workers/ directory
@@ -57,6 +65,18 @@ npx tsx scripts/test-onet-import.ts
    - requires_skill: 9
    - related_to: 2
 ```
+
+**Run DO comparison test:**
+```bash
+# Run from workers/ directory
+npx tsx scripts/test-onet-import-with-do.ts
+```
+
+**What it tests:**
+1. Both D1 and Durable Object SQLite backends
+2. Same API works with both implementations
+3. Performance characteristics comparison
+4. Backend selection recommendations
 
 ## Deployment
 

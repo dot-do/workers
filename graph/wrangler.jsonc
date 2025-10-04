@@ -26,5 +26,15 @@
       "binding": "AUTH_SERVICE",
       "service": "auth"
     }
-  ]
+  ],
+  // Durable Objects for SQLite-backed graph database
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "GRAPH_DO",
+        "class_name": "GraphDO",
+        "script_name": "graph"
+      }
+    ]
+  }
 }

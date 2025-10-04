@@ -1,5 +1,5 @@
 {
-  "name": "@do/graph",
+  "name": "@dot-do/graph",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,8 +11,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@do/graph-api": "workspace:*",
-    "@do/graph-types": "workspace:*",
+    "@dot-do/graph-api": "workspace:*",
+    "@dot-do/graph-types": "workspace:*",
     "hono": "^4.7.11"
   },
   "devDependencies": {

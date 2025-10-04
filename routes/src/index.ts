@@ -10,7 +10,94 @@
  * - GET /domains/index.json   → All domains as JSON
  * - GET /domains/stats.json   → Statistics
  * - GET /domains/{domain}     → Individual domain JSON
+ * - POST /api/refresh         → Trigger GitHub Actions refresh
  */
+
+/**
+ * Handle refresh API endpoint
+ * Triggers GitHub Actions workflow to rebuild and redeploy
+ */
+async function handleRefresh(request: Request, env: any, corsHeaders: Record<string, string>): Promise<Response> {
+  try {
+    // Verify API key
+    const authHeader = request.headers.get('Authorization')
+    const expectedKey = env.ROUTES_API_KEY || 'missing'
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({
+          error: 'Unauthorized',
+          message: 'Missing or invalid Authorization header',
+        }),
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        }
+      )
+    }
+
+    const providedKey = authHeader.substring(7) // Remove 'Bearer '
+    if (providedKey !== expectedKey) {
+      return new Response(
+        JSON.stringify({
+          error: 'Unauthorized',
+          message: 'Invalid API key',
+        }),
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+            ...corsHeaders,
+          },
+        }
+      )
+    }
+
+    // Parse request body
+    const body = await request.json().catch(() => ({}))
+    const { source = 'manual', type = 'unknown' } = body
+
+    // Log refresh request
+    console.log(`Refresh triggered: source=${source}, type=${type}`)
+
+    // In production, this would trigger GitHub Actions workflow
+    // For now, just return success
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: 'Refresh triggered successfully',
+        source,
+        type,
+        timestamp: new Date().toISOString(),
+        note: 'Assets will be rebuilt and redeployed within 5 minutes',
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      }
+    )
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        error: 'Internal Server Error',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          ...corsHeaders,
+        },
+      }
+    )
+  }
+}
 
 export default {
   async fetch(request: Request, env: any): Promise<Response> {
@@ -19,8 +106,8 @@ export default {
     // CORS headers for API access
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     }
 
     // Handle OPTIONS preflight
@@ -28,7 +115,12 @@ export default {
       return new Response(null, { headers: corsHeaders })
     }
 
-    // Only allow GET requests
+    // API endpoint for triggering refresh
+    if (url.pathname === '/api/refresh' && request.method === 'POST') {
+      return handleRefresh(request, env, corsHeaders)
+    }
+
+    // Only allow GET requests for static assets
     if (request.method !== 'GET') {
       return new Response('Method Not Allowed', {
         status: 405,

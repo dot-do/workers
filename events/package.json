@@ -1,5 +1,5 @@
 {
-  "name": "@do/events",
+  "name": "@dot-do/events",
   "version": "0.1.0",
   "type": "module",
   "private": true,
@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250406.0",
-    "@do/db": "workspace:*",
+    "@dot-do/db": "workspace:*",
     "typescript": "^5.7.3",
     "vitest": "^3.2.4",
     "wrangler": "^4.40.3"

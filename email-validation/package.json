@@ -1,5 +1,5 @@
 {
-  "name": "@do/email-validation",
+  "name": "@dot-do/email-validation",
   "version": "1.0.0",
   "type": "module",
   "private": true,

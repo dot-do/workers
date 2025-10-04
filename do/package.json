@@ -1,5 +1,5 @@
 {
-  "name": "@do/do",
+  "name": "@dot-do/do",
   "version": "1.0.0",
   "private": true,
   "description": "DO Worker - RPC proxy for all services",

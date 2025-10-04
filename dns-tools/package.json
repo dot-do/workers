@@ -1,5 +1,5 @@
 {
-  "name": "@do/dns-tools",
+  "name": "@dot-do/dns-tools",
   "version": "1.0.0",
   "type": "module",
   "private": true,

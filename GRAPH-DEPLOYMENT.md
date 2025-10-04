@@ -13,6 +13,11 @@ This deployment guide covers:
 
 ## Architecture
 
+### Two Storage Backends
+
+The graph database supports **two storage backends** with identical APIs:
+
+**1. D1 Database (Global, Best for Large Datasets)**
 ```
 ┌─────────────────┐
 │   ONET MDX      │
@@ -33,10 +38,60 @@ This deployment guide covers:
          │
          ▼
 ┌─────────────────┐
-│  D1 Database    │
-│ (Things + Rels) │
+│  D1 Database    │  ◄── Global read replicas
+│ (Things + Rels) │      Sub-10ms reads worldwide
 └─────────────────┘
 ```
+
+**2. Durable Object SQLite (Strong Consistency, Per-User/Tenant)**
+```
+┌─────────────────┐
+│   ONET MDX      │
+│     Files       │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ ONET Importer   │  ◄── RPC/REST/MCP
+│   (Parser)      │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│   Graph API     │  ◄── Things & Relationships
+│  (CRUD Layer)   │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Durable Object │  ◄── Strongly consistent
+│  SQLite Storage │      Transactional guarantees
+└─────────────────┘      Single-region
+```
+
+### Backend Comparison
+
+| Feature | D1 Database | Durable Object SQLite |
+|---------|-------------|----------------------|
+| **Read Performance** | Sub-10ms globally | Fast within region |
+| **Write Performance** | Primary region only | Fast, strongly consistent |
+| **Consistency** | Eventual consistency | Strong consistency |
+| **Transactions** | Limited | Full ACID |
+| **Distribution** | Global read replicas | Single region |
+| **Best For** | Large datasets, global apps | Per-user/tenant graphs |
+| **Cost** | Storage + operations | Storage + compute |
+
+**Use D1 when:**
+- Global user base requiring fast reads worldwide
+- Large shared graph database
+- Read-heavy workloads
+- Eventual consistency is acceptable
+
+**Use Durable Object SQLite when:**
+- Per-user or per-tenant isolated graphs
+- Strong consistency required
+- Transactional guarantees needed
+- Small to medium datasets per instance
 
 ## Prerequisites
 

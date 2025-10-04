@@ -1,5 +1,5 @@
 {
-  "name": "@do/benchmark",
+  "name": "@dot-do/benchmark",
   "version": "0.1.0",
   "private": true,
   "type": "module",

@@ -34,26 +34,28 @@ Successfully deployed **8 production-ready microservices** to Cloudflare Workers
 | # | Service | URL | Status | Notes |
 |---|---------|-----|--------|-------|
 | 1 | **do-db** | https://do-db.drivly.workers.dev | ⚠️ Degraded | Needs DATABASE_URL configured |
-| 2 | **auth** | https://auth.drivly.workers.dev | ❌ Error | Worker threw exception |
+| 2 | **auth** | https://auth.drivly.workers.dev | 🚧 In Progress | Being fixed by another developer |
 | 3 | **do-schedule** | https://do-schedule.drivly.workers.dev | ✅ Healthy | OK |
-| 4 | **webhooks** | https://webhooks.drivly.workers.dev | ⚠️ No health | 404 on /health endpoint |
+| 4 | **webhooks** | https://webhooks.drivly.workers.dev | ✅ Healthy | OK (health endpoint added) |
 | 5 | **queue** | https://queue.drivly.workers.dev | ✅ Healthy | OK |
-| 6 | **do-mcp** | https://do-mcp.drivly.workers.dev | ❌ Error | Worker threw exception |
+| 6 | **do-mcp** | https://do-mcp.drivly.workers.dev | ✅ Healthy | OK (env reference and binding fixed) |
 | 7 | **do-gateway** | https://do-gateway.drivly.workers.dev | ✅ Healthy | OK |
-| 8 | **email** | https://email.drivly.workers.dev | ❌ Error | Error 1101 |
+| 8 | **email** | https://email.drivly.workers.dev | ✅ Healthy | OK (export pattern fixed) |
 
 **Health Summary:**
-- ✅ 3 services healthy (gateway, schedule, queue)
-- ⚠️ 2 services need configuration (db, webhooks)
-- ❌ 3 services need debugging (auth, email, mcp)
+- ✅ 6 services healthy (gateway, schedule, queue, webhooks, mcp, email)
+- ⚠️ 1 service needs configuration (db - DATABASE_URL)
+- 🚧 1 service in progress (auth - another developer)
 
 **Next Steps:**
-- Fix runtime errors in auth, email, and mcp services (P0)
-- Configure DATABASE_URL and other production secrets (P0)
-- Add health endpoint to webhooks service (P1)
-- Service-to-service RPC testing (P1)
-- Configure custom domains (*.do) (P2)
-- GitHub Actions deployment automation (P2)
+- ✅ Fixed email service (error 1101) - Changed default export pattern
+- ✅ Fixed MCP service (error 1101) - Fixed env reference and do-db binding
+- ✅ Added health endpoint to webhooks service
+- ⏳ Auth service being fixed by another developer
+- ⏳ Configure DATABASE_URL and other production secrets (P0)
+- ⏳ Service-to-service RPC testing (P1)
+- ⏳ Configure custom domains (*.do) (P2)
+- ⏳ GitHub Actions deployment automation (P2)
 
 ---
 

@@ -1,0 +1,32 @@
+/**
+ * html Worker Configuration
+ * Generated from html.mdx
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "html",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-07-08",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"node_compat": true,
+	"observability": {
+		"enabled": true
+	},
+	"services": [
+		{
+			"binding": "DEPLOY_SERVICE",
+			"service": "do-deploy"
+		}
+	],
+	"routes": [
+		{
+			"pattern": "html.apis.do/*",
+			"zone_name": "apis.do"
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
+	]
+}

@@ -1,0 +1,125 @@
+---
+$type: Worker
+$id: html
+name: html
+main: src/index.ts
+compatibility_date: "2025-07-08"
+account_id: b6641681fe423910342b9ffa1364c76d
+
+observability:
+  enabled: true
+
+tail_consumers:
+  - service: pipeline
+
+routes:
+  - pattern: html.apis.do/*
+    zone_name: apis.do
+
+services:
+  - binding: DEPLOY_SERVICE
+    service: do-deploy
+---
+
+# HTML Worker
+
+Converts Markdown to HTML with frontmatter support, GitHub-flavored markdown, and custom styling.
+
+## Features
+
+- ✅ Markdown to HTML conversion using marked
+- ✅ YAML frontmatter parsing
+- ✅ GitHub-flavored heading IDs
+- ✅ Automatic anchor links in headings
+- ✅ GitHub markdown CSS styling
+
+## API
+
+**POST markdown for conversion:**
+```javascript
+const response = await fetch('https://html.apis.do/', {
+  method: 'POST',
+  body: '---\ntitle: Test\n---\n# Hello\n\nWorld'
+})
+const html = await response.text()
+```
+
+## Dependencies
+
+- marked (^16.0.0) - Markdown parser
+- marked-gfm-heading-id (^4.1.2) - Heading ID generation
+- yaml (^2.8.0) - YAML parser
+
+## Implementation
+
+```typescript
+import { WorkerEntrypoint } from 'cloudflare:workers'
+import { marked } from 'marked'
+import { gfmHeadingId } from 'marked-gfm-heading-id'
+import YAML from 'yaml'
+
+// Configure marked with GitHub-flavored heading IDs
+marked.use(gfmHeadingId())
+
+// Note: The anchor links customization from the original worker.ts
+// was removed as it causes compatibility issues with Workers runtime
+
+const FRONT = /^---\s*[\r\n]+([\s\S]*?)\r?\n---\s*[\r\n]*/m
+
+function renderWithSections(src: string): string {
+  let rest = src, out = ''
+  while (true) {
+    const m = rest.match(FRONT)
+    if (!m) break
+    out += String(marked.parse(rest.slice(0, m.index)))
+    out += yamlSection(YAML.parse(m[1]) ?? {})
+    rest = rest.slice(m.index! + m[0].length)
+  }
+  out += String(marked.parse(rest))
+  return wrap(out)
+}
+
+function yamlSection(obj: Record<string, unknown>): string {
+  return `<section class="frontmatter">
+            <h2>Front-matter</h2>
+            <pre><code>${escape(JSON.stringify(obj, null, 2))}</code></pre>
+          </section>`
+}
+
+const escape = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
+
+const wrap = (body: string) => `<!doctype html>
+<html lang="en"><meta charset="utf-8">
+<title>Rendered Markdown</title>
+<link rel="stylesheet" href="https://unpkg.com/github-markdown-css/github-markdown-light.css">
+<style>
+  body{max-width:780px;margin:2rem auto;padding:0 1rem;font:16px/1.6 system-ui}
+  .frontmatter{background:#f6f8fa;border:1px solid #d0d7de;padding:1rem;border-radius:6px;margin:1.5rem 0}
+  .anchor{opacity:.2;margin-right:.25em;text-decoration:none}
+  h1:hover .anchor,h2:hover .anchor,h3:hover .anchor{opacity:.6}
+</style>
+<body class="markdown-body">
+${body}
+</body></html>`
+
+export default class extends WorkerEntrypoint {
+  async fetch(req: Request): Promise<Response> {
+    if (req.method !== 'POST') {
+      return Response.json({ success: true, message: 'POST markdown to convert to HTML' })
+    }
+
+    try {
+      const md = await req.text()
+      const html = renderWithSections(md)
+      return new Response(html, {
+        headers: { 'content-type': 'text/html;charset=utf-8' }
+      })
+    } catch (error) {
+      return new Response(JSON.stringify({ error: String(error) }), {
+        status: 500,
+        headers: { 'content-type': 'application/json' }
+      })
+    }
+  }
+}
+```

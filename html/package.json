@@ -1,18 +1,13 @@
 {
-  "name": "auth",
+  "name": "html-worker",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "wrangler dev --port 3000"
   },
   "dependencies": {
-    "@cloudflare/workers-oauth-provider": "^0.0.5",
-    "@cloudflare/workers-types": "^4.20250710.0",
-    "@workos-inc/node": "^7.58.0",
-    "hono": "^4.8.4",
-    "jose": "^6.0.11",
-    "marked": "^16.0.0",
+    "marked": "^16.3.0",
     "marked-gfm-heading-id": "^4.1.2",
-    "yaml": "^2.8.0"
+    "yaml": "^2.8.1"
   }
 }

@@ -339,7 +339,11 @@ ORDER BY count DESC;
         const statements = schemaSQL
           .split(';')
           .map((s) => s.trim())
-          .filter((s) => s.length > 0 && !s.startsWith('--'))
+          .filter((s) => {
+            if (s.length === 0) return false
+            // Remove comment-only statements, but keep statements with CREATE/ALTER/DROP
+            return s.includes('CREATE') || s.includes('ALTER') || s.includes('DROP')
+          })
 
         const results = []
         for (const statement of statements) {

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog Stream Demo</title>
+  <style>
+    body {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+    }
+    h1 { color: #333; }
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #0070f3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover { background: #0051cc; }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .status {
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .status.info { background: #e3f2fd; color: #1976d2; }
+    .status.success { background: #e8f5e9; color: #388e3c; }
+    .status.error { background: #ffebee; color: #c62828; }
+    .content {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 4px;
+      min-height: 200px;
+      white-space: pre-wrap;
+      font-family: 'Georgia', serif;
+    }
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #0070f3;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀 Blog Stream Demo</h1>
+  <p>Enter a blog post slug to generate AI-powered content with real-time streaming.</p>
+
+  <div class="input-group">
+    <input
+      type="text"
+      id="slug"
+      placeholder="e.g., getting-started-with-ai"
+      value="getting-started-with-ai"
+    />
+    <button id="generate" onclick="generatePost()">Generate Post</button>
+  </div>
+
+  <div id="status"></div>
+  <div id="content" class="content"></div>
+
+  <script>
+    let eventSource = null
+
+    function setStatus(message, type = 'info') {
+      const statusEl = document.getElementById('status')
+      statusEl.className = `status ${type}`
+      statusEl.textContent = message
+    }
+
+    function generatePost() {
+      const slug = document.getElementById('slug').value.trim()
+      const generateBtn = document.getElementById('generate')
+      const contentEl = document.getElementById('content')
+
+      if (!slug) {
+        setStatus('Please enter a blog post slug', 'error')
+        return
+      }
+
+      // Close existing connection
+      if (eventSource) {
+        eventSource.close()
+      }
+
+      // Clear previous content
+      contentEl.textContent = ''
+      generateBtn.disabled = true
+
+      // Show loading
+      setStatus('Checking database...', 'info')
+
+      // Create EventSource for streaming
+      const url = `http://localhost:8788/blog/${slug}`
+
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(data => {
+              throw new Error(data.reason || data.error || 'Request failed')
+            })
+          }
+
+          // Check if it's a cached post (JSON response)
+          const contentType = response.headers.get('content-type')
+          if (contentType && contentType.includes('application/json')) {
+            return response.json().then(data => {
+              if (data.source === 'database') {
+                setStatus('✓ Post loaded from database', 'success')
+                contentEl.textContent = data.post.content
+                generateBtn.disabled = false
+                return
+              }
+            })
+          }
+
+          // Stream response
+          setStatus('Generating with AI (streaming)...', 'info')
+          const reader = response.body.getReader()
+          const decoder = new TextDecoder()
+          let buffer = ''
+
+          function processStream() {
+            reader.read().then(({ done, value }) => {
+              if (done) {
+                generateBtn.disabled = false
+                return
+              }
+
+              buffer += decoder.decode(value, { stream: true })
+              const lines = buffer.split('\n')
+              buffer = lines.pop() || ''
+
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  try {
+                    const data = JSON.parse(line.slice(6))
+                    handleEvent(data)
+                  } catch (e) {
+                    console.error('Parse error:', e)
+                  }
+                }
+              }
+
+              processStream()
+            }).catch(error => {
+              setStatus(`Stream error: ${error.message}`, 'error')
+              generateBtn.disabled = false
+            })
+          }
+
+          processStream()
+        })
+        .catch(error => {
+          setStatus(`Error: ${error.message}`, 'error')
+          generateBtn.disabled = false
+        })
+    }
+
+    function handleEvent(data) {
+      const contentEl = document.getElementById('content')
+
+      switch (data.type) {
+        case 'start':
+          setStatus(`Generating: ${data.title}`, 'info')
+          contentEl.innerHTML = '<div class="loading"></div> Generating content...'
+          break
+
+        case 'content':
+          if (contentEl.querySelector('.loading')) {
+            contentEl.textContent = ''
+          }
+          contentEl.textContent += data.text
+          break
+
+        case 'complete':
+          setStatus(`✓ Generated ${data.contentLength} characters`, 'success')
+          break
+
+        case 'error':
+          setStatus(`Error: ${data.error}`, 'error')
+          break
+      }
+    }
+
+    // Auto-generate on load
+    window.addEventListener('DOMContentLoaded', () => {
+      generatePost()
+    })
+  </script>
+</body>
+</html>

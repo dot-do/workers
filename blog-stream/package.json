@@ -1,0 +1,17 @@
+{
+  "name": "blog-stream-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev --port 8788",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.9.9"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250106.0",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,46 @@
+/**
+ * Blog Stream Worker Configuration
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "blog-stream",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-08",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+
+  "observability": {
+    "enabled": true
+  },
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB_SERVICE",
+      "service": "db"
+    },
+    {
+      "binding": "DEPLOY_SERVICE",
+      "service": "do-deploy"
+    }
+  ],
+
+  // AI binding (Workers AI)
+  "ai": {
+    "binding": "AI"
+  },
+
+  // Routes
+  "routes": [
+    {
+      "pattern": "blog.apis.do/*",
+      "zone_name": "apis.do"
+    }
+  ],
+
+  // Tail consumers (observability pipeline)
+  "tail_consumers": [
+    {
+      "service": "pipeline"
+    }
+  ]
+}

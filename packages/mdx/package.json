@@ -1,0 +1,61 @@
+{
+  "name": "@hono/mdx",
+  "version": "0.1.0",
+  "description": "MDX/Markdown rendering middleware for Hono",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:watch": "vitest --watch"
+  },
+  "keywords": [
+    "hono",
+    "middleware",
+    "mdx",
+    "markdown",
+    "rendering",
+    "frontmatter",
+    "yaml",
+    "cloudflare-workers",
+    "github-flavored-markdown",
+    "gfm",
+    "marked",
+    "html",
+    "blog",
+    "documentation",
+    "cms"
+  ],
+  "author": "dot-do",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers",
+    "directory": "packages/mdx"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "homepage": "https://github.com/dot-do/workers/tree/main/packages/mdx#readme",
+  "dependencies": {
+    "hono": "^4.9.8",
+    "marked": "^16.3.0",
+    "marked-gfm-heading-id": "^4.1.2",
+    "yaml": "^2.8.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250106.0",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.9"
+  },
+  "peerDependencies": {
+    "hono": "^4.0.0"
+  }
+}

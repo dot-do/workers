@@ -64,6 +64,40 @@ interface QueryResponse {
 }
 
 /**
+ * Execute R2 SQL query (standalone function)
+ */
+async function executeQuery(env: Env, sql: string, warehouse?: string): Promise<QueryResponse> {
+  const warehouseName = warehouse || env.R2_WAREHOUSE_NAME
+
+  try {
+    const startTime = Date.now()
+
+    // Call Cloudflare R2 SQL API
+    const result = await executeR2SQLQuery(env, warehouseName, sql)
+
+    const duration = Date.now() - startTime
+
+    return {
+      results: result,
+      meta: {
+        rows: result.length,
+        duration,
+      },
+    }
+  } catch (error) {
+    console.error('[R2 SQL Query] Error:', error)
+    return {
+      results: [],
+      meta: {
+        rows: 0,
+        duration: 0,
+      },
+      error: error instanceof Error ? error.message : String(error),
+    }
+  }
+}
+
+/**
  * R2 SQL Query Service - RPC Interface
  */
 export class R2SQLQueryService extends WorkerEntrypoint<Env> {
@@ -71,34 +105,7 @@ export class R2SQLQueryService extends WorkerEntrypoint<Env> {
    * Execute R2 SQL query
    */
   async query(sql: string, warehouse?: string): Promise<QueryResponse> {
-    const warehouseName = warehouse || this.env.R2_WAREHOUSE_NAME
-
-    try {
-      const startTime = Date.now()
-
-      // Call Cloudflare R2 SQL API
-      const result = await executeR2SQLQuery(this.env, warehouseName, sql)
-
-      const duration = Date.now() - startTime
-
-      return {
-        results: result,
-        meta: {
-          rows: result.length,
-          duration,
-        },
-      }
-    } catch (error) {
-      console.error('[R2 SQL Query] Error:', error)
-      return {
-        results: [],
-        meta: {
-          rows: 0,
-          duration: 0,
-        },
-        error: error instanceof Error ? error.message : String(error),
-      }
-    }
+    return executeQuery(this.env, sql, warehouse)
   }
 }
 

@@ -2,21 +2,23 @@
  * ClickHouse Adapter for Graph API
  *
  * Implements graph database operations using Cloudflare ClickHouse
+ * with optimized graph_things and graph_relationships tables.
  *
- * ClickHouse is a columnar OLAP database optimized for analytics queries
+ * This adapter uses the @clickhouse/client-web library for direct
+ * ClickHouse HTTP API access (not Analytics Engine).
  */
 
+import { createClient, type ClickHouseClient } from '@clickhouse/client-web'
 import type { ThingDatabase, PreparedStatement } from '../things.js'
 
 /**
- * ClickHouse Connection
- *
- * ClickHouse uses HTTP API for queries
+ * ClickHouse Connection Config
  */
-export interface ClickHouseConnection {
-  accountId: string
-  apiToken: string
-  databaseId: string
+export interface ClickHouseConfig {
+  url: string // ClickHouse HTTP endpoint
+  database: string // Database name
+  username?: string // Optional username
+  password?: string // Optional password
 }
 
 /**
@@ -25,12 +27,12 @@ export interface ClickHouseConnection {
 class ClickHousePreparedStatement implements PreparedStatement {
   private query: string
   private params: unknown[]
-  private connection: ClickHouseConnection
+  private client: ClickHouseClient
 
-  constructor(query: string, connection: ClickHouseConnection) {
+  constructor(query: string, client: ClickHouseClient) {
     this.query = query
     this.params = []
-    this.connection = connection
+    this.client = client
   }
 
   bind(...params: unknown[]): PreparedStatement {
@@ -39,14 +41,14 @@ class ClickHousePreparedStatement implements PreparedStatement {
   }
 
   async all<T = unknown>(): Promise<{ results: T[] }> {
-    const response = await this.execute()
-    return { results: response as T[] }
+    const results = await this.execute()
+    return { results: results as T[] }
   }
 
   async first<T = unknown>(): Promise<T | null> {
-    const response = await this.execute()
-    const results = response as T[]
-    return results.length > 0 ? results[0] : null
+    const results = await this.execute()
+    const array = results as T[]
+    return array.length > 0 ? array[0] : null
   }
 
   async run(): Promise<{ success: boolean; meta?: Record<string, unknown> }> {
@@ -55,53 +57,61 @@ class ClickHousePreparedStatement implements PreparedStatement {
   }
 
   private async execute(): Promise<unknown[]> {
-    // ClickHouse uses {param:Type} syntax
-    let query = this.query
+    // Build query with named parameters
+    const queryParams: Record<string, unknown> = {}
+    let parameterizedQuery = this.query
+
     this.params.forEach((param, index) => {
-      const placeholder = '?'
-      const value = typeof param === 'string' ? `'${param.replace(/'/g, "''")}'` : param
-      query = query.replace(placeholder, String(value))
+      const key = `p${index}`
+      const paramType = this.inferType(param)
+      const placeholder = `{${key}:${paramType}}`
+
+      // Replace first occurrence of ? with the named parameter
+      parameterizedQuery = parameterizedQuery.replace('?', placeholder)
+      queryParams[key] = param
     })
 
-    // ClickHouse API endpoint
-    const url = `https://api.cloudflare.com/client/v4/accounts/${this.connection.accountId}/analytics_engine/sql`
+    try {
+      const resultSet = await this.client.query({
+        query: parameterizedQuery,
+        format: 'JSON',
+        query_params: queryParams,
+        clickhouse_settings: {
+          enable_json_type: 1,
+        },
+      })
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.connection.apiToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query,
-        database: this.connection.databaseId,
-        format: 'JSONEachRow',
-      }),
-    })
-
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`ClickHouse query failed: ${error}`)
+      const data = await resultSet.json()
+      return (data as any).data || []
+    } catch (error: any) {
+      throw new Error(`ClickHouse query failed: ${error.message}`)
     }
+  }
 
-    const text = await response.text()
-    // Parse JSONEachRow format (one JSON object per line)
-    return text
-      .trim()
-      .split('\n')
-      .filter(line => line)
-      .map(line => JSON.parse(line))
+  private inferType(value: unknown): string {
+    switch (typeof value) {
+      case 'number':
+        return Number.isInteger(value as number) ? 'Int64' : 'Float64'
+      case 'boolean':
+        return 'Bool'
+      case 'string':
+        return 'String'
+      default:
+        return 'String'
+    }
   }
 }
 
 /**
- * ClickHouse Database Adapter
+ * ClickHouse Database Adapter for Graph Operations
+ *
+ * Uses optimized graph_things and graph_relationships tables
  */
 export class ClickHouseDatabase implements ThingDatabase {
-  private connection: ClickHouseConnection
+  private client: ClickHouseClient
 
-  constructor(connection: ClickHouseConnection) {
-    this.connection = connection
+  constructor(config: ClickHouseConfig) {
+    this.client = createClient(config)
   }
 
   async execute(query: string, params?: unknown[]): Promise<unknown[]> {
@@ -114,62 +124,90 @@ export class ClickHouseDatabase implements ThingDatabase {
   }
 
   prepare(query: string): PreparedStatement {
-    return new ClickHousePreparedStatement(query, this.connection)
+    return new ClickHousePreparedStatement(query, this.client)
+  }
+
+  /**
+   * Direct ClickHouse client access for advanced queries
+   */
+  getClient(): ClickHouseClient {
+    return this.client
   }
 }
 
 /**
- * Create ClickHouse database instance
+ * Create ClickHouse database instance from config
  */
-export function createClickHouseDatabase(
-  accountId: string,
-  apiToken: string,
-  databaseId: string
-): ClickHouseDatabase {
-  return new ClickHouseDatabase({
-    accountId,
-    apiToken,
-    databaseId,
-  })
+export function createClickHouseDatabase(config: ClickHouseConfig): ClickHouseDatabase {
+  return new ClickHouseDatabase(config)
 }
 
 /**
- * Initialize ClickHouse database with graph schemas
+ * Create ClickHouse database instance from environment variables
+ */
+export function createClickHouseDatabaseFromEnv(): ClickHouseDatabase {
+  const config: ClickHouseConfig = {
+    url: process.env.CLICKHOUSE_URL || '',
+    database: process.env.CLICKHOUSE_DATABASE || '',
+    username: process.env.CLICKHOUSE_USERNAME,
+    password: process.env.CLICKHOUSE_PASSWORD,
+  }
+
+  if (!config.url || !config.database) {
+    throw new Error('CLICKHOUSE_URL and CLICKHOUSE_DATABASE environment variables are required')
+  }
+
+  return new ClickHouseDatabase(config)
+}
+
+/**
+ * Initialize ClickHouse database with optimized graph schemas
+ *
+ * Note: This creates simplified tables. For full schema with materialized views,
+ * use the migration script: pnpm tsx workers/db/migrate-graph-schema.ts
  */
 export async function initClickHouseSchemas(db: ClickHouseDatabase): Promise<void> {
-  // Create Things table with MergeTree engine
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS things (
-      ulid String,
-      ns String,
-      id String,
-      type String,
-      data String,
-      content String,
-      createdAt String,
-      updatedAt String
-    ) ENGINE = MergeTree()
-    ORDER BY (ns, id)
-    PRIMARY KEY (ns, id)
-  `)
+  const client = db.getClient()
 
-  // Create Relationships table optimized for inbound queries
-  await db.execute(`
-    CREATE TABLE IF NOT EXISTS relationships (
-      ulid String,
-      fromNs String,
-      fromId String,
-      fromType String,
-      predicate String,
-      toNs String,
-      toId String,
-      toType String,
-      data String,
-      createdAt String
-    ) ENGINE = MergeTree()
-    ORDER BY (toNs, toId, predicate)
-    PRIMARY KEY (toNs, toId)
-  `)
+  // Create graph_things table (optimized for entity queries)
+  await client.command({
+    query: `
+      CREATE TABLE IF NOT EXISTS graph_things (
+        ns String,
+        id String,
+        type String,
+        data JSON,
+        content String DEFAULT '',
+        createdAt DateTime64(3) DEFAULT now64(),
+        updatedAt DateTime64(3) DEFAULT now64()
+      ) ENGINE = ReplacingMergeTree(updatedAt)
+      ORDER BY (ns, id)
+      PRIMARY KEY (ns, id)
+    `,
+    clickhouse_settings: {
+      enable_json_type: 1,
+    },
+  })
 
-  // ClickHouse automatically creates secondary indexes for filtering
+  // Create graph_relationships table (optimized for inbound queries - backlinks!)
+  await client.command({
+    query: `
+      CREATE TABLE IF NOT EXISTS graph_relationships (
+        fromNs String,
+        fromId String,
+        fromType String,
+        predicate String,
+        toNs String,
+        toId String,
+        toType String,
+        data JSON DEFAULT '{}',
+        createdAt DateTime64(3) DEFAULT now64()
+      ) ENGINE = ReplacingMergeTree(createdAt)
+      ORDER BY (toNs, toId, predicate, fromNs, fromId)
+      PRIMARY KEY (toNs, toId, predicate)
+    `,
+    clickhouse_settings: {
+      enable_json_type: 1,
+    },
+  })
 }

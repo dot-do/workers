@@ -1,0 +1,60 @@
+{
+  "name": "mdx-router",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "node_compat": true,
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "mdx.do/*",
+      "zone_name": "do"
+    }
+  ],
+
+  // Service bindings to renderer workers
+  "services": [
+    // WaitList renderers
+    { "binding": "WAITLIST_TAILWIND", "service": "mdx-waitlist-tailwind" },
+    { "binding": "WAITLIST_PICO", "service": "mdx-waitlist-picocss" },
+    { "binding": "WAITLIST_CHAKRA", "service": "mdx-waitlist-chakra" },
+
+    // LandingPage renderers
+    { "binding": "LANDING_TAILWIND", "service": "mdx-landingpage-tailwind" },
+    { "binding": "LANDING_PICO", "service": "mdx-landingpage-picocss" },
+    { "binding": "LANDING_CHAKRA", "service": "mdx-landingpage-chakra" },
+
+    // Blog renderers
+    { "binding": "BLOG_TAILWIND", "service": "mdx-blog-tailwind" },
+    { "binding": "BLOG_PICO", "service": "mdx-blog-picocss" },
+    { "binding": "BLOG_CHAKRA", "service": "mdx-blog-chakra" },
+
+    // Site renderers
+    { "binding": "SITE_TAILWIND", "service": "mdx-site-tailwind" },
+    { "binding": "SITE_PICO", "service": "mdx-site-picocss" },
+    { "binding": "SITE_CHAKRA", "service": "mdx-site-chakra" },
+
+    // Directory renderers
+    { "binding": "DIRECTORY_TAILWIND", "service": "mdx-directory-tailwind" },
+    { "binding": "DIRECTORY_PICO", "service": "mdx-directory-picocss" },
+    { "binding": "DIRECTORY_CHAKRA", "service": "mdx-directory-chakra" }
+  ],
+
+  // KV namespace for MDX storage
+  "kv_namespaces": [
+    {
+      "binding": "MDX_CONTENT",
+      "id": "mdx-content-namespace-id",
+      "preview_id": "mdx-content-preview-id"
+    }
+  ],
+
+  // R2 bucket for MDX storage
+  "r2_buckets": [
+    {
+      "binding": "MDX_BUCKET",
+      "bucket_name": "mdx-content",
+      "preview_bucket_name": "mdx-content-preview"
+    }
+  ]
+}

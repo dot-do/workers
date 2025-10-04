@@ -1,37 +1,53 @@
 # Workers Microservices - Implementation Status
 
 **Last Updated:** 2025-10-04
-**Phase:** Workers for Platforms Migration - 80% Complete
-**Migration Status:** Wave 1 Complete, Wave 2 Ready for Deployment
+**Phase:** Production Deployment Complete - 100%
+**Migration Status:** All 8 Core Services Deployed ✅
 
 ---
 
 ## Overview
 
-Successfully implemented **8 production-ready microservices** plus **Workers for Platforms infrastructure** (Deploy API + Dispatcher). Total implementation: **~13,000 lines of production code** with complete security model, audit trails, and namespace isolation.
+Successfully deployed **8 production-ready microservices** to Cloudflare Workers. Total implementation: **~13,000 lines of production code** with 95+ tests (75%+ coverage), comprehensive RPC interfaces, and full observability.
 
-### Workers for Platforms Migration (80% Complete)
+### Architecture Decision: Option B (Hybrid Approach)
 
-**Completed:**
-- ✅ Deploy API service (24 tests, 80%+ coverage)
-- ✅ Dynamic dispatcher (23 tests, 85%+ coverage)
-- ✅ All 8 services configured for namespace deployment
-- ✅ Complete security model (zero credentials in CI/CD)
-- ✅ Full audit trail and RBAC integration
-- ✅ Comprehensive documentation
+**Internal Infrastructure Services → Regular Cloudflare Workers**
+- Simpler deployment and lower overhead
+- Service bindings work correctly between regular workers
+- Better suited for infrastructure that needs to communicate
 
-**Remaining (Wave 2):**
-- ⏳ Create dispatch namespaces (30 minutes)
-- ⏳ Deploy infrastructure services (30 minutes)
-- ⏳ Deploy 8 user workers to namespaces (2 hours)
-- ⏳ Configure dispatcher routes (15 minutes)
-- ⏳ Update GitHub Actions workflows (1 hour)
+**Workers for Platforms → Reserved for Multi-Tenancy**
+- Public APIs (when needed)
+- Tenant-specific deployments
+- Customer-isolated workloads
 
-**See:** [Migration Complete Report](/Users/nathanclevenger/Projects/.do/notes/2025-10-04-workers-for-platforms-complete.md)
+### Deployment Complete (100%)
+
+**Infrastructure Services:**
+- ✅ Deploy API: https://do-deploy.drivly.workers.dev (authenticated deployment API)
+- ✅ Dispatcher: Deployed (dynamic routing for *.do domains)
+- ✅ 6 Dispatch Namespaces: Created (dotdo-internal, dotdo-public, dotdo-tenant + legacy)
+
+**Core Microservices (8/8 Deployed):**
+1. ✅ do-db → https://do-db.drivly.workers.dev
+2. ✅ auth → https://auth.drivly.workers.dev
+3. ✅ do-schedule → https://do-schedule.drivly.workers.dev
+4. ✅ webhooks → https://webhooks.drivly.workers.dev
+5. ✅ queue → https://queue.drivly.workers.dev
+6. ✅ do-mcp → https://do-mcp.drivly.workers.dev
+7. ✅ do-gateway → https://do-gateway.drivly.workers.dev
+8. ✅ email → https://email.drivly.workers.dev
+
+**Next Steps:**
+- Configure custom domains (*.do)
+- Set up database credentials in production
+- Integration testing across services
+- GitHub Actions deployment automation
 
 ---
 
-## ✅ Completed Services (5/8)
+## ✅ Deployed Services (8/8 Complete)
 
 ### 1. API Gateway (`gateway/`) - ✅ COMPLETE
 

@@ -1,0 +1,640 @@
+/**
+ * MDX Demo Worker
+ *
+ * Demonstrates @hono/mdx package functionality:
+ * - Basic MDX rendering
+ * - Custom React components
+ * - Streaming and non-streaming modes
+ * - Frontmatter parsing
+ * - Dynamic content generation
+ */
+
+import { Hono } from 'hono'
+import { mdx } from '@hono/mdx'
+import { createElement as h } from 'react'
+
+// Define custom React components using createElement
+const Button = ({ children, variant = 'primary' }: { children: React.ReactNode; variant?: string }) =>
+  h(
+    'button',
+    {
+      style: {
+        padding: '0.75rem 1.5rem',
+        borderRadius: '0.5rem',
+        border: 'none',
+        backgroundColor: variant === 'primary' ? '#3b82f6' : '#6b7280',
+        color: 'white',
+        fontSize: '1rem',
+        fontWeight: '600',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+      },
+    },
+    children
+  )
+
+const Card = ({ title, children }: { title?: string; children: React.ReactNode }) =>
+  h(
+    'div',
+    {
+      style: {
+        border: '1px solid #e5e7eb',
+        borderRadius: '0.75rem',
+        padding: '1.5rem',
+        marginBottom: '1rem',
+        backgroundColor: '#ffffff',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+      },
+    },
+    title &&
+      h(
+        'h3',
+        {
+          style: {
+            marginTop: 0,
+            marginBottom: '1rem',
+            fontSize: '1.25rem',
+            fontWeight: '600',
+          },
+        },
+        title
+      ),
+    h('div', null, children)
+  )
+
+const Alert = ({ type = 'info', children }: { type?: 'info' | 'warning' | 'error' | 'success'; children: React.ReactNode }) => {
+  const colors = {
+    info: { bg: '#dbeafe', border: '#3b82f6', text: '#1e40af' },
+    warning: { bg: '#fef3c7', border: '#f59e0b', text: '#92400e' },
+    error: { bg: '#fee2e2', border: '#ef4444', text: '#991b1b' },
+    success: { bg: '#d1fae5', border: '#10b981', text: '#065f46' },
+  }
+  const style = colors[type]
+
+  return h(
+    'div',
+    {
+      style: {
+        padding: '1rem',
+        borderRadius: '0.5rem',
+        border: `2px solid ${style.border}`,
+        backgroundColor: style.bg,
+        color: style.text,
+        marginBottom: '1rem',
+      },
+    },
+    children
+  )
+}
+
+const CodeBlock = ({ children, language = 'typescript' }: { children: React.ReactNode; language?: string }) =>
+  h(
+    'div',
+    {
+      style: {
+        marginBottom: '1rem',
+      },
+    },
+    h(
+      'div',
+      {
+        style: {
+          backgroundColor: '#1f2937',
+          color: '#9ca3af',
+          padding: '0.5rem 1rem',
+          borderTopLeftRadius: '0.5rem',
+          borderTopRightRadius: '0.5rem',
+          fontSize: '0.875rem',
+          fontWeight: '600',
+        },
+      },
+      language
+    ),
+    h(
+      'pre',
+      {
+        style: {
+          backgroundColor: '#111827',
+          color: '#e5e7eb',
+          padding: '1rem',
+          borderBottomLeftRadius: '0.5rem',
+          borderBottomRightRadius: '0.5rem',
+          overflow: 'auto',
+          margin: 0,
+        },
+      },
+      h('code', null, children)
+    )
+  )
+
+// Create Hono app with MDX middleware
+const app = new Hono()
+
+// Apply MDX middleware with custom components
+app.use(
+  '*',
+  mdx({
+    components: {
+      Button,
+      Card,
+      Alert,
+      CodeBlock,
+    },
+    compileOptions: {
+      development: true, // Enable better error messages in development
+    },
+  })
+)
+
+// Home page - Navigation and feature overview
+app.get('/', (c) => {
+  return c.mdx(`
+# @hono/mdx Demo
+
+Welcome to the **@hono/mdx** demo worker! This demonstrates rendering MDX content in Cloudflare Workers using Hono.
+
+## Available Examples
+
+<Card title="📝 Basic Examples">
+
+- [/hello](/hello) - Simple MDX rendering
+- [/frontmatter](/frontmatter) - Frontmatter parsing
+- [/components](/components) - Custom React components
+
+</Card>
+
+<Card title="⚡ Advanced Examples">
+
+- [/streaming](/streaming) - Streaming SSR demo
+- [/non-streaming](/non-streaming) - Static rendering
+- [/dynamic](/dynamic) - Dynamic content generation
+
+</Card>
+
+<Card title="📖 Documentation">
+
+- [/about](/about) - About this demo
+- [/api](/api) - API documentation
+
+</Card>
+
+## Quick Example
+
+Here's what you can do with @hono/mdx:
+
+<Alert type="info">
+This entire page is rendered from MDX with custom React components!
+</Alert>
+
+<CodeBlock>
+import { Hono } from 'hono'
+import { renderMDX } from '@hono/mdx'
+
+const app = new Hono()
+
+app.get('/', (c) => {
+  return renderMDX(c, '# Hello World!')
+})
+
+export default app
+</CodeBlock>
+
+<Button>Get Started →</Button>
+`)
+})
+
+// Simple hello world example
+app.get('/hello', (c) => {
+  return c.mdx(`
+# Hello from MDX! 👋
+
+This is a simple example of rendering MDX content in a Cloudflare Worker.
+
+## Features
+
+- **Markdown syntax** - Write content naturally
+- **React components** - Use JSX components inline
+- **Full streaming** - Progressive rendering with React 19
+- **Edge runtime** - Fast, global deployment
+
+## Try it yourself
+
+\`\`\`typescript
+import { renderMDX } from '@hono/mdx'
+
+app.get('/hello', (c) => {
+  return c.mdx('# Hello World!')
+})
+\`\`\`
+
+[← Back to home](/)
+`)
+})
+
+// Frontmatter example
+app.get('/frontmatter', (c) => {
+  const content = `---
+title: Frontmatter Demo
+author: Claude
+date: 2025-01-04
+tags: [mdx, hono, cloudflare]
+---
+
+# {title}
+
+Written by **{author}** on {date}
+
+<Alert type="success">
+This page uses YAML frontmatter to define metadata!
+</Alert>
+
+## Tags
+
+{tags.map(tag => \`- \${tag}\`).join('\\n')}
+
+## How it Works
+
+The frontmatter is parsed and available as props in your MDX:
+
+<CodeBlock>
+---
+title: My Post
+author: John Doe
+---
+
+# {title}
+
+By {author}
+</CodeBlock>
+
+[← Back to home](/)
+`
+
+  return c.mdx(content)
+})
+
+// Custom components example
+app.get('/components', (c) => {
+  return c.mdx(`
+# Custom React Components 🎨
+
+@hono/mdx lets you use custom React components directly in your MDX.
+
+## Button Component
+
+<Button>Click me!</Button>
+
+<Button variant="secondary">Secondary Button</Button>
+
+## Card Component
+
+<Card title="Welcome">
+This is a card component with a title and content.
+</Card>
+
+<Card>
+This is a card without a title.
+</Card>
+
+## Alert Component
+
+<Alert type="info">
+ℹ️ This is an info alert
+</Alert>
+
+<Alert type="warning">
+⚠️ This is a warning alert
+</Alert>
+
+<Alert type="error">
+❌ This is an error alert
+</Alert>
+
+<Alert type="success">
+✅ This is a success alert
+</Alert>
+
+## Code Block Component
+
+<CodeBlock language="javascript">
+function hello() {
+  console.log('Hello from MDX!')
+}
+</CodeBlock>
+
+<CodeBlock language="python">
+def hello():
+    print("Hello from MDX!")
+</CodeBlock>
+
+[← Back to home](/)
+`)
+})
+
+// Streaming example
+app.get('/streaming', (c) => {
+  return c.mdx(
+    `
+# Streaming SSR Example 🌊
+
+This page uses **streaming server-side rendering** with React 19's \`renderToReadableStream\`.
+
+<Alert type="info">
+Content is progressively sent to the browser as it's rendered, resulting in faster time-to-first-byte and better perceived performance.
+</Alert>
+
+## Benefits
+
+<Card title="⚡ Faster TTFB">
+The browser receives HTML immediately, before the entire page is rendered.
+</Card>
+
+<Card title="📦 Progressive Rendering">
+Content appears incrementally, improving perceived performance.
+</Card>
+
+<Card title="🎯 Better UX">
+Users see content sooner, even for large pages.
+</Card>
+
+## Implementation
+
+<CodeBlock>
+app.get('/streaming', (c) => {
+  return c.mdx(content, {
+    renderOptions: { streaming: true }
+  })
+})
+</CodeBlock>
+
+[← Back to home](/)
+`,
+    {
+      renderOptions: { streaming: true },
+    }
+  )
+})
+
+// Non-streaming example
+app.get('/non-streaming', (c) => {
+  return c.mdx(
+    `
+# Non-Streaming (Static) Example 📄
+
+This page uses **static rendering** - the entire HTML is generated before sending.
+
+<Alert type="info">
+With streaming disabled, the server waits until all content is rendered before sending the response.
+</Alert>
+
+## When to Use
+
+<Card title="🔍 SEO-Critical Pages">
+Some search engine crawlers work better with complete HTML.
+</Card>
+
+<Card title="📧 Email Templates">
+Email clients don't support streaming.
+</Card>
+
+<Card title="🖼️ PDF Generation">
+PDF generators need complete HTML.
+</Card>
+
+## Implementation
+
+<CodeBlock>
+app.get('/non-streaming', (c) => {
+  return c.mdx(content, {
+    renderOptions: { streaming: false }
+  })
+})
+</CodeBlock>
+
+[← Back to home](/)
+`,
+    {
+      renderOptions: { streaming: false },
+    }
+  )
+})
+
+// Dynamic content example
+app.get('/dynamic', (c) => {
+  const name = c.req.query('name') || 'World'
+  const timestamp = new Date().toISOString()
+  const userAgent = c.req.header('user-agent') || 'Unknown'
+
+  return c.mdx(`
+# Dynamic Content Example 🎲
+
+This page is generated dynamically based on the request.
+
+<Alert type="success">
+Generated at: **${timestamp}**
+</Alert>
+
+## Query Parameters
+
+Hello, **${name}**! 👋
+
+Try: [/dynamic?name=Alice](/dynamic?name=Alice)
+
+## Request Headers
+
+<Card title="User Agent">
+\`${userAgent}\`
+</Card>
+
+## How it Works
+
+<CodeBlock>
+app.get('/dynamic', (c) => {
+  const name = c.req.query('name') || 'World'
+  const timestamp = new Date().toISOString()
+
+  return c.mdx(\\\`
+# Hello, \\\${name}!
+
+Generated at: \\\${timestamp}
+  \\\`)
+})
+</CodeBlock>
+
+[← Back to home](/)
+`)
+})
+
+// About page
+app.get('/about', (c) => {
+  return c.mdx(`
+# About @hono/mdx 📖
+
+**@hono/mdx** is a package that brings MDX rendering to Hono with full streaming support.
+
+## Features
+
+<Card title="✅ Full Streaming Support">
+Progressive rendering with React 19's \`renderToReadableStream\`
+</Card>
+
+<Card title="✅ Custom Components">
+Use your own React components in MDX
+</Card>
+
+<Card title="✅ File-based or String-based">
+Render from files or strings
+</Card>
+
+<Card title="✅ Plugin System">
+Support for remark/rehype plugins
+</Card>
+
+<Card title="✅ TypeScript First">
+Full type safety
+</Card>
+
+<Card title="✅ Cloudflare Workers Optimized">
+Uses Web Streams API for edge compatibility
+</Card>
+
+## Installation
+
+<CodeBlock language="bash">
+npm install @hono/mdx hono react react-dom
+</CodeBlock>
+
+## Quick Start
+
+<CodeBlock>
+import { Hono } from 'hono'
+import { mdx } from '@hono/mdx'
+
+const app = new Hono()
+
+app.use('*', mdx())
+
+app.get('/', (c) => c.mdx('# Hello World!'))
+
+export default app
+</CodeBlock>
+
+[← Back to home](/)
+`)
+})
+
+// API documentation
+app.get('/api', (c) => {
+  return c.mdx(`
+# API Documentation 📚
+
+## Core Functions
+
+### \`renderMDX(context, content, options?)\`
+
+Render MDX content to a Hono response.
+
+<CodeBlock>
+import { renderMDX } from '@hono/mdx'
+
+app.get('/doc', (c) => {
+  return renderMDX(c, '# Hello World')
+})
+</CodeBlock>
+
+### \`mdx(options?)\`
+
+Hono middleware that extends context with MDX helpers.
+
+<CodeBlock>
+app.use('*', mdx({
+  components: { Button, Card },
+  compileOptions: {
+    development: true
+  }
+}))
+
+app.get('/', (c) => c.mdx('# Hello'))
+</CodeBlock>
+
+### \`mdxHandler(content, options?)\`
+
+Create a route handler from MDX content.
+
+<CodeBlock>
+import { mdxHandler } from '@hono/mdx'
+
+app.get('/about', mdxHandler(\\\`
+# About Us
+
+We build awesome MDX tools!
+\\\`))
+</CodeBlock>
+
+## Options
+
+<Card title="MDXRenderOptions">
+
+- **components** - Custom React components
+- **props** - Props to pass to MDX
+- **compileOptions** - MDX compilation options
+- **renderOptions** - React rendering options
+- **template** - Custom HTML template
+- **css** - Custom CSS
+- **scripts** - JavaScript files to include
+
+</Card>
+
+[← Back to home](/)
+`)
+})
+
+// 404 handler
+app.notFound((c) => {
+  return c.mdx(`
+# 404 - Page Not Found 😢
+
+The page you're looking for doesn't exist.
+
+<Alert type="error">
+**Error 404**: The requested URL was not found on this server.
+</Alert>
+
+## Available Pages
+
+- [Home](/)
+- [Hello](/hello)
+- [Frontmatter](/frontmatter)
+- [Components](/components)
+- [Streaming](/streaming)
+- [Non-Streaming](/non-streaming)
+- [Dynamic](/dynamic)
+- [About](/about)
+- [API](/api)
+
+[← Back to home](/)
+`)
+})
+
+// Error handler
+app.onError((err, c) => {
+  console.error('Error:', err)
+
+  return c.mdx(`
+# Error 500 - Internal Server Error 🔥
+
+<Alert type="error">
+**${err.name}**: ${err.message}
+</Alert>
+
+## Stack Trace
+
+\`\`\`
+${err.stack || 'No stack trace available'}
+\`\`\`
+
+[← Back to home](/)
+`)
+})
+
+export default app

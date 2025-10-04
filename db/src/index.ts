@@ -222,6 +222,180 @@ export default class DatabaseService extends WorkerEntrypoint<Env> {
       return c.json(activity)
     })
 
+    // Admin endpoint - Apply graph schema migration
+    app.post('/admin/migrate-graph-schema', async (c) => {
+      try {
+        // Read schema file content (embedded as constant for now)
+        const schemaSQL = `
+-- Graph Things Table
+CREATE TABLE IF NOT EXISTS graph_things (
+  ns String,
+  id String,
+  type String,
+  data JSON,
+  content String DEFAULT '',
+  createdAt DateTime64(3) DEFAULT now64(),
+  updatedAt DateTime64(3) DEFAULT now64(),
+  nsHash UInt32 MATERIALIZED xxHash32(ns),
+  idHash UInt32 MATERIALIZED xxHash32(id),
+  typeHash UInt32 MATERIALIZED xxHash32(type),
+  INDEX bf_ns (nsHash) TYPE bloom_filter() GRANULARITY 4,
+  INDEX bf_id (idHash) TYPE bloom_filter() GRANULARITY 4,
+  INDEX bf_type (typeHash) TYPE bloom_filter() GRANULARITY 4,
+  INDEX tk_content (content) TYPE tokenbf_v1(4096, 3, 0) GRANULARITY 8
+) ENGINE = ReplacingMergeTree(updatedAt)
+ORDER BY (ns, id)
+PRIMARY KEY (ns, id)
+SETTINGS index_granularity = 8192;
+
+-- Graph Relationships Table
+CREATE TABLE IF NOT EXISTS graph_relationships (
+  fromNs String,
+  fromId String,
+  fromType String,
+  predicate String,
+  toNs String,
+  toId String,
+  toType String,
+  data JSON DEFAULT '{}',
+  createdAt DateTime64(3) DEFAULT now64(),
+  fromNsHash UInt32 MATERIALIZED xxHash32(fromNs),
+  fromIdHash UInt32 MATERIALIZED xxHash32(fromId),
+  toNsHash UInt32 MATERIALIZED xxHash32(toNs),
+  toIdHash UInt32 MATERIALIZED xxHash32(toId),
+  predicateHash UInt32 MATERIALIZED xxHash32(predicate),
+  INDEX bf_to_ns (toNsHash) TYPE bloom_filter() GRANULARITY 4,
+  INDEX bf_to_id (toIdHash) TYPE bloom_filter() GRANULARITY 4,
+  INDEX bf_from_ns (fromNsHash) TYPE bloom_filter() GRANULARITY 4,
+  INDEX bf_from_id (fromIdHash) TYPE bloom_filter() GRANULARITY 4,
+  INDEX bf_predicate (predicateHash) TYPE bloom_filter() GRANULARITY 4
+) ENGINE = ReplacingMergeTree(createdAt)
+ORDER BY (toNs, toId, predicate, fromNs, fromId)
+PRIMARY KEY (toNs, toId, predicate)
+SETTINGS index_granularity = 8192;
+
+-- Materialized View: Events → Graph Things
+CREATE MATERIALIZED VIEW IF NOT EXISTS graph_things_stream TO graph_things
+AS SELECT
+  ns, id, type, data, content,
+  ts AS createdAt, ts AS updatedAt
+FROM events
+WHERE type != 'Relationship' AND type IS NOT NULL;
+
+-- Materialized View: Events → Graph Relationships
+CREATE MATERIALIZED VIEW IF NOT EXISTS graph_relationships_stream TO graph_relationships
+AS SELECT
+  JSONExtractString(data, 'fromNs') AS fromNs,
+  JSONExtractString(data, 'fromId') AS fromId,
+  JSONExtractString(data, 'fromType') AS fromType,
+  JSONExtractString(data, 'predicate') AS predicate,
+  JSONExtractString(data, 'toNs') AS toNs,
+  JSONExtractString(data, 'toId') AS toId,
+  JSONExtractString(data, 'toType') AS toType,
+  data,
+  ts AS createdAt
+FROM events
+WHERE type = 'Relationship'
+  AND JSONHas(data, 'fromNs')
+  AND JSONHas(data, 'toNs');
+
+-- Helper View: Inbound Relationships
+CREATE VIEW IF NOT EXISTS v_inbound_relationships AS
+SELECT * FROM graph_relationships
+ORDER BY toNs, toId, predicate, createdAt DESC;
+
+-- Helper View: Outbound Relationships
+CREATE VIEW IF NOT EXISTS v_outbound_relationships AS
+SELECT * FROM graph_relationships
+ORDER BY fromNs, fromId, predicate, createdAt DESC;
+
+-- Helper View: Predicate Stats
+CREATE VIEW IF NOT EXISTS v_predicate_stats AS
+SELECT
+  predicate,
+  COUNT(*) AS count,
+  COUNT(DISTINCT fromNs || '/' || fromId) AS unique_sources,
+  COUNT(DISTINCT toNs || '/' || toId) AS unique_targets,
+  MIN(createdAt) AS first_seen,
+  MAX(createdAt) AS last_seen
+FROM graph_relationships
+GROUP BY predicate
+ORDER BY count DESC;
+
+-- Helper View: Type Stats
+CREATE VIEW IF NOT EXISTS v_type_stats AS
+SELECT
+  type,
+  COUNT(*) AS count,
+  COUNT(DISTINCT ns) AS unique_namespaces,
+  MIN(createdAt) AS first_seen,
+  MAX(createdAt) AS last_seen
+FROM graph_things
+GROUP BY type
+ORDER BY count DESC;
+`
+
+        // Split into statements
+        const statements = schemaSQL
+          .split(';')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0 && !s.startsWith('--'))
+
+        const results = []
+        for (const statement of statements) {
+          try {
+            await clickhouse.command({
+              query: statement,
+              clickhouse_settings: {
+                enable_json_type: 1,
+                allow_experimental_vector_similarity_index: 1,
+              },
+            })
+            results.push({
+              success: true,
+              statement: statement.split('\\n')[0].substring(0, 80) + '...',
+            })
+          } catch (error: any) {
+            // Check if already exists
+            if (error.message?.includes('already exists') || error.message?.includes('ALREADY_EXISTS')) {
+              results.push({
+                success: true,
+                skipped: true,
+                statement: statement.split('\\n')[0].substring(0, 80) + '...',
+              })
+            } else {
+              results.push({
+                success: false,
+                error: error.message,
+                statement: statement.split('\\n')[0].substring(0, 80) + '...',
+              })
+            }
+          }
+        }
+
+        const successCount = results.filter((r) => r.success).length
+        const errorCount = results.filter((r) => !r.success).length
+
+        return c.json({
+          status: errorCount === 0 ? 'success' : 'partial',
+          summary: {
+            total: statements.length,
+            successful: successCount,
+            failed: errorCount,
+          },
+          results,
+        })
+      } catch (error: any) {
+        return c.json(
+          {
+            status: 'error',
+            error: error.message,
+          },
+          500
+        )
+      }
+    })
+
     // RPC over HTTP endpoint (for debugging)
     app.post('/rpc', async (c) => {
       const { method, params } = await c.req.json()

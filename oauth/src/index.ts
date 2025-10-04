@@ -32,7 +32,8 @@ app.get('/health', c => {
  * Opens browser to this endpoint, which redirects to WorkOS
  */
 app.get('/login', async c => {
-  const sessionId = crypto.randomUUID()
+  // Allow session ID to be provided (for CLI polling), or generate new one
+  const sessionId = c.req.query('session_id') || crypto.randomUUID()
   const state = Array.from(crypto.getRandomValues(new Uint8Array(16)))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('')
@@ -67,7 +68,7 @@ app.get('/login', async c => {
     code_challenge: codeChallenge,
     code_challenge_method: 'S256',
     state: `${sessionId}:${state}`,
-    scope: 'openid profile email',
+    provider: 'authkit',
   })
 
   const authUrl = `${c.env.WORKOS_AUTH_URL}?${params.toString()}`
@@ -77,7 +78,7 @@ app.get('/login', async c => {
 /**
  * Production OAuth callback - Handle WorkOS redirect
  */
-app.get('/callback', async c => {
+const handleCallback = async (c: any) => {
   const { code, state: stateParam, error, error_description } = c.req.query()
 
   if (error) {
@@ -235,7 +236,11 @@ app.get('/callback', async c => {
       </html>
     `)
   }
-})
+}
+
+// Register callback handler for both paths
+app.get('/callback', handleCallback)
+app.get('/api/callback', handleCallback)
 
 /**
  * Poll for tokens - CLI uses this to retrieve tokens
@@ -286,7 +291,7 @@ app.get('/authorize', c => {
     code_challenge,
     code_challenge_method: 'S256',
     state,
-    scope: scope || 'openai profile email',
+    provider: 'authkit',
   })
 
   const authUrl = `${c.env.WORKOS_AUTH_URL}?${params.toString()}`
@@ -408,7 +413,6 @@ app.post('/device', async c => {
       },
       body: new URLSearchParams({
         client_id: c.env.WORKOS_CLIENT_ID,
-        scope: scope || 'openai profile email',
       }),
     })
 

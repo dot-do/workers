@@ -100,6 +100,153 @@ Incoming Requests:
    - Optimized for inference and embeddings
    - Deployed to dispatch namespaces
 
+### Bi-Directional GitHub Sync (Webhooks Service)
+
+The **webhooks** service implements comprehensive bi-directional synchronization between the database and GitHub repositories using MDX files with MDXLD (MDX Linked Data) format.
+
+**Architecture:**
+```
+GitHub Push Event
+      ↓ Webhook
+┌─────────────────┐
+│ Webhooks Worker │ ◄── Processes push events
+│  (HTTP Handler) │     Syncs MDX → Database
+└────────┬────────┘
+         │ Queue
+         ▼
+┌─────────────────┐
+│ Queue Consumer  │ ◄── Auto-syncs database changes
+│  (Queue Handler)│     Database → GitHub
+└────────┬────────┘
+         │ Octokit
+         ▼
+    GitHub API
+```
+
+**Three Sync Modes:**
+1. **GitHub → Database** - Webhook handler processes push events
+2. **Database → GitHub** - RPC method `syncToGitHub()`
+3. **Automatic Queue-Based** - Queue consumer auto-syncs changes
+
+**Key Files:**
+- `src/handlers/github.ts` - GitHub webhook handler and sync logic
+- `src/queue.ts` - Queue consumer for automatic sync (184 LOC)
+- `src/conflicts.ts` - Conflict detection and resolution (467 LOC)
+- `src/index.ts` - RPC interface (WebhooksService class)
+
+**MDXLD Format:**
+All MDX files use `$id` and `$type` fields:
+```yaml
+---
+$id: note/2025-10-03-implementation
+$type: Note
+title: Implementation Plan
+---
+
+# Content here...
+```
+
+**Conflict Resolution:**
+When database and GitHub versions diverge, conflicts are detected via SHA comparison:
+- **ours** - Use database version, force push to GitHub
+- **theirs** - Use GitHub version, update database
+- **merge** - Attempt three-way merge (database takes precedence)
+- **manual** - Mark for manual resolution
+
+**RPC Interface:**
+```typescript
+export class WebhooksService extends WorkerEntrypoint<Env> {
+  // Sync entity to GitHub (called by API service)
+  async syncToGitHub(options: {
+    repository: string;
+    path: string;
+    content: string;
+    message: string;
+    branch?: string;
+    createPR?: boolean;
+  }): Promise<any>
+
+  // Resolve conflict with strategy
+  async resolveConflict(
+    conflictId: string,
+    strategy: 'ours' | 'theirs' | 'merge' | 'manual'
+  ): Promise<any>
+}
+```
+
+**Queue Configuration:**
+```jsonc
+{
+  "queues": {
+    "consumers": [
+      {
+        "queue": "github-sync",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "github-sync-dlq"
+      }
+    ]
+  }
+}
+```
+
+**Database Tracking:**
+- `sync_status` - 'synced', 'pending', 'failed', 'conflict'
+- `github_sha` - Git commit SHA for conflict detection
+- `github_url` - Repository URL
+- `github_path` - File path in repository
+- `last_synced_at` - Timestamp of last sync
+
+**Conflict Tracking Table:**
+```sql
+CREATE TABLE sync_conflicts (
+  id TEXT PRIMARY KEY,
+  ns TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  repository TEXT NOT NULL,
+  path TEXT NOT NULL,
+  branch TEXT NOT NULL DEFAULT 'main',
+  database_sha TEXT NOT NULL,
+  github_sha TEXT NOT NULL,
+  database_content TEXT NOT NULL,
+  github_content TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  strategy TEXT,
+  resolved_at INTEGER,
+  error TEXT
+);
+```
+
+**Usage Example:**
+```typescript
+// API service calls webhooks service via RPC
+const result = await env.WEBHOOKS_SERVICE.syncToGitHub({
+  repository: 'dot-do/notes',
+  path: 'test-note.mdx',
+  content: '---\n$id: note/test-note\n$type: Note\n---\n\nContent',
+  message: 'Update test-note.mdx',
+  branch: 'main',
+  createPR: false
+});
+
+// Resolve conflict
+const resolution = await env.WEBHOOKS_SERVICE.resolveConflict(
+  'conflict_123',
+  'ours' // Use database version
+);
+```
+
+**Testing:**
+- `tests/queue.test.ts` - Queue handler integration tests
+- `tests/conflicts.test.ts` - Conflict resolution tests
+- `tests/github.test.ts` - GitHub sync tests (existing)
+
+**See Also:**
+- [api/CLAUDE.md](../api/CLAUDE.md) - API endpoints for sync and conflicts
+- [GRAPH-DEPLOYMENT.md](./GRAPH-DEPLOYMENT.md) - Graph database deployment guide
+
 ### Service Interface Pattern
 
 Every service exposes **4 interfaces**:

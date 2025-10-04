@@ -114,6 +114,7 @@ export async function executeCode(
         requestId: context.requestId
       } : undefined
 
+      // Create serializable runtime using pure RPC proxies
       const $ = createBusinessRuntime(rpcClient, runtimeContext)
 
       const workerCode: WorkerCode = {
@@ -123,15 +124,11 @@ export async function executeCode(
           'main.js': wrapCode(request.code, request.captureConsole ?? true)
         },
         env: {
-          // Spread all primitives from $ runtime (ai, db, api, on, send, every, decide, user)
-          ...$,
-          // Also provide $ itself
+          // ✅ Serializable runtime - pure RPC proxies, no functions
           $,
           // Provide DO binding - prefer ctx.exports (automatic loopback via enable_ctx_exports)
           DO: (ctx?.exports as any)?.DO || env.DO || { fetch: () => Promise.resolve(new Response('DO service not available', { status: 503 })) },
-          // Provide logging utilities
-          __logRequest: (log: RequestLog) => { requests.push(log) },
-          // Provide read-only context
+          // Provide read-only context (plain object, serializable)
           __context: runtimeContext
         },
         // Outbound handler - inject context into all service calls

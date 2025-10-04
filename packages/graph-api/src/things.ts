@@ -38,27 +38,19 @@ export interface PreparedStatement {
  */
 export async function createThing(thing: Thing, db: ThingDatabase): Promise<Thing & { ulid: string }> {
   const ulid = generateUlid()
-  const now = Date.now()
-
-  const meta = {
-    ...thing.meta,
-    createdAt: thing.meta?.createdAt || now,
-    updatedAt: thing.meta?.updatedAt || now,
-    version: 1,
-  }
+  const now = new Date().toISOString()
 
   const query = `
     INSERT INTO things (
-      ulid, ns, id, type, data, code, content, meta
+      ulid, ns, id, type, data, content, createdAt, updatedAt
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `
 
-  await db.prepare(query).bind(ulid, thing.ns, thing.id, thing.type, JSON.stringify(thing.data || {}), thing.code || null, thing.content || null, JSON.stringify(meta)).run()
+  await db.prepare(query).bind(ulid, thing.ns, thing.id, thing.type, JSON.stringify(thing.data || {}), thing.content || null, now, now).run()
 
   return {
     ...thing,
     ulid,
-    meta,
   }
 }
 
@@ -72,7 +64,7 @@ export async function createThing(thing: Thing, db: ThingDatabase): Promise<Thin
  */
 export async function getThing(ns: string, id: string, db: ThingDatabase): Promise<(Thing & { ulid: string }) | null> {
   const query = `
-    SELECT ulid, ns, id, type, data, code, content, meta
+    SELECT ulid, ns, id, type, data, content, createdAt, updatedAt
     FROM things
     WHERE ns = ? AND id = ?
     LIMIT 1
@@ -88,9 +80,7 @@ export async function getThing(ns: string, id: string, db: ThingDatabase): Promi
     id: result.id,
     type: result.type,
     data: result.data ? JSON.parse(result.data) : undefined,
-    code: result.code || undefined,
     content: result.content || undefined,
-    meta: result.meta ? JSON.parse(result.meta) : undefined,
   }
 }
 
@@ -112,34 +102,23 @@ export async function updateThing(
   const existing = await getThing(ns, id, db)
   if (!existing) return null
 
-  const now = Date.now()
-  const meta = {
-    ...existing.meta,
-    ...updates.meta,
-    updatedAt: now,
-    version: (existing.meta?.version || 1) + 1,
-  }
+  const now = new Date().toISOString()
 
   const updated: Thing = {
     ns,
     id,
     type: updates.type !== undefined ? updates.type : existing.type,
     data: updates.data !== undefined ? updates.data : existing.data,
-    code: updates.code !== undefined ? updates.code : existing.code,
     content: updates.content !== undefined ? updates.content : existing.content,
-    meta,
   }
 
   const query = `
     UPDATE things
-    SET type = ?, data = ?, code = ?, content = ?, meta = ?
+    SET type = ?, data = ?, content = ?, updatedAt = ?
     WHERE ns = ? AND id = ?
   `
 
-  await db
-    .prepare(query)
-    .bind(updated.type, JSON.stringify(updated.data || {}), updated.code || null, updated.content || null, JSON.stringify(meta), ns, id)
-    .run()
+  await db.prepare(query).bind(updated.type, JSON.stringify(updated.data || {}), updated.content || null, now, ns, id).run()
 
   return {
     ...updated,
@@ -212,7 +191,7 @@ export async function queryThings(
 
   // Fetch items
   const query = `
-    SELECT ulid, ns, id, type, data, code, content, meta
+    SELECT ulid, ns, id, type, data, content, createdAt, updatedAt
     FROM things
     ${whereClause}
     ${orderClause}
@@ -227,9 +206,7 @@ export async function queryThings(
     id: row.id,
     type: row.type,
     data: row.data ? JSON.parse(row.data) : undefined,
-    code: row.code || undefined,
     content: row.content || undefined,
-    meta: row.meta ? JSON.parse(row.meta) : undefined,
   }))
 
   return {

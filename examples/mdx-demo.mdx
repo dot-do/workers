@@ -1,0 +1,341 @@
+---
+$type: Worker
+$id: mdx-demo
+name: mdx-demo
+
+# Wrangler Configuration
+main: src/index.ts
+compatibility_date: "2025-01-01"
+observability:
+  enabled: true
+
+# Environment Variables
+vars:
+  ENVIRONMENT: production
+---
+
+# MDX Demo Worker
+
+A demonstration of the `@dot-do/hono-mdx` package running in a Cloudflare Worker.
+
+## What This Worker Does
+
+This worker demonstrates:
+- Rendering MDX with Hono
+- Custom React components in MDX
+- Streaming support
+- Frontmatter handling
+- Dynamic content generation
+
+## Endpoints
+
+- `GET /` - Home page with MDX demo
+- `GET /basic` - Basic MDX rendering
+- `GET /streaming` - Streaming demo
+- `GET /components` - Custom components demo
+- `GET /greeting?name=Alice` - Dynamic greeting
+
+## Code
+
+```typescript
+import { Hono } from 'hono'
+import { mdx, renderMDX } from '@dot-do/hono-mdx'
+import { createElement } from 'react'
+
+// Define custom components
+const Button = ({ children, variant = 'primary' }: any) =>
+  createElement('button', { className: `btn btn-${variant}` }, children)
+
+const Card = ({ title, children }: any) =>
+  createElement(
+    'div',
+    { className: 'card' },
+    createElement('h3', null, title),
+    createElement('div', null, children)
+  )
+
+const Alert = ({ type = 'info', children }: any) =>
+  createElement('div', { className: `alert alert-${type}` }, children)
+
+// Create Hono app
+const app = new Hono()
+
+// Add MDX middleware with components
+app.use(
+  '*',
+  mdx({
+    components: { Button, Card, Alert },
+    compileOptions: {
+      development: false,
+    },
+  })
+)
+
+// Home page
+app.get('/', (c) => {
+  return c.mdx(`
+# Welcome to hono-mdx!
+
+This is a live demo running on Cloudflare Workers.
+
+## Try These Pages
+
+<Card title="Examples">
+- [Basic MDX](/basic)
+- [Streaming Demo](/streaming)
+- [Custom Components](/components)
+- [Dynamic Greeting](/greeting?name=Alice)
+</Card>
+
+<Alert type="info">
+  All pages are rendered with **streaming SSR** for optimal performance!
+</Alert>
+  `)
+})
+
+// Basic example
+app.get('/basic', (c) => {
+  return renderMDX(
+    c,
+    `
+---
+title: Basic MDX Demo
+date: 2025-01-01
+---
+
+# {title}
+
+Created on {date}
+
+This page demonstrates:
+- **Frontmatter** parsing
+- **Markdown** syntax
+- **Streaming** rendering
+
+## Markdown Features
+
+1. Ordered lists
+2. With multiple items
+3. And proper formatting
+
+> Blockquotes work too!
+
+\`\`\`typescript
+const greeting = "Hello, MDX!"
+console.log(greeting)
+\`\`\`
+  `
+  )
+})
+
+// Streaming demo
+app.get('/streaming', (c) => {
+  const sections = Array.from({ length: 20 }, (_, i) => `
+## Section ${i + 1}
+
+This is section ${i + 1} of the streaming demo. Each section is progressively rendered and sent to the client.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  `).join('\n')
+
+  return renderMDX(
+    c,
+    `
+# Streaming Demo
+
+This page demonstrates progressive rendering with streaming SSR.
+
+${sections}
+
+<Alert type="success">
+  All sections were streamed to your browser progressively!
+</Alert>
+  `,
+    {
+      renderOptions: { streaming: true },
+    }
+  )
+})
+
+// Components demo
+app.get('/components', (c) => {
+  return c.mdx(`
+# Custom Components
+
+## Buttons
+
+<Button>Primary Button</Button>
+<Button variant="secondary">Secondary</Button>
+
+## Cards
+
+<Card title="Feature 1">
+  MDX supports **custom React components** seamlessly.
+
+  <Button>Learn More</Button>
+</Card>
+
+<Card title="Feature 2">
+  Everything is **fully typed** with TypeScript.
+
+  <Button variant="secondary">Documentation</Button>
+</Card>
+
+## Alerts
+
+<Alert type="info">
+  This is an info alert with **MDX** content inside!
+</Alert>
+
+<Alert type="warning">
+  Components can be nested and styled with CSS.
+</Alert>
+  `)
+})
+
+// Dynamic greeting
+app.get('/greeting', (c) => {
+  const name = c.req.query('name') || 'World'
+  const time = new Date().toLocaleTimeString('en-US', { timeZone: 'UTC' })
+
+  return c.mdx(
+    `
+# Hello, {name}!
+
+<Card title="Welcome">
+  Thanks for visiting the hono-mdx demo!
+
+  Current UTC time: **{time}**
+
+  <Button>Get Started</Button>
+</Card>
+
+<Alert type="info">
+  This page was generated dynamically based on the URL query parameter.
+</Alert>
+
+Try changing the URL:
+- [/greeting?name=Alice](/greeting?name=Alice)
+- [/greeting?name=Bob](/greeting?name=Bob)
+- [/greeting?name=Charlie](/greeting?name=Charlie)
+  `,
+    {
+      props: { name, time },
+    }
+  )
+})
+
+// Health check
+app.get('/health', (c) => {
+  return c.json({
+    status: 'ok',
+    service: 'mdx-demo',
+    timestamp: new Date().toISOString(),
+  })
+})
+
+// Export worker
+export default app
+```
+
+## Building and Running
+
+Build the worker:
+```bash
+pnpm install
+pnpm build
+```
+
+Run locally:
+```bash
+pnpm dev
+```
+
+Deploy:
+```bash
+pnpm deploy
+```
+
+## Testing
+
+Visit these URLs:
+- https://mdx-demo.do/
+- https://mdx-demo.do/basic
+- https://mdx-demo.do/streaming
+- https://mdx-demo.do/components
+- https://mdx-demo.do/greeting?name=YourName
+
+## CSS Styling
+
+Custom CSS for components:
+
+```css
+body {
+  font-family: system-ui, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: #f8f9fa;
+}
+
+.card {
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin: 0.25rem;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.alert {
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1.5rem 0;
+  border-left: 4px solid;
+}
+
+.alert-info {
+  background: #d1ecf1;
+  border-color: #0c5460;
+  color: #0c5460;
+}
+
+.alert-warning {
+  background: #fff3cd;
+  border-color: #856404;
+  color: #856404;
+}
+
+.alert-success {
+  background: #d4edda;
+  border-color: #155724;
+  color: #155724;
+}
+```
+
+## Related
+
+- [@dot-do/hono-mdx](https://github.com/dot-do/packages/tree/main/packages/hono-mdx) - Package source
+- [Hono](https://hono.dev) - Web framework
+- [MDX](https://mdxjs.com) - Markdown for components

@@ -1,0 +1,7 @@
+# R2 SQL Query Worker - Local Development Variables
+# Copy this file to .dev.vars and fill in your values
+
+# R2 SQL authentication token (from Cloudflare Dashboard)
+# Create at: https://dash.cloudflare.com/profile/api-tokens
+# Permissions: Account -> R2 Data Catalog -> Read & Write
+R2_SQL_AUTH_TOKEN=your-r2-sql-auth-token-here

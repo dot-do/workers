@@ -8,6 +8,7 @@ type Bindings = {
   WORKOS_TOKEN_URL: string
   WORKOS_DEVICE_AUTH_URL: string
   WORKOS_USERINFO_URL: string
+  OAUTH_SESSIONS: KVNamespace // For temporary session storage
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -24,6 +25,234 @@ app.use('*', cors({
  */
 app.get('/health', c => {
   return c.json({ status: 'ok', service: 'oauth', timestamp: new Date().toISOString() })
+})
+
+/**
+ * Production OAuth flow - Start authentication
+ * Opens browser to this endpoint, which redirects to WorkOS
+ */
+app.get('/login', async c => {
+  const sessionId = crypto.randomUUID()
+  const state = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+
+  // Generate PKCE challenge
+  const codeVerifier = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+
+  const encoder = new TextEncoder()
+  const data = encoder.encode(codeVerifier)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  const codeChallenge = btoa(String.fromCharCode(...hashArray))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '')
+
+  // Store session data (expires in 10 minutes)
+  await c.env.OAUTH_SESSIONS.put(
+    sessionId,
+    JSON.stringify({ state, codeVerifier }),
+    { expirationTtl: 600 }
+  )
+
+  // Redirect to WorkOS
+  const redirectUri = `${new URL(c.req.url).origin}/callback`
+  const params = new URLSearchParams({
+    client_id: c.env.WORKOS_CLIENT_ID,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
+    state: `${sessionId}:${state}`,
+    scope: 'openid profile email',
+  })
+
+  const authUrl = `${c.env.WORKOS_AUTH_URL}?${params.toString()}`
+  return c.redirect(authUrl)
+})
+
+/**
+ * Production OAuth callback - Handle WorkOS redirect
+ */
+app.get('/callback', async c => {
+  const { code, state: stateParam, error, error_description } = c.req.query()
+
+  if (error) {
+    return c.html(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>Authentication Failed</title></head>
+      <body style="font-family: sans-serif; padding: 2rem; text-align: center;">
+        <h1>❌ Authentication Failed</h1>
+        <p>${error_description || error}</p>
+        <p>You can close this window and try again.</p>
+      </body>
+      </html>
+    `)
+  }
+
+  if (!code || !stateParam) {
+    return c.html(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>Invalid Request</title></head>
+      <body style="font-family: sans-serif; padding: 2rem; text-align: center;">
+        <h1>❌ Invalid Request</h1>
+        <p>Missing code or state parameter.</p>
+      </body>
+      </html>
+    `)
+  }
+
+  // Parse session ID and state from combined state parameter
+  const [sessionId, expectedState] = stateParam.split(':')
+
+  // Get session data
+  const sessionData = await c.env.OAUTH_SESSIONS.get(sessionId)
+  if (!sessionData) {
+    return c.html(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>Session Expired</title></head>
+      <body style="font-family: sans-serif; padding: 2rem; text-align: center;">
+        <h1>⏱️ Session Expired</h1>
+        <p>Your authentication session has expired. Please try again.</p>
+      </body>
+      </html>
+    `)
+  }
+
+  const session = JSON.parse(sessionData)
+
+  // Verify state
+  if (session.state !== expectedState) {
+    return c.html(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>Security Error</title></head>
+      <body style="font-family: sans-serif; padding: 2rem; text-align: center;">
+        <h1>🔒 Security Error</h1>
+        <p>State mismatch detected. Possible CSRF attack.</p>
+      </body>
+      </html>
+    `)
+  }
+
+  // Exchange code for tokens
+  try {
+    const redirectUri = `${new URL(c.req.url).origin}/callback`
+    const response = await fetch(c.env.WORKOS_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        code_verifier: session.codeVerifier,
+        client_id: c.env.WORKOS_CLIENT_ID,
+        client_secret: c.env.WORKOS_CLIENT_SECRET,
+        redirect_uri: redirectUri,
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(error)
+    }
+
+    const tokens = await response.json()
+
+    // Store tokens with session ID (expires in 5 minutes)
+    await c.env.OAUTH_SESSIONS.put(
+      `tokens:${sessionId}`,
+      JSON.stringify(tokens),
+      { expirationTtl: 300 }
+    )
+
+    // Delete session data
+    await c.env.OAUTH_SESSIONS.delete(sessionId)
+
+    return c.html(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Authentication Successful</title>
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          }
+          .container {
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 400px;
+          }
+          h1 { color: #2d3748; margin: 0 0 1rem 0; }
+          p { color: #4a5568; margin: 0; line-height: 1.6; }
+          .icon { font-size: 48px; margin-bottom: 1rem; }
+          .code {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.875rem;
+            margin-top: 1rem;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="icon">✅</div>
+          <h1>Authentication Successful!</h1>
+          <p>Your CLI will automatically detect the tokens.</p>
+          <p>You can close this window and return to your terminal.</p>
+          <div class="code">Session ID: ${sessionId}</div>
+        </div>
+      </body>
+      </html>
+    `)
+  } catch (error) {
+    return c.html(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>Token Exchange Failed</title></head>
+      <body style="font-family: sans-serif; padding: 2rem; text-align: center;">
+        <h1>❌ Token Exchange Failed</h1>
+        <p>${error instanceof Error ? error.message : 'Unknown error'}</p>
+        <p>Please try again.</p>
+      </body>
+      </html>
+    `)
+  }
+})
+
+/**
+ * Poll for tokens - CLI uses this to retrieve tokens
+ */
+app.get('/poll/:sessionId', async c => {
+  const sessionId = c.req.param('sessionId')
+  const tokensData = await c.env.OAUTH_SESSIONS.get(`tokens:${sessionId}`)
+
+  if (!tokensData) {
+    return c.json({ status: 'pending' }, 202)
+  }
+
+  // Delete tokens after retrieval
+  await c.env.OAUTH_SESSIONS.delete(`tokens:${sessionId}`)
+
+  const tokens = JSON.parse(tokensData)
+  return c.json({ status: 'complete', tokens })
 })
 
 /**

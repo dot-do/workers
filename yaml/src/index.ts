@@ -1,4 +1,23 @@
+import { WorkerEntrypoint } from 'cloudflare:workers'
+import { parse, stringify } from 'yaml'
 import YAML from 'yaml'
+
+/**
+ * YAML Service - RPC wrapper for YAML parsing and stringification
+ */
+export default class extends WorkerEntrypoint {
+  parse(...args: Parameters<typeof parse>) {
+    return parse(...args)
+  }
+
+  stringify(...args: Parameters<typeof stringify>) {
+    return stringify(...args)
+  }
+
+  fetch() {
+    return Response.json({ success: true })
+  }
+}
 
 /**
  * Markdown/Front-matter ⭢ JSON  (streaming)
@@ -8,7 +27,7 @@ import YAML from 'yaml'
  * JSON array (or a single object when only one doc is found).
  *
  * • Output is streamed – only a small buffer is ever held.
- * • Uses “streaming-array” syntax:  `[obj1,{…},…]`
+ * • Uses "streaming-array" syntax:  `[obj1,{…},…]`
  *   so the client can JSON-parse incrementally.
  */
 export async function mdToJson (markdownRes: Response): Promise<Response> {
@@ -115,7 +134,7 @@ export async function jsonToMd (jsonRes: Response): Promise<Response> {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Internals: your existing front-matter streaming parser                     */
+/* Internals: streaming front-matter parser                                   */
 /* -------------------------------------------------------------------------- */
 
 async function* streamDocs (body: ReadableStream<Uint8Array>) {

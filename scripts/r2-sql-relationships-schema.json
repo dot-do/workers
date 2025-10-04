@@ -1,0 +1,49 @@
+{
+  "fields": [
+    {
+      "name": "fromNs",
+      "type": "string",
+      "description": "Source namespace (domain)"
+    },
+    {
+      "name": "fromId",
+      "type": "string",
+      "description": "Source identifier (path)"
+    },
+    {
+      "name": "fromType",
+      "type": "string",
+      "description": "Source thing type"
+    },
+    {
+      "name": "predicate",
+      "type": "string",
+      "description": "Relationship type (e.g. 'requires_skill', 'links_to')"
+    },
+    {
+      "name": "toNs",
+      "type": "string",
+      "description": "Target namespace (domain)"
+    },
+    {
+      "name": "toId",
+      "type": "string",
+      "description": "Target identifier (path)"
+    },
+    {
+      "name": "toType",
+      "type": "string",
+      "description": "Target thing type"
+    },
+    {
+      "name": "data",
+      "type": "string",
+      "description": "Additional relationship data (JSON)"
+    },
+    {
+      "name": "createdAt",
+      "type": "timestamp",
+      "description": "When the relationship was created"
+    }
+  ]
+}

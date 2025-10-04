@@ -105,10 +105,12 @@ function generateWranglerConfig(frontmatter: WorkerFrontmatter): string {
   }
 
   // Copy optional fields
+  if (frontmatter.account_id) config.account_id = frontmatter.account_id
   if (frontmatter.observability) config.observability = frontmatter.observability
   if (frontmatter.services) config.services = frontmatter.services
   if (frontmatter.vars) config.vars = frontmatter.vars
   if (frontmatter.routes) config.routes = frontmatter.routes
+  if (frontmatter.tail_consumers) config.tail_consumers = frontmatter.tail_consumers
   if (frontmatter.kv_namespaces) config.kv_namespaces = frontmatter.kv_namespaces
   if (frontmatter.r2_buckets) config.r2_buckets = frontmatter.r2_buckets
   if (frontmatter.d1_databases) config.d1_databases = frontmatter.d1_databases
@@ -133,7 +135,7 @@ function buildWorker(mdxPath: string, outputDir?: string): void {
 
   // Determine output directory
   const workerName = extracted.frontmatter.name
-  const outputPath = outputDir || path.join(path.dirname(mdxPath), '..', workerName)
+  const outputPath = outputDir || path.join(path.dirname(mdxPath), workerName)
 
   // Create directories
   const srcDir = path.join(outputPath, 'src')
@@ -253,9 +255,11 @@ Examples:
   }
 }
 
+export { parseMdxWorker, generateWranglerConfig, buildWorker, findMdxWorkers }
+
 // Run if executed directly
-if (require.main === module) {
+// In ESM, we need to check import.meta.url
+const isMainModule = import.meta.url === `file://${process.argv[1]}`
+if (isMainModule) {
   main()
 }
-
-export { parseMdxWorker, generateWranglerConfig, buildWorker, findMdxWorkers }

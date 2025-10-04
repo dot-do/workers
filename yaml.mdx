@@ -1,0 +1,270 @@
+---
+$type: Worker
+$id: yaml
+name: yaml
+main: src/index.ts
+compatibility_date: "2025-07-08"
+account_id: b6641681fe423910342b9ffa1364c76d
+
+observability:
+  enabled: true
+
+tail_consumers:
+  - service: pipeline
+
+routes:
+  - pattern: yaml.apis.do/*
+    zone_name: apis.do
+
+services:
+  - binding: DEPLOY_SERVICE
+    service: do-deploy
+---
+
+# YAML Parser and Converter Worker
+
+A Cloudflare Worker that provides YAML parsing, stringification, and streaming markdown/frontmatter conversion capabilities via RPC.
+
+## Features
+
+- ✅ **YAML Parsing** - Parse YAML strings to JavaScript objects
+- ✅ **YAML Stringification** - Convert JavaScript objects to YAML strings
+- ✅ **Streaming Markdown → JSON** - Convert markdown with YAML frontmatter to JSON
+- ✅ **Streaming JSON → Markdown** - Convert JSON to markdown with YAML frontmatter
+- ✅ **RPC Interface** - Service-to-service communication via WorkerEntrypoint
+- ✅ **HTTP Health Check** - Simple health endpoint
+
+## RPC Interface
+
+```javascript
+// Parse YAML to object
+const data = await env.YAML_SERVICE.parse('key: value')
+
+// Stringify object to YAML
+const yaml = await env.YAML_SERVICE.stringify({ key: 'value' })
+```
+
+## Streaming Converters
+
+**Markdown with frontmatter → JSON:**
+```javascript
+const markdownRes = new Response('---\ntitle: Test\n---\nContent here')
+const jsonRes = await mdToJson(markdownRes)
+// Returns: [{ "title": "Test", "$content": "Content here" }]
+```
+
+**JSON → Markdown with frontmatter:**
+```javascript
+const jsonRes = new Response(JSON.stringify([
+  { title: 'Test', $content: 'Content here' }
+]))
+const mdRes = await jsonToMd(jsonRes)
+// Returns markdown with YAML frontmatter
+```
+
+## Usage
+
+This worker is designed to be called via RPC from other workers:
+
+```javascript
+// In your wrangler.jsonc
+{
+  "services": [
+    { "binding": "YAML_SERVICE", "service": "yaml" }
+  ]
+}
+
+// In your worker
+const parsed = await env.YAML_SERVICE.parse(yamlString)
+const stringified = await env.YAML_SERVICE.stringify(data)
+```
+
+## Dependencies
+
+- `yaml` (v2.8.0+) - YAML parser and stringifier
+
+## Implementation
+
+```typescript
+import { WorkerEntrypoint } from 'cloudflare:workers'
+import { parse, stringify } from 'yaml'
+import YAML from 'yaml'
+
+/**
+ * YAML Service - RPC wrapper for YAML parsing and stringification
+ */
+export default class extends WorkerEntrypoint {
+  parse(...args: Parameters<typeof parse>) {
+    return parse(...args)
+  }
+
+  stringify(...args: Parameters<typeof stringify>) {
+    return stringify(...args)
+  }
+
+  fetch() {
+    return Response.json({ success: true })
+  }
+}
+
+/**
+ * Markdown/Front-matter ⭢ JSON  (streaming)
+ * -----------------------------------------------------------
+ * Reads a Response whose body is Markdown containing one-or-many
+ * `---` fenced YAML blocks.  Returns a Response whose body is a
+ * JSON array (or a single object when only one doc is found).
+ *
+ * • Output is streamed – only a small buffer is ever held.
+ * • Uses "streaming-array" syntax:  `[obj1,{…},…]`
+ *   so the client can JSON-parse incrementally.
+ */
+export async function mdToJson (markdownRes: Response): Promise<Response> {
+  if (!markdownRes.body) throw new Error('Body required')
+
+  const { readable, writable } = new TransformStream()
+  const writer  = writable.getWriter()
+
+  // state for building JSON
+  let isFirstDoc = true
+  await writer.write(Uint8Array.from([91])) // '['
+
+  // reuse your existing streaming front-matter parser
+  for await (const doc of streamDocs(markdownRes.body)) {
+    const json  = JSON.stringify(doc)
+    const chunk = (isFirstDoc ? '' : ',') + json
+    await writer.write(new TextEncoder().encode(chunk))
+    isFirstDoc = false
+  }
+
+  await writer.write(Uint8Array.from([93])) // ']'
+  await writer.close()
+
+  const headers = new Headers({ 'content-type': 'application/json' })
+  return new Response(readable, { headers })
+}
+
+/**
+ * JSON (array or NDJSON) ⭢ Markdown/Front-matter  (streaming)
+ * -----------------------------------------------------------
+ * Accepts a Response whose body is either
+ *   • a JSON array, _or_
+ *   • newline-delimited JSON (NDJSON)
+ *
+ * Emits a Response whose body is Markdown with `---` YAML
+ * front-matter for each object and `$content` rendered after.
+ *
+ * • Each input object **must** have a `$content` field
+ *   (markdown string).  All other fields go into the YAML block.
+ * • Processes NDJSON strictly line-by-line (constant memory).
+ * • For a JSON array the whole body is read once – if you expect
+ *   truly huge inputs prefer NDJSON.
+ */
+export async function jsonToMd (jsonRes: Response): Promise<Response> {
+  if (!jsonRes.body) throw new Error('Body required')
+
+  const { readable, writable } = new TransformStream()
+  const writer  = writable.getWriter()
+  const decoder = new TextDecoder()
+
+  // Decide which format (NDJSON vs array) by peeking at first byte
+  const firstChunk = await jsonRes.body.getReader().read()
+  if (firstChunk.done) throw new Error('Empty body')
+
+  const firstByte = decoder.decode(firstChunk.value).trimStart()[0]
+
+  // Helper to output one object → markdown
+  const printDoc = async (obj: any) => {
+    const { $content = '', ...yamlPart } = obj ?? {}
+    const yaml = YAML.stringify(yamlPart).trimEnd()
+    const md  = `---\n${yaml}\n---\n${$content}\n`
+    await writer.write(new TextEncoder().encode(md))
+  }
+
+  if (firstByte === '[') {
+    // ---------- JSON array ----------
+    // re-assemble the rest, parse once, then stream each entry
+    let buf = decoder.decode(firstChunk.value)
+    for await (const chunk of jsonRes.body) buf += decoder.decode(chunk)
+    const arr = JSON.parse(buf)
+    if (!Array.isArray(arr)) throw new Error('Expected JSON array')
+    for (const obj of arr) await printDoc(obj)
+  } else {
+    // ---------- NDJSON ----------
+    // re-insert firstChunk into a new stream reader
+    const reader = new ReadableStream({
+      start (controller) {
+        controller.enqueue(firstChunk.value)
+        jsonRes.body!.pipeTo(new WritableStream({
+          write: chunk => controller.enqueue(chunk),
+          close: () => controller.close()
+        }))
+      }
+    }).getReader()
+
+    let buffer = ''
+    while (true) {
+      const { value, done } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      let nl: number
+      while ((nl = buffer.indexOf('\n')) !== -1) {
+        const line = buffer.slice(0, nl).trim()
+        buffer = buffer.slice(nl + 1)
+        if (line) await printDoc(JSON.parse(line))
+      }
+    }
+    if (buffer.trim()) await printDoc(JSON.parse(buffer))
+  }
+
+  await writer.close()
+  const headers = new Headers({ 'content-type': 'text/markdown; charset=utf-8' })
+  return new Response(readable, { headers })
+}
+
+/* -------------------------------------------------------------------------- */
+/* Internals: streaming front-matter parser                                   */
+/* -------------------------------------------------------------------------- */
+
+async function* streamDocs (body: ReadableStream<Uint8Array>) {
+  const reader  = body.getReader()
+  const decoder = new TextDecoder()
+
+  enum State { Outside, Inside }
+  let state: State = State.Outside
+  let yamlBuf = ''
+  let mdBuf   = ''
+  const emit = (obj: Record<string, unknown>) => {
+    obj.$content = mdBuf.trimStart()
+    mdBuf = ''
+    return obj
+  }
+
+  let buf = ''
+  while (true) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buf += decoder.decode(value, { stream: true })
+
+    let nl: number
+    while ((nl = buf.indexOf('\n')) !== -1) {
+      const line = buf.slice(0, nl).replace(/\r?$/, '')
+      buf = buf.slice(nl + 1)
+
+      if (line.trim() === '---') {
+        if (state === State.Inside) {
+          yield emit(YAML.parse(yamlBuf))
+          yamlBuf = ''
+          state   = State.Outside
+        } else {
+          state = State.Inside
+        }
+        continue
+      }
+
+      if (state === State.Inside) yamlBuf += line + '\n'
+      else                        mdBuf   += line + '\n'
+    }
+  }
+  if (yamlBuf) yield emit(YAML.parse(yamlBuf))
+}
+```

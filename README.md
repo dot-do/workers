@@ -51,6 +51,59 @@ cd workers/my-worker && wrangler deploy
 - ✅ Zero configuration with mdxe
 - ✅ Self-documenting
 
+**Workers with Large Dependencies:**
+
+For workers with large dependencies (like `yaml` or `esbuild-wasm`), dependencies are managed in the root `workers/package.json`:
+
+```bash
+# Build and deploy yaml worker
+pnpm deploy:yaml
+
+# Build and deploy esbuild worker
+pnpm deploy:esbuild
+
+# Or manually:
+pnpm build-mdx workers/yaml.mdx
+cd workers/yaml && wrangler deploy
+```
+
+**Example MDX Workers:**
+- `workers/yaml.mdx` - YAML parsing and markdown/frontmatter streaming conversion
+- `workers/esbuild.mdx` - On-demand JavaScript/TypeScript compilation with esbuild-wasm
+
+**Self-Deployment Pattern:**
+
+Workers can deploy themselves via RPC to the deploy service:
+
+```bash
+# Traditional deployment
+cd yaml && wrangler deploy
+
+# Self-deployment (workers deploying workers)
+pnpm deploy:yaml:self
+
+# Behind the scenes:
+# 1. Worker bundles itself
+# 2. Calls DEPLOY_SERVICE.deploy() via RPC
+# 3. Deploy service handles Cloudflare API
+# 4. Deployment logged for audit
+```
+
+**Testing with Wrangler Dev:**
+
+Test deployed workers locally using `wrangler dev` with service bindings:
+
+```bash
+# Terminal 1: Start dev server
+cd tests/dev
+wrangler dev
+
+# Terminal 2: Run tests
+pnpm test:dev
+```
+
+The local test worker automatically RPCs to deployed workers. No API tokens or complex config needed - OAuth handles authentication.
+
 ### Create a New Service (Traditional Approach)
 
 **For complex workers**, use the service generator:

@@ -20,6 +20,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^2.1.8
         version: 2.1.9(vitest@2.1.9)
+      esbuild-wasm:
+        specifier: ^0.24.2
+        version: 0.24.2
       prettier:
         specifier: ^3.5.3
         version: 3.6.2
@@ -32,6 +35,12 @@ importers:
       vitest:
         specifier: ^2.1.8
         version: 2.1.9
+      wrangler:
+        specifier: ^3.99.0
+        version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
+      yaml:
+        specifier: ^2.7.0
+        version: 2.8.1
 
   ../sdk/packages/402.do:
     dependencies:
@@ -47,13 +56,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/action.do:
     devDependencies:
@@ -62,13 +71,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/actions.do:
     devDependencies:
@@ -77,19 +86,19 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/ads-types:
     devDependencies:
       tsup:
         specifier: ^8.0.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
@@ -101,13 +110,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/agi.do:
     devDependencies:
@@ -116,13 +125,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/ai-chat:
     devDependencies:
@@ -131,13 +140,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/ai-embeddings:
     devDependencies:
@@ -146,13 +155,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/ai-generation:
     devDependencies:
@@ -161,13 +170,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/ai-models:
     devDependencies:
@@ -176,13 +185,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/amy.do:
     devDependencies:
@@ -191,13 +200,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/analytics.do:
     devDependencies:
@@ -206,13 +215,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/apis.do:
     dependencies:
@@ -249,13 +258,13 @@ importers:
         version: 3.2.4(vitest@3.2.4)
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/ari.do:
     devDependencies:
@@ -264,13 +273,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/barcode.do:
     devDependencies:
@@ -279,13 +288,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/bdr.do:
     devDependencies:
@@ -294,13 +303,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/benchmarks.do:
     devDependencies:
@@ -309,13 +318,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/blogs.do:
     devDependencies:
@@ -324,13 +333,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/bots.do:
     devDependencies:
@@ -339,13 +348,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/browse.do:
     devDependencies:
@@ -354,13 +363,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/browser.do:
     devDependencies:
@@ -369,13 +378,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/browsers.do:
     devDependencies:
@@ -384,13 +393,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/business-as-code:
     devDependencies:
@@ -399,13 +408,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/careers.do:
     devDependencies:
@@ -414,13 +423,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/cfo.do:
     devDependencies:
@@ -429,13 +438,44 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
+
+  ../sdk/packages/cli.do:
+    dependencies:
+      '@workos-inc/node':
+        specifier: ^7.21.0
+        version: 7.70.0
+      node-fetch:
+        specifier: ^3.3.2
+        version: 3.3.2
+      open:
+        specifier: ^10.1.0
+        version: 10.2.0
+      sdk.do:
+        specifier: workspace:*
+        version: link:../sdk.do
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.18.8
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
+      tsx:
+        specifier: ^4.19.0
+        version: 4.20.6
+      typescript:
+        specifier: ^5.5.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/clickhouse.do:
     devDependencies:
@@ -444,13 +484,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/cmo.do:
     devDependencies:
@@ -459,13 +499,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/coach.do:
     devDependencies:
@@ -474,13 +514,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/colo.do:
     devDependencies:
@@ -489,13 +529,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/context.do:
     devDependencies:
@@ -504,13 +544,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/coo.do:
     devDependencies:
@@ -519,13 +559,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/cpo.do:
     devDependencies:
@@ -534,13 +574,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/cro.do:
     devDependencies:
@@ -549,13 +589,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/cto.do:
     devDependencies:
@@ -564,13 +604,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/ctx.do:
     devDependencies:
@@ -579,13 +619,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/dara.do:
     devDependencies:
@@ -594,13 +634,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/dash.do:
     devDependencies:
@@ -609,13 +649,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/dashboard.do:
     devDependencies:
@@ -624,13 +664,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/database.do:
     devDependencies:
@@ -639,13 +679,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/databases.do:
     devDependencies:
@@ -654,13 +694,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/do.com.ai:
     devDependencies:
@@ -669,13 +709,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/do.industries:
     devDependencies:
@@ -684,13 +724,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/domains.do:
     devDependencies:
@@ -699,13 +739,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/emails.do:
     devDependencies:
@@ -714,13 +754,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/embeddings.do:
     dependencies:
@@ -736,13 +776,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/esbuild.do:
     devDependencies:
@@ -751,13 +791,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/evals.do:
     devDependencies:
@@ -766,13 +806,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/events.do:
     devDependencies:
@@ -781,13 +821,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/experiments.do:
     devDependencies:
@@ -796,13 +836,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/extract.do:
     devDependencies:
@@ -811,13 +851,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/function.do:
     devDependencies:
@@ -826,13 +866,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/functions.do:
     devDependencies:
@@ -841,13 +881,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/gpt.do:
     devDependencies:
@@ -856,13 +896,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/graph.do:
     devDependencies:
@@ -871,13 +911,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/graphdl:
     dependencies:
@@ -908,7 +948,7 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       tsx:
         specifier: ^4.19.0
         version: 4.20.6
@@ -917,7 +957,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/gs1.org.ai:
     devDependencies:
@@ -926,13 +966,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/humans.do:
     devDependencies:
@@ -941,13 +981,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/integrations.do:
     devDependencies:
@@ -956,13 +996,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/issues.do:
     devDependencies:
@@ -971,13 +1011,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/ivy.do:
     devDependencies:
@@ -986,13 +1026,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/kpis.do:
     devDependencies:
@@ -1001,13 +1041,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/lena.do:
     devDependencies:
@@ -1016,13 +1056,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/lexi.do:
     devDependencies:
@@ -1031,13 +1071,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/lists.do:
     devDependencies:
@@ -1046,13 +1086,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/llm.do:
     dependencies:
@@ -1068,13 +1108,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/llms.do:
     devDependencies:
@@ -1083,13 +1123,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/lodash.do:
     devDependencies:
@@ -1098,13 +1138,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/mcp.do:
     devDependencies:
@@ -1113,13 +1153,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/mdx.do:
     devDependencies:
@@ -1128,13 +1168,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/mdx.org.ai:
     devDependencies:
@@ -1143,13 +1183,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/models.do:
     dependencies:
@@ -1162,13 +1202,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/nat.do:
     devDependencies:
@@ -1177,13 +1217,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/nats.do:
     devDependencies:
@@ -1192,13 +1232,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/nouns.do:
     devDependencies:
@@ -1207,13 +1247,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/oauth.do:
     devDependencies:
@@ -1222,13 +1262,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/objects.do:
     devDependencies:
@@ -1237,13 +1277,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/okrs.do:
     devDependencies:
@@ -1252,13 +1292,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/payload.do:
     devDependencies:
@@ -1267,13 +1307,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/pdm.do:
     devDependencies:
@@ -1282,13 +1322,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/perf.do:
     devDependencies:
@@ -1297,13 +1337,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/photos.do:
     devDependencies:
@@ -1312,13 +1352,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/pkg.do:
     devDependencies:
@@ -1327,13 +1367,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/programmers.do:
     devDependencies:
@@ -1342,13 +1382,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/qrcode.do:
     devDependencies:
@@ -1357,13 +1397,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/queue.do:
     devDependencies:
@@ -1372,13 +1412,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/repo.do:
     devDependencies:
@@ -1387,13 +1427,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/requests.do:
     devDependencies:
@@ -1402,13 +1442,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/research.do:
     devDependencies:
@@ -1417,13 +1457,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/resources.do:
     devDependencies:
@@ -1432,13 +1472,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/responses.do:
     devDependencies:
@@ -1447,13 +1487,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/schema.org.ai:
     devDependencies:
@@ -1462,13 +1502,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/scraper.do:
     devDependencies:
@@ -1477,13 +1517,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/sdk.do:
     dependencies:
@@ -1526,7 +1566,7 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       tsx:
         specifier: ^4.19.0
         version: 4.20.6
@@ -1535,7 +1575,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/sdr.do:
     devDependencies:
@@ -1544,13 +1584,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/searches.do:
     devDependencies:
@@ -1559,25 +1599,25 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/seo-types:
     devDependencies:
       tsup:
         specifier: ^8.3.5
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)
+        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/services-as-software:
     devDependencies:
@@ -1586,13 +1626,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/services.do:
     devDependencies:
@@ -1601,13 +1641,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/sites.do:
     devDependencies:
@@ -1616,13 +1656,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/speak.do:
     devDependencies:
@@ -1631,13 +1671,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/state.do:
     devDependencies:
@@ -1646,13 +1686,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/studio.do:
     devDependencies:
@@ -1661,13 +1701,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/svc.do:
     devDependencies:
@@ -1676,13 +1716,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/swe.do:
     devDependencies:
@@ -1691,13 +1731,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/tasks.do:
     devDependencies:
@@ -1706,13 +1746,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/tom.do:
     devDependencies:
@@ -1721,13 +1761,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/trace.do:
     devDependencies:
@@ -1736,13 +1776,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/traces.do:
     devDependencies:
@@ -1751,13 +1791,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/trigger.do:
     devDependencies:
@@ -1766,13 +1806,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/triggers.do:
     devDependencies:
@@ -1781,13 +1821,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/vectors.do:
     devDependencies:
@@ -1796,13 +1836,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/vehicle.do:
     devDependencies:
@@ -1811,13 +1851,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/vera.do:
     devDependencies:
@@ -1826,13 +1866,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/verbs.do:
     devDependencies:
@@ -1841,13 +1881,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/waitlist.do:
     devDependencies:
@@ -1856,13 +1896,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/webhook.do:
     devDependencies:
@@ -1871,13 +1911,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/webhooks.do:
     devDependencies:
@@ -1886,13 +1926,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/worker.do:
     devDependencies:
@@ -1901,13 +1941,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/workers.do:
     devDependencies:
@@ -1916,13 +1956,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ../sdk/packages/workflows.do:
     devDependencies:
@@ -1931,13 +1971,13 @@ importers:
         version: 22.18.8
       tsup:
         specifier: ^8.5.0
-        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)
+        version: 8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1)
       typescript:
         specifier: ^5.5.2
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
 
   ads-analytics:
     dependencies:
@@ -2124,7 +2164,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ~3.2.0
-        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)
+        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)(yaml@2.8.1)
       wrangler:
         specifier: ^4.24.0
         version: 4.42.0(@cloudflare/workers-types@4.20251003.0)
@@ -2143,7 +2183,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.0.3
-        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)
+        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)(yaml@2.8.1)
       wrangler:
         specifier: ^3.99.0
         version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
@@ -2174,7 +2214,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.0
-        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)
+        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)(yaml@2.8.1)
       wrangler:
         specifier: ^4.40.3
         version: 4.42.0(@cloudflare/workers-types@4.20251003.0)
@@ -2351,7 +2391,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)
+        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)(yaml@2.8.1)
       wrangler:
         specifier: ^4.24.0
         version: 4.42.0(@cloudflare/workers-types@4.20251003.0)
@@ -2513,7 +2553,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.0
-        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)
+        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)(yaml@2.8.1)
       wrangler:
         specifier: ^3.100.0
         version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
@@ -2564,6 +2604,18 @@ importers:
       wrangler:
         specifier: ^4.24.0
         version: 4.42.0(@cloudflare/workers-types@4.20251003.0)
+
+  html:
+    dependencies:
+      marked:
+        specifier: ^16.3.0
+        version: 16.3.0
+      marked-gfm-heading-id:
+        specifier: ^4.1.2
+        version: 4.1.2(marked@16.3.0)
+      yaml:
+        specifier: ^2.8.1
+        version: 2.8.1
 
   imagen:
     dependencies:
@@ -2647,7 +2699,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ~3.2.0
-        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+        version: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
       wrangler:
         specifier: ^4.24.0
         version: 4.42.0(@cloudflare/workers-types@4.20251003.0)
@@ -2666,7 +2718,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)
+        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)(yaml@2.8.1)
       wrangler:
         specifier: ^3.102.0
         version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
@@ -2804,7 +2856,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.0
-        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)
+        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)(yaml@2.8.1)
       wrangler:
         specifier: ^4.40.3
         version: 4.42.0(@cloudflare/workers-types@4.20251003.0)
@@ -2857,7 +2909,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)
+        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)(yaml@2.8.1)
       wrangler:
         specifier: ^4.41.0
         version: 4.42.0(@cloudflare/workers-types@4.20251003.0)
@@ -3024,7 +3076,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.0
-        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)
+        version: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)(yaml@2.8.1)
       wrangler:
         specifier: ^3.100.0
         version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
@@ -3145,7 +3197,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.0
-        version: 3.2.4(@types/node@24.6.2)(tsx@4.20.6)
+        version: 3.2.4(@types/node@24.6.2)(tsx@4.20.6)(yaml@2.8.1)
       wrangler:
         specifier: ^4.24.0
         version: 4.42.0(@cloudflare/workers-types@4.20251003.0)
@@ -3448,7 +3500,7 @@ packages:
       devalue: 5.3.2
       miniflare: 4.20250906.0
       semver: 7.7.2
-      vitest: 3.2.4(tsx@4.20.6)
+      vitest: 3.2.4(tsx@4.20.6)(yaml@2.8.1)
       wrangler: 4.35.0(@cloudflare/workers-types@4.20251003.0)
       zod: 3.25.76
     transitivePeerDependencies:
@@ -3471,7 +3523,7 @@ packages:
       devalue: 5.3.2
       miniflare: 4.20251001.0
       semver: 7.7.2
-      vitest: 3.2.4(tsx@4.20.6)
+      vitest: 3.2.4(tsx@4.20.6)(yaml@2.8.1)
       wrangler: 4.42.0(@cloudflare/workers-types@4.20251003.0)
       zod: 3.25.76
     transitivePeerDependencies:
@@ -6615,7 +6667,7 @@ packages:
       std-env: 3.9.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+      vitest: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -6678,7 +6730,7 @@ packages:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.19
-      vite: 7.1.9(@types/node@22.18.8)(tsx@4.20.6)
+      vite: 7.1.9(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
     dev: true
 
   /@vitest/pretty-format@2.1.9:
@@ -6770,7 +6822,7 @@ packages:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)
+      vitest: 3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)(yaml@2.8.1)
     dev: true
 
   /@vitest/utils@1.6.1:
@@ -7057,7 +7109,6 @@ packages:
     engines: {node: '>=18'}
     dependencies:
       run-applescript: 7.1.0
-    dev: true
 
   /bundle-require@5.1.0(esbuild@0.25.10):
     resolution: {integrity: sha512-3WrrOuZiyaaZPWiEt4G3+IffISVC9HYlWueJEBWED4ZH4aIAC2PnkdnuRrR94M+w6yGWn4AglWtJtBI8YqvgoA==}
@@ -7360,7 +7411,6 @@ packages:
   /data-uri-to-buffer@4.0.1:
     resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
     engines: {node: '>= 12'}
-    dev: true
 
   /date-fns@4.1.0:
     resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
@@ -7397,7 +7447,6 @@ packages:
   /default-browser-id@5.0.0:
     resolution: {integrity: sha512-A6p/pu/6fyBcA1TRz/GqWYPViplrftcW2gZC9q79ngNCKAeR/X3gcEdXQHl4KNXV+3wgIJ1CPkJQ3IHM6lcsyA==}
     engines: {node: '>=18'}
-    dev: true
 
   /default-browser@5.2.1:
     resolution: {integrity: sha512-WY/3TUME0x3KPYdRRxEJJvXRHV4PyPoUsxtZa78lwItwRQRHhd2U9xOscaT/YTf8uCXIAjeJOFBVEh/7FtD8Xg==}
@@ -7405,12 +7454,10 @@ packages:
     dependencies:
       bundle-name: 4.1.0
       default-browser-id: 5.0.0
-    dev: true
 
   /define-lazy-prop@3.0.0:
     resolution: {integrity: sha512-N+MeXYoqr3pOgn8xfyRPREN7gHakLYjhsHhWGT3fWAiL4IkAt0iDw14QiiEm2bE30c5XX5q0FtAA3CK5f9/BUg==}
     engines: {node: '>=12'}
-    dev: true
 
   /defu@6.1.4:
     resolution: {integrity: sha512-mEQCMmwJu317oSz8CwdIOdwf3xMif1ttiM8LTufzc3g6kR+9Pe236twL8j3IYT1F7GfRgGcW6MWxzZjLIkuHIg==}
@@ -7682,6 +7729,12 @@ packages:
       esbuild: 0.25.10
     transitivePeerDependencies:
       - supports-color
+    dev: true
+
+  /esbuild-wasm@0.24.2:
+    resolution: {integrity: sha512-03/7Z1gD+ohDnScFztvI4XddTAbKVmMEzCvvkBpQdWKEXJ+73dTyeNrmdxP1Q0zpDMFjzUJwtK4rLjqwiHbzkw==}
+    engines: {node: '>=18'}
+    hasBin: true
     dev: true
 
   /esbuild@0.17.19:
@@ -8016,7 +8069,6 @@ packages:
     dependencies:
       node-domexception: 1.0.0
       web-streams-polyfill: 3.3.3
-    dev: true
 
   /fflate@0.8.2:
     resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
@@ -8106,7 +8158,6 @@ packages:
     engines: {node: '>=12.20.0'}
     dependencies:
       fetch-blob: 3.2.0
-    dev: true
 
   /forwarded@0.2.0:
     resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
@@ -8220,6 +8271,10 @@ packages:
     dependencies:
       resolve-pkg-maps: 1.0.0
     dev: true
+
+  /github-slugger@2.0.0:
+    resolution: {integrity: sha512-IaOQ9puYtjrkq7Y0Ygl9KDZnrf/aiUJYUpVf89y8kyaxbRG7Y1SrX/jaumrv81vc61+kiMempujsM3Yw7w5qcw==}
+    dev: false
 
   /glob-to-regexp@0.4.1:
     resolution: {integrity: sha512-lkX1HJXwyMcprw/5YUZc2s7DrpAiHB21/V+E1rHUrVNokkvB6bqMzT0VfV6/86ZNabt1k14YOIaT7nDvOX3Iiw==}
@@ -8454,7 +8509,6 @@ packages:
     resolution: {integrity: sha512-eljcgEDlEns/7AXFosB5K/2nCM4P7FQPkGc/DWLy5rmFEWvZayGrik1d9/QIY5nJ4f9YsVvBkA6kJpHn9rISdQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     hasBin: true
-    dev: true
 
   /is-fullwidth-code-point@3.0.0:
     resolution: {integrity: sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg==}
@@ -8466,7 +8520,6 @@ packages:
     hasBin: true
     dependencies:
       is-docker: 3.0.0
-    dev: true
 
   /is-promise@4.0.0:
     resolution: {integrity: sha512-hvpoI6korhJMnej285dSg6nu1+e6uxs7zG3BYAm5byqDsgJNWwxzM6z6iZiAgQR4TJ30JmBTOwqZUw3WlyH3AQ==}
@@ -8487,7 +8540,6 @@ packages:
     engines: {node: '>=16'}
     dependencies:
       is-inside-container: 1.0.0
-    dev: true
 
   /isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
@@ -8757,6 +8809,21 @@ packages:
     resolution: {integrity: sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==}
     dev: true
 
+  /marked-gfm-heading-id@4.1.2(marked@16.3.0):
+    resolution: {integrity: sha512-EQ1WiEGHJh0C8viU+hbXbhHyWTDgEia2i96fiSemm2wdYER6YBw/9QI5TB6YFTqFfmMOxBFXPcPJtlgD0fVV2w==}
+    peerDependencies:
+      marked: '>=13 <17'
+    dependencies:
+      github-slugger: 2.0.0
+      marked: 16.3.0
+    dev: false
+
+  /marked@16.3.0:
+    resolution: {integrity: sha512-K3UxuKu6l6bmA5FUwYho8CfJBlsUWAooKtdGgMcERSpF7gcBUrCGsLH7wDaaNOzwq18JzSUDyoEb/YsrqMac3w==}
+    engines: {node: '>= 20'}
+    hasBin: true
+    dev: false
+
   /math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
@@ -8996,7 +9063,6 @@ packages:
       data-uri-to-buffer: 4.0.1
       fetch-blob: 3.2.0
       formdata-polyfill: 4.0.10
-    dev: true
 
   /node-forge@1.3.1:
     resolution: {integrity: sha512-dPEtOeMvF9VMcYV/1Wb8CPoVAXtp6MKMlcbAt4ddqmGqUJ6fQZFXkNZNkNlfevtNkGtaSoXf/vNNNSvgrdXwtA==}
@@ -9073,7 +9139,6 @@ packages:
       define-lazy-prop: 3.0.0
       is-inside-container: 1.0.0
       wsl-utils: 0.1.0
-    dev: true
 
   /openai@4.104.0(zod@3.25.76):
     resolution: {integrity: sha512-p99EFNsA/yX6UhVO93f5kJsDRLAg+CTA2RBqdHK4RtK8u5IJw32Hyb2dTGKbnnFmnuoBv5r7Z2CURI9sGZpSuA==}
@@ -9270,7 +9335,7 @@ packages:
     resolution: {integrity: sha512-8+qHvxoRRlcpzhfzwUCzIi7Sd+mfa1jQXggWVibvVW2CuQ5cVH0Oade5UUwRairBkl9QYcNY7FlIbeFWMZ30KQ==}
     dev: false
 
-  /postcss-load-config@6.0.1(tsx@4.20.6):
+  /postcss-load-config@6.0.1(tsx@4.20.6)(yaml@2.8.1):
     resolution: {integrity: sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g==}
     engines: {node: '>= 18'}
     peerDependencies:
@@ -9290,6 +9355,7 @@ packages:
     dependencies:
       lilconfig: 3.1.3
       tsx: 4.20.6
+      yaml: 2.8.1
     dev: true
 
   /postcss@8.5.6:
@@ -9645,7 +9711,6 @@ packages:
   /run-applescript@7.1.0:
     resolution: {integrity: sha512-DPe5pVFaAsinSaV6QjQ6gdiedWDcRCbUuiQfQa2wmWV7+xC9bGulGI8+TdRmoFkAPaBXk8CrAbnlY2ISniJ47Q==}
     engines: {node: '>=18'}
-    dev: true
 
   /rxjs@7.8.2:
     resolution: {integrity: sha512-dhKf903U/PQZY6boNNtAGdWbG85WAbjT/1xYoZIC7FAY0yWapOBQVsVrDl58W86//e1VpMNBtRV4MaXfdMySFA==}
@@ -10192,7 +10257,7 @@ packages:
   /tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
-  /tsup@8.5.0(tsx@4.20.6)(typescript@5.9.3):
+  /tsup@8.5.0(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.1):
     resolution: {integrity: sha512-VmBp77lWNQq6PfuMqCHD3xWl22vEoWsKajkF8t+yMBawlUS8JzEI+vOVMeuNZIuMML8qXRizFKi9oD5glKQVcQ==}
     engines: {node: '>=18'}
     hasBin: true
@@ -10220,7 +10285,7 @@ packages:
       fix-dts-default-cjs-exports: 1.0.1
       joycon: 3.1.1
       picocolors: 1.1.1
-      postcss-load-config: 6.0.1(tsx@4.20.6)
+      postcss-load-config: 6.0.1(tsx@4.20.6)(yaml@2.8.1)
       resolve-from: 5.0.0
       rollup: 4.52.4
       source-map: 0.8.0-beta.0
@@ -10508,7 +10573,7 @@ packages:
       - yaml
     dev: true
 
-  /vite-node@3.2.4(@types/node@22.18.8)(tsx@4.20.6):
+  /vite-node@3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1):
     resolution: {integrity: sha512-EbKSKh+bh1E1IFxeO0pg1n4dvoOTt0UDiXMd/qn++r98+jPO1xtJilvXldeuQ8giIB5IkpjCgMleHMNEsGH6pg==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
@@ -10517,7 +10582,7 @@ packages:
       debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 7.1.9(@types/node@22.18.8)(tsx@4.20.6)
+      vite: 7.1.9(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -10533,7 +10598,7 @@ packages:
       - yaml
     dev: true
 
-  /vite-node@3.2.4(@types/node@24.6.2)(tsx@4.20.6):
+  /vite-node@3.2.4(@types/node@24.6.2)(tsx@4.20.6)(yaml@2.8.1):
     resolution: {integrity: sha512-EbKSKh+bh1E1IFxeO0pg1n4dvoOTt0UDiXMd/qn++r98+jPO1xtJilvXldeuQ8giIB5IkpjCgMleHMNEsGH6pg==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
@@ -10542,7 +10607,7 @@ packages:
       debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 7.1.9(@types/node@24.6.2)(tsx@4.20.6)
+      vite: 7.1.9(@types/node@24.6.2)(tsx@4.20.6)(yaml@2.8.1)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -10558,7 +10623,7 @@ packages:
       - yaml
     dev: true
 
-  /vite-node@3.2.4(tsx@4.20.6):
+  /vite-node@3.2.4(tsx@4.20.6)(yaml@2.8.1):
     resolution: {integrity: sha512-EbKSKh+bh1E1IFxeO0pg1n4dvoOTt0UDiXMd/qn++r98+jPO1xtJilvXldeuQ8giIB5IkpjCgMleHMNEsGH6pg==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
@@ -10567,7 +10632,7 @@ packages:
       debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 7.1.9(tsx@4.20.6)
+      vite: 7.1.9(tsx@4.20.6)(yaml@2.8.1)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -10752,7 +10817,7 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /vite@7.1.9(@types/node@22.18.8)(tsx@4.20.6):
+  /vite@7.1.9(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1):
     resolution: {integrity: sha512-4nVGliEpxmhCL8DslSAUdxlB6+SMrhB0a1v5ijlh1xB1nEPuy1mxaHxysVucLHuWryAxLWg6a5ei+U4TLn/rFg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
@@ -10800,11 +10865,12 @@ packages:
       rollup: 4.52.4
       tinyglobby: 0.2.15
       tsx: 4.20.6
+      yaml: 2.8.1
     optionalDependencies:
       fsevents: 2.3.3
     dev: true
 
-  /vite@7.1.9(@types/node@24.6.2)(tsx@4.20.6):
+  /vite@7.1.9(@types/node@24.6.2)(tsx@4.20.6)(yaml@2.8.1):
     resolution: {integrity: sha512-4nVGliEpxmhCL8DslSAUdxlB6+SMrhB0a1v5ijlh1xB1nEPuy1mxaHxysVucLHuWryAxLWg6a5ei+U4TLn/rFg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
@@ -10852,11 +10918,12 @@ packages:
       rollup: 4.52.4
       tinyglobby: 0.2.15
       tsx: 4.20.6
+      yaml: 2.8.1
     optionalDependencies:
       fsevents: 2.3.3
     dev: true
 
-  /vite@7.1.9(tsx@4.20.6):
+  /vite@7.1.9(tsx@4.20.6)(yaml@2.8.1):
     resolution: {integrity: sha512-4nVGliEpxmhCL8DslSAUdxlB6+SMrhB0a1v5ijlh1xB1nEPuy1mxaHxysVucLHuWryAxLWg6a5ei+U4TLn/rFg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
@@ -10903,6 +10970,7 @@ packages:
       rollup: 4.52.4
       tinyglobby: 0.2.15
       tsx: 4.20.6
+      yaml: 2.8.1
     optionalDependencies:
       fsevents: 2.3.3
     dev: true
@@ -11146,7 +11214,7 @@ packages:
       - yaml
     dev: true
 
-  /vitest@3.2.4(@types/node@22.18.8)(tsx@4.20.6):
+  /vitest@3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1):
     resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
@@ -11195,8 +11263,8 @@ packages:
       tinyglobby: 0.2.15
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.1.9(@types/node@22.18.8)(tsx@4.20.6)
-      vite-node: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)
+      vite: 7.1.9(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
+      vite-node: 3.2.4(@types/node@22.18.8)(tsx@4.20.6)(yaml@2.8.1)
       why-is-node-running: 2.3.0
     transitivePeerDependencies:
       - jiti
@@ -11213,7 +11281,7 @@ packages:
       - yaml
     dev: true
 
-  /vitest@3.2.4(@types/node@24.6.2)(tsx@4.20.6):
+  /vitest@3.2.4(@types/node@24.6.2)(tsx@4.20.6)(yaml@2.8.1):
     resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
@@ -11262,8 +11330,8 @@ packages:
       tinyglobby: 0.2.15
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.1.9(@types/node@24.6.2)(tsx@4.20.6)
-      vite-node: 3.2.4(@types/node@24.6.2)(tsx@4.20.6)
+      vite: 7.1.9(@types/node@24.6.2)(tsx@4.20.6)(yaml@2.8.1)
+      vite-node: 3.2.4(@types/node@24.6.2)(tsx@4.20.6)(yaml@2.8.1)
       why-is-node-running: 2.3.0
     transitivePeerDependencies:
       - jiti
@@ -11280,7 +11348,7 @@ packages:
       - yaml
     dev: true
 
-  /vitest@3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6):
+  /vitest@3.2.4(@vitest/ui@3.2.4)(tsx@4.20.6)(yaml@2.8.1):
     resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
@@ -11329,8 +11397,8 @@ packages:
       tinyglobby: 0.2.15
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.1.9(tsx@4.20.6)
-      vite-node: 3.2.4(tsx@4.20.6)
+      vite: 7.1.9(tsx@4.20.6)(yaml@2.8.1)
+      vite-node: 3.2.4(tsx@4.20.6)(yaml@2.8.1)
       why-is-node-running: 2.3.0
     transitivePeerDependencies:
       - jiti
@@ -11347,7 +11415,7 @@ packages:
       - yaml
     dev: true
 
-  /vitest@3.2.4(tsx@4.20.6):
+  /vitest@3.2.4(tsx@4.20.6)(yaml@2.8.1):
     resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
@@ -11395,8 +11463,8 @@ packages:
       tinyglobby: 0.2.15
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.1.9(tsx@4.20.6)
-      vite-node: 3.2.4(tsx@4.20.6)
+      vite: 7.1.9(tsx@4.20.6)(yaml@2.8.1)
+      vite-node: 3.2.4(tsx@4.20.6)(yaml@2.8.1)
       why-is-node-running: 2.3.0
     transitivePeerDependencies:
       - jiti
@@ -11416,7 +11484,6 @@ packages:
   /web-streams-polyfill@3.3.3:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
     engines: {node: '>= 8'}
-    dev: true
 
   /web-streams-polyfill@4.0.0-beta.3:
     resolution: {integrity: sha512-QW95TCTaHmsYfHDybGMwO5IJIM93I/6vTRk+daHTWFPhwh+C8Cg7j7XyKrwrj8Ib6vYXe0ocYNrmzY4xAAN6ug==}
@@ -11679,7 +11746,6 @@ packages:
     engines: {node: '>=18'}
     dependencies:
       is-wsl: 3.1.0
-    dev: true
 
   /xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}

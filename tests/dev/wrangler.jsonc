@@ -1,0 +1,13 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "test-worker",
+  "main": "index.ts",
+  "compatibility_date": "2025-01-01",
+
+  // Service bindings to deployed workers
+  // When running `wrangler dev`, these automatically RPC to deployed workers
+  "services": [
+    { "binding": "YAML_SERVICE", "service": "yaml" },
+    { "binding": "ESBUILD_SERVICE", "service": "esbuild" }
+  ]
+}

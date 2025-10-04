@@ -17,18 +17,13 @@ import type { ThingDatabase } from './things.js'
  */
 export async function createRelationship(relationship: Relationship, db: ThingDatabase): Promise<Relationship & { ulid: string }> {
   const ulid = generateUlid()
-  const now = Date.now()
-
-  const meta = {
-    ...relationship.meta,
-    createdAt: relationship.meta?.createdAt || now,
-  }
+  const now = new Date().toISOString()
 
   const query = `
     INSERT INTO relationships (
-      ulid, from_ns, from_id, from_type, predicate, reverse,
-      to_ns, to_id, data, content, meta
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ulid, fromNs, fromId, fromType, predicate,
+      toNs, toId, toType, data, createdAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `
 
   await db
@@ -37,21 +32,19 @@ export async function createRelationship(relationship: Relationship, db: ThingDa
       ulid,
       relationship.fromNs,
       relationship.fromId,
-      relationship.fromType || null,
+      relationship.fromType,
       relationship.predicate,
-      relationship.reverse || null,
       relationship.toNs,
       relationship.toId,
+      relationship.toType,
       JSON.stringify(relationship.data || {}),
-      relationship.content || null,
-      JSON.stringify(meta)
+      now
     )
     .run()
 
   return {
     ...relationship,
     ulid,
-    meta,
   }
 }
 
@@ -78,7 +71,7 @@ export async function getInboundRelationships(
 ): Promise<QueryResult<Relationship & { ulid: string }>> {
   const { predicate, limit = 100, offset = 0 } = options
 
-  const conditions = ['to_ns = ?', 'to_id = ?']
+  const conditions = ['toNs = ?', 'toId = ?']
   const params: unknown[] = [toNs, toId]
 
   if (predicate) {
@@ -95,11 +88,11 @@ export async function getInboundRelationships(
 
   // Fetch relationships
   const query = `
-    SELECT ulid, from_ns, from_id, from_type, predicate, reverse,
-           to_ns, to_id, data, content, meta
+    SELECT ulid, fromNs, fromId, fromType, predicate,
+           toNs, toId, toType, data, createdAt
     FROM relationships
     WHERE ${whereClause}
-    ORDER BY predicate, from_ns, from_id
+    ORDER BY predicate, fromNs, fromId
     LIMIT ? OFFSET ?
   `
 
@@ -107,16 +100,14 @@ export async function getInboundRelationships(
 
   const items = results.results.map((row) => ({
     ulid: row.ulid,
-    fromNs: row.from_ns,
-    fromId: row.from_id,
-    fromType: row.from_type || undefined,
+    fromNs: row.fromNs,
+    fromId: row.fromId,
+    fromType: row.fromType,
     predicate: row.predicate,
-    reverse: row.reverse || undefined,
-    toNs: row.to_ns,
-    toId: row.to_id,
+    toNs: row.toNs,
+    toId: row.toId,
+    toType: row.toType,
     data: row.data ? JSON.parse(row.data) : undefined,
-    content: row.content || undefined,
-    meta: row.meta ? JSON.parse(row.meta) : undefined,
   }))
 
   return {
@@ -149,7 +140,7 @@ export async function getOutboundRelationships(
 ): Promise<QueryResult<Relationship & { ulid: string }>> {
   const { predicate, limit = 100, offset = 0 } = options
 
-  const conditions = ['from_ns = ?', 'from_id = ?']
+  const conditions = ['fromNs = ?', 'fromId = ?']
   const params: unknown[] = [fromNs, fromId]
 
   if (predicate) {
@@ -166,11 +157,11 @@ export async function getOutboundRelationships(
 
   // Fetch relationships
   const query = `
-    SELECT ulid, from_ns, from_id, from_type, predicate, reverse,
-           to_ns, to_id, data, content, meta
+    SELECT ulid, fromNs, fromId, fromType, predicate,
+           toNs, toId, toType, data, createdAt
     FROM relationships
     WHERE ${whereClause}
-    ORDER BY predicate, to_ns, to_id
+    ORDER BY predicate, toNs, toId
     LIMIT ? OFFSET ?
   `
 
@@ -178,16 +169,14 @@ export async function getOutboundRelationships(
 
   const items = results.results.map((row) => ({
     ulid: row.ulid,
-    fromNs: row.from_ns,
-    fromId: row.from_id,
-    fromType: row.from_type || undefined,
+    fromNs: row.fromNs,
+    fromId: row.fromId,
+    fromType: row.fromType,
     predicate: row.predicate,
-    reverse: row.reverse || undefined,
-    toNs: row.to_ns,
-    toId: row.to_id,
+    toNs: row.toNs,
+    toId: row.toId,
+    toType: row.toType,
     data: row.data ? JSON.parse(row.data) : undefined,
-    content: row.content || undefined,
-    meta: row.meta ? JSON.parse(row.meta) : undefined,
   }))
 
   return {
@@ -217,17 +206,17 @@ export async function queryRelationships(
   const params: unknown[] = []
 
   if (filter.fromNs) {
-    conditions.push('from_ns = ?')
+    conditions.push('fromNs = ?')
     params.push(filter.fromNs)
   }
 
   if (filter.fromId) {
-    conditions.push('from_id = ?')
+    conditions.push('fromId = ?')
     params.push(filter.fromId)
   }
 
   if (filter.fromType) {
-    conditions.push('from_type = ?')
+    conditions.push('fromType = ?')
     params.push(filter.fromType)
   }
 
@@ -237,24 +226,19 @@ export async function queryRelationships(
   }
 
   if (filter.toNs) {
-    conditions.push('to_ns = ?')
+    conditions.push('toNs = ?')
     params.push(filter.toNs)
   }
 
   if (filter.toId) {
-    conditions.push('to_id = ?')
+    conditions.push('toId = ?')
     params.push(filter.toId)
-  }
-
-  if (filter.minStrength !== undefined) {
-    conditions.push("JSON_EXTRACT(meta, '$.strength') >= ?")
-    params.push(filter.minStrength)
   }
 
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
   // Build ORDER BY clause (default: sort by toNs, toId for index optimization)
-  const orderClause = sort ? `ORDER BY ${sort.field} ${sort.direction.toUpperCase()}` : 'ORDER BY to_ns, to_id, predicate'
+  const orderClause = sort ? `ORDER BY ${sort.field} ${sort.direction.toUpperCase()}` : 'ORDER BY toNs, toId, predicate'
 
   // Count total
   const countQuery = `SELECT COUNT(*) as total FROM relationships ${whereClause}`
@@ -263,8 +247,8 @@ export async function queryRelationships(
 
   // Fetch relationships
   const query = `
-    SELECT ulid, from_ns, from_id, from_type, predicate, reverse,
-           to_ns, to_id, data, content, meta
+    SELECT ulid, fromNs, fromId, fromType, predicate,
+           toNs, toId, toType, data, createdAt
     FROM relationships
     ${whereClause}
     ${orderClause}
@@ -275,16 +259,14 @@ export async function queryRelationships(
 
   const items = results.results.map((row) => ({
     ulid: row.ulid,
-    fromNs: row.from_ns,
-    fromId: row.from_id,
-    fromType: row.from_type || undefined,
+    fromNs: row.fromNs,
+    fromId: row.fromId,
+    fromType: row.fromType,
     predicate: row.predicate,
-    reverse: row.reverse || undefined,
-    toNs: row.to_ns,
-    toId: row.to_id,
+    toNs: row.toNs,
+    toId: row.toId,
+    toType: row.toType,
     data: row.data ? JSON.parse(row.data) : undefined,
-    content: row.content || undefined,
-    meta: row.meta ? JSON.parse(row.meta) : undefined,
   }))
 
   return {
@@ -318,10 +300,10 @@ export async function deleteRelationship(ulid: string, db: ThingDatabase): Promi
 export async function deleteThingRelationships(ns: string, id: string, db: ThingDatabase): Promise<number> {
   const query = `
     DELETE FROM relationships
-    WHERE (from_ns = ? AND from_id = ?) OR (to_ns = ? AND to_id = ?)
+    WHERE (fromNs = ? AND fromId = ?) OR (toNs = ? AND toId = ?)
   `
   const result = await db.prepare(query).bind(ns, id, ns, id).run()
-  return result.meta?.changes || 0
+  return result.success ? 1 : 0
 }
 
 /**

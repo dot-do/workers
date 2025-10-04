@@ -1,10 +1,10 @@
 /**
- * yaml Worker Configuration
- * Generated from yaml.mdx
+ * esbuild Worker Configuration
+ * Generated from esbuild.mdx
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "yaml",
+	"name": "esbuild",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
@@ -15,12 +15,6 @@
 		{
 			"binding": "DEPLOY_SERVICE",
 			"service": "do-deploy"
-		}
-	],
-	"routes": [
-		{
-			"pattern": "yaml.apis.do/*",
-			"zone_name": "apis.do"
 		}
 	],
 	"tail_consumers": [

@@ -1,0 +1,24 @@
+/**
+ * R2 SQL Query Worker - Wrangler Configuration
+ *
+ * Proxy worker for R2 SQL queries via Cloudflare API.
+ *
+ * For more details: https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "r2sql-query",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-08",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "observability": {
+    "enabled": true
+  },
+  // Environment variables (set via .dev.vars for local development)
+  "vars": {
+    "CLOUDFLARE_ACCOUNT_ID": "b6641681fe423910342b9ffa1364c76d",
+    "R2_WAREHOUSE_NAME": "b6641681fe423910342b9ffa1364c76d_mdxld-graph"
+  }
+  // Secrets (set via `wrangler secret put R2_SQL_AUTH_TOKEN`)
+  // R2_SQL_AUTH_TOKEN - API token with R2 Data Catalog permissions
+}

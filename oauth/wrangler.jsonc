@@ -15,6 +15,13 @@
     "WORKOS_USERINFO_URL": "https://api.workos.com/user_management/users/me"
   },
 
+  "kv_namespaces": [
+    {
+      "binding": "OAUTH_SESSIONS",
+      "id": "46a9a419822b49a78ec0a0fb4411f8b9"
+    }
+  ],
+
   // Secrets (set via `wrangler secret put`)
   // WORKOS_CLIENT_ID - WorkOS OAuth client ID
   // WORKOS_CLIENT_SECRET - WorkOS API key (client secret)

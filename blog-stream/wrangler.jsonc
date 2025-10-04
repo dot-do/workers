@@ -19,15 +19,14 @@
       "service": "db"
     },
     {
+      "binding": "AI_SERVICE",
+      "service": "ai"
+    },
+    {
       "binding": "DEPLOY_SERVICE",
-      "service": "do-deploy"
+      "service": "deploy"
     }
   ],
-
-  // AI binding (Workers AI)
-  "ai": {
-    "binding": "AI"
-  },
 
   // Routes
   "routes": [

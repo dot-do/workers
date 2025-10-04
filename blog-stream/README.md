@@ -7,7 +7,7 @@ AI-powered blog post generation with streaming responses.
 ✅ **On-Demand Generation** - Generate blog posts on-the-fly when not found in DB
 ✅ **Streaming Responses** - Server-Sent Events (SSE) for real-time content streaming
 ✅ **Safety Validation** - Comprehensive title validation (SQL injection, XSS, path traversal)
-✅ **Workers AI Generation** - Uses GPT-OSS 120B model via Workers AI
+✅ **AI Service Integration** - Uses AI service via RPC with GPT-OSS 120B model
 ✅ **Database Integration** - Automatic caching of generated posts
 ✅ **RPC Interface** - Service-to-service communication support
 
@@ -93,19 +93,26 @@ The worker validates blog post slugs against multiple attack vectors:
 - **Length Validation** - Max 200 characters
 - **Empty Slugs** - Rejects empty or dash-only slugs
 
-## AI Model
+## AI Integration
 
-Uses **GPT-OSS 120B** (`@cf/openai/gpt-oss-120b`) via Cloudflare Workers AI.
+Uses the **AI service** via RPC with **GPT-OSS 120B** (`@cf/openai/gpt-oss-120b`) model.
+
+**Architecture:**
+```
+blog-stream → AI_SERVICE (RPC) → Workers AI GPT-OSS 120B
+```
 
 **Benefits:**
-- ✅ No API keys required
-- ✅ Built-in to Workers platform
-- ✅ Fast streaming responses
-- ✅ Cost-effective at scale
+- ✅ Microservices architecture - AI logic centralized
+- ✅ Multi-provider support (OpenAI, Anthropic, Workers AI)
+- ✅ Automatic fallback between providers
+- ✅ Fast streaming responses via RPC
+- ✅ Cost-effective at scale (Workers AI default)
 - ✅ High-quality blog content (120B parameter model)
 - ✅ GPT-style architecture
+- ✅ Usage tracking and cost calculation
 
-No additional configuration needed - the AI binding is included in `wrangler.jsonc`.
+No API keys required for Workers AI - the AI service handles all provider configuration.
 
 ## Usage Examples
 
@@ -198,7 +205,7 @@ interface BlogPost {
 ## Service Bindings
 
 - `DB_SERVICE` - Database service for post storage/retrieval
-- `AI` - Workers AI binding for content generation
+- `AI_SERVICE` - AI service for content generation (via RPC)
 - `DEPLOY_SERVICE` - Deploy API (for observability)
 
 ## Environment Variables
@@ -249,10 +256,14 @@ curl http://localhost:8788/blog/ai-best-practices
          │
          ├── Found? → Return cached post
          │
-         └── Not found? → Generate with AI
+         └── Not found?
                     │
                     ├── Validate title safety
-                    ├── Stream AI generation (SSE)
+                    │
+                    ├── Call AI_SERVICE.generateStream() (RPC)
+                    │   └── Workers AI GPT-OSS 120B
+                    │
+                    ├── Stream response to client (SSE)
                     └── Save to DB (fire & forget)
 ```
 
@@ -291,5 +302,6 @@ All requests are logged to the `pipeline` service via tail consumers for:
 ## Related Workers
 
 - `db` - Database service for post storage
+- `ai` - AI service for content generation
 - `gateway` - API gateway for routing
 - `pipeline` - Observability and logging

@@ -11,7 +11,7 @@ import { stream, streamText } from 'hono/streaming'
 
 interface Env {
   DB_SERVICE: any
-  AI: any
+  AI_SERVICE: any
 }
 
 interface BlogPost {
@@ -83,12 +83,10 @@ Tone: Professional but conversational
 Length: ~800-1200 words
 Format: Markdown`
 
-  // Use Workers AI with GPT-OSS 120B model
-  const messages = [{ role: 'user' as const, content: prompt }]
-
-  return env.AI.run('@cf/openai/gpt-oss-120b', {
-    messages,
-    stream: true
+  // Use AI service with Workers AI GPT-OSS 120B model
+  return env.AI_SERVICE.generateStream(prompt, {
+    provider: 'workers-ai',
+    model: '@cf/openai/gpt-oss-120b'
   })
 }
 

@@ -393,5 +393,8 @@ app.post('/check-permission', async c => {
   return success({ hasPermission, resource, action })
 })
 
-// Export HTTP handler
+// Export HTTP handler for direct requests
 export { app }
+
+// Export fetch handler
+export const fetch = app.fetch

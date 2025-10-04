@@ -706,3 +706,6 @@ app.get('/cold-email/variables/sample', async (c) => {
 
 export { EmailService }
 export { app as http }
+
+// Export fetch handler
+export const fetch = app.fetch

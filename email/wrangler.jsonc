@@ -11,9 +11,10 @@
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
 	"observability": { "enabled": true },
 	"tail_consumers": [{ "service": "pipeline" }],
-	"routes": [
-		{ "pattern": "email.services.do/*", "custom_domain": true }
-	],
+	// Routes temporarily disabled - will configure after deployment
+	// "routes": [
+	// 	{ "pattern": "email.services.do/*", "custom_domain": true }
+	// ],
   "services": [
 		{ "binding": "DB", "service": "do-db" }
 	],

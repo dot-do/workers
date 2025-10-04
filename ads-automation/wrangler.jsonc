@@ -1,0 +1,35 @@
+{
+  "name": "ads-automation",
+  "compatibility_date": "2024-11-01",
+  "main": "src/index.ts",
+  "observability": {
+    "enabled": true
+  },
+  "kv_namespaces": [
+    {
+      "binding": "AUTOMATION_KV",
+      "id": "ads_automation_kv",
+      "preview_id": "ads_automation_kv_preview"
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dotdo",
+      "database_id": "dotdo"
+    }
+  ],
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "AUTOMATION_QUEUE",
+        "queue": "ads-automation-queue"
+      }
+    ]
+  }
+}

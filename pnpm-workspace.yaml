@@ -35,6 +35,7 @@ packages:
   - 'ads-audiences'
   - 'ads-creatives'
   - 'ads-analytics'
+  - 'ads-automation'
   # SDK packages (foundation packages)
   - '../sdk/packages/ai-generation'
   - '../sdk/packages/ai-embeddings'

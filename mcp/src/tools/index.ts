@@ -7,6 +7,7 @@ import * as search from './search'
 import * as queue from './queue'
 import * as workflows from './workflows'
 import * as cli from './cli'
+import * as code from './code'
 
 /**
  * Tool Registry
@@ -19,7 +20,8 @@ const toolCategories = {
   search,
   queue,
   workflows,
-  cli
+  cli,
+  code
 }
 
 /**

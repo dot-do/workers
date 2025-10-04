@@ -7,24 +7,22 @@
   "observability": {
     "enabled": true
   },
-  // Custom domain routing
-  "routes": [
-    {
-      "pattern": "do.do/*",
-      "zone_name": "do.do"
-    }
-  ],
   // Worker Loader binding for dynamic code execution
   "worker_loaders": [
     {
       "binding": "LOADER"
     }
   ],
-  // Service bindings for providing to code
+  // Service bindings - all core services
   "services": [
     { "binding": "DB", "service": "db" },
-    { "binding": "AI", "service": "ai" },
-    { "binding": "MCP", "service": "mcp" }
+    { "binding": "AUTH", "service": "auth" },
+    { "binding": "GATEWAY", "service": "gateway" },
+    { "binding": "SCHEDULE", "service": "schedule" },
+    { "binding": "WEBHOOKS", "service": "webhooks" },
+    { "binding": "EMAIL", "service": "email" },
+    { "binding": "MCP", "service": "mcp" },
+    { "binding": "QUEUE", "service": "queue" }
   ],
   // KV for caching code and results
   "kv_namespaces": [

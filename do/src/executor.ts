@@ -53,14 +53,13 @@ export async function executeCode(
 
     try {
       // Execute by calling the worker's fetch handler
-      const response = await worker.fetch('http://execute', {
-        signal: controller.signal
-      })
+      const fetchRequest = new Request('http://execute', { signal: controller.signal })
+      const response = await worker.fetch(fetchRequest)
 
       clearTimeout(timeoutId)
 
       // Parse the result
-      const result = await response.json()
+      const result = await response.json() as { output?: any; logs?: string[]; error?: string; stack?: string }
 
       const executionResponse: ExecuteCodeResponse = {
         success: true,
@@ -182,11 +181,18 @@ function buildBindings(
   if (requestedBindings.includes('db') && env.DB) {
     bindings.DB = env.DB
   }
-  if (requestedBindings.includes('ai') && env.AI) {
-    bindings.AI = env.AI
-  }
   if (requestedBindings.includes('mcp') && env.MCP) {
     bindings.MCP = env.MCP
+  }
+  // Add more bindings as services are requested
+  if (requestedBindings.includes('auth') && env.AUTH) {
+    bindings.AUTH = env.AUTH
+  }
+  if (requestedBindings.includes('email') && env.EMAIL) {
+    bindings.EMAIL = env.EMAIL
+  }
+  if (requestedBindings.includes('queue') && env.QUEUE) {
+    bindings.QUEUE = env.QUEUE
   }
 
   // Add logging utilities

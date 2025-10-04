@@ -6,10 +6,15 @@ export interface Env {
   // Worker Loader binding for dynamic code execution
   LOADER: WorkerLoader
 
-  // Service bindings
-  DB?: Fetcher
-  AI?: Fetcher
-  MCP?: Fetcher
+  // Service bindings - all core services
+  DB: Fetcher
+  AUTH: Fetcher
+  GATEWAY: Fetcher
+  SCHEDULE: Fetcher
+  WEBHOOKS: Fetcher
+  EMAIL: Fetcher
+  MCP: Fetcher
+  QUEUE: Fetcher
 
   // KV for caching
   CODE_CACHE?: KVNamespace
@@ -18,6 +23,39 @@ export interface Env {
   ENVIRONMENT?: string
   MAX_EXECUTION_TIME?: string
   DEFAULT_COMPATIBILITY_DATE?: string
+}
+
+/**
+ * Authentication context passed through all service calls
+ */
+export interface AuthContext {
+  user?: {
+    id: string
+    email: string
+    name?: string
+    role?: string
+    permissions?: string[]
+  }
+  session?: {
+    id: string
+    expiresAt: number
+  }
+  apiKey?: {
+    id: string
+    name: string
+    permissions: string[]
+  }
+  authenticated: boolean
+}
+
+/**
+ * Request context wrapper for all service calls
+ */
+export interface ServiceContext {
+  auth: AuthContext
+  requestId: string
+  timestamp: number
+  metadata?: Record<string, any>
 }
 
 export interface WorkerLoader {

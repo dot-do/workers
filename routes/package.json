@@ -1,0 +1,16 @@
+{
+  "name": "@dot-do/routes-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun run ../../scripts/build-domain-routes.ts",
+    "dev": "wrangler dev",
+    "deploy": "bun run build && wrangler deploy",
+    "deploy:production": "bun run build && wrangler deploy --env production"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241022.0",
+    "wrangler": "^3.80.4"
+  }
+}

@@ -1,0 +1,48 @@
+/**
+ * ONET Importer Worker - Wrangler Configuration
+ *
+ * For more details: https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "onet-importer",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-08",
+  "compatibility_flags": ["nodejs_compat"],
+
+  /**
+   * Service bindings - RPC connections to other workers
+   */
+  "services": [
+    {
+      "binding": "GRAPH",
+      "service": "graph",
+      "entrypoint": "OnetImporter"
+    }
+  ],
+
+  /**
+   * D1 database binding
+   */
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "graph-db",
+      "database_id": "TODO"
+    }
+  ],
+
+  /**
+   * Environment variables
+   */
+  "vars": {
+    "ENVIRONMENT": "development"
+  },
+
+  /**
+   * Development settings
+   */
+  "dev": {
+    "port": 8795
+  }
+}

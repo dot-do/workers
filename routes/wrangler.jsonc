@@ -1,0 +1,27 @@
+{
+  "name": "routes",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-09-25",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Workers Assets configuration
+  // Assets in public/* are served at /*
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
+  // Environment configuration
+  "vars": {
+    "ENVIRONMENT": "development"
+  },
+
+  // Production configuration
+  "env": {
+    "production": {
+      "vars": {
+        "ENVIRONMENT": "production"
+      }
+    }
+  }
+}

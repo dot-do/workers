@@ -1,0 +1,64 @@
+{
+  "name": "api",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Service bindings (all other workers via RPC)
+  "services": [
+    { "binding": "DB_SERVICE", "service": "db" },
+    { "binding": "AUTH_SERVICE", "service": "auth" },
+    { "binding": "GATEWAY_SERVICE", "service": "gateway" },
+    { "binding": "SCHEDULE_SERVICE", "service": "schedule" },
+    { "binding": "WEBHOOKS_SERVICE", "service": "webhooks" },
+    { "binding": "EMAIL_SERVICE", "service": "email" },
+    { "binding": "MCP_SERVICE", "service": "mcp" },
+    { "binding": "QUEUE_SERVICE", "service": "queue" },
+    { "binding": "WAITLIST_SERVICE", "service": "waitlist-beta-management" },
+    { "binding": "DO_SERVICE", "service": "do" },
+    { "binding": "AI_SERVICE", "service": "ai" },
+    { "binding": "EMBEDDINGS_SERVICE", "service": "embeddings" }
+  ],
+
+  // Dispatch namespaces (Workers for Platforms)
+  "dispatch_namespaces": [
+    { "binding": "PRODUCTION", "namespace": "dotdo-production" },
+    { "binding": "STAGING", "namespace": "dotdo-staging" },
+    { "binding": "DEVELOPMENT", "namespace": "dotdo-development" }
+  ],
+
+  // KV namespace for caching
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "YOUR_KV_NAMESPACE_ID",
+      "preview_id": "YOUR_PREVIEW_KV_NAMESPACE_ID"
+    }
+  ],
+
+  // Workers Assets for domain routing config
+  // Note: In production, upload domain-routes.json via Assets API
+  "assets": {
+    "directory": "./assets",
+    "binding": "ASSETS"
+  },
+
+  // Environment variable
+  "vars": {
+    "ENVIRONMENT": "production"
+  },
+
+  // Development overrides
+  "env": {
+    "development": {
+      "vars": {
+        "ENVIRONMENT": "development"
+      }
+    },
+    "staging": {
+      "vars": {
+        "ENVIRONMENT": "staging"
+      }
+    }
+  }
+}

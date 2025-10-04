@@ -1,0 +1,79 @@
+[
+  {
+    "domain": "api.do",
+    "service": "gateway",
+    "binding": "GATEWAY_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Main API gateway"
+    },
+    "updatedAt": "2025-10-04T00:00:00Z"
+  },
+  {
+    "domain": "db.do",
+    "service": "db",
+    "binding": "DB_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Database service"
+    },
+    "updatedAt": "2025-10-04T00:00:00Z"
+  },
+  {
+    "domain": "auth.do",
+    "service": "auth",
+    "binding": "AUTH_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Authentication service"
+    },
+    "updatedAt": "2025-10-04T00:00:00Z"
+  },
+  {
+    "domain": "ai.do",
+    "service": "ai",
+    "binding": "AI_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "AI generation service"
+    },
+    "updatedAt": "2025-10-04T00:00:00Z"
+  },
+  {
+    "domain": "agents.do",
+    "service": "agents",
+    "binding": "AGENTS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "AI agents service"
+    },
+    "updatedAt": "2025-10-04T00:00:00Z"
+  },
+  {
+    "domain": "workflows.do",
+    "service": "workflows",
+    "binding": "WORKFLOWS_SERVICE",
+    "requiresAuth": true,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Workflow orchestration"
+    },
+    "updatedAt": "2025-10-04T00:00:00Z"
+  },
+  {
+    "domain": "*.waitlist.do",
+    "service": "waitlist",
+    "binding": "WAITLIST_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Waitlist landing pages (wildcard)"
+    },
+    "updatedAt": "2025-10-04T00:00:00Z"
+  }
+]

@@ -1,27 +1,43 @@
-/**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
- */
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "do",
-	"main": "worker.ts",
-	"compatibility_date": "2025-07-08",
-	"account_id": "b6641681fe423910342b9ffa1364c76d",
-	"observability": { "enabled": true },
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "do",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-08",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "observability": { "enabled": true },
 
-	/**
-	 * Service Bindings (communicate between multiple Workers)
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-	 */
-	"services": [
-		// { "binding": "ai", "service": "do-ai" },
-		// { "binding": "api", "service": "do-api" },
-		{ "binding": "db", "service": "db" },
-		{ "binding": "pipeline", "service": "pipeline" },
-		{ "binding": "yaml", "service": "yaml" },
-	],
-	"dispatch_namespaces": [{ "binding": "workers", "namespace": "do" }],
-	"tail_consumers": [{ "service": "pipeline" }],
-  // "pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }]
+  // Service bindings - connect to ALL other workers
+  "services": [
+    // Core services
+    { "binding": "DB_SERVICE", "service": "db" },
+    { "binding": "AUTH_SERVICE", "service": "auth" },
+    { "binding": "SCHEDULE_SERVICE", "service": "schedule" },
+    { "binding": "WEBHOOKS_SERVICE", "service": "webhooks" },
+    { "binding": "EMAIL_SERVICE", "service": "email" },
+    { "binding": "MCP_SERVICE", "service": "mcp" },
+    { "binding": "QUEUE_SERVICE", "service": "queue" },
+    { "binding": "WAITLIST_SERVICE", "service": "waitlist-beta-management" },
+
+    // AI services
+    { "binding": "AI_SERVICE", "service": "ai" },
+    { "binding": "EMBEDDINGS_SERVICE", "service": "embeddings" },
+
+    // Infrastructure
+    { "binding": "PIPELINE", "service": "pipeline" },
+    { "binding": "YAML", "service": "yaml" }
+
+    // Add more services as they become available:
+    // { "binding": "AGENTS_SERVICE", "service": "agents" },
+    // { "binding": "WORKFLOWS_SERVICE", "service": "workflows" },
+    // { "binding": "BUSINESS_SERVICE", "service": "business" },
+    // { "binding": "STRIPE_SERVICE", "service": "stripe" },
+    // { "binding": "GITHUB_SERVICE", "service": "github" }
+  ],
+
+  "dispatch_namespaces": [{ "binding": "workers", "namespace": "do" }],
+  "tail_consumers": [{ "service": "pipeline" }],
+
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
 }

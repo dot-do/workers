@@ -1,4 +1,5 @@
 {
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
@@ -13,8 +14,8 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2021",
-    "types": ["./worker.d.ts"]
+    "types": ["@cloudflare/workers-types"]
   },
-  "include": ["**/*.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", ".wrangler"]
 }

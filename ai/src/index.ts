@@ -57,7 +57,7 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
    * Generate text with automatic fallback
    */
   async generateText(prompt: string, options?: GenerateOptions): Promise<string> {
-    const provider = options?.provider || 'openai'
+    const provider = options?.provider || 'workers-ai'
     const model = options?.model || this.getDefaultModel(provider)
 
     try {
@@ -95,7 +95,7 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
    * Generate streaming response
    */
   async generateStream(prompt: string, options?: GenerateOptions): Promise<ReadableStream> {
-    const provider = options?.provider || 'openai'
+    const provider = options?.provider || 'workers-ai'
     const model = options?.model || this.getDefaultModel(provider)
 
     return await this.getProvider(provider).generateStream(prompt, { ...options, model })
@@ -105,7 +105,7 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
    * Generate embedding vector
    */
   async generateEmbedding(text: string, options?: EmbeddingOptions): Promise<number[]> {
-    const provider = options?.provider || 'openai'
+    const provider = options?.provider || 'workers-ai'
     const model = options?.model || this.getProvider(provider).getDefaultEmbeddingModel()
 
     try {
@@ -125,7 +125,7 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
    */
   async analyzeContent(content: string, analysis: string, options?: GenerateOptions): Promise<string> {
     const prompt = `Analyze the following content for: ${analysis}\n\nContent:\n${content}`
-    return await this.generateText(prompt, { ...options, model: options?.model || 'gpt-4o' })
+    return await this.generateText(prompt, options)
   }
 
   /**
@@ -133,7 +133,7 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
    */
   async generate(prompt: string, options?: GenerateOptions): Promise<GenerateResponse> {
     const startTime = Date.now()
-    const provider = options?.provider || 'openai'
+    const provider = options?.provider || 'workers-ai'
     const model = options?.model || this.getDefaultModel(provider)
 
     const text = await this.generateText(prompt, { ...options, provider, model })
@@ -164,7 +164,7 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
    */
   async embed(text: string, options?: EmbeddingOptions): Promise<EmbeddingResponse> {
     const startTime = Date.now()
-    const provider = options?.provider || 'openai'
+    const provider = options?.provider || 'workers-ai'
     const model = options?.model || this.getProvider(provider).getDefaultEmbeddingModel()
 
     const embedding = await this.generateEmbedding(text, { ...options, provider, model })
@@ -194,8 +194,8 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
    */
   async analyze(content: string, analysis: string, options?: GenerateOptions): Promise<AnalysisResult> {
     const startTime = Date.now()
-    const provider = options?.provider || 'openai'
-    const model = options?.model || 'gpt-4o'
+    const provider = options?.provider || 'workers-ai'
+    const model = options?.model || this.getDefaultModel(provider)
 
     const result = await this.analyzeContent(content, analysis, { ...options, provider, model })
 

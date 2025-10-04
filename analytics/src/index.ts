@@ -16,6 +16,7 @@ import { getServiceMetrics, getRevenueMetrics, getMarketplaceMetrics, getExperim
 import { updateRealtimeCounters } from './aggregators/real-time'
 import { executeR2Query, resultToCSV, resultToJSON, listTables, getTableStats, DomainQueries } from './r2-sql'
 import { trackDomainEvent, getDomainAnalyticsSummary, type DomainAnalyticsEvent } from './domain-analytics'
+import { getErrorSummary, getErrorTimeSeries, getErrorTrends, generateAlerts, getErrorsByService, getErrorDistribution, ErrorQueries } from './error-analytics'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -372,6 +373,98 @@ app.get('/sql/queries/:queryName', async (c) => {
   } catch (error) {
     console.error('Error executing pre-built query:', error)
     return c.json({ error: 'Failed to execute query' }, 500)
+  }
+})
+
+/**
+ * Error Analytics Endpoints
+ */
+
+// Get error summary
+app.get('/errors/summary', async (c) => {
+  try {
+    const timeRange = c.req.query('range') || '1 hour'
+    const summary = await getErrorSummary(timeRange, c.env)
+    return c.json({ data: summary })
+  } catch (error) {
+    console.error('Error getting error summary:', error)
+    return c.json({ error: 'Failed to get error summary' }, 500)
+  }
+})
+
+// Get error time series
+app.get('/errors/timeseries', async (c) => {
+  try {
+    const timeRange = c.req.query('range') || '24 hours'
+    const timeseries = await getErrorTimeSeries(timeRange, c.env)
+    return c.json({ data: timeseries })
+  } catch (error) {
+    console.error('Error getting error time series:', error)
+    return c.json({ error: 'Failed to get error time series' }, 500)
+  }
+})
+
+// Get error trends (spike detection)
+app.get('/errors/trends', async (c) => {
+  try {
+    const trends = await getErrorTrends(c.env)
+    return c.json({ data: trends })
+  } catch (error) {
+    console.error('Error getting error trends:', error)
+    return c.json({ error: 'Failed to get error trends' }, 500)
+  }
+})
+
+// Get active alerts
+app.get('/errors/alerts', async (c) => {
+  try {
+    const alerts = await generateAlerts(c.env)
+    return c.json({ data: alerts })
+  } catch (error) {
+    console.error('Error generating alerts:', error)
+    return c.json({ error: 'Failed to generate alerts' }, 500)
+  }
+})
+
+// Get errors by service
+app.get('/errors/by-service', async (c) => {
+  try {
+    const timeRange = c.req.query('range') || '1 hour'
+    const byService = await getErrorsByService(timeRange, c.env)
+    return c.json({ data: byService })
+  } catch (error) {
+    console.error('Error getting errors by service:', error)
+    return c.json({ error: 'Failed to get errors by service' }, 500)
+  }
+})
+
+// Get error distribution
+app.get('/errors/distribution', async (c) => {
+  try {
+    const timeRange = c.req.query('range') || '24 hours'
+    const distribution = await getErrorDistribution(timeRange, c.env)
+    return c.json({ data: distribution })
+  } catch (error) {
+    console.error('Error getting error distribution:', error)
+    return c.json({ error: 'Failed to get error distribution' }, 500)
+  }
+})
+
+// Execute pre-built error queries
+app.get('/errors/queries/:queryName', async (c) => {
+  try {
+    const queryName = c.req.param('queryName') as keyof typeof ErrorQueries
+
+    if (!ErrorQueries[queryName]) {
+      return c.json({ error: 'Query not found' }, 404)
+    }
+
+    const sql = ErrorQueries[queryName]
+    const result = await executeR2Query(sql, c.env)
+    return c.json({ data: result })
+  } catch (error) {
+    console.error('Error executing error query:', error)
+    return c.json({ error: 'Failed to execute error query' }, 500)
   }
 })
 

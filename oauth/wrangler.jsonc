@@ -1,0 +1,21 @@
+{
+  "name": "oauth",
+  "compatibility_date": "2025-10-04",
+  "main": "src/index.ts",
+
+  "observability": {
+    "enabled": true
+  },
+
+  "vars": {
+    "ENVIRONMENT": "production",
+    "WORKOS_AUTH_URL": "https://api.workos.com/sso/authorize",
+    "WORKOS_TOKEN_URL": "https://api.workos.com/sso/token",
+    "WORKOS_DEVICE_AUTH_URL": "https://api.workos.com/device/code",
+    "WORKOS_USERINFO_URL": "https://api.workos.com/user_management/users/me"
+  },
+
+  // Secrets (set via `wrangler secret put`)
+  // WORKOS_CLIENT_ID - WorkOS OAuth client ID
+  // WORKOS_CLIENT_SECRET - WorkOS API key (client secret)
+}

@@ -29,8 +29,10 @@ packages:
   - 'blacklist-monitor'
   - 'lead-enrichment'
   - 'waitlist-beta-management'
+  - 'referral-program'
   - 'ads-campaigns'
   - 'ads-audiences'
+  - 'ads-creatives'
   # SDK packages (foundation packages)
   - '../sdk/packages/ai-generation'
   - '../sdk/packages/ai-embeddings'

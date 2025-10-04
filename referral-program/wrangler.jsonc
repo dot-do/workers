@@ -1,0 +1,64 @@
+{
+  "name": "referral-program",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "observability": {
+    "enabled": true
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "production",
+      "database_id": "your-d1-database-id"
+    }
+  ],
+
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "your-kv-namespace-id"
+    }
+  ],
+
+  "queues": {
+    "consumers": [
+      {
+        "queue": "referral-queue",
+        "max_batch_size": 10,
+        "max_batch_timeout": 30
+      }
+    ],
+    "producers": [
+      {
+        "binding": "REFERRAL_QUEUE",
+        "queue": "referral-queue"
+      }
+    ]
+  },
+
+  "services": [
+    {
+      "binding": "EMAIL_SERVICE",
+      "service": "email"
+    },
+    {
+      "binding": "ANALYTICS_SERVICE",
+      "service": "analytics"
+    },
+    {
+      "binding": "AUTH_SERVICE",
+      "service": "auth"
+    },
+    {
+      "binding": "WAITLIST_SERVICE",
+      "service": "waitlist-beta-management"
+    }
+  ],
+
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+}

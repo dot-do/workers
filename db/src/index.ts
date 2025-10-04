@@ -210,8 +210,24 @@ export default class DatabaseService extends WorkerEntrypoint<Env> {
    * Execute raw ClickHouse SQL string (for RPC calls)
    */
   async executeSql(query: string) {
-    const resultSet = await clickhouse.query({ query, format: 'JSON' })
-    return resultSet.json()
+    // Check if this is a DDL statement (CREATE, ALTER, DROP) or DML (SELECT, INSERT, etc.)
+    const isDDL = /^\s*(CREATE|ALTER|DROP|TRUNCATE|RENAME)\s+/i.test(query)
+
+    if (isDDL) {
+      // Use command() for DDL statements
+      await clickhouse.command({
+        query,
+        clickhouse_settings: {
+          enable_json_type: 1,
+          allow_experimental_vector_similarity_index: 1,
+        },
+      })
+      return { success: true, message: 'DDL statement executed successfully' }
+    } else {
+      // Use query() for SELECT statements that return data
+      const resultSet = await clickhouse.query({ query, format: 'JSON' })
+      return resultSet.json()
+    }
   }
 
   // ============================================================================

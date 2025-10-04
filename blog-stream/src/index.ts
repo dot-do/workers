@@ -83,10 +83,10 @@ Tone: Professional but conversational
 Length: ~800-1200 words
 Format: Markdown`
 
-  // Use Workers AI with GPT-OSS model
+  // Use Workers AI with GPT-OSS 120B model
   const messages = [{ role: 'user' as const, content: prompt }]
 
-  return env.AI.run('@cf/openchat/openchat-3.5-0106', {
+  return env.AI.run('@cf/openai/gpt-oss-120b', {
     messages,
     stream: true
   })

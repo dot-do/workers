@@ -7,7 +7,7 @@ AI-powered blog post generation with streaming responses.
 ✅ **On-Demand Generation** - Generate blog posts on-the-fly when not found in DB
 ✅ **Streaming Responses** - Server-Sent Events (SSE) for real-time content streaming
 ✅ **Safety Validation** - Comprehensive title validation (SQL injection, XSS, path traversal)
-✅ **Workers AI Generation** - Uses OpenChat 3.5 model via Workers AI
+✅ **Workers AI Generation** - Uses GPT-OSS 120B model via Workers AI
 ✅ **Database Integration** - Automatic caching of generated posts
 ✅ **RPC Interface** - Service-to-service communication support
 
@@ -95,14 +95,15 @@ The worker validates blog post slugs against multiple attack vectors:
 
 ## AI Model
 
-Uses **OpenChat 3.5** (`@cf/openchat/openchat-3.5-0106`) via Cloudflare Workers AI.
+Uses **GPT-OSS 120B** (`@cf/openai/gpt-oss-120b`) via Cloudflare Workers AI.
 
 **Benefits:**
 - ✅ No API keys required
 - ✅ Built-in to Workers platform
 - ✅ Fast streaming responses
 - ✅ Cost-effective at scale
-- ✅ Good quality blog content
+- ✅ High-quality blog content (120B parameter model)
+- ✅ GPT-style architecture
 
 No additional configuration needed - the AI binding is included in `wrangler.jsonc`.
 

@@ -1,0 +1,30 @@
+/**
+ * Graph Service Worker - Wrangler Configuration
+ *
+ * For more details: https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "graph",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-08",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "observability": {
+    "enabled": true
+  },
+  // Database binding - will be configured for ClickHouse or R2 SQL
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "graph",
+      "database_id": "" // TODO: Create database and add ID
+    }
+  ],
+  // Service bindings for auth
+  "services": [
+    {
+      "binding": "AUTH_SERVICE",
+      "service": "auth"
+    }
+  ]
+}

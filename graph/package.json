@@ -1,0 +1,25 @@
+{
+  "name": "@do/graph",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@do/graph-api": "workspace:*",
+    "@do/graph-types": "workspace:*",
+    "hono": "^4.7.11"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250110.0",
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.105.0"
+  }
+}

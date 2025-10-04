@@ -17,6 +17,42 @@ The database worker is accessible via multiple domains:
   - `https://apis.do/db/`
   - `https://gateway.do/db/`
 
+## Glyph Domains & Root-Level Routes
+
+The international character domains (彡.io, 口.io, 回.io) and db.mw provide **root-level access** without the `/api` prefix:
+
+```bash
+# Standard domain (with /api prefix)
+GET https://database.do/api/things/onet/11-1011.00
+
+# Glyph domain (no /api prefix)
+GET https://彡.io/onet/11-1011.00
+```
+
+### Special Route Pattern: `/:ns/:id.:predicate`
+
+Access relationships using dot notation:
+
+```bash
+# Get all relationships for a thing
+GET https://彡.io/onet/11-1011.00.relationships
+
+# Get specific predicate relationships
+GET https://彡.io/onet/11-1011.00.requires
+GET https://彡.io/onet/11-1011.00.relatesTo
+```
+
+This is equivalent to:
+```bash
+GET https://database.do/api/relationships/onet/11-1011.00
+GET https://database.do/api/relationships/onet/11-1011.00?predicate=requires
+```
+
+**Supported Glyph Domains:**
+- **彡.io** - Data Layer - AI-native database access (彡 = shape/pattern/database)
+- **口.io** - Data Model - Entity types and nouns (口 = mouth/noun)
+- **回.io** - Data Model - Things and resources (回 = rotation/thing)
+
 ## Authentication
 
 Most API endpoints require authentication. Include your API key or bearer token in the request headers:
@@ -31,14 +67,25 @@ Public endpoints (no auth required):
 
 ## Response Format
 
-All API responses follow a consistent JSON format:
+All API responses follow a consistent JSON format with **HATEOAS (Hypermedia as the Engine of Application State)** navigation links.
 
-**Success Response:**
+**Success Response (with HATEOAS):**
 ```json
 {
-  "data": { /* result data */ },
-  "total": 100,
-  "hasMore": true
+  "_links": {
+    "self": { "href": "https://database.do/api/things?ns=default&page=1&limit=20" },
+    "home": { "href": "https://database.do/" },
+    "first": { "href": "https://database.do/api/things?ns=default&page=1&limit=20" },
+    "next": { "href": "https://database.do/api/things?ns=default&page=2&limit=20" },
+    "last": { "href": "https://database.do/api/things?ns=default&page=5&limit=20" }
+  },
+  "data": [ /* result data */ ],
+  "_meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 100,
+    "hasMore": true
+  }
 }
 ```
 
@@ -48,6 +95,18 @@ All API responses follow a consistent JSON format:
   "error": "Error message"
 }
 ```
+
+### HATEOAS Navigation Links
+
+Every successful response includes `_links` for navigating the API:
+
+- **self** - Current resource URL
+- **home** - API root endpoint
+- **first** - First page (for paginated results)
+- **prev** - Previous page (if available)
+- **next** - Next page (if available)
+- **last** - Last page (for paginated results)
+- Additional resource-specific links (e.g., `thing`, `relationships`, `namespace`)
 
 ## Pagination
 
@@ -85,6 +144,13 @@ curl -X GET "https://database.do/api/things?ns=onet&type=Occupation&page=1&limit
 **Example Response:**
 ```json
 {
+  "_links": {
+    "self": { "href": "https://database.do/api/things?ns=onet&type=Occupation&page=1&limit=20" },
+    "home": { "href": "https://database.do/" },
+    "first": { "href": "https://database.do/api/things?ns=onet&type=Occupation&page=1&limit=20" },
+    "next": { "href": "https://database.do/api/things?ns=onet&type=Occupation&page=2&limit=20" },
+    "last": { "href": "https://database.do/api/things?ns=onet&type=Occupation&page=50&limit=20" }
+  },
   "data": [
     {
       "ns": "onet",
@@ -99,8 +165,12 @@ curl -X GET "https://database.do/api/things?ns=onet&type=Occupation&page=1&limit
       "updatedAt": "2025-01-02T00:00:00.000Z"
     }
   ],
-  "total": 1000,
-  "hasMore": true
+  "_meta": {
+    "page": 1,
+    "limit": 20,
+    "total": 1000,
+    "hasMore": true
+  }
 }
 ```
 
@@ -112,29 +182,44 @@ Get a specific thing by namespace and ID.
 
 **Endpoint:** `GET /api/things/:ns/:id`
 
+**Glyph Domain Shortcut:** `GET /:ns/:id` (on 彡.io, 口.io, 回.io, db.mw)
+
 **Parameters:**
 - `ns` (required) - Namespace
 - `id` (required) - Thing ID
 
 **Example Request:**
 ```bash
+# Standard domain with /api prefix
 curl -X GET "https://database.do/api/things/onet/11-1011.00" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+
+# Glyph domain without /api prefix
+curl -X GET "https://彡.io/onet/11-1011.00" \
   -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 **Example Response:**
 ```json
 {
-  "ns": "onet",
-  "id": "11-1011.00",
-  "type": "Occupation",
-  "data": {
-    "title": "Chief Executives",
-    "description": "Determine and formulate policies..."
+  "_links": {
+    "self": { "href": "https://database.do/api/things/onet/11-1011.00" },
+    "home": { "href": "https://database.do/" },
+    "namespace": { "href": "https://database.do/api/things?ns=onet" },
+    "relationships": { "href": "https://database.do/api/relationships/onet/11-1011.00" }
   },
-  "content": "Chief Executives determine and formulate policies...",
-  "createdAt": "2025-01-01T00:00:00.000Z",
-  "updatedAt": "2025-01-02T00:00:00.000Z"
+  "data": {
+    "ns": "onet",
+    "id": "11-1011.00",
+    "type": "Occupation",
+    "data": {
+      "title": "Chief Executives",
+      "description": "Determine and formulate policies..."
+    },
+    "content": "Chief Executives determine and formulate policies...",
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "updatedAt": "2025-01-02T00:00:00.000Z"
+  }
 }
 ```
 

@@ -45,6 +45,86 @@ function getModelColumns(model: EmbeddingModel): { embeddingColumn: string; time
 }
 
 /**
+ * HATEOAS link generation helper
+ * Generates navigable links for RESTful responses
+ */
+interface HateoasLinks {
+  self: { href: string }
+  home: { href: string }
+  first?: { href: string }
+  prev?: { href: string }
+  next?: { href: string }
+  last?: { href: string }
+  [key: string]: { href: string } | undefined
+}
+
+function generateHateoasLinks(
+  baseUrl: string,
+  path: string,
+  params: Record<string, any> = {},
+  pagination?: { page: number; limit: number; total: number; hasMore: boolean }
+): HateoasLinks {
+  const buildUrl = (p: string, overrides: Record<string, any> = {}) => {
+    const queryParams = { ...params, ...overrides }
+    const query = Object.entries(queryParams)
+      .filter(([_, v]) => v !== undefined && v !== null)
+      .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+      .join('&')
+    return query ? `${baseUrl}${p}?${query}` : `${baseUrl}${p}`
+  }
+
+  const links: HateoasLinks = {
+    self: { href: buildUrl(path, params) },
+    home: { href: baseUrl },
+  }
+
+  if (pagination) {
+    const { page, limit, total, hasMore } = pagination
+    const totalPages = Math.ceil(total / limit)
+
+    // First page link
+    if (page > 1) {
+      links.first = { href: buildUrl(path, { ...params, page: 1 }) }
+    }
+
+    // Previous page link
+    if (page > 1) {
+      links.prev = { href: buildUrl(path, { ...params, page: page - 1 }) }
+    }
+
+    // Next page link
+    if (hasMore || page < totalPages) {
+      links.next = { href: buildUrl(path, { ...params, page: page + 1 }) }
+    }
+
+    // Last page link
+    if (totalPages > 1 && page < totalPages) {
+      links.last = { href: buildUrl(path, { ...params, page: totalPages }) }
+    }
+  }
+
+  return links
+}
+
+/**
+ * Add HATEOAS links to response
+ */
+function withHateoas<T>(
+  data: T,
+  links: HateoasLinks,
+  meta?: Record<string, any>
+): { _links: HateoasLinks; data: T; _meta?: Record<string, any> } {
+  const response: any = {
+    _links: links,
+    data,
+  }
+  if (meta) {
+    response._meta = meta
+  }
+  return response
+}
+
+/**
  * Database Service - Comprehensive database abstraction layer
  * Handles ALL data access for the platform (PostgreSQL + ClickHouse)
  *
@@ -1028,11 +1108,21 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
     })
 
     // ============================================================================
-    // REST API - THINGS
+    // SHARED HANDLERS (used by both /api/* and root /* routes)
     // ============================================================================
 
-    // List things with pagination
-    app.get('/api/things', async (c) => {
+    /**
+     * Get base URL from request
+     */
+    const getBaseUrl = (c: any) => {
+      const url = new URL(c.req.url)
+      return `${url.protocol}//${url.host}`
+    }
+
+    /**
+     * Handler: List things with pagination and HATEOAS
+     */
+    const handleListThings = async (c: any) => {
       try {
         const ns = c.req.query('ns') || 'default'
         const page = parseInt(c.req.query('page') || '1')
@@ -1048,64 +1138,252 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         }
 
         const result = await this.list(ns, options)
-        return c.json(result)
+
+        // Add HATEOAS links
+        const baseUrl = getBaseUrl(c)
+        const path = '/things'
+        const links = generateHateoasLinks(baseUrl, path, { ns, type, visibility }, {
+          page,
+          limit,
+          total: result.total || 0,
+          hasMore: result.hasMore || false,
+        })
+
+        return c.json(withHateoas(result.data, links, { page, limit, total: result.total, hasMore: result.hasMore }))
       } catch (error: any) {
         return c.json({ error: error.message }, 500)
       }
-    })
+    }
 
-    // Get single thing
-    app.get('/api/things/:ns/:id', async (c) => {
+    /**
+     * Handler: Get single thing with HATEOAS
+     */
+    const handleGetThing = async (c: any, ns: string, id: string) => {
       try {
-        const ns = c.req.param('ns')
-        const id = c.req.param('id')
         const result = await this.get(ns, id)
 
         if (!result) {
           return c.json({ error: 'Thing not found' }, 404)
         }
 
-        return c.json(result)
+        // Add HATEOAS links
+        const baseUrl = getBaseUrl(c)
+        const links: HateoasLinks = {
+          self: { href: `${baseUrl}/${ns}/${id}` },
+          home: { href: baseUrl },
+          relationships: { href: `${baseUrl}/${ns}/${id}.relationships` },
+          namespace: { href: `${baseUrl}/things?ns=${ns}` },
+        }
+
+        return c.json(withHateoas(result, links))
       } catch (error: any) {
         return c.json({ error: error.message }, 500)
       }
-    })
+    }
 
-    // Create thing
-    app.post('/api/things', async (c) => {
+    /**
+     * Handler: Create thing
+     */
+    const handleCreateThing = async (c: any) => {
       try {
         const body = await c.req.json()
         const result = await this.upsert(body)
-        return c.json(result, 201)
+
+        // Add HATEOAS links
+        const baseUrl = getBaseUrl(c)
+        const links: HateoasLinks = {
+          self: { href: `${baseUrl}/${result.ns}/${result.id}` },
+          home: { href: baseUrl },
+        }
+
+        return c.json(withHateoas(result, links), 201)
       } catch (error: any) {
         return c.json({ error: error.message }, 400)
       }
+    }
+
+    /**
+     * Handler: Update thing
+     */
+    const handleUpdateThing = async (c: any, ns: string, id: string) => {
+      try {
+        const body = await c.req.json()
+        const result = await this.upsert({ ...body, ns, id })
+
+        // Add HATEOAS links
+        const baseUrl = getBaseUrl(c)
+        const links: HateoasLinks = {
+          self: { href: `${baseUrl}/${ns}/${id}` },
+          home: { href: baseUrl },
+        }
+
+        return c.json(withHateoas(result, links))
+      } catch (error: any) {
+        return c.json({ error: error.message }, 400)
+      }
+    }
+
+    /**
+     * Handler: Delete thing
+     */
+    const handleDeleteThing = async (c: any, ns: string, id: string) => {
+      try {
+        const result = await this.delete(ns, id)
+
+        // Add HATEOAS links
+        const baseUrl = getBaseUrl(c)
+        const links: HateoasLinks = {
+          self: { href: `${baseUrl}/${ns}/${id}` },
+          home: { href: baseUrl },
+        }
+
+        return c.json(withHateoas(result, links))
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    }
+
+    /**
+     * Handler: Get relationships for a thing (outgoing)
+     */
+    const handleGetRelationships = async (c: any, ns: string, id: string, predicate?: string) => {
+      try {
+        const page = parseInt(c.req.query('page') || '1')
+        const limit = parseInt(c.req.query('limit') || '20')
+
+        const options: relationships.RelationshipListOptions = {
+          page,
+          limit,
+          ...(predicate && { predicate }),
+        }
+
+        const result = await this.getRelationships(ns, id, options)
+
+        // Add HATEOAS links
+        const baseUrl = getBaseUrl(c)
+        const path = predicate ? `/${ns}/${id}.${predicate}` : `/${ns}/${id}.relationships`
+        const links = generateHateoasLinks(baseUrl, path, {}, {
+          page,
+          limit,
+          total: result.total || 0,
+          hasMore: result.hasMore || false,
+        })
+
+        links.thing = { href: `${baseUrl}/${ns}/${id}` }
+
+        return c.json(withHateoas(result.data, links, { page, limit, total: result.total, hasMore: result.hasMore }))
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    }
+
+    /**
+     * Handler: Search
+     */
+    const handleSearch = async (c: any) => {
+      try {
+        const query = c.req.query('q') || ''
+        const ns = c.req.query('ns')
+        const limit = parseInt(c.req.query('limit') || '10')
+        const minScore = parseFloat(c.req.query('minScore') || '0')
+
+        const options: search.VectorSearchOptions = {
+          ...(ns && { ns }),
+          limit,
+          minScore,
+        }
+
+        const result = await this.search(query, undefined, options)
+
+        // Add HATEOAS links
+        const baseUrl = getBaseUrl(c)
+        const links: HateoasLinks = {
+          self: { href: `${baseUrl}/search?q=${encodeURIComponent(query)}${ns ? `&ns=${ns}` : ''}` },
+          home: { href: baseUrl },
+        }
+
+        return c.json(withHateoas(result, links))
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    }
+
+    // ============================================================================
+    // ROOT-LEVEL ROUTES (for glyph domains and db.mw)
+    // Direct access without /api prefix
+    // ============================================================================
+
+    // List things
+    app.get('/things', handleListThings.bind(this))
+
+    // Search
+    app.get('/search', handleSearch.bind(this))
+
+    // Create thing
+    app.post('/things', handleCreateThing.bind(this))
+
+    // Get/Update/Delete specific thing by ns:id
+    app.get('/:ns/:id', async (c) => {
+      const ns = c.req.param('ns')
+      const id = c.req.param('id')
+
+      // Check if this is a relationships request (id.predicate format)
+      if (id.includes('.')) {
+        const [actualId, predicate] = id.split('.')
+
+        // Special case: .relationships = all relationships
+        if (predicate === 'relationships') {
+          return handleGetRelationships.call(this, c, ns, actualId)
+        }
+
+        // Specific predicate
+        return handleGetRelationships.call(this, c, ns, actualId, predicate)
+      }
+
+      return handleGetThing.call(this, c, ns, id)
     })
+
+    app.put('/:ns/:id', async (c) => {
+      const ns = c.req.param('ns')
+      const id = c.req.param('id')
+      return handleUpdateThing.call(this, c, ns, id)
+    })
+
+    app.delete('/:ns/:id', async (c) => {
+      const ns = c.req.param('ns')
+      const id = c.req.param('id')
+      return handleDeleteThing.call(this, c, ns, id)
+    })
+
+    // ============================================================================
+    // REST API - THINGS (Legacy /api/* routes for backward compatibility)
+    // ============================================================================
+
+    // List things with pagination
+    app.get('/api/things', handleListThings.bind(this))
+
+    // Get single thing
+    app.get('/api/things/:ns/:id', async (c) => {
+      const ns = c.req.param('ns')
+      const id = c.req.param('id')
+      return handleGetThing.call(this, c, ns, id)
+    })
+
+    // Create thing
+    app.post('/api/things', handleCreateThing.bind(this))
 
     // Update thing
     app.put('/api/things/:ns/:id', async (c) => {
-      try {
-        const ns = c.req.param('ns')
-        const id = c.req.param('id')
-        const body = await c.req.json()
-
-        const result = await this.upsert({ ...body, ns, id })
-        return c.json(result)
-      } catch (error: any) {
-        return c.json({ error: error.message }, 400)
-      }
+      const ns = c.req.param('ns')
+      const id = c.req.param('id')
+      return handleUpdateThing.call(this, c, ns, id)
     })
 
     // Delete thing
     app.delete('/api/things/:ns/:id', async (c) => {
-      try {
-        const ns = c.req.param('ns')
-        const id = c.req.param('id')
-        const result = await this.delete(ns, id)
-        return c.json(result)
-      } catch (error: any) {
-        return c.json({ error: error.message }, 500)
-      }
+      const ns = c.req.param('ns')
+      const id = c.req.param('id')
+      return handleDeleteThing.call(this, c, ns, id)
     })
 
     // Count things
@@ -1120,7 +1398,12 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         if (visibility) filters.visibility = visibility
 
         const result = await this.count(ns, filters)
-        return c.json({ count: result })
+
+        const baseUrl = new URL(c.req.url).origin
+        const path = c.req.path
+        const links = generateHateoasLinks(baseUrl, path, { ns, type, visibility })
+
+        return c.json(withHateoas({ count: result }, links))
       } catch (error: any) {
         return c.json({ error: error.message }, 500)
       }
@@ -1145,7 +1428,14 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         }
 
         const result = await this.listRelationships(ns, options)
-        return c.json(result)
+
+        const baseUrl = new URL(c.req.url).origin
+        const path = c.req.path
+        const total = result.total || 0
+        const hasMore = result.hasMore || false
+        const links = generateHateoasLinks(baseUrl, path, { ns, predicate }, { page, limit, total, hasMore })
+
+        return c.json(withHateoas(result.data, links, { page, limit, total, hasMore }))
       } catch (error: any) {
         return c.json({ error: error.message }, 500)
       }
@@ -1153,24 +1443,10 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
 
     // Get relationships for a thing (outgoing)
     app.get('/api/relationships/:ns/:id', async (c) => {
-      try {
-        const ns = c.req.param('ns')
-        const id = c.req.param('id')
-        const predicate = c.req.query('predicate')
-        const page = parseInt(c.req.query('page') || '1')
-        const limit = parseInt(c.req.query('limit') || '20')
-
-        const options: relationships.RelationshipListOptions = {
-          page,
-          limit,
-          ...(predicate && { predicate }),
-        }
-
-        const result = await this.getRelationships(ns, id, options)
-        return c.json(result)
-      } catch (error: any) {
-        return c.json({ error: error.message }, 500)
-      }
+      const ns = c.req.param('ns')
+      const id = c.req.param('id')
+      const predicate = c.req.query('predicate') || undefined
+      return handleGetRelationships.call(this, c, ns, id, predicate)
     })
 
     // Get incoming relationships for a thing
@@ -1189,7 +1465,18 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         }
 
         const result = await this.getIncomingRelationships(ns, id, options)
-        return c.json(result)
+
+        const baseUrl = new URL(c.req.url).origin
+        const path = c.req.path
+        const total = result.total || 0
+        const hasMore = result.hasMore || false
+        const links = generateHateoasLinks(baseUrl, path, { predicate }, { page, limit, total, hasMore })
+
+        // Add resource links
+        links.thing = { href: `${baseUrl}/api/things/${ns}/${id}` }
+        links.outgoing = { href: `${baseUrl}/api/relationships/${ns}/${id}` }
+
+        return c.json(withHateoas(result.data, links, { page, limit, total, hasMore }))
       } catch (error: any) {
         return c.json({ error: error.message }, 500)
       }
@@ -1200,7 +1487,20 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
       try {
         const body = await c.req.json()
         const result = await this.upsertRelationship(body)
-        return c.json(result, 201)
+
+        const baseUrl = new URL(c.req.url).origin
+        const path = c.req.path
+        const links = generateHateoasLinks(baseUrl, path)
+
+        // Add resource links
+        if (result.fromNs && result.fromId) {
+          links.from = { href: `${baseUrl}/api/things/${result.fromNs}/${result.fromId}` }
+        }
+        if (result.toNs && result.toId) {
+          links.to = { href: `${baseUrl}/api/things/${result.toNs}/${result.toId}` }
+        }
+
+        return c.json(withHateoas(result, links), 201)
       } catch (error: any) {
         return c.json({ error: error.message }, 400)
       }
@@ -1212,7 +1512,13 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         const ns = c.req.param('ns')
         const id = c.req.param('id')
         const result = await this.deleteRelationship(ns, id)
-        return c.json(result)
+
+        const baseUrl = new URL(c.req.url).origin
+        const path = c.req.path
+        const links = generateHateoasLinks(baseUrl, path)
+        links.relationships = { href: `${baseUrl}/api/relationships?ns=${ns}` }
+
+        return c.json(withHateoas(result, links))
       } catch (error: any) {
         return c.json({ error: error.message }, 500)
       }
@@ -1223,25 +1529,7 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
     // ============================================================================
 
     // Full-text search
-    app.get('/api/search', async (c) => {
-      try {
-        const query = c.req.query('q') || ''
-        const ns = c.req.query('ns')
-        const limit = parseInt(c.req.query('limit') || '10')
-        const minScore = parseFloat(c.req.query('minScore') || '0')
-
-        const options: search.VectorSearchOptions = {
-          ...(ns && { ns }),
-          limit,
-          minScore,
-        }
-
-        const result = await this.search(query, undefined, options)
-        return c.json(result)
-      } catch (error: any) {
-        return c.json({ error: error.message }, 500)
-      }
-    })
+    app.get('/api/search', handleSearch.bind(this))
 
     // Vector similarity search
     app.post('/api/search/vector', async (c) => {
@@ -1261,7 +1549,22 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         }
 
         const result = await this.vectorSearch(embedding, options)
-        return c.json(result)
+
+        const baseUrl = new URL(c.req.url).origin
+        const path = c.req.path
+        const links = generateHateoasLinks(baseUrl, path, { ns, limit, minScore, model })
+
+        // Add resource links for each result
+        const dataWithLinks = Array.isArray(result.data)
+          ? result.data.map((item: any) => ({
+              ...item,
+              _links: {
+                self: { href: `${baseUrl}/api/things/${item.ns}/${item.id}` },
+              },
+            }))
+          : result.data
+
+        return c.json(withHateoas(dataWithLinks, links, { total: result.total || result.data?.length || 0 }))
       } catch (error: any) {
         return c.json({ error: error.message }, 500)
       }
@@ -1285,7 +1588,22 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         }
 
         const result = await this.search(query, embedding, options)
-        return c.json(result)
+
+        const baseUrl = new URL(c.req.url).origin
+        const path = c.req.path
+        const links = generateHateoasLinks(baseUrl, path, { q: query, ns, limit, minScore, model })
+
+        // Add resource links for each result
+        const dataWithLinks = Array.isArray(result.data)
+          ? result.data.map((item: any) => ({
+              ...item,
+              _links: {
+                self: { href: `${baseUrl}/api/things/${item.ns}/${item.id}` },
+              },
+            }))
+          : result.data
+
+        return c.json(withHateoas(dataWithLinks, links, { total: result.total || result.data?.length || 0 }))
       } catch (error: any) {
         return c.json({ error: error.message }, 500)
       }
@@ -1308,7 +1626,23 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
           minScore,
           model,
         })
-        return c.json(result)
+
+        const baseUrl = new URL(c.req.url).origin
+        const path = c.req.path
+        const links = generateHateoasLinks(baseUrl, path, { ns, limit, minScore, model })
+
+        // Add resource links for each result
+        const dataWithLinks = Array.isArray(result.data)
+          ? result.data.map((item: any) => ({
+              ...item,
+              _links: {
+                self: { href: `${baseUrl}/api/things/${item.ns}/${item.id}` },
+                chunk: { href: `${baseUrl}/api/things/${item.ns}/${item.id}?chunk=${item.chunkIndex}` },
+              },
+            }))
+          : result.data
+
+        return c.json(withHateoas(dataWithLinks, links, { total: result.data?.length || 0 }))
       } catch (error: any) {
         return c.json({ error: error.message }, 500)
       }
@@ -1323,42 +1657,79 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
 
     // Root endpoint - service info
     app.get('/', (c) => {
+      const baseUrl = new URL(c.req.url).origin
+      const isGlyphDomain = ['彡.io', '口.io', '回.io', 'db.mw'].includes(new URL(c.req.url).hostname)
+
       return c.json({
         service: 'database',
         version: '1.0.0',
-        description: 'Comprehensive database abstraction layer for the platform',
+        description: 'Comprehensive database abstraction layer for the platform with HATEOAS navigation',
         interfaces: {
           rpc: 'WorkerEntrypoint methods for service-to-service calls',
           http: 'REST API for CRUD operations, search, and analytics',
+          hateoas: 'Hypermedia-driven navigation with _links in all responses',
           mcp: 'AI agent tools (coming soon)',
         },
+        _links: {
+          self: { href: `${baseUrl}/` },
+          health: { href: `${baseUrl}/health` },
+          stats: { href: `${baseUrl}/stats` },
+          types: { href: `${baseUrl}/types` },
+          activity: { href: `${baseUrl}/activity` },
+          things: { href: `${baseUrl}${isGlyphDomain ? '' : '/api'}/things?ns=default` },
+          relationships: { href: `${baseUrl}${isGlyphDomain ? '' : '/api'}/relationships?ns=default` },
+          search: { href: `${baseUrl}${isGlyphDomain ? '' : '/api'}/search?q=query` },
+        },
         endpoints: {
-          health: '/health',
-          stats: '/stats',
-          types: '/types?ns=onet',
-          activity: '/activity?limit=100',
-          things: {
-            list: 'GET /api/things?ns=default&page=1&limit=20',
-            get: 'GET /api/things/:ns/:id',
-            create: 'POST /api/things',
-            update: 'PUT /api/things/:ns/:id',
-            delete: 'DELETE /api/things/:ns/:id',
-            count: 'GET /api/things/count/:ns',
+          // Root-level routes (for glyph domains: 彡.io, 口.io, 回.io, db.mw)
+          ...(isGlyphDomain && {
+            root: {
+              things: {
+                list: 'GET /things?ns=default&page=1&limit=20',
+                get: 'GET /:ns/:id',
+                relationships: 'GET /:ns/:id.relationships (or /:ns/:id.:predicate)',
+                create: 'POST /things',
+                update: 'PUT /:ns/:id',
+                delete: 'DELETE /:ns/:id',
+              },
+              search: {
+                text: 'GET /search?q=query&ns=default&limit=10',
+              },
+            },
+          }),
+          // Legacy /api/* routes (for backward compatibility)
+          api: {
+            things: {
+              list: 'GET /api/things?ns=default&page=1&limit=20',
+              get: 'GET /api/things/:ns/:id',
+              create: 'POST /api/things',
+              update: 'PUT /api/things/:ns/:id',
+              delete: 'DELETE /api/things/:ns/:id',
+              count: 'GET /api/things/count/:ns',
+            },
+            relationships: {
+              list: 'GET /api/relationships?ns=default&page=1&limit=20',
+              get: 'GET /api/relationships/:ns/:id',
+              incoming: 'GET /api/relationships/:ns/:id/incoming',
+              create: 'POST /api/relationships',
+              delete: 'DELETE /api/relationships/:ns/:id',
+            },
+            search: {
+              text: 'GET /api/search?q=query&ns=default&limit=10',
+              vector: 'POST /api/search/vector',
+              hybrid: 'POST /api/search/hybrid',
+              chunks: 'POST /api/search/chunks',
+            },
+            rpc: 'POST /rpc',
           },
-          relationships: {
-            list: 'GET /api/relationships?ns=default&page=1&limit=20',
-            get: 'GET /api/relationships/:ns/:id',
-            incoming: 'GET /api/relationships/:ns/:id/incoming',
-            create: 'POST /api/relationships',
-            delete: 'DELETE /api/relationships/:ns/:id',
+        },
+        domains: {
+          standard: ['database.do', 'db.mw', 'apis.do'],
+          glyph: {
+            '彡.io': 'Data Layer - AI-native database access (彡 = shape/pattern/database)',
+            '口.io': 'Data Model - Entity types and nouns (口 = mouth/noun)',
+            '回.io': 'Data Model - Things and resources (回 = rotation/thing)',
           },
-          search: {
-            text: 'GET /api/search?q=query&ns=default&limit=10',
-            vector: 'POST /api/search/vector',
-            hybrid: 'POST /api/search/hybrid',
-            chunks: 'POST /api/search/chunks',
-          },
-          rpc: 'POST /rpc',
         },
       })
     })

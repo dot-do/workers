@@ -108,7 +108,7 @@ app.post('/token', async c => {
     if (!response.ok) {
       const error = await response.text()
       console.error('Token exchange failed:', error)
-      return c.json({ error: 'token_exchange_failed', details: error }, response.status)
+      return c.json({ error: 'token_exchange_failed', details: error }, response.status as any)
     }
 
     const tokens = await response.json()
@@ -150,7 +150,7 @@ app.post('/refresh', async c => {
     if (!response.ok) {
       const error = await response.text()
       console.error('Token refresh failed:', error)
-      return c.json({ error: 'refresh_failed', details: error }, response.status)
+      return c.json({ error: 'refresh_failed', details: error }, response.status as any)
     }
 
     const tokens = await response.json()
@@ -186,7 +186,7 @@ app.post('/device', async c => {
     if (!response.ok) {
       const error = await response.text()
       console.error('Device authorization failed:', error)
-      return c.json({ error: 'device_auth_failed', details: error }, response.status)
+      return c.json({ error: 'device_auth_failed', details: error }, response.status as any)
     }
 
     const deviceAuth = await response.json()
@@ -227,7 +227,7 @@ app.post('/device/token', async c => {
 
     // Return response as-is (including errors like authorization_pending)
     const data = await response.json()
-    return c.json(data, response.status)
+    return c.json(data, response.status as any)
   } catch (error) {
     console.error('Device token error:', error)
     return c.json({ error: 'internal_error', message: error instanceof Error ? error.message : 'Unknown error' }, 500)
@@ -259,7 +259,7 @@ app.get('/user', async c => {
     if (!response.ok) {
       const error = await response.text()
       console.error('User info fetch failed:', error)
-      return c.json({ error: 'userinfo_failed', details: error }, response.status)
+      return c.json({ error: 'userinfo_failed', details: error }, response.status as any)
     }
 
     const userInfo = await response.json()

@@ -28,6 +28,7 @@ packages:
   - 'deliverability'
   - 'blacklist-monitor'
   - 'lead-enrichment'
+  - 'waitlist-beta-management'
   - 'ads-campaigns'
   - 'ads-audiences'
   # SDK packages (foundation packages)

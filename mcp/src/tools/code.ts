@@ -9,6 +9,52 @@ import type { Env, User, MCPTool } from '../types'
 export function getTools(): MCPTool[] {
   return [
     {
+      name: 'do',
+      description: `Execute TypeScript code with full access to the .do platform via the $ runtime.
+
+Available primitives (accessible as $ or directly):
+- $.ai / ai - AI operations (generateText, generate, generateStream, embed, classify, extract)
+- $.db / db - Database operations (find, create, update, delete, forEvery)
+- $.api / api - API calls (get, post, put, delete)
+- $.on / on - Event handlers (created, updated, deleted, emit)
+- $.send / send - Send operations (email, sms, push, webhook)
+- $.every / every - Scheduled tasks (hour, day, week, month, year)
+- $.decide / decide - Decision logic (if/then/else, switch/case)
+- $.user / user - User context (id, email, name, roles, metadata)
+
+Documentation: Use $.md to get full docs, or specific docs like db.md, ai.md, etc.
+
+Examples:
+- await ai.generateText('Write a haiku')
+- await $.ai.generateText('Write a haiku')
+- await db.users.find({ email: 'user@example.com' })
+- await send.email('user@example.com', 'Subject', 'Body')
+- every.hour(async () => { /* task */ })
+- on.user.created(async (user) => { /* handler */ })
+
+Code runs in a secure V8 isolate with rollback capability. All mutations are non-destructive.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          code: {
+            type: 'string',
+            description: 'TypeScript code to execute. Has access to $ runtime and all primitives (ai, db, api, on, send, every, decide, user). Use return to return a value.'
+          },
+          timeout: {
+            type: 'number',
+            description: 'Execution timeout in milliseconds (default: 30000, max: 30000)',
+            default: 30000,
+            maximum: 30000
+          },
+          cacheKey: {
+            type: 'string',
+            description: 'Optional cache key for result caching (1 hour TTL)'
+          }
+        },
+        required: ['code']
+      }
+    },
+    {
       name: 'code_execute',
       description: 'Execute TypeScript code in a secure V8 isolate. Use this for complex logic, data transformations, or when you need to run code with access to platform services (db, ai, mcp). Returns the result, console logs, and execution metrics.',
       inputSchema: {
@@ -97,6 +143,54 @@ export function getTools(): MCPTool[] {
       }
     }
   ]
+}
+
+/**
+ * Universal 'do' tool - Execute code with full $ runtime access
+ */
+export async function do_tool(
+  args: {
+    code: string
+    timeout?: number
+    cacheKey?: string
+  },
+  c: Context<{ Bindings: Env }>,
+  user: User | null
+): Promise<any> {
+  const env = c.env
+
+  // Validate DO service is available
+  if (!env.DO) {
+    throw new Error('Code execution service not available')
+  }
+
+  // Build service context for authorization
+  const context = user ? {
+    auth: {
+      authenticated: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role || 'public',
+        permissions: []
+      }
+    },
+    requestId: crypto.randomUUID(),
+    timestamp: Date.now(),
+    metadata: {}
+  } : undefined
+
+  // Call DO service with $ runtime available
+  const result = await env.DO.execute({
+    code: args.code,
+    timeout: args.timeout || 30000,
+    cacheKey: args.cacheKey,
+    captureConsole: true,
+    captureFetch: false
+  }, context)
+
+  return result
 }
 
 /**

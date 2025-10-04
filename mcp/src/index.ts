@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { handleMCPRequest } from './server'
 import { authMiddleware, optionalAuthMiddleware, OAUTH_METADATA } from './auth'
+import { generateDocs, generateDocsIndex, listDocs } from './docs/generator'
 import type { Env } from './types'
 
 /**
@@ -66,10 +67,46 @@ export class MCPServer extends WorkerEntrypoint<Env> {
           'Search Tools',
           'Queue Tools',
           'Workflow Tools',
-          'CLI Tools'
+          'CLI Tools',
+          'Code Execution'
         ],
-        transport: ['http', 'sse', 'stdio']
+        transport: ['http', 'sse', 'stdio'],
+        documentation: {
+          index: 'https://mcp.do/docs',
+          primitives: listDocs().map(name => `https://mcp.do/${name}.md`)
+        }
       })
+    })
+
+    /**
+     * Documentation endpoints (no auth required)
+     */
+
+    // Documentation index
+    app.get('/docs', (c) => {
+      const docs = generateDocsIndex()
+      return c.text(docs, 200, { 'Content-Type': 'text/markdown' })
+    })
+
+    // Root runtime documentation
+    app.get('/$.md', (c) => {
+      try {
+        const docs = generateDocs('$')
+        return c.text(docs, 200, { 'Content-Type': 'text/markdown' })
+      } catch (error) {
+        return c.text('Documentation not found', 404)
+      }
+    })
+
+    // Primitive-specific documentation
+    app.get('/:primitive.md', (c) => {
+      const primitive = c.req.param('primitive')
+      try {
+        const docs = generateDocs(primitive)
+        return c.text(docs, 200, { 'Content-Type': 'text/markdown' })
+      } catch (error) {
+        return c.text(`Documentation not found for primitive: ${primitive}`, 404)
+      }
     })
 
     /**

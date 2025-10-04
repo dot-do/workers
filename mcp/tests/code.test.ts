@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { code_execute, code_generate, code_test } from '../src/tools/code'
+import { code_execute, code_generate, code_test, do_tool } from '../src/tools/code'
 import type { Env, User } from '../src/types'
 
 // Mock DO service
@@ -580,5 +580,265 @@ describe('MCP Code Tools - Context Building', () => {
     )
 
     expect(env.DO.execute).toHaveBeenCalledWith(expect.any(Object), undefined)
+  })
+})
+
+describe('MCP Code Tools - do_tool (Universal Business-as-Code Tool)', () => {
+  it('should execute simple code with $ runtime', async () => {
+    const env = createMockEnv()
+    const context = createMockContext(env)
+    const user = createMockUser('admin')
+
+    const result = await do_tool(
+      {
+        code: 'return 2 + 2',
+      },
+      context,
+      user
+    )
+
+    expect(result.success).toBe(true)
+    expect(result.result).toBe(4)
+    expect(env.DO.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        code: 'return 2 + 2',
+        timeout: 30000,
+        captureConsole: true,
+        captureFetch: false,
+      }),
+      expect.objectContaining({
+        auth: expect.objectContaining({
+          authenticated: true,
+          user: expect.objectContaining({
+            id: 'usr_admin',
+            role: 'admin',
+          }),
+        }),
+      })
+    )
+  })
+
+  it('should execute code with direct primitive access (ai, db, etc.)', async () => {
+    const env = createMockEnv()
+    const context = createMockContext(env)
+    const user = createMockUser('admin')
+
+    const result = await do_tool(
+      {
+        code: 'return { message: "Hello from $ runtime" }',
+      },
+      context,
+      user
+    )
+
+    expect(result.success).toBe(true)
+    expect(result.result).toEqual({ message: 'Hello from $ runtime' })
+  })
+
+  it('should execute code with $ object', async () => {
+    const env = createMockEnv()
+    const context = createMockContext(env)
+    const user = createMockUser('admin')
+
+    const result = await do_tool(
+      {
+        code: 'const { ai, db } = $; return { ai: typeof ai, db: typeof db }',
+      },
+      context,
+      user
+    )
+
+    expect(result.success).toBe(true)
+  })
+
+  it('should support custom timeout', async () => {
+    const env = createMockEnv()
+    const context = createMockContext(env)
+    const user = createMockUser('admin')
+
+    await do_tool(
+      {
+        code: 'return 42',
+        timeout: 15000,
+      },
+      context,
+      user
+    )
+
+    expect(env.DO.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        timeout: 15000,
+      }),
+      expect.any(Object)
+    )
+  })
+
+  it('should support cache key', async () => {
+    const env = createMockEnv()
+    const context = createMockContext(env)
+    const user = createMockUser('admin')
+
+    await do_tool(
+      {
+        code: 'return 42',
+        cacheKey: 'my-cache-key',
+      },
+      context,
+      user
+    )
+
+    expect(env.DO.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cacheKey: 'my-cache-key',
+      }),
+      expect.any(Object)
+    )
+  })
+
+  it('should work for unauthenticated users', async () => {
+    const env = createMockEnv()
+    const context = createMockContext(env)
+
+    const result = await do_tool(
+      {
+        code: 'return "public access"',
+      },
+      context,
+      null
+    )
+
+    expect(result.success).toBe(true)
+    expect(env.DO.execute).toHaveBeenCalledWith(expect.any(Object), undefined)
+  })
+
+  it('should pass user context for authorization', async () => {
+    const env = createMockEnv()
+    const context = createMockContext(env)
+    const user = createMockUser('tenant')
+
+    await do_tool(
+      {
+        code: 'return user.id',
+      },
+      context,
+      user
+    )
+
+    expect(env.DO.execute).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        auth: {
+          authenticated: true,
+          user: {
+            id: 'usr_tenant',
+            email: 'tenant@example.com',
+            name: 'tenant user',
+            role: 'tenant',
+            permissions: [],
+          },
+        },
+        requestId: expect.any(String),
+        timestamp: expect.any(Number),
+        metadata: {},
+      })
+    )
+  })
+
+  it('should handle execution errors', async () => {
+    const env = createMockEnv()
+    const context = createMockContext(env)
+    const user = createMockUser('admin')
+
+    const result = await do_tool(
+      {
+        code: 'throw new Error("Runtime error")',
+      },
+      context,
+      user
+    )
+
+    expect(result.success).toBe(false)
+    expect(result.error).toBeDefined()
+    expect(result.error.message).toContain('error')
+  })
+
+  it('should throw error when DO service not available', async () => {
+    const env = createMockEnv()
+    env.DO = undefined as any
+    const context = createMockContext(env)
+    const user = createMockUser('admin')
+
+    await expect(
+      do_tool(
+        {
+          code: 'return 42',
+        },
+        context,
+        user
+      )
+    ).rejects.toThrow('Code execution service not available')
+  })
+
+  it('should capture console logs by default', async () => {
+    const env = createMockEnv()
+    const context = createMockContext(env)
+    const user = createMockUser('admin')
+
+    await do_tool(
+      {
+        code: 'console.log("test"); return 42',
+      },
+      context,
+      user
+    )
+
+    expect(env.DO.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        captureConsole: true,
+      }),
+      expect.any(Object)
+    )
+  })
+
+  it('should not capture fetch requests by default', async () => {
+    const env = createMockEnv()
+    const context = createMockContext(env)
+    const user = createMockUser('admin')
+
+    await do_tool(
+      {
+        code: 'return 42',
+      },
+      context,
+      user
+    )
+
+    expect(env.DO.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        captureFetch: false,
+      }),
+      expect.any(Object)
+    )
+  })
+
+  it('should use default timeout of 30000ms', async () => {
+    const env = createMockEnv()
+    const context = createMockContext(env)
+    const user = createMockUser('admin')
+
+    await do_tool(
+      {
+        code: 'return 42',
+      },
+      context,
+      user
+    )
+
+    expect(env.DO.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        timeout: 30000,
+      }),
+      expect.any(Object)
+    )
   })
 })

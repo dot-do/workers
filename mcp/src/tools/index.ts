@@ -58,9 +58,12 @@ export async function callTool(
   user: User | null,
   authenticated: boolean
 ): Promise<any> {
+  // Special mapping for 'do' tool (since 'do' is a reserved keyword)
+  const toolName = name === 'do' ? 'do_tool' : name
+
   // Find tool handler
   for (const [category, tools] of Object.entries(toolCategories)) {
-    const handler = (tools as any)[name]
+    const handler = (tools as any)[toolName]
     if (handler && typeof handler === 'function') {
       return await handler(args, c, user)
     }

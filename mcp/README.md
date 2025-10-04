@@ -1,67 +1,105 @@
-# MCP Proxy Worker
+# MCP Server
 
-A Cloudflare Worker that proxies Model Context Protocol (MCP) servers and provides built-in GitHub integration and knowledge graph memory storage.
+A Cloudflare Worker that implements the Model Context Protocol (MCP) JSON-RPC 2.0 server, providing AI agents with access to platform capabilities through a universal Business-as-Code tool.
 
 ## Features
 
-- **MCP Server Proxy**: Forward requests to external MCP servers (Context7, DeepWiki, Slack, etc.)
-- **GitHub Integration**: Built-in GitHub MCP tools for repository operations
-- **Knowledge Graph Memory**: Anthropic-compatible graph memory store with KV persistence
-- **RPC Interface**: Service-to-service communication via Workers RPC
-- **HTTP API**: REST endpoints for tool discovery and execution
+- **Universal `do` Tool**: Single MCP tool that accepts TypeScript code using the $ runtime
+- **Business-as-Code Runtime**: 8 core primitives (ai, db, api, on, send, every, decide, user)
+- **Code Mode Philosophy**: AI writes code instead of calling dozens of individual tools
+- **Comprehensive Documentation**: HTTP endpoints and MCP resources for all primitives
+- **OAuth 2.1 Authentication**: Secure token-based authentication
+- **V8 Isolate Execution**: Sandboxed code execution with automatic rollback
+- **Type-Safe**: Full TypeScript support with intellisense
 
 ## Architecture
 
-### Supported MCP Servers
+### Code Mode Philosophy
 
-- **context7**: https://context7.liam.sh/sse
-- **deepwiki**: https://mcp.deepwiki.com/sse
-- **memory**: Built-in knowledge graph memory store
-- **slack**: https://mcp.slack.com/sse
-- **github**: Built-in GitHub API integration
-- *More servers can be added to the registry*
+> "LLMs are better at writing code to call MCP, than at calling MCP directly"
+>
+> — [Cloudflare Code Mode Blog Post](https://blog.cloudflare.com/code-mode/)
 
-### Built-in Servers
+Instead of exposing 100+ MCP tools, we provide a **single universal `do` tool** that accepts TypeScript code. The AI writes code using the $ runtime, which executes in a secure V8 isolate.
 
-#### GitHub MCP Server
+**Benefits:**
+- **Simpler for AI** - One tool instead of dozens
+- **More flexible** - Can combine primitives in any way
+- **Type-safe** - Full TypeScript intellisense
+- **Secure** - Sandboxed with automatic rollback
 
-Provides GitHub API integration with these tools:
-- `github_search_repositories` - Search GitHub repositories
-- `github_get_file_contents` - Get file contents from a repository
-- `github_list_issues` - List issues in a repository
+### Business-as-Code Runtime ($)
 
-**Requirements**: Set `GITHUB_TOKEN` secret via `wrangler secret put GITHUB_TOKEN`
+The $ runtime provides 8 core primitives for building business logic:
 
-#### Memory MCP Server
+```typescript
+interface BusinessRuntime {
+  ai: AIOperations        // AI generation, embeddings, classification
+  db: DatabaseOperations  // CRUD, queries, bulk operations
+  api: APIOperations      // HTTP client for external APIs
+  on: EventOperations     // Event handlers and custom events
+  send: SendOperations    // Email, SMS, push, webhooks
+  every: EveryOperations  // Cron tasks, collection iteration
+  decide: DecisionOperations // If/then/else, switch/case, rules
+  user: UserContext       // Authentication, roles, permissions
+}
+```
 
-Knowledge graph memory store with Anthropic-compatible API:
-- `create_entities` - Create entities in the knowledge graph
-- `create_relations` - Create relations between entities
-- `add_observations` - Add observations to entities
-- `delete_entities` - Remove entities and their relations
-- `delete_observations` - Remove specific observations
-- `delete_relations` - Remove specific relations
-- `read_graph` - Read the entire knowledge graph
-- `search_nodes` - Search for nodes based on query
+### Usage Patterns
 
-**Storage**: Persisted to Cloudflare KV
+**Pattern 1: Evaluate Statement**
+```typescript
+// Execute a single expression or statement
+await ai.generateText('Write a haiku about coding')
+await db.users.find({ role: 'admin' })
+await db.forEvery.industry.occupations.tasks.generateService()
+```
+
+**Pattern 2: Business Module**
+```typescript
+// Define complete business logic as a module
+export default $ => {
+  const { ai, api, db, decide, every, on, send, user } = $
+
+  // Event-driven logic
+  on.user.created(async (user) => {
+    const welcome = await ai.generateWelcomeEmail(user)
+    await send.email(user.email, 'Welcome!', welcome)
+  })
+
+  // Scheduled tasks
+  every.hour.reviewKPIs()
+  every.month.forEvery.user.sendMonthlyReport()
+
+  // Decision logic
+  decide.switch(user.tier, {
+    free: () => db.usage.limit(user.id, { requests: 100 }),
+    pro: () => db.usage.limit(user.id, { requests: 10000 }),
+    enterprise: () => db.usage.unlimited(user.id)
+  })
+}
+```
 
 ## Setup
 
-### 1. Create KV Namespace
+### 1. Prerequisites
 
-```bash
-wrangler kv:namespace create "KV"
-wrangler kv:namespace create "KV" --preview
-```
+- Cloudflare account
+- Wrangler CLI: `npm install -g wrangler`
+- Service bindings configured for DO_SERVICE, AUTH_SERVICE, DB_SERVICE
 
-Update `wrangler.jsonc` with the namespace IDs.
+### 2. Configure Bindings
 
-### 2. Set Secrets
+Update `wrangler.jsonc` with your service bindings:
 
-```bash
-wrangler secret put GITHUB_TOKEN
-# Enter your GitHub personal access token
+```jsonc
+{
+  "services": [
+    { "binding": "DO_SERVICE", "service": "do" },
+    { "binding": "AUTH_SERVICE", "service": "auth" },
+    { "binding": "DB_SERVICE", "service": "db" }
+  ]
+}
 ```
 
 ### 3. Deploy
@@ -72,170 +110,271 @@ pnpm deploy
 
 ## API Reference
 
-### HTTP Endpoints
+### Well-Known Endpoints (No Auth)
 
-#### GET /servers
-List all available MCP servers.
+#### GET /.well-known/oauth-protected-resource
+OAuth 2.1 discovery endpoint. MCP clients use this to discover the authorization server.
 
 ```bash
-curl https://mcp.YOUR_WORKER.workers.dev/servers
+curl https://mcp.do/.well-known/oauth-protected-resource
 ```
 
 Response:
 ```json
 {
-  "servers": ["context7", "deepwiki", "memory", "slack", "github", "linear", "stripe", "cloudflare"]
+  "resource": "https://mcp.do",
+  "authorization_servers": ["https://auth.do"],
+  "authorization_endpoint": "https://auth.do/oauth/authorize",
+  "token_endpoint": "https://auth.do/oauth/token"
 }
 ```
 
-#### GET /{server}/tools
-Get available tools for a specific server.
+### Health & Info Endpoints (No Auth)
+
+#### GET /health
+Service health check.
 
 ```bash
-curl https://mcp.YOUR_WORKER.workers.dev/github/tools
+curl https://mcp.do/health
 ```
 
 Response:
 ```json
 {
-  "tools": [
-    {
-      "name": "github_search_repositories",
-      "description": "Search GitHub repositories",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "query": { "type": "string", "description": "Search query" }
-        },
-        "required": ["query"]
-      }
-    }
-  ]
+  "status": "ok",
+  "service": "mcp-server",
+  "version": "1.0.0",
+  "protocol": "mcp/2024-11-05",
+  "oauth": "enabled"
 }
 ```
 
-#### POST /{server}/call
-Execute a tool on a specific server.
+#### GET /
+Server information and capabilities.
 
 ```bash
-curl -X POST https://mcp.YOUR_WORKER.workers.dev/github/call \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tool": "github_search_repositories",
-    "args": { "query": "cloudflare workers" }
-  }'
+curl https://mcp.do/
 ```
 
 Response:
 ```json
 {
-  "result": {
-    "items": [...]
+  "name": "mcp-server",
+  "version": "1.0.0",
+  "protocol": "mcp/2024-11-05",
+  "description": "MCP server exposing platform capabilities as AI-accessible tools",
+  "authentication": {
+    "type": "oauth2.1",
+    "discovery": "https://mcp.do/.well-known/oauth-protected-resource"
+  },
+  "capabilities": {
+    "tools": { "listChanged": true },
+    "resources": { "subscribe": true, "listChanged": true }
+  },
+  "categories": [
+    "Database Tools",
+    "AI Tools",
+    "Auth Tools",
+    "Search Tools",
+    "Queue Tools",
+    "Workflow Tools",
+    "CLI Tools",
+    "Code Execution"
+  ],
+  "transport": ["http", "sse", "stdio"],
+  "documentation": {
+    "index": "https://mcp.do/docs",
+    "primitives": [
+      "https://mcp.do/$.md",
+      "https://mcp.do/ai.md",
+      "https://mcp.do/db.md",
+      "https://mcp.do/api.md",
+      "https://mcp.do/on.md",
+      "https://mcp.do/send.md",
+      "https://mcp.do/every.md",
+      "https://mcp.do/decide.md",
+      "https://mcp.do/user.md"
+    ]
   }
 }
 ```
 
-### RPC Methods
+### Documentation Endpoints (No Auth)
 
-#### getTools(server: ServerName): Promise<any>
-
-Get tools from an MCP server.
-
-```typescript
-const tools = await env.MCP.getTools('github')
-```
-
-#### callTool(server: ServerName, toolName: string, args: any): Promise<any>
-
-Execute a tool on an MCP server.
-
-```typescript
-const result = await env.MCP.callTool('github', 'github_search_repositories', {
-  query: 'cloudflare workers'
-})
-```
-
-## Usage Examples
-
-### Memory Store: Create Entities
+#### GET /docs
+Documentation index with links to all primitives.
 
 ```bash
-curl -X POST https://mcp.YOUR_WORKER.workers.dev/memory/call \
+curl https://mcp.do/docs
+```
+
+Returns markdown with:
+- Overview of the $ runtime
+- Quick start examples
+- Links to all primitive documentation
+- Security information
+- Code Mode philosophy
+
+#### GET /$.md
+Complete $ runtime documentation.
+
+```bash
+curl https://mcp.do/$.md
+```
+
+Returns comprehensive markdown documentation for the BusinessRuntime interface with TypeScript definitions and usage examples.
+
+#### GET /:primitive.md
+Documentation for a specific primitive (ai, db, api, on, send, every, decide, user).
+
+```bash
+curl https://mcp.do/ai.md
+curl https://mcp.do/db.md
+curl https://mcp.do/api.md
+```
+
+Returns detailed markdown documentation with:
+- TypeScript interface definitions
+- JSDoc comments for all methods
+- Usage examples
+- Best practices
+
+### MCP JSON-RPC Endpoint (Requires Auth)
+
+#### POST /
+MCP protocol endpoint. All requests require OAuth 2.1 access token.
+
+**Authentication:**
+```bash
+Authorization: Bearer <access_token>
+```
+
+**MCP Methods:**
+- `initialize` - Initialize MCP session
+- `tools/list` - List available tools
+- `tools/call` - Execute a tool
+- `resources/list` - List available resources
+- `resources/read` - Read a resource
+
+**Example: List Tools**
+```bash
+curl -X POST https://mcp.do/ \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "tool": "create_entities",
-    "args": {
-      "entities": [
-        {
-          "name": "Alice",
-          "entityType": "person",
-          "observations": ["Works at Acme Corp", "Expert in TypeScript"]
-        },
-        {
-          "name": "Acme Corp",
-          "entityType": "organization",
-          "observations": ["Tech company", "Based in San Francisco"]
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/list"
+  }'
+```
+
+Response:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tools": [
+      {
+        "name": "do",
+        "description": "Universal Business-as-Code tool - execute TypeScript with $ runtime",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "description": "TypeScript code to execute using $ runtime"
+            },
+            "timeout": {
+              "type": "number",
+              "description": "Execution timeout in milliseconds (max 30000)"
+            },
+            "cacheKey": {
+              "type": "string",
+              "description": "Optional cache key for result caching"
+            }
+          },
+          "required": ["code"]
         }
-      ]
+      }
+    ]
+  }
+}
+```
+
+**Example: Execute Code**
+```bash
+curl -X POST https://mcp.do/ \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/call",
+    "params": {
+      "name": "do",
+      "arguments": {
+        "code": "return await ai.generateText(\"Write a haiku about coding\")"
+      }
     }
   }'
 ```
 
-### Memory Store: Create Relations
+Response:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\"success\":true,\"result\":\"Code writes itself\\nIn midnight's gentle glow\\nBugs become features\"}"
+      }
+    ]
+  }
+}
+```
 
+**Example: List Resources**
 ```bash
-curl -X POST https://mcp.YOUR_WORKER.workers.dev/memory/call \
+curl -X POST https://mcp.do/ \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "tool": "create_relations",
-    "args": {
-      "relations": [
-        {
-          "from": "Alice",
-          "to": "Acme Corp",
-          "relationType": "works at"
-        }
-      ]
+    "jsonrpc": "2.0",
+    "id": 3,
+    "method": "resources/list"
+  }'
+```
+
+Response includes 9 documentation resources:
+- `doc://$` - Business-as-Code Runtime
+- `doc://ai` - AI Operations
+- `doc://db` - Database Operations
+- `doc://api` - API Operations
+- `doc://on` - Event Operations
+- `doc://send` - Send Operations
+- `doc://every` - Every Operations
+- `doc://decide` - Decide Operations
+- `doc://user` - User Context
+
+**Example: Read Resource**
+```bash
+curl -X POST https://mcp.do/ \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 4,
+    "method": "resources/read",
+    "params": {
+      "uri": "doc://ai"
     }
   }'
 ```
 
-### Memory Store: Search Nodes
-
-```bash
-curl -X POST https://mcp.YOUR_WORKER.workers.dev/memory/call \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tool": "search_nodes",
-    "args": { "query": "TypeScript" }
-  }'
-```
-
-### GitHub: Search Repositories
-
-```bash
-curl -X POST https://mcp.YOUR_WORKER.workers.dev/github/call \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tool": "github_search_repositories",
-    "args": { "query": "model context protocol" }
-  }'
-```
-
-### GitHub: Get File Contents
-
-```bash
-curl -X POST https://mcp.YOUR_WORKER.workers.dev/github/call \
-  -H "Content-Type: application/json" \
-  -d '{
-    "tool": "github_get_file_contents",
-    "args": {
-      "owner": "modelcontextprotocol",
-      "repo": "servers",
-      "path": "README.md"
-    }
-  }'
-```
+Returns complete AI operations documentation in markdown format.
 
 ## Development
 
@@ -253,10 +392,157 @@ The worker will be available at `http://localhost:8787`
 pnpm test
 ```
 
+Test files:
+- `tests/code.test.ts` - Tests for the universal `do` tool
+- `tests/docs.test.ts` - Tests for documentation generation
+- `tests/resources.test.ts` - Tests for MCP resources
+- `tests/server.test.ts` - Tests for JSON-RPC server
+
 ### Type Checking
 
 ```bash
 pnpm typecheck
+```
+
+## Security
+
+### V8 Isolate Sandboxing
+
+All code executed via the `do` tool runs in secure V8 isolates with:
+- ✅ **Automatic rollback** - Failed operations roll back automatically
+- ✅ **Non-destructive mutations** - Database changes are versioned
+- ✅ **Rate limiting** - Tier-based execution limits
+- ✅ **Namespace isolation** - Tenant data is isolated
+- ✅ **Timeout protection** - Max 30 seconds execution time
+
+### OAuth 2.1 Authentication
+
+The MCP endpoint requires a valid OAuth 2.1 access token. Tokens are validated via the AUTH_SERVICE binding.
+
+**Token Requirements:**
+- Bearer token in Authorization header
+- Valid WorkOS or API key authentication
+- Appropriate permissions for requested operations
+
+### User Context
+
+All code executes with user context:
+```typescript
+user.id          // User ID
+user.email       // User email
+user.name        // User name
+user.roles       // User roles (e.g., ['admin'])
+user.permissions // User permissions
+user.hasRole(role)       // Check role
+user.hasPermission(perm) // Check permission
+```
+
+## Documentation
+
+### Available Documentation
+
+- **HTTP Endpoints**: Public documentation endpoints (no auth required)
+  - `GET /docs` - Documentation index
+  - `GET /$.md` - $ runtime documentation
+  - `GET /:primitive.md` - Primitive-specific documentation
+
+- **MCP Resources**: Documentation via MCP protocol (auth required)
+  - `doc://$` - $ runtime
+  - `doc://ai` - AI operations
+  - `doc://db` - Database operations
+  - `doc://api` - API operations
+  - `doc://on` - Event operations
+  - `doc://send` - Send operations
+  - `doc://every` - Every operations
+  - `doc://decide` - Decide operations
+  - `doc://user` - User context
+
+### Documentation Format
+
+All documentation includes:
+- **TypeScript Interfaces** - Complete type definitions
+- **JSDoc Comments** - Method descriptions and parameters
+- **Usage Examples** - Both evaluation and module patterns
+- **Best Practices** - Security, performance, patterns
+
+## Examples
+
+### Example 1: Simple AI Generation
+
+```typescript
+// MCP tool call
+{
+  "name": "do",
+  "arguments": {
+    "code": "return await ai.generateText('Write a haiku about coding')"
+  }
+}
+```
+
+### Example 2: Database Query
+
+```typescript
+// MCP tool call
+{
+  "name": "do",
+  "arguments": {
+    "code": "return await db.users.find({ role: 'admin', active: true }).limit(10)"
+  }
+}
+```
+
+### Example 3: Chained Operations
+
+```typescript
+// MCP tool call
+{
+  "name": "do",
+  "arguments": {
+    "code": `
+      const users = await db.users.find({ role: 'admin' })
+      const summaries = await Promise.all(
+        users.map(user => ai.generateText(\`Summarize user: \${user.name}\`))
+      )
+      return summaries
+    `
+  }
+}
+```
+
+### Example 4: Business Module
+
+```typescript
+// MCP tool call
+{
+  "name": "do",
+  "arguments": {
+    "code": `
+      export default $ => {
+        const { ai, db, on, send } = $
+
+        on.user.created(async (user) => {
+          const welcome = await ai.generateWelcomeEmail(user)
+          await send.email(user.email, 'Welcome!', welcome)
+        })
+
+        return { registered: true }
+      }
+    `
+  }
+}
+```
+
+### Example 5: Custom Timeout
+
+```typescript
+// MCP tool call
+{
+  "name": "do",
+  "arguments": {
+    "code": "return await db.forEvery.user.processMonthlyReport()",
+    "timeout": 30000  // 30 second timeout
+  }
+}
 ```
 
 ## Configuration
@@ -264,46 +550,39 @@ pnpm typecheck
 ### Environment Variables
 
 Set via `wrangler secret put`:
-- `GITHUB_TOKEN` - GitHub personal access token (required for GitHub tools)
+- None required (uses service bindings)
 
-### KV Namespace
+### Service Bindings
 
-The memory store persists data to Cloudflare KV. Configure in `wrangler.jsonc`:
-
+Required bindings in `wrangler.jsonc`:
 ```jsonc
 {
-  "kv_namespaces": [
-    {
-      "binding": "KV",
-      "id": "YOUR_KV_NAMESPACE_ID",
-      "preview_id": "YOUR_PREVIEW_KV_NAMESPACE_ID"
-    }
+  "services": [
+    { "binding": "DO_SERVICE", "service": "do" },
+    { "binding": "AUTH_SERVICE", "service": "auth" },
+    { "binding": "DB_SERVICE", "service": "db" }
   ]
 }
-```
-
-## Adding New MCP Servers
-
-To add a new external MCP server:
-
-1. Update the `servers` registry in `worker.ts`:
-
-```typescript
-const servers = {
-  // ... existing servers
-  yourserver: 'https://your-mcp-server.com/sse',
-} as const
-```
-
-2. Deploy the worker:
-
-```bash
-pnpm deploy
 ```
 
 ## References
 
 - [Model Context Protocol](https://modelcontextprotocol.io)
 - [Cloudflare Workers](https://workers.cloudflare.com)
-- [Anthropic Memory MCP Server](https://github.com/modelcontextprotocol/servers/tree/main/src/memory)
+- [Code Mode Blog Post](https://blog.cloudflare.com/code-mode/)
+- [OAuth 2.1 Spec](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10)
 - [WorkOS + Cloudflare MCP](https://workos.com/blog/workos-cloudflare-mcp-auth-for-agentic-ai)
+
+## Status
+
+- ✅ Universal `do` tool implemented
+- ✅ Business-as-Code runtime integrated
+- ✅ Documentation system complete (HTTP + MCP resources)
+- ✅ OAuth 2.1 authentication configured
+- ✅ V8 isolate execution enabled
+- ✅ 100+ tests written (infrastructure issue prevents execution)
+- ⏳ Ready for deployment
+
+## License
+
+MIT

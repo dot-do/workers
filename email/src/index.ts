@@ -29,7 +29,7 @@ import {
  * - HTTP: Hono routes for direct API access
  * - Webhooks: Resend delivery status updates
  */
-export default class EmailService extends WorkerEntrypoint<Env> {
+export class EmailService extends WorkerEntrypoint<Env> {
   // ============================================================================
   // RPC INTERFACE - For service-to-service communication
   // ============================================================================
@@ -704,8 +704,10 @@ app.get('/cold-email/variables/sample', async (c) => {
   }
 })
 
-export { EmailService }
+// Export HTTP app for testing
 export { app as http }
 
-// Export fetch handler
-export const fetch = app.fetch
+// Default export for Worker (HTTP interface)
+export default {
+  fetch: app.fetch,
+}

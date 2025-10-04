@@ -60,7 +60,7 @@ export class MCPServer extends WorkerEntrypoint<Env> {
       })
     })
 
-    return app.fetch(request, c.env as Env)
+    return app.fetch(request, this.env)
   }
 }
 

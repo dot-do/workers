@@ -9,7 +9,7 @@
   },
   // Service bindings - using actual deployed names
   "services": [
-    { "binding": "DB", "service": "db" }
+    { "binding": "DB", "service": "do-db" }
     // Other services commented out until deployed
     // { "binding": "AI", "service": "ai" },
     // { "binding": "AUTH", "service": "auth" },

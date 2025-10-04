@@ -26,6 +26,14 @@ app.get('/', (c) => {
   })
 })
 
+app.get('/health', (c) => {
+  return c.json({
+    status: 'ok',
+    service: 'webhooks',
+    timestamp: new Date().toISOString(),
+  })
+})
+
 // Stripe webhook handler
 app.post('/stripe', async (c) => {
   const signature = c.req.header('stripe-signature')

@@ -1,0 +1,40 @@
+{
+  "name": "@dot-do/payload-adapter",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Payload CMS database adapter for dot-do platform with RPC integration",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "payload": "^3.58.0",
+    "@payloadcms/db-sqlite": "^3.58.0",
+    "@payloadcms/db-d1-sqlite": "^3.58.0",
+    "drizzle-orm": "^0.30.0",
+    "libsql": "^0.5.11",
+    "gray-matter": "^4.0.3",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@repo/tsup-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.5.4",
+    "tsup": "^8.0.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.3"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  }
+}

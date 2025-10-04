@@ -2671,6 +2671,28 @@ importers:
         specifier: ^3.102.0
         version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
 
+  packages/graph-api:
+    dependencies:
+      '@dot-do/graph-types':
+        specifier: workspace:*
+        version: link:../graph-types
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20250110.0
+        version: 4.20251003.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9
+
+  packages/graph-types:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   packages/middleware:
     dependencies:
       '@dot-do/worker-types':
@@ -3426,7 +3448,7 @@ packages:
       devalue: 5.3.2
       miniflare: 4.20250906.0
       semver: 7.7.2
-      vitest: 3.2.4(@types/node@24.6.2)(tsx@4.20.6)
+      vitest: 3.2.4(tsx@4.20.6)
       wrangler: 4.35.0(@cloudflare/workers-types@4.20251003.0)
       zod: 3.25.76
     transitivePeerDependencies:
@@ -6656,7 +6678,7 @@ packages:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.19
-      vite: 7.1.9(@types/node@24.6.2)(tsx@4.20.6)
+      vite: 7.1.9(@types/node@22.18.8)(tsx@4.20.6)
     dev: true
 
   /@vitest/pretty-format@2.1.9:

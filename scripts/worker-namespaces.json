@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Worker to namespace mapping - defines which namespace each worker deploys to",
+  "note": "⚠️  EXPERIMENTAL ARCHITECTURE - This configuration is under evaluation",
+  "architectureOptions": {
+    "optionA": "3 Namespaces - internal, public, tenant (current implementation)",
+    "optionB": "Hybrid - internal as regular workers, only public/tenant use namespaces"
+  },
+  "namespaces": {
+    "internal": {
+      "name": "dotdo-internal",
+      "description": "Internal infrastructure services (admin access required)",
+      "auth": "admin-only",
+      "workers": [
+        "db",
+        "auth",
+        "schedule",
+        "webhooks",
+        "email",
+        "queue",
+        "mcp"
+      ]
+    },
+    "public": {
+      "name": "dotdo-public",
+      "description": "Public APIs and services (open access, rate-limited)",
+      "auth": "open-with-rate-limiting",
+      "workers": [
+        "gateway"
+      ]
+    },
+    "tenant": {
+      "name": "dotdo-tenant",
+      "description": "Tenant-specific deployments (tenant-scoped authentication)",
+      "auth": "tenant-scoped",
+      "workers": []
+    }
+  },
+  "workerClassification": {
+    "infrastructure": {
+      "description": "Core infrastructure services that power the platform",
+      "namespace": "internal",
+      "workers": ["db", "auth", "schedule", "webhooks", "email", "queue", "mcp"]
+    },
+    "publicApis": {
+      "description": "Public-facing API services with open access",
+      "namespace": "public",
+      "workers": ["gateway"]
+    },
+    "tenantServices": {
+      "description": "Tenant-specific service deployments",
+      "namespace": "tenant",
+      "workers": []
+    }
+  },
+  "routingRules": {
+    "internal": {
+      "domain": "internal.do",
+      "authRequired": true,
+      "authLevel": "admin",
+      "examples": [
+        "https://db.internal.do/health",
+        "https://auth.internal.do/users"
+      ]
+    },
+    "public": {
+      "domain": "*.do",
+      "authRequired": false,
+      "rateLimiting": true,
+      "examples": [
+        "https://gateway.do/health",
+        "https://api.do/v1/users"
+      ]
+    },
+    "tenant": {
+      "domain": "*.tenant.do",
+      "authRequired": true,
+      "authLevel": "tenant",
+      "examples": [
+        "https://acme.tenant.do/api/users",
+        "https://bigco.tenant.do/dashboard"
+      ]
+    }
+  },
+  "openQuestions": [
+    "Should internal services use a namespace or remain regular workers?",
+    "Is the complexity of 3 namespaces worth the isolation benefits?",
+    "How do we handle versioning across namespaces?",
+    "Should gateway be split into internal/public instances?",
+    "Do we need different deployment strategies per namespace?"
+  ]
+}

@@ -4,11 +4,18 @@
 #
 # Usage:
 #   ./scripts/deploy-to-namespace.sh <service> <namespace>
-#   ./scripts/deploy-to-namespace.sh gateway production
-#   ./scripts/deploy-to-namespace.sh all staging
+#   ./scripts/deploy-to-namespace.sh gateway public
+#   ./scripts/deploy-to-namespace.sh db internal
+#   ./scripts/deploy-to-namespace.sh all internal
 #
-# Services: gateway, db, auth, schedule, all
-# Namespaces: production, staging, development
+# Services: gateway, db, auth, schedule, webhooks, email, queue, mcp, all
+# Namespaces: internal, public, tenant (new 3-tier architecture)
+#           OR production, staging, development (legacy environment-based)
+#
+# ⚠️  EXPERIMENTAL: Testing 3-tier namespace architecture
+#     - internal: Infrastructure services (admin-only)
+#     - public: Public APIs (open, rate-limited)
+#     - tenant: Tenant deployments (tenant-scoped)
 #
 
 set -e
@@ -18,13 +25,21 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Valid services
-SERVICES=("gateway" "db" "auth" "schedule")
+SERVICES=("gateway" "db" "auth" "schedule" "webhooks" "email" "queue" "mcp")
 
-# Namespace mappings
-declare -A NAMESPACE_NAMES=(
+# NEW: 3-tier namespace mappings (experimental)
+declare -A TIER_NAMESPACES=(
+  ["internal"]="dotdo-internal"
+  ["public"]="dotdo-public"
+  ["tenant"]="dotdo-tenant"
+)
+
+# LEGACY: Environment-based namespace mappings (existing)
+declare -A ENV_NAMESPACES=(
   ["production"]="dotdo-production"
   ["staging"]="dotdo-staging"
   ["development"]="dotdo-development"
@@ -45,17 +60,30 @@ usage() {
   echo "  db         - Database RPC service"
   echo "  auth       - Authentication service"
   echo "  schedule   - Cron/scheduled tasks service"
+  echo "  webhooks   - External webhooks"
+  echo "  email      - Transactional email"
+  echo "  queue      - Message queue processing"
+  echo "  mcp        - Model Context Protocol server"
   echo "  all        - Deploy all services in order"
   echo ""
-  echo "Namespaces:"
+  echo -e "${CYAN}3-Tier Namespaces (EXPERIMENTAL):${NC}"
+  echo "  internal   - dotdo-internal (infrastructure, admin-only)"
+  echo "  public     - dotdo-public (public APIs, rate-limited)"
+  echo "  tenant     - dotdo-tenant (tenant-specific, tenant-scoped)"
+  echo ""
+  echo -e "${CYAN}Environment Namespaces (LEGACY):${NC}"
   echo "  production  - dotdo-production"
   echo "  staging     - dotdo-staging"
   echo "  development - dotdo-development"
   echo ""
-  echo "Examples:"
+  echo "Examples (3-tier):"
+  echo "  $0 db internal"
+  echo "  $0 gateway public"
+  echo "  $0 all internal"
+  echo ""
+  echo "Examples (legacy):"
   echo "  $0 gateway production"
-  echo "  $0 db staging"
-  echo "  $0 all development"
+  echo "  $0 all staging"
   exit 1
 }
 
@@ -66,26 +94,45 @@ if [ $# -ne 2 ]; then
 fi
 
 SERVICE="$1"
-ENVIRONMENT="$2"
+NAMESPACE_KEY="$2"
 
-# Validate namespace
-if [ -z "${NAMESPACE_NAMES[$ENVIRONMENT]}" ]; then
-  echo -e "${RED}Error: Invalid namespace '$ENVIRONMENT'${NC}"
-  echo "Valid namespaces: production, staging, development"
+# Determine namespace type and validate
+NAMESPACE=""
+NAMESPACE_ID=""
+NAMESPACE_TYPE=""
+
+if [ -n "${TIER_NAMESPACES[$NAMESPACE_KEY]}" ]; then
+  NAMESPACE="${TIER_NAMESPACES[$NAMESPACE_KEY]}"
+  NAMESPACE_TYPE="3-tier"
+elif [ -n "${ENV_NAMESPACES[$NAMESPACE_KEY]}" ]; then
+  NAMESPACE="${ENV_NAMESPACES[$NAMESPACE_KEY]}"
+  NAMESPACE_ID="${NAMESPACE_IDS[$NAMESPACE_KEY]}"
+  NAMESPACE_TYPE="environment"
+else
+  echo -e "${RED}Error: Invalid namespace '$NAMESPACE_KEY'${NC}"
+  echo ""
+  echo "Valid 3-tier namespaces: internal, public, tenant"
+  echo "Valid environment namespaces: production, staging, development"
   exit 1
 fi
-
-NAMESPACE="${NAMESPACE_NAMES[$ENVIRONMENT]}"
-NAMESPACE_ID="${NAMESPACE_IDS[$ENVIRONMENT]}"
 
 echo -e "${BLUE}============================================${NC}"
 echo -e "${BLUE}Workers for Platforms Deployment${NC}"
 echo -e "${BLUE}============================================${NC}"
 echo ""
-echo -e "Environment:    ${GREEN}$ENVIRONMENT${NC}"
+echo -e "Service:        ${GREEN}$SERVICE${NC}"
+echo -e "Namespace Key:  ${GREEN}$NAMESPACE_KEY${NC}"
 echo -e "Namespace:      ${GREEN}$NAMESPACE${NC}"
-echo -e "Namespace ID:   ${GREEN}$NAMESPACE_ID${NC}"
+echo -e "Type:           ${CYAN}$NAMESPACE_TYPE${NC}"
+if [ -n "$NAMESPACE_ID" ]; then
+  echo -e "Namespace ID:   ${GREEN}$NAMESPACE_ID${NC}"
+fi
 echo ""
+
+if [ "$NAMESPACE_TYPE" = "3-tier" ]; then
+  echo -e "${YELLOW}⚠️  Deploying to EXPERIMENTAL 3-tier architecture${NC}"
+  echo ""
+fi
 
 # Function to deploy a single service
 deploy_service() {

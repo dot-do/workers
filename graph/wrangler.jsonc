@@ -16,8 +16,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "graph",
-      "database_id": "" // TODO: Create database and add ID
+      "database_name": "graph-db",
+      "database_id": "05c719f3-1a96-48fe-a9d1-e43ce1a8badc"
     }
   ],
   // Service bindings for auth
@@ -26,15 +26,15 @@
       "binding": "AUTH_SERVICE",
       "service": "auth"
     }
-  ],
-  // Durable Objects for SQLite-backed graph database
-  "durable_objects": {
-    "bindings": [
-      {
-        "name": "GRAPH_DO",
-        "class_name": "GraphDO",
-        "script_name": "graph"
-      }
-    ]
-  }
+  ]
+  // TODO: Add Durable Objects binding after initial deployment
+  // "durable_objects": {
+  //   "bindings": [
+  //     {
+  //       "name": "GRAPH_DO",
+  //       "class_name": "GraphDO",
+  //       "script_name": "graph"
+  //     }
+  //   ]
+  // }
 }

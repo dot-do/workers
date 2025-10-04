@@ -11,15 +11,27 @@ export interface Env {
   CLOUDFLARE_ACCOUNT_ID: string
   CLOUDFLARE_API_TOKEN: string
 
-  // Namespace names
+  // LEGACY: Environment-based namespace names
   PRODUCTION_NAMESPACE: string
   STAGING_NAMESPACE: string
   DEV_NAMESPACE: string
+
+  // NEW (EXPERIMENTAL): 3-tier namespace names
+  INTERNAL_NAMESPACE?: string // dotdo-internal
+  PUBLIC_NAMESPACE?: string // dotdo-public
+  TENANT_NAMESPACE?: string // dotdo-tenant
+
+  // Architecture mode toggle
+  NAMESPACE_MODE?: 'tier' | 'environment' // default: 'environment'
 }
 
 export type ServiceName = 'gateway' | 'db' | 'auth' | 'schedule' | 'webhooks' | 'email' | 'mcp' | 'queue'
 
+// LEGACY: Environment-based deployment
 export type Environment = 'production' | 'staging' | 'development'
+
+// NEW (EXPERIMENTAL): Tier-based deployment
+export type Tier = 'internal' | 'public' | 'tenant'
 
 export interface DeploymentMetadata {
   commit: string
@@ -30,7 +42,8 @@ export interface DeploymentMetadata {
 
 export interface DeploymentRequest {
   service: ServiceName
-  environment: Environment
+  environment: Environment // For legacy environment-based
+  tier?: Tier // For new tier-based (optional, experimental)
   script: string // base64-encoded bundle
   bindings?: Record<string, any>
   metadata: DeploymentMetadata
@@ -39,8 +52,10 @@ export interface DeploymentRequest {
 export interface Deployment {
   id: string
   service: ServiceName
-  environment: Environment
+  environment: Environment // Legacy environment-based
+  tier?: Tier // New tier-based (experimental)
   namespace: string
+  namespaceMode: 'tier' | 'environment'
   status: 'deployed' | 'failed' | 'rolled_back'
   timestamp: string
   url: string

@@ -8,7 +8,11 @@ import { z } from 'zod'
 
 export const serviceNameSchema = z.enum(['gateway', 'db', 'auth', 'schedule', 'webhooks', 'email', 'mcp', 'queue'])
 
+// LEGACY: Environment-based deployment
 export const environmentSchema = z.enum(['production', 'staging', 'development'])
+
+// NEW (EXPERIMENTAL): Tier-based deployment
+export const tierSchema = z.enum(['internal', 'public', 'tenant'])
 
 export const deploymentMetadataSchema = z.object({
   commit: z.string().min(1),
@@ -20,6 +24,7 @@ export const deploymentMetadataSchema = z.object({
 export const deploymentRequestSchema = z.object({
   service: serviceNameSchema,
   environment: environmentSchema,
+  tier: tierSchema.optional(), // NEW: Optional tier for 3-tier architecture
   script: z.string().min(1, 'Script content is required'),
   bindings: z.record(z.any()).optional(),
   metadata: deploymentMetadataSchema,

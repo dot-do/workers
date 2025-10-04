@@ -39,33 +39,91 @@ This is the **Workers Repository** for the dot-do organization's microservices a
 
 The workers repository uses **Cloudflare Workers for Platforms** for secure, isolated deployments with complete audit trails and RBAC.
 
-**Architecture Flow:**
+**⚠️  EXPERIMENTAL: 3-Tier Namespace Architecture**
+
+We're currently evaluating two namespace architecture approaches:
+
+**Option A: 3-Tier Namespaces** (Current Implementation)
 ```
 GitHub Actions
   └─> curl https://deploy.do/deploy (using DEPLOY_API_KEY)
       └─> Deploy API Service (AUTH_SERVICE validates)
           └─> Cloudflare Workers for Platforms API
-              └─> Dispatch Namespace (production/staging/dev)
-                  └─> User Workers (gateway, db, auth, etc.)
+              └─> Dispatch Namespace Selection:
+                  ├─> dotdo-internal (admin-only)
+                  ├─> dotdo-public (rate-limited)
+                  └─> dotdo-tenant (tenant-scoped)
 
 Incoming Requests:
-  └─> https://gateway.do/health
-      └─> Dispatcher (routes by subdomain)
-          └─> PRODUCTION namespace
-              └─> gateway worker
+  ├─> https://db.internal.do/query        → INTERNAL namespace
+  ├─> https://gateway.do/health           → PUBLIC namespace
+  └─> https://acme.app.tenant.do/api      → TENANT namespace
 ```
 
-**Key Benefits:**
+**Option B: Hybrid Approach** (Under Consideration)
+```
+GitHub Actions
+  └─> Deploy API Service decides:
+      ├─> Internal services → Regular Cloudflare Workers (no namespace)
+      ├─> Public APIs → dotdo-public namespace
+      └─> Tenant services → dotdo-tenant namespace
+```
+
+**Namespace Classification:**
+
+- **internal** (`dotdo-internal`): Infrastructure services
+  - Services: db, auth, schedule, webhooks, email, queue, mcp
+  - Auth: Admin-only access required
+  - Use case: Platform infrastructure
+
+- **public** (`dotdo-public`): Public APIs
+  - Services: gateway (public routes)
+  - Auth: Open access, rate-limited
+  - Use case: Public-facing APIs
+
+- **tenant** (`dotdo-tenant`): Tenant deployments
+  - Services: Customer-specific workers
+  - Auth: Tenant-scoped authentication
+  - Use case: Multi-tenant SaaS
+
+**Benefits of Option A (3-Tier):**
+- ✅ Clear security boundaries between tiers
+- ✅ Independent versioning per tier
+- ✅ Flexible deployment strategies
+- ✅ Better isolation and fault tolerance
+- ✅ Consistent deployment model
+
+**Benefits of Option B (Hybrid):**
+- ✅ Simpler deployment for infrastructure
+- ✅ Lower overhead for internal services
+- ✅ Only use Workers for Platforms where needed
+- ✅ Reduced complexity
+
+**Common Benefits:**
 - ✅ Zero Cloudflare credentials in CI/CD
 - ✅ Fine-grained RBAC via AUTH_SERVICE
 - ✅ Complete audit trail of all deployments
-- ✅ Namespace isolation (dev/staging/production)
 - ✅ Foundation for multi-tenant SaaS platform
+
+**Open Questions:**
+1. Should internal services use a namespace or remain regular workers?
+2. Is the complexity of 3 namespaces worth the isolation benefits?
+3. How do we handle versioning across namespaces?
+4. Should gateway be split into internal/public instances?
+5. Do we need different deployment strategies per namespace?
+
+**Configuration Files:**
+- `scripts/setup-namespaces.sh` - Provision 3-tier namespaces
+- `scripts/worker-namespaces.json` - Worker→namespace mapping
+- `scripts/deploy-to-namespace.sh` - Deploy to specific namespace
+- `workers/deploy/src/types.ts` - Tier and Environment types
+- `workers/deploy/src/index.ts` - Namespace routing logic
 
 **Infrastructure Services:**
 1. **Deploy API** (`workers/deploy/`) - Authenticated deployment service
    - Validates API keys via AUTH_SERVICE
-   - Deploys to dispatch namespaces
+   - Supports both tier-based and environment-based deployment
+   - Automatically routes services to appropriate namespaces
    - Logs all deployments for audit
    - Supports rollback
 
@@ -75,10 +133,15 @@ Incoming Requests:
    - Path-based: /api/db/* → db worker
    - Zero business logic (pure router)
 
-**Dispatch Namespaces:**
+**Legacy Environment-Based Namespaces:**
 - `dotdo-production` - Production environment
 - `dotdo-staging` - Staging environment
 - `dotdo-development` - Development environment
+
+**Experimental 3-Tier Namespaces:**
+- `dotdo-internal` - Infrastructure services (admin-only)
+- `dotdo-public` - Public APIs (rate-limited)
+- `dotdo-tenant` - Tenant deployments (tenant-scoped)
 
 ### Service Types
 

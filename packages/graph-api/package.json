@@ -1,5 +1,5 @@
 {
-  "name": "@do/graph-api",
+  "name": "@dot-do/graph-api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@do/graph-types": "workspace:*"
+    "@dot-do/graph-types": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250110.0",

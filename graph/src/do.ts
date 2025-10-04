@@ -6,7 +6,7 @@
  */
 
 import { DurableObject } from 'cloudflare:workers'
-import type { Thing, Relationship, ThingFilter, RelationshipFilter, QueryResult } from '@do/graph-types'
+import type { Thing, Relationship, ThingFilter, RelationshipFilter, QueryResult } from '@dot-do/graph-types'
 import {
   createThing as apiCreateThing,
   getThing as apiGetThing,
@@ -20,7 +20,7 @@ import {
   queryRelationships as apiQueryRelationships,
   deleteRelationship as apiDeleteRelationship,
   bulkCreateRelationships as apiBulkCreateRelationships,
-} from '@do/graph-api'
+} from '@dot-do/graph-api'
 
 /**
  * Environment for Durable Object

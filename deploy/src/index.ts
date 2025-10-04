@@ -32,6 +32,7 @@ import type {
   AuthValidation,
   ServiceName,
   Environment,
+  Tier,
 } from './types'
 import { deploymentRequestSchema, rollbackRequestSchema, listDeploymentsRequestSchema } from './schema'
 
@@ -136,10 +137,10 @@ export class DeployService extends WorkerEntrypoint<Env> {
    * Deploy worker to Cloudflare dispatch namespace
    */
   private async deployToCloudflare(request: DeploymentRequest): Promise<Deployment> {
-    const { service, environment, script, bindings, metadata } = request
+    const { service, environment, tier, script, bindings, metadata } = request
 
-    // Determine namespace
-    const namespace = this.getNamespace(environment)
+    // Determine namespace (supports both tier and environment modes)
+    const { namespace, mode } = this.getNamespace(request)
 
     // Decode base64 script
     const scriptContent = atob(script)
@@ -188,10 +189,12 @@ export class DeployService extends WorkerEntrypoint<Env> {
       id: `deploy_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`,
       service,
       environment,
+      tier,
       namespace,
+      namespaceMode: mode,
       status: 'deployed',
       timestamp: new Date().toISOString(),
-      url: this.getServiceUrl(service, environment),
+      url: this.getServiceUrl(service, mode === 'tier' ? tier! : environment),
       version: metadata.version || metadata.commit.substring(0, 7),
       metadata,
     }
@@ -200,25 +203,95 @@ export class DeployService extends WorkerEntrypoint<Env> {
   }
 
   /**
-   * Get namespace name for environment
+   * Get namespace name for environment or tier
+   *
+   * Supports both legacy environment-based and new tier-based namespaces.
+   * Mode is controlled by NAMESPACE_MODE env var (default: 'environment').
+   *
+   * ⚠️  EXPERIMENTAL: 3-tier architecture is under evaluation
    */
-  private getNamespace(environment: Environment): string {
-    switch (environment) {
+  private getNamespace(request: DeploymentRequest): { namespace: string; mode: 'tier' | 'environment' } {
+    const mode = this.env.NAMESPACE_MODE || 'environment'
+
+    // NEW: Tier-based namespace routing (experimental)
+    if (mode === 'tier') {
+      const tier = request.tier || this.getDefaultTier(request.service)
+
+      switch (tier) {
+        case 'internal':
+          if (!this.env.INTERNAL_NAMESPACE) throw new Error('INTERNAL_NAMESPACE not configured')
+          return { namespace: this.env.INTERNAL_NAMESPACE, mode: 'tier' }
+        case 'public':
+          if (!this.env.PUBLIC_NAMESPACE) throw new Error('PUBLIC_NAMESPACE not configured')
+          return { namespace: this.env.PUBLIC_NAMESPACE, mode: 'tier' }
+        case 'tenant':
+          if (!this.env.TENANT_NAMESPACE) throw new Error('TENANT_NAMESPACE not configured')
+          return { namespace: this.env.TENANT_NAMESPACE, mode: 'tier' }
+        default:
+          throw new Error(`Invalid tier: ${tier}`)
+      }
+    }
+
+    // LEGACY: Environment-based namespace routing
+    switch (request.environment) {
       case 'production':
-        return this.env.PRODUCTION_NAMESPACE
+        return { namespace: this.env.PRODUCTION_NAMESPACE, mode: 'environment' }
       case 'staging':
-        return this.env.STAGING_NAMESPACE
+        return { namespace: this.env.STAGING_NAMESPACE, mode: 'environment' }
       case 'development':
-        return this.env.DEV_NAMESPACE
+        return { namespace: this.env.DEV_NAMESPACE, mode: 'environment' }
       default:
-        throw new Error(`Invalid environment: ${environment}`)
+        throw new Error(`Invalid environment: ${request.environment}`)
     }
   }
 
   /**
-   * Get service URL after deployment
+   * Get default tier for a service (experimental)
+   *
+   * Maps services to their default tier based on worker-namespaces.json.
+   * This is used when tier is not explicitly specified in request.
    */
-  private getServiceUrl(service: ServiceName, environment: Environment): string {
+  private getDefaultTier(service: ServiceName): Tier {
+    const TIER_MAPPING: Record<ServiceName, Tier> = {
+      // Infrastructure services → internal
+      db: 'internal',
+      auth: 'internal',
+      schedule: 'internal',
+      webhooks: 'internal',
+      email: 'internal',
+      queue: 'internal',
+      mcp: 'internal',
+
+      // Public APIs → public
+      gateway: 'public',
+    }
+
+    return TIER_MAPPING[service]
+  }
+
+  /**
+   * Get service URL after deployment
+   *
+   * Generates URL based on namespace mode:
+   * - tier: internal.do, *.do, tenant.do
+   * - environment: *.do, staging.do, dev.do
+   */
+  private getServiceUrl(service: ServiceName, target: Tier | Environment): string {
+    // Tier-based URLs
+    if (target === 'internal' || target === 'public' || target === 'tenant') {
+      const tier = target as Tier
+      if (tier === 'internal') {
+        return `https://${service}.internal.do`
+      } else if (tier === 'public') {
+        return `https://${service}.do`
+      } else {
+        // tenant services have dynamic subdomains
+        return `https://<tenant-id>.${service}.tenant.do`
+      }
+    }
+
+    // Environment-based URLs (legacy)
+    const environment = target as Environment
     const domain = environment === 'production' ? 'do' : `${environment}.do`
     return `https://${service}.${domain}`
   }

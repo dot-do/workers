@@ -9,7 +9,7 @@
 
 import { Hono } from 'hono'
 import { WorkerEntrypoint } from 'cloudflare:workers'
-import type { Thing, Relationship, ThingFilter, RelationshipFilter, QueryResult } from '@do/graph-types'
+import type { Thing, Relationship, ThingFilter, RelationshipFilter, QueryResult } from '@dot-do/graph-types'
 import {
   createThing,
   getThing,
@@ -23,7 +23,7 @@ import {
   queryRelationships,
   deleteRelationship,
   bulkCreateRelationships,
-} from '@do/graph-api'
+} from '@dot-do/graph-api'
 
 /**
  * Environment bindings

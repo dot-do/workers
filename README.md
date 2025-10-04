@@ -187,12 +187,58 @@ pnpm deploy
 
 ## Deployment
 
-Services deploy to Cloudflare Workers:
+### ⚠️  EXPERIMENTAL: 3-Tier Namespace Architecture
+
+We're currently evaluating a new 3-tier namespace architecture for better security isolation:
+
+**Architecture Options:**
+
+**Option A: 3 Namespaces** (Current Implementation)
+- `internal`: Infrastructure services (db, auth, schedule, etc.) - admin-only access
+- `public`: Public APIs (gateway) - open access, rate-limited
+- `tenant`: Tenant-specific deployments - tenant-scoped authentication
+
+**Option B: Hybrid Approach** (Under Consideration)
+- Internal services remain as regular workers (no namespace overhead)
+- Only `public` and `tenant` use Workers for Platforms namespaces
+
+**Benefits of 3-Tier:**
+- Clear security boundaries between internal, public, and tenant services
+- Independent versioning per tier
+- Flexible deployment strategies
+- Better isolation and fault tolerance
+
+**Benefits of Hybrid:**
+- Simpler deployment for infrastructure services
+- Lower overhead for internal-only services
+- Only use Workers for Platforms where multi-tenancy is needed
+
+**This is an open architectural question we're actively exploring.**
+
+### Deployment Commands
+
+**3-Tier Namespace Deployment (Experimental):**
+
+```bash
+# Setup namespaces (one-time)
+./scripts/setup-namespaces.sh
+
+# Deploy to specific namespace
+./scripts/deploy-to-namespace.sh db internal
+./scripts/deploy-to-namespace.sh gateway public
+./scripts/deploy-to-namespace.sh all internal
+```
+
+**Legacy Environment-Based Deployment:**
 
 ```bash
 cd <service-name>
 pnpm deploy               # Production
 wrangler deploy --env staging  # Staging
+
+# Or use deployment script
+./scripts/deploy-to-namespace.sh gateway production
+./scripts/deploy-to-namespace.sh all staging
 ```
 
 ## Contributing

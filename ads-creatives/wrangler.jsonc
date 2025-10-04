@@ -1,0 +1,60 @@
+{
+  "name": "ads-creatives",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // KV namespace for caching
+  "kv_namespaces": [
+    {
+      "binding": "CREATIVES_KV",
+      "id": "creatives_kv_production"
+    }
+  ],
+
+  // D1 database for creative storage
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ads_platform",
+      "database_id": "ads_platform_production"
+    }
+  ],
+
+  // R2 bucket for asset uploads
+  "r2_buckets": [
+    {
+      "binding": "ASSETS",
+      "bucket_name": "creative-assets"
+    }
+  ],
+
+  // Queue for async operations
+  "queues": {
+    "producers": [
+      {
+        "binding": "CREATIVE_QUEUE",
+        "queue": "creative-queue"
+      }
+    ]
+  },
+
+  // Analytics Engine
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS"
+    }
+  ],
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "ADS_CAMPAIGNS",
+      "service": "ads-campaigns"
+    },
+    {
+      "binding": "ADS_ANALYTICS",
+      "service": "ads-analytics"
+    }
+  ]
+}

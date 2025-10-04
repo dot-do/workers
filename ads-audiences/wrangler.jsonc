@@ -1,0 +1,68 @@
+{
+  "name": "ads-audiences",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // KV namespace for audience caching
+  "kv_namespaces": [
+    {
+      "binding": "AUDIENCES_KV",
+      "id": "TBD", // Replace with actual KV namespace ID
+      "preview_id": "TBD"
+    }
+  ],
+
+  // D1 database for audience storage
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "production",
+      "database_id": "TBD" // Replace with actual D1 database ID
+    }
+  ],
+
+  // R2 bucket for customer list storage
+  "r2_buckets": [
+    {
+      "binding": "CUSTOMER_LISTS",
+      "bucket_name": "customer-lists"
+    }
+  ],
+
+  // Queue for async audience operations
+  "queues": {
+    "producers": [
+      {
+        "binding": "AUDIENCE_QUEUE",
+        "queue": "audience-operations"
+      }
+    ]
+  },
+
+  // Analytics Engine for event tracking
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS"
+    }
+  ],
+
+  // Service bindings for other ad services
+  "services": [
+    {
+      "binding": "ADS_CAMPAIGNS",
+      "service": "ads-campaigns",
+      "environment": "production"
+    },
+    {
+      "binding": "ADS_ANALYTICS",
+      "service": "ads-analytics",
+      "environment": "production"
+    }
+  ],
+
+  // Observability
+  "observability": {
+    "enabled": true
+  }
+}

@@ -2277,6 +2277,25 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9
 
+  seo-admin:
+    dependencies:
+      '@dot-do/seo-types':
+        specifier: workspace:*
+        version: link:../../sdk/packages/seo-types
+      hono:
+        specifier: ^4.7.10
+        version: 4.9.9
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20241127.0
+        version: 4.20251003.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      wrangler:
+        specifier: ^3.105.0
+        version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
+
   seo-content:
     dependencies:
       '@dot-do/seo-types':
@@ -2335,6 +2354,25 @@ importers:
         version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
 
   seo-schema:
+    dependencies:
+      '@dot-do/seo-types':
+        specifier: workspace:*
+        version: link:../../sdk/packages/seo-types
+      hono:
+        specifier: ^4.7.10
+        version: 4.9.9
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20241127.0
+        version: 4.20251003.0
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+      wrangler:
+        specifier: ^3.105.0
+        version: 3.114.14(@cloudflare/workers-types@4.20251003.0)
+
+  seo-tools:
     dependencies:
       '@dot-do/seo-types':
         specifier: workspace:*

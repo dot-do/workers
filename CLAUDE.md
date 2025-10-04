@@ -35,22 +35,70 @@ This is the **Workers Repository** for the dot-do organization's microservices a
 
 ## Architecture
 
+### Workers for Platforms (Secure Deployment Model)
+
+The workers repository uses **Cloudflare Workers for Platforms** for secure, isolated deployments with complete audit trails and RBAC.
+
+**Architecture Flow:**
+```
+GitHub Actions
+  └─> curl https://deploy.do/deploy (using DEPLOY_API_KEY)
+      └─> Deploy API Service (AUTH_SERVICE validates)
+          └─> Cloudflare Workers for Platforms API
+              └─> Dispatch Namespace (production/staging/dev)
+                  └─> User Workers (gateway, db, auth, etc.)
+
+Incoming Requests:
+  └─> https://gateway.do/health
+      └─> Dispatcher (routes by subdomain)
+          └─> PRODUCTION namespace
+              └─> gateway worker
+```
+
+**Key Benefits:**
+- ✅ Zero Cloudflare credentials in CI/CD
+- ✅ Fine-grained RBAC via AUTH_SERVICE
+- ✅ Complete audit trail of all deployments
+- ✅ Namespace isolation (dev/staging/production)
+- ✅ Foundation for multi-tenant SaaS platform
+
+**Infrastructure Services:**
+1. **Deploy API** (`workers/deploy/`) - Authenticated deployment service
+   - Validates API keys via AUTH_SERVICE
+   - Deploys to dispatch namespaces
+   - Logs all deployments for audit
+   - Supports rollback
+
+2. **Dispatcher** (`workers/dispatcher/`) - Dynamic routing worker
+   - Routes *.do requests to appropriate user workers
+   - Subdomain-based: gateway.do → gateway worker
+   - Path-based: /api/db/* → db worker
+   - Zero business logic (pure router)
+
+**Dispatch Namespaces:**
+- `dotdo-production` - Production environment
+- `dotdo-staging` - Staging environment
+- `dotdo-development` - Development environment
+
 ### Service Types
 
 1. **Domain Services** (e.g., agents, workflows, business)
    - Core business logic services
    - Own specific domain models
    - Expose RPC, HTTP, MCP, and Queue interfaces
+   - Deployed to dispatch namespaces
 
 2. **Integration Services** (e.g., stripe, github, anthropic)
    - External API wrappers
    - Normalize external APIs into internal patterns
    - Handle authentication and rate limiting
+   - Deployed to dispatch namespaces
 
 3. **AI Services** (e.g., embeddings, generation, eval)
    - AI/ML-specific functionality
    - Use Workers AI or external providers
    - Optimized for inference and embeddings
+   - Deployed to dispatch namespaces
 
 ### Service Interface Pattern
 
@@ -336,29 +384,158 @@ pnpm test -- --coverage
 
 ## Deployment
 
-### Development
+### Workers for Platforms Deployment
 
+All services deploy to **dispatch namespaces** via the **Deploy API** for security and audit trails.
+
+#### Prerequisites
+
+1. **Create Dispatch Namespaces** (one-time setup):
 ```bash
-cd <service-name>
-pnpm dev
+npx wrangler dispatch-namespace create dotdo-production
+npx wrangler dispatch-namespace create dotdo-staging
+npx wrangler dispatch-namespace create dotdo-development
 ```
 
-This starts a local development server with hot reload.
-
-### Production
-
+2. **Deploy Infrastructure Services**:
 ```bash
-cd <service-name>
+# Deploy API (handles authenticated deployments)
+cd workers/deploy
+pnpm deploy
+
+# Dispatcher (routes *.do traffic)
+cd workers/dispatcher
 pnpm deploy
 ```
 
-This deploys to Cloudflare Workers.
+3. **Create Deploy API Key**:
+```bash
+curl -X POST https://auth.do/apikeys \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -d '{
+    "name": "GitHub Actions Deploy",
+    "permissions": ["deploy"],
+    "expiresInDays": 365
+  }'
+```
 
-### Staging
+#### Deploy a Service
+
+**Via Deploy API (Production):**
+```bash
+cd <service-name>
+
+# Build bundle
+pnpm build
+
+# Base64 encode
+SCRIPT_B64=$(cat dist/index.js | base64)
+
+# Deploy via API
+curl -X POST https://deploy.do/deploy \
+  -H "Authorization: Bearer $DEPLOY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"service\": \"<service-name>\",
+    \"environment\": \"production\",
+    \"script\": \"$SCRIPT_B64\",
+    \"metadata\": {
+      \"commit\": \"$(git rev-parse HEAD)\",
+      \"branch\": \"main\",
+      \"author\": \"$(git config user.email)\",
+      \"version\": \"v1.0.0\"
+    }
+  }"
+```
+
+**Via Wrangler (Local Testing):**
+```bash
+cd <service-name>
+pnpm dev  # Local development
+```
+
+**Direct to Namespace (Testing):**
+```bash
+cd <service-name>
+npx wrangler deploy --dispatch-namespace dotdo-production
+```
+
+#### Verify Deployment
 
 ```bash
-wrangler deploy --env staging
+# Check deployment logged
+curl https://deploy.do/deployments?service=<service-name>&limit=1 \
+  -H "Authorization: Bearer $DEPLOY_API_KEY"
+
+# Test service endpoint
+curl https://<service-name>.do/health
 ```
+
+#### Rollback
+
+```bash
+curl -X POST https://deploy.do/rollback \
+  -H "Authorization: Bearer $DEPLOY_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "service": "<service-name>",
+    "environment": "production"
+  }'
+```
+
+#### Deployment Environments
+
+| Environment | Namespace | Domain | Example |
+|-------------|-----------|--------|---------|
+| Production | `dotdo-production` | `*.do` | `https://gateway.do` |
+| Staging | `dotdo-staging` | `*.staging.do` | `https://gateway.staging.do` |
+| Development | `dotdo-development` | `*.dev.do` | `https://gateway.dev.do` |
+
+#### GitHub Actions Integration
+
+**Example workflow:**
+```yaml
+- name: Deploy to Production
+  run: |
+    cd workers/${{ matrix.service }}
+    pnpm build
+
+    SCRIPT_B64=$(cat dist/index.js | base64)
+
+    curl -X POST https://deploy.do/deploy \
+      -H "Authorization: Bearer ${{ secrets.DEPLOY_API_KEY }}" \
+      -H "Content-Type: application/json" \
+      -d "{
+        \"service\": \"${{ matrix.service }}\",
+        \"environment\": \"production\",
+        \"script\": \"$SCRIPT_B64\",
+        \"metadata\": {
+          \"commit\": \"${{ github.sha }}\",
+          \"branch\": \"${{ github.ref_name }}\",
+          \"author\": \"${{ github.actor }}\",
+          \"version\": \"${{ github.run_number }}\"
+        }
+      }"
+```
+
+**Security:**
+- ✅ No `CLOUDFLARE_API_TOKEN` in GitHub secrets
+- ✅ Only `DEPLOY_API_KEY` (scoped to deployments)
+- ✅ Validated by AUTH_SERVICE with RBAC
+- ✅ Complete audit trail
+
+#### Deployment Order
+
+Services must be deployed in this order to satisfy dependencies:
+
+1. **db** - No dependencies
+2. **auth** - Depends on db
+3. **gateway** - Depends on db + auth
+4. **schedule** - Depends on db
+5. **webhooks** - Depends on db
+6. **email** - Depends on db
+7. **queue** - Depends on db
+8. **mcp** - Depends on all services
 
 ## Common Patterns
 

@@ -26,6 +26,11 @@
     "binding": "AI"
   },
 
+  // R2 Buckets (for media storage)
+  "r2_buckets": [
+    { "binding": "MEDIA_BUCKET", "bucket_name": "ai-media" }
+  ],
+
   // Service Bindings (for RPC to other services)
   "services": [
     { "binding": "DB", "service": "db" }
@@ -35,6 +40,22 @@
   "tail_consumers": [
     { "service": "pipeline" }
   ],
+
+  // Queues (for async/background processing)
+  "queues": {
+    "producers": [
+      { "binding": "AI_QUEUE", "queue": "ai-generation" }
+    ],
+    "consumers": [
+      {
+        "queue": "ai-generation",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "ai-generation-dlq"
+      }
+    ]
+  },
 
   // Environment Variables (secrets via wrangler secret put)
   "vars": {

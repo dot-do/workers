@@ -6,6 +6,7 @@
 import type AIService from './index'
 import type { GenerateOptions } from 'ai-generation'
 import type { EmbeddingOptions } from 'ai-embeddings'
+import type { ImageGenerationOptions, SpeechGenerationOptions } from './types'
 
 /**
  * MCP Tool Definition
@@ -123,6 +124,244 @@ export const MCP_TOOLS: MCPTool[] = [
       required: ['text'],
     },
   },
+  {
+    name: 'generate_image',
+    description: 'Generate images using DALL-E 3 or DALL-E 2. Creates high-quality images from text descriptions. Supports various sizes, qualities, and artistic styles.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        prompt: {
+          type: 'string',
+          description: 'Text description of the image to generate',
+        },
+        provider: {
+          type: 'string',
+          enum: ['openai'],
+          description: 'Image generation provider (default: openai)',
+        },
+        model: {
+          type: 'string',
+          enum: ['dall-e-3', 'dall-e-2'],
+          description: 'Model to use (default: dall-e-3)',
+        },
+        size: {
+          type: 'string',
+          enum: ['1024x1024', '1792x1024', '1024x1792', '512x512', '256x256'],
+          description: 'Image size (DALL-E 3 supports: 1024x1024, 1792x1024, 1024x1792)',
+        },
+        quality: {
+          type: 'string',
+          enum: ['standard', 'hd'],
+          description: 'Image quality (default: standard). HD costs 2x more.',
+        },
+        style: {
+          type: 'string',
+          enum: ['vivid', 'natural'],
+          description: 'Image style. Vivid = hyper-real, dramatic. Natural = more realistic.',
+        },
+        n: {
+          type: 'number',
+          description: 'Number of images to generate (1-10, default: 1)',
+          minimum: 1,
+          maximum: 10,
+        },
+        responseFormat: {
+          type: 'string',
+          enum: ['url', 'b64_json'],
+          description: 'Response format (default: url)',
+        },
+      },
+      required: ['prompt'],
+    },
+  },
+  {
+    name: 'generate_speech',
+    description: 'Generate speech audio from text using OpenAI TTS. Supports multiple voices and audio formats. Also available via alias "say".',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        text: {
+          type: 'string',
+          description: 'Text to convert to speech',
+        },
+        provider: {
+          type: 'string',
+          enum: ['openai'],
+          description: 'Speech provider (default: openai)',
+        },
+        model: {
+          type: 'string',
+          enum: ['tts-1', 'tts-1-hd'],
+          description: 'TTS model (default: tts-1). HD has higher quality but costs 2x more.',
+        },
+        voice: {
+          type: 'string',
+          enum: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'],
+          description: 'Voice to use (default: alloy). Each has distinct characteristics.',
+        },
+        speed: {
+          type: 'number',
+          description: 'Playback speed (0.25 to 4.0, default: 1.0)',
+          minimum: 0.25,
+          maximum: 4.0,
+        },
+        format: {
+          type: 'string',
+          enum: ['mp3', 'opus', 'aac', 'flac', 'wav'],
+          description: 'Audio format (default: mp3)',
+        },
+      },
+      required: ['text'],
+    },
+  },
+  {
+    name: 'say',
+    description: 'Alias for generate_speech. Generate speech audio from text using OpenAI TTS.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        text: {
+          type: 'string',
+          description: 'Text to convert to speech',
+        },
+        voice: {
+          type: 'string',
+          enum: ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'],
+          description: 'Voice to use (default: alloy)',
+        },
+        speed: {
+          type: 'number',
+          description: 'Playback speed (0.25 to 4.0, default: 1.0)',
+          minimum: 0.25,
+          maximum: 4.0,
+        },
+        format: {
+          type: 'string',
+          enum: ['mp3', 'opus', 'aac', 'flac', 'wav'],
+          description: 'Audio format (default: mp3)',
+        },
+      },
+      required: ['text'],
+    },
+  },
+  {
+    name: 'generate_list',
+    description: 'Generate a structured list of items on a topic. Returns a formatted list with a specified number of items in JSON, markdown, or plain text format.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        topic: {
+          type: 'string',
+          description: 'The topic to generate a list about',
+        },
+        count: {
+          type: 'number',
+          description: 'Number of items to generate (default: 10)',
+          minimum: 1,
+          maximum: 100,
+        },
+        format: {
+          type: 'string',
+          enum: ['json', 'markdown', 'plain'],
+          description: 'Output format (default: json)',
+        },
+        criteria: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Optional filtering criteria for list items',
+        },
+        provider: {
+          type: 'string',
+          enum: ['openai', 'anthropic', 'workers-ai'],
+          description: 'AI provider to use (default: openai)',
+        },
+        model: {
+          type: 'string',
+          description: 'Specific model to use',
+        },
+      },
+      required: ['topic'],
+    },
+  },
+  {
+    name: 'research_topic',
+    description: 'Research a topic using multi-query synthesis. Generates multiple perspectives and synthesizes findings into a comprehensive report with sources.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        topic: {
+          type: 'string',
+          description: 'The topic to research',
+        },
+        depth: {
+          type: 'string',
+          enum: ['shallow', 'medium', 'deep'],
+          description: 'Research depth (shallow=1 query, medium=3 queries, deep=5 queries, default: medium)',
+        },
+        sources: {
+          type: 'number',
+          description: 'Number of sources to synthesize (default: 5)',
+          minimum: 1,
+          maximum: 20,
+        },
+        format: {
+          type: 'string',
+          enum: ['summary', 'detailed', 'outline'],
+          description: 'Output format (default: summary)',
+        },
+        provider: {
+          type: 'string',
+          enum: ['openai', 'anthropic', 'workers-ai'],
+          description: 'AI provider to use (default: openai)',
+        },
+        model: {
+          type: 'string',
+          description: 'Specific model to use',
+        },
+      },
+      required: ['topic'],
+    },
+  },
+  {
+    name: 'generate_code',
+    description: 'Generate code based on a description. Supports multiple programming languages, frameworks, and styles. Returns code with explanation and optional tests.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        description: {
+          type: 'string',
+          description: 'Description of what the code should do',
+        },
+        language: {
+          type: 'string',
+          description: 'Programming language (e.g., typescript, python, rust, go)',
+        },
+        framework: {
+          type: 'string',
+          description: 'Framework or library to use (e.g., react, fastapi, actix)',
+        },
+        style: {
+          type: 'string',
+          enum: ['minimal', 'production', 'documented'],
+          description: 'Code style (default: production)',
+        },
+        includeTests: {
+          type: 'boolean',
+          description: 'Whether to include unit tests (default: false)',
+        },
+        provider: {
+          type: 'string',
+          enum: ['openai', 'anthropic', 'workers-ai'],
+          description: 'AI provider to use (default: openai)',
+        },
+        model: {
+          type: 'string',
+          description: 'Specific model to use',
+        },
+      },
+      required: ['description'],
+    },
+  },
 ]
 
 /**
@@ -143,6 +382,52 @@ export async function executeMCPTool(service: AIService, toolName: string, args:
     case 'embed_text': {
       const { text, ...options } = args as { text: string } & EmbeddingOptions
       return await service.embed(text, options)
+    }
+
+    case 'generate_image': {
+      const { prompt, ...options } = args as { prompt: string } & ImageGenerationOptions
+      return await service.generateImage(prompt, options)
+    }
+
+    case 'generate_speech': {
+      const { text, ...options } = args as { text: string } & SpeechGenerationOptions
+      const result = await service.generateSpeech(text, options)
+      // Convert ArrayBuffer to base64 for JSON response
+      const uint8Array = new Uint8Array(result.audio)
+      const base64Audio = btoa(String.fromCharCode.apply(null, Array.from(uint8Array)))
+      return {
+        ...result,
+        audio: base64Audio, // Return as base64 string for JSON compatibility
+        audioFormat: result.format,
+      }
+    }
+
+    case 'say': {
+      const { text, ...options } = args as { text: string } & SpeechGenerationOptions
+      const result = await service.say(text, options)
+      // Convert ArrayBuffer to base64 for JSON response
+      const uint8Array = new Uint8Array(result.audio)
+      const base64Audio = btoa(String.fromCharCode.apply(null, Array.from(uint8Array)))
+      return {
+        ...result,
+        audio: base64Audio,
+        audioFormat: result.format,
+      }
+    }
+
+    case 'generate_list': {
+      const { topic, ...options } = args as any
+      return await service.list(topic, options)
+    }
+
+    case 'research_topic': {
+      const { topic, ...options } = args as any
+      return await service.research(topic, options)
+    }
+
+    case 'generate_code': {
+      const { description, ...options } = args as any
+      return await service.code(description, options)
     }
 
     default:

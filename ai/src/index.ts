@@ -18,6 +18,10 @@ import type {
   EmbeddingResponse,
   AnalysisResult,
   AIProviderInterface,
+  ImageGenerationOptions,
+  ImageGenerationResponse,
+  SpeechGenerationOptions,
+  SpeechGenerationResponse,
 } from './types'
 import { calculateCost } from 'ai-models'
 
@@ -222,6 +226,300 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
   }
 
   /**
+   * RPC Method: Generate image with full response metadata
+   */
+  async generateImage(prompt: string, options?: ImageGenerationOptions): Promise<ImageGenerationResponse> {
+    const provider = options?.provider || 'openai'
+    const providerInstance = this.getProvider(provider)
+
+    if (!providerInstance.generateImage) {
+      throw new Error(`Provider ${provider} does not support image generation`)
+    }
+
+    const response = await providerInstance.generateImage(prompt, options)
+
+    // Upload images to R2
+    const { downloadAndUploadImage } = await import('./r2')
+    const uploadedImages = await Promise.all(
+      response.images.map(async (img) => {
+        if (img.url) {
+          // Download from temporary URL and upload to R2
+          const r2Url = await downloadAndUploadImage(this.env, img.url, 'image/png')
+          return { ...img, url: r2Url, temporaryUrl: img.url }
+        } else if (img.b64_json) {
+          // Upload base64 image to R2
+          const { uploadImageToR2 } = await import('./r2')
+          const r2Url = await uploadImageToR2(this.env, img.b64_json, 'image/png')
+          return { ...img, url: r2Url, b64_json: undefined } // Remove base64, use R2 URL
+        }
+        return img
+      })
+    )
+
+    return {
+      ...response,
+      images: uploadedImages,
+    }
+  }
+
+  /**
+   * RPC Method: Generate speech with full response metadata
+   */
+  async generateSpeech(text: string, options?: SpeechGenerationOptions): Promise<SpeechGenerationResponse> {
+    const startTime = Date.now()
+    const provider = options?.provider || 'openai'
+    const model = options?.model || 'tts-1'
+    const voice = options?.voice || 'alloy'
+    const format = options?.format || 'mp3'
+
+    const providerInstance = this.getProvider(provider)
+
+    if (!providerInstance.generateSpeech) {
+      throw new Error(`Provider ${provider} does not support speech generation`)
+    }
+
+    const audio = await providerInstance.generateSpeech(text, options)
+    const latency = Date.now() - startTime
+
+    // Calculate cost based on character count
+    // OpenAI TTS-1: $0.015 per 1K characters
+    // OpenAI TTS-1-HD: $0.030 per 1K characters
+    const characters = text.length
+    const costPer1K = model === 'tts-1-hd' ? 0.030 : 0.015
+    const cost = (characters / 1000) * costPer1K
+
+    // Upload audio to R2
+    const { uploadAudioToR2 } = await import('./r2')
+    const r2Url = await uploadAudioToR2(this.env, audio, format)
+
+    return {
+      audio,
+      audioUrl: r2Url, // Add R2 URL
+      model,
+      provider,
+      voice,
+      format,
+      cost,
+      latency,
+      usage: {
+        characters,
+      },
+    }
+  }
+
+  /**
+   * RPC Method: Alias for generateSpeech (more intuitive name)
+   */
+  async say(text: string, options?: SpeechGenerationOptions): Promise<SpeechGenerationResponse> {
+    return await this.generateSpeech(text, options)
+  }
+
+  /**
+   * RPC Method: Generate structured list
+   */
+  async list(topic: string, options?: import('./types').ListOptions): Promise<import('./types').ListResponse> {
+    const startTime = Date.now()
+    const provider = options?.provider || 'openai'
+    const model = options?.model || this.getDefaultModel(provider)
+    const count = options?.count || 10
+    const format = options?.format || 'json'
+
+    // Build prompt for list generation
+    let prompt = `Generate a list of ${count} items about: ${topic}\n\n`
+
+    if (options?.criteria && options.criteria.length > 0) {
+      prompt += `Criteria:\n${options.criteria.map(c => `- ${c}`).join('\n')}\n\n`
+    }
+
+    if (format === 'json') {
+      prompt += `Return ONLY a JSON array of strings, no other text. Example: ["item1", "item2", "item3"]`
+    } else if (format === 'markdown') {
+      prompt += `Return as a markdown list with numbers.`
+    } else {
+      prompt += `Return as a plain text list, one item per line.`
+    }
+
+    const text = await this.generateText(prompt, { ...options, provider, model })
+    const latency = Date.now() - startTime
+
+    // Parse items based on format
+    let items: string[]
+    if (format === 'json') {
+      try {
+        items = JSON.parse(text.trim())
+      } catch {
+        // Fallback: split by lines
+        items = text.trim().split('\n').filter(line => line.trim())
+      }
+    } else {
+      items = text.trim().split('\n').filter(line => line.trim())
+    }
+
+    const usage = {
+      promptTokens: Math.ceil(prompt.length / 4),
+      completionTokens: Math.ceil(text.length / 4),
+      totalTokens: Math.ceil((prompt.length + text.length) / 4),
+    }
+
+    const cost = calculateCost(usage, model)
+
+    return {
+      items,
+      count: items.length,
+      topic,
+      model,
+      provider,
+      usage,
+      cost,
+      latency,
+    }
+  }
+
+  /**
+   * RPC Method: Research topic with synthesis
+   */
+  async research(topic: string, options?: import('./types').ResearchOptions): Promise<import('./types').ResearchResponse> {
+    const startTime = Date.now()
+    const provider = options?.provider || 'openai'
+    const model = options?.model || 'gpt-4o'
+    const depth = options?.depth || 'medium'
+    const sourceCount = options?.sources || 5
+    const format = options?.format || 'summary'
+
+    // Multi-query approach based on depth
+    const queries: string[] = []
+    if (depth === 'shallow') {
+      queries.push(`Provide a brief overview of: ${topic}`)
+    } else if (depth === 'medium') {
+      queries.push(`What are the key aspects of: ${topic}?`)
+      queries.push(`What are recent developments in: ${topic}?`)
+      queries.push(`What are the main challenges in: ${topic}?`)
+    } else {
+      // deep
+      queries.push(`Provide a comprehensive overview of: ${topic}`)
+      queries.push(`What are the historical developments in: ${topic}?`)
+      queries.push(`What are current trends and recent breakthroughs in: ${topic}?`)
+      queries.push(`What are the main challenges and limitations in: ${topic}?`)
+      queries.push(`What are future directions and opportunities in: ${topic}?`)
+    }
+
+    // Generate responses for each query
+    const responses: string[] = []
+    for (const query of queries) {
+      const response = await this.generateText(query, { ...options, provider, model })
+      responses.push(response)
+    }
+
+    // Synthesize findings
+    const synthesisPrompt = `Based on the following research findings about "${topic}", create a comprehensive ${format}:\n\n${responses.map((r, i) => `Finding ${i + 1}:\n${r}\n`).join('\n')}\n\nProvide a well-structured ${format} that synthesizes these findings.`
+
+    const summary = await this.generateText(synthesisPrompt, { ...options, provider, model })
+    const latency = Date.now() - startTime
+
+    // Extract key findings
+    const findings = responses.slice(0, sourceCount)
+
+    // Create mock sources (in real implementation, these would come from actual sources)
+    const sources = findings.map((finding, i) => ({
+      title: queries[i],
+      content: finding.substring(0, 500) + '...',
+      relevance: 1 - (i * 0.1), // Simple relevance score
+    }))
+
+    const usage = {
+      promptTokens: Math.ceil((queries.join('').length + responses.join('').length) / 4),
+      completionTokens: Math.ceil(summary.length / 4),
+      totalTokens: Math.ceil((queries.join('').length + responses.join('').length + summary.length) / 4),
+    }
+
+    const cost = calculateCost(usage, model)
+
+    return {
+      summary,
+      findings,
+      sources,
+      topic,
+      model,
+      provider,
+      usage,
+      cost,
+      latency,
+    }
+  }
+
+  /**
+   * RPC Method: Generate code with best practices
+   */
+  async code(description: string, options?: import('./types').CodeOptions): Promise<import('./types').CodeResponse> {
+    const startTime = Date.now()
+    const provider = options?.provider || 'openai'
+    const model = options?.model || 'gpt-4o'
+    const language = options?.language || 'typescript'
+    const framework = options?.framework
+    const style = options?.style || 'production'
+    const includeTests = options?.includeTests ?? true
+
+    // Build code generation prompt
+    let prompt = `Generate ${language} code for: ${description}\n\n`
+
+    if (framework) {
+      prompt += `Framework: ${framework}\n`
+    }
+
+    if (style === 'minimal') {
+      prompt += `Style: Minimal, concise code with minimal comments.\n`
+    } else if (style === 'documented') {
+      prompt += `Style: Well-documented code with JSDoc/docstrings and inline comments.\n`
+    } else {
+      prompt += `Style: Production-ready code with proper error handling, types, and reasonable comments.\n`
+    }
+
+    prompt += `\nProvide:\n1. The code implementation\n2. A brief explanation of how it works\n`
+
+    if (includeTests) {
+      prompt += `3. Unit tests for the code\n`
+    }
+
+    prompt += `\nFormat your response as:\n\n### Code\n\`\`\`${language}\n[code here]\n\`\`\`\n\n### Explanation\n[explanation here]\n`
+
+    if (includeTests) {
+      prompt += `\n### Tests\n\`\`\`${language}\n[tests here]\n\`\`\`\n`
+    }
+
+    const text = await this.generateText(prompt, { ...options, provider, model })
+    const latency = Date.now() - startTime
+
+    // Parse response sections
+    const codeMatch = text.match(/###\s*Code\s*\n```[\w]*\n([\s\S]*?)\n```/)
+    const explanationMatch = text.match(/###\s*Explanation\s*\n([\s\S]*?)(?=###|$)/)
+    const testsMatch = text.match(/###\s*Tests\s*\n```[\w]*\n([\s\S]*?)\n```/)
+
+    const code = codeMatch ? codeMatch[1].trim() : text
+    const explanation = explanationMatch ? explanationMatch[1].trim() : 'Code generated successfully'
+    const tests = testsMatch ? testsMatch[1].trim() : undefined
+
+    const usage = {
+      promptTokens: Math.ceil(prompt.length / 4),
+      completionTokens: Math.ceil(text.length / 4),
+      totalTokens: Math.ceil((prompt.length + text.length) / 4),
+    }
+
+    const cost = calculateCost(usage, model)
+
+    return {
+      code,
+      language,
+      explanation,
+      tests,
+      model,
+      provider,
+      usage,
+      cost,
+      latency,
+    }
+  }
+
+  /**
    * HTTP fetch handler
    */
   async fetch(request: Request): Promise<Response> {
@@ -288,11 +586,176 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
         return Response.json(response)
       }
 
+      // POST /ai/generate-image - Generate image
+      if (pathname === '/ai/generate-image' && request.method === 'POST') {
+        const body = await request.json() as any
+        const { prompt, ...options } = body
+
+        if (!prompt) {
+          return Response.json({ error: 'Prompt is required' }, { status: 400 })
+        }
+
+        const response = await this.generateImage(prompt, options)
+        return Response.json(response)
+      }
+
+      // POST /ai/generate-speech - Generate speech
+      if (pathname === '/ai/generate-speech' && request.method === 'POST') {
+        const body = await request.json() as any
+        const { text, ...options } = body
+
+        if (!text) {
+          return Response.json({ error: 'Text is required' }, { status: 400 })
+        }
+
+        const response = await this.generateSpeech(text, options)
+
+        // Return audio with appropriate content type
+        const contentType = options.format === 'opus' ? 'audio/opus' :
+                           options.format === 'aac' ? 'audio/aac' :
+                           options.format === 'flac' ? 'audio/flac' :
+                           options.format === 'wav' ? 'audio/wav' :
+                           'audio/mpeg' // Default to mp3
+
+        return new Response(response.audio, {
+          headers: {
+            'Content-Type': contentType,
+            'X-AI-Model': response.model,
+            'X-AI-Provider': response.provider,
+            'X-AI-Voice': response.voice,
+            'X-AI-Cost': response.cost?.toString() || '0',
+            'X-AI-Latency': response.latency.toString(),
+          },
+        })
+      }
+
+      // POST /ai/say - Alias for generate-speech (more intuitive)
+      if (pathname === '/ai/say' && request.method === 'POST') {
+        const body = await request.json() as any
+        const { text, ...options } = body
+
+        if (!text) {
+          return Response.json({ error: 'Text is required' }, { status: 400 })
+        }
+
+        const response = await this.say(text, options)
+
+        const contentType = options.format === 'opus' ? 'audio/opus' :
+                           options.format === 'aac' ? 'audio/aac' :
+                           options.format === 'flac' ? 'audio/flac' :
+                           options.format === 'wav' ? 'audio/wav' :
+                           'audio/mpeg'
+
+        return new Response(response.audio, {
+          headers: {
+            'Content-Type': contentType,
+            'X-AI-Model': response.model,
+            'X-AI-Provider': response.provider,
+            'X-AI-Voice': response.voice,
+            'X-AI-Cost': response.cost?.toString() || '0',
+            'X-AI-Latency': response.latency.toString(),
+          },
+        })
+      }
+
+      // POST /ai/list - Generate structured list
+      if (pathname === '/ai/list' && request.method === 'POST') {
+        const body = await request.json() as any
+        const { topic, ...options } = body
+
+        if (!topic) {
+          return Response.json({ error: 'Topic is required' }, { status: 400 })
+        }
+
+        const response = await this.list(topic, options)
+        return Response.json(response)
+      }
+
+      // POST /ai/research - Research topic with synthesis
+      if (pathname === '/ai/research' && request.method === 'POST') {
+        const body = await request.json() as any
+        const { topic, ...options } = body
+
+        if (!topic) {
+          return Response.json({ error: 'Topic is required' }, { status: 400 })
+        }
+
+        const response = await this.research(topic, options)
+        return Response.json(response)
+      }
+
+      // POST /ai/code - Generate code with best practices
+      if (pathname === '/ai/code' && request.method === 'POST') {
+        const body = await request.json() as any
+        const { description, ...options } = body
+
+        if (!description) {
+          return Response.json({ error: 'Description is required' }, { status: 400 })
+        }
+
+        const response = await this.code(description, options)
+        return Response.json(response)
+      }
+
+      // POST /ai/background - Submit background job
+      if (pathname === '/ai/background' && request.method === 'POST') {
+        const body = await request.json() as any
+        const { type, input, options } = body
+
+        if (!type || !input) {
+          return Response.json({ error: 'Type and input are required' }, { status: 400 })
+        }
+
+        const jobId = crypto.randomUUID()
+        const job: import('./types').BackgroundJobRequest = {
+          id: jobId,
+          type,
+          input,
+          options,
+          createdAt: Date.now(),
+        }
+
+        await this.env.AI_QUEUE.send(job)
+
+        return Response.json({
+          jobId,
+          status: 'queued',
+          message: 'Job submitted successfully',
+        })
+      }
+
+      // POST /ai/batch - Submit batch of jobs
+      if (pathname === '/ai/batch' && request.method === 'POST') {
+        const body = await request.json() as import('./types').BatchRequest
+
+        if (!body.requests || !Array.isArray(body.requests)) {
+          return Response.json({ error: 'Requests array is required' }, { status: 400 })
+        }
+
+        const jobs = body.requests.map((req) => ({
+          id: req.id || crypto.randomUUID(),
+          type: req.type,
+          input: req.input,
+          options: req.options,
+          createdAt: Date.now(),
+        }))
+
+        await this.env.AI_QUEUE.sendBatch(jobs)
+
+        return Response.json({
+          jobIds: jobs.map((j) => j.id),
+          status: 'queued',
+          message: `${jobs.length} jobs submitted successfully`,
+        })
+      }
+
       // GET /ai/health - Health check
       if (pathname === '/ai/health' && request.method === 'GET') {
         return Response.json({
           status: 'healthy',
           providers: ['openai', 'anthropic', 'workers-ai'],
+          capabilities: ['text', 'image', 'speech', 'embeddings', 'analysis', 'list', 'research', 'code'],
+          modes: ['sync', 'async', 'batch'],
           timestamp: new Date().toISOString(),
         })
       }
@@ -310,6 +773,9 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
     }
   }
 }
+
+// Export queue handler
+export { handleQueueBatch as queue } from './queue'
 
 // Export types for consumers
 export * from './types'

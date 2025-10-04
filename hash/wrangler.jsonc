@@ -1,12 +1,32 @@
 /**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
+ * hash Worker Configuration
+ * Generated from hash.mdx
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "do-hash",
-	"main": "worker.ts",
+	"name": "hash",
+	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
+	"compatibility_flags": ["nodejs_compat"],
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
-	"observability": { "enabled": true }
+	"observability": {
+		"enabled": true
+	},
+	"services": [
+		{
+			"binding": "DEPLOY_SERVICE",
+			"service": "do-deploy"
+		}
+	],
+	"routes": [
+		{
+			"pattern": "hash.apis.do/*",
+			"zone_name": "apis.do"
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
+	]
 }

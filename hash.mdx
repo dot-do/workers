@@ -1,0 +1,128 @@
+---
+$type: Worker
+$id: hash
+name: hash
+main: src/index.ts
+compatibility_date: "2025-07-08"
+account_id: b6641681fe423910342b9ffa1364c76d
+
+observability:
+  enabled: true
+
+tail_consumers:
+  - service: pipeline
+
+routes:
+  - pattern: hash.apis.do/*
+    zone_name: apis.do
+
+services:
+  - binding: DEPLOY_SERVICE
+    service: do-deploy
+---
+
+# Hash Worker
+
+A Cloudflare Worker that provides fast hashing and short ID generation capabilities via RPC.
+
+## Features
+
+- ✅ **xxHash32** - Ultra-fast non-cryptographic hash function
+- ✅ **Sqids Encoding** - Short, unique IDs from hash values
+- ✅ **RPC Interface** - Service-to-service communication via WorkerEntrypoint
+- ✅ **HTTP Health Check** - Simple health endpoint
+
+## Use Cases
+
+**Data Deduplication:**
+- Generate consistent hashes for content
+- Detect duplicate entries
+- Create content-addressable identifiers
+
+**Short IDs:**
+- Convert hash values to short, URL-safe strings
+- Generate unique identifiers from data
+- Create readable references for internal systems
+
+**Performance:**
+- xxHash32 is one of the fastest hashing algorithms
+- Ideal for high-throughput hashing operations
+- Low latency for edge compute
+
+## API
+
+**Hash a string:**
+```javascript
+const hash = await env.HASH_SERVICE.xxHash32('Hello, World!')
+console.log(hash) // 2954815703
+```
+
+**Generate short ID:**
+```javascript
+const sqid = await env.HASH_SERVICE.encodeSqid('Hello, World!')
+console.log(sqid) // "DXtr5NJ" (short, URL-safe ID)
+```
+
+## Usage
+
+This worker is designed to be called via RPC from other workers:
+
+```javascript
+// In your wrangler.jsonc
+{
+  "services": [
+    { "binding": "HASH_SERVICE", "service": "hash" }
+  ]
+}
+
+// In your worker
+const hash = await env.HASH_SERVICE.xxHash32('my-data')
+const sqid = await env.HASH_SERVICE.encodeSqid('my-data')
+```
+
+## Dependencies
+
+- `sqids` (^0.3.0) - Short ID generation from numbers
+- `@taylorzane/hash-wasm` (^0.0.11) - Fast WebAssembly-based hashing
+
+## Implementation
+
+```typescript
+import { WorkerEntrypoint } from 'cloudflare:workers'
+import Squids from 'sqids'
+import { xxhash32 } from '@taylorzane/hash-wasm'
+
+/**
+ * Hash Service - Fast hashing and short ID generation
+ */
+export default class extends WorkerEntrypoint {
+  /**
+   * Generate a 32-bit xxHash of the input string
+   * @param data - String to hash
+   * @returns 32-bit hash as number
+   */
+  async xxHash32(data: string): Promise<number> {
+    const hash = await xxhash32(data)
+    console.log(hash)
+    return parseInt(hash, 16)
+  }
+
+  /**
+   * Generate a short, URL-safe ID from a hash of the input string
+   * @param data - String to encode
+   * @returns Short ID (Sqid)
+   */
+  async encodeSqid(data: string): Promise<string> {
+    const sqids = new Squids()
+    const hash = await xxhash32(data)
+    return sqids.encode([parseInt(hash, 16)])
+  }
+
+  /**
+   * HTTP health check endpoint
+   */
+  fetch(): Response {
+    return Response.json({ success: true })
+  }
+}
+```

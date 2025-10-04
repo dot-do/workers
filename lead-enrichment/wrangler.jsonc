@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/wrangler/main/wrangler-schema.json",
+  "name": "lead-enrichment",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-12-03",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db",
+      "entrypoint": "DatabaseService"
+    }
+  ],
+
+  // KV for caching enrichment results (30-day TTL)
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "lead_enrichment_cache"
+    }
+  ],
+
+  // Queue for bulk enrichment
+  "queues": {
+    "producers": [
+      {
+        "binding": "ENRICHMENT_QUEUE",
+        "queue": "enrichment-queue"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "enrichment-queue",
+        "max_batch_size": 10,
+        "max_batch_timeout": 30
+      }
+    ]
+  },
+
+  // Rate limiting for API calls
+  "unsafe": {
+    "bindings": [
+      {
+        "type": "ratelimit",
+        "name": "ENRICHMENT_RATE_LIMITER",
+        "namespace_id": "enrichment_rate_limit",
+        "simple": {
+          "limit": 100,
+          "period": 60
+        }
+      }
+    ]
+  },
+
+  // Environment variables (API keys stored as secrets)
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+
+  // Secrets to set via `wrangler secret put <NAME>`:
+  // - APOLLO_API_KEY
+  // - CLEARBIT_API_KEY
+  // - HUNTER_API_KEY
+  // - SNOV_API_KEY
+}

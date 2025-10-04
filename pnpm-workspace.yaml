@@ -27,6 +27,7 @@ packages:
   - 'email-warming'
   - 'deliverability'
   - 'blacklist-monitor'
+  - 'lead-enrichment'
   # SDK packages (foundation packages)
   - '../sdk/packages/ai-generation'
   - '../sdk/packages/ai-embeddings'

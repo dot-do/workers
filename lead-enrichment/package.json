@@ -1,0 +1,25 @@
+{
+  "name": "@do/lead-enrichment",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.7.12",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241231.0",
+    "@cloudflare/vitest-pool-workers": "^0.5.28",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.102.0"
+  }
+}

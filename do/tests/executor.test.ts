@@ -360,7 +360,7 @@ describe('Code Executor - Execution Metrics', () => {
     }
 
     const result = await executeCode(request, env, context)
-    expect(result.executionTime).toBeGreaterThan(0)
+    expect(result.executionTime).toBeGreaterThanOrEqual(0) // Can be 0ms for very fast execution
     expect(result.executionTime).toBeLessThan(1000)
   })
 

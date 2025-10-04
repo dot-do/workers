@@ -16,7 +16,7 @@ export interface Env {
   EMAIL: Fetcher
   MCP: Fetcher
   QUEUE: Fetcher
-  DO?: Fetcher // Self-reference for recursive calls (optional)
+  DO?: Fetcher // Self-reference (optional - prefer ctx.exports.DO via enable_ctx_exports flag)
 
   // KV for caching
   CODE_CACHE?: KVNamespace

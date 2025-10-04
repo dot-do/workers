@@ -13,7 +13,8 @@ import { createBusinessRuntime } from 'sdk.do'
 export async function executeCode(
   request: ExecuteCodeRequest,
   env: Env,
-  context?: ServiceContext
+  context?: ServiceContext,
+  ctx?: ExecutionContext
 ): Promise<ExecuteCodeResponse> {
   const startTime = Date.now()
   const logs: string[] = []
@@ -126,8 +127,8 @@ export async function executeCode(
           ...$,
           // Also provide $ itself
           $,
-          // Provide DO binding - SDK will use this
-          DO: env.DO || { fetch: () => Promise.resolve(new Response('DO service not available', { status: 503 })) },
+          // Provide DO binding - prefer ctx.exports (automatic loopback via enable_ctx_exports)
+          DO: (ctx?.exports as any)?.DO || env.DO || { fetch: () => Promise.resolve(new Response('DO service not available', { status: 503 })) },
           // Provide logging utilities
           __logRequest: (log: RequestLog) => { requests.push(log) },
           // Provide read-only context

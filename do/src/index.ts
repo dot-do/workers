@@ -98,7 +98,7 @@ export class DO extends WorkerEntrypoint<Env> {
         }
 
         // Execute with authorization context
-        const result = await executeCode(body, c.env, context)
+        const result = await executeCode(body, c.env, context, this.ctx)
         return c.json(result, result.success ? 200 : 500)
       } catch (error) {
         return c.json({
@@ -232,7 +232,7 @@ export class DO extends WorkerEntrypoint<Env> {
   }
 
   async execute(request: ExecuteCodeRequest, context?: ServiceContext): Promise<any> {
-    return await executeCode(request, this.env, context)
+    return await executeCode(request, this.env, context, this.ctx)
   }
 
   // ========== Private Helper ==========

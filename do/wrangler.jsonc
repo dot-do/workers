@@ -3,7 +3,10 @@
   "name": "do",
   "main": "src/index.ts",
   "compatibility_date": "2025-07-08",
-  "compatibility_flags": ["nodejs_compat"],
+  // Compatibility flags:
+  // - nodejs_compat: Node.js compatibility for imports
+  // - enable_ctx_exports: Enables ctx.exports API for automatic loopback bindings to WorkerEntrypoints
+  "compatibility_flags": ["nodejs_compat", "enable_ctx_exports"],
   "account_id": "b6641681fe423910342b9ffa1364c76d",
   "observability": {
     "enabled": true
@@ -16,6 +19,7 @@
   ],
   // Service bindings - all core services
   "services": [
+    { "binding": "AI", "service": "ai" },
     { "binding": "DB", "service": "db" },
     { "binding": "AUTH", "service": "auth" },
     { "binding": "GATEWAY", "service": "gateway" },

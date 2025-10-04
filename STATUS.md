@@ -25,7 +25,7 @@ Successfully deployed **8 production-ready microservices** to Cloudflare Workers
 ### Deployment Complete (100%)
 
 **Infrastructure Services:**
-- ✅ Deploy API: https://do-deploy.drivly.workers.dev (authenticated deployment API)
+- ✅ Deploy API: https://deploy.drivly.workers.dev (authenticated deployment API)
 - ✅ Dispatcher: Deployed (dynamic routing for *.do domains)
 - ✅ 6 Dispatch Namespaces: Created (dotdo-internal, dotdo-public, dotdo-tenant + legacy)
 
@@ -33,18 +33,18 @@ Successfully deployed **8 production-ready microservices** to Cloudflare Workers
 
 | # | Service | URL | Status | Notes |
 |---|---------|-----|--------|-------|
-| 1 | **do-db** | https://do-db.drivly.workers.dev | ⚠️ Degraded | Needs CLICKHOUSE_PASSWORD (PostgreSQL deprecated) |
+| 1 | **db** | https://db.drivly.workers.dev | ✅ Healthy | ClickHouse working (PostgreSQL deprecated) |
 | 2 | **auth** | https://auth.drivly.workers.dev | 🚧 In Progress | Being fixed by another developer |
-| 3 | **do-schedule** | https://do-schedule.drivly.workers.dev | ✅ Healthy | OK |
+| 3 | **schedule** | https://schedule.drivly.workers.dev | ⚠️ Needs Redeploy | Error 1042 - config updated, needs redeployment |
 | 4 | **webhooks** | https://webhooks.drivly.workers.dev | ✅ Healthy | OK (health endpoint added) |
 | 5 | **queue** | https://queue.drivly.workers.dev | ✅ Healthy | OK |
-| 6 | **do-mcp** | https://do-mcp.drivly.workers.dev | ✅ Healthy | OK (env reference and binding fixed) |
-| 7 | **do-gateway** | https://do-gateway.drivly.workers.dev | ✅ Healthy | OK |
+| 6 | **mcp** | https://mcp.drivly.workers.dev | ⚠️ Needs Redeploy | 404 - custom domain routing added, needs redeployment |
+| 7 | **gateway** | https://gateway.drivly.workers.dev | ⚠️ Needs Redeploy | Error 1042 - config updated, needs redeployment |
 | 8 | **email** | https://email.drivly.workers.dev | ✅ Healthy | OK (export pattern fixed) |
 
 **Health Summary:**
-- ✅ 6 services healthy (gateway, schedule, queue, webhooks, mcp, email)
-- ⚠️ 1 service needs configuration (db - CLICKHOUSE_PASSWORD)
+- ✅ 4 services healthy (db, queue, webhooks, email)
+- ⚠️ 3 services need redeployment (mcp, gateway, schedule) - configs updated by another agent
 - 🚧 1 service in progress (auth - another developer)
 
 **Architecture Note:**
@@ -53,14 +53,14 @@ Successfully deployed **8 production-ready microservices** to Cloudflare Workers
 
 **Next Steps:**
 - ✅ Fixed email service (error 1101) - Changed default export pattern
-- ✅ Fixed MCP service (error 1101) - Fixed env reference and do-db binding
+- ✅ Fixed MCP service (error 1101) - Fixed env reference and binding
 - ✅ Added health endpoint to webhooks service
 - ✅ Deprecated PostgreSQL - ClickHouse-only architecture
-- ⏳ Auth service being fixed by another developer
-- ⏳ Configure CLICKHOUSE_PASSWORD secret (P0)
+- ✅ Standardized naming convention - Changed from `do-*` prefix to short names
+- ⚠️ Redeploy 3 services (mcp, gateway, schedule) - configs updated, need redeployment (P0)
+- 🚧 Auth service being fixed by another developer (P0)
 - ⏳ Service-to-service RPC testing (P1)
 - ⏳ Add Vectorize support for vector search (P2)
-- ⏳ Configure custom domains (*.do) (P2)
 - ⏳ GitHub Actions deployment automation (P2)
 
 ---

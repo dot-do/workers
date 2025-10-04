@@ -23,17 +23,19 @@
 
 	/**
 	 * Routes - Direct domain access to DB service
-	 * Configure DNS to point these domains to Cloudflare Workers
+	 * Using existing apis.do zone (confirmed working)
 	 */
 	"routes": [
-		// Primary database domain
-		{ "pattern": "database.do/*", "zone_name": "database.do" },
-		{ "pattern": "db.mw/*", "zone_name": "db.mw" },
+		// Database routes on apis.do zone
+		{ "pattern": "db.apis.do/*", "zone_name": "apis.do" },
+		{ "pattern": "database.apis.do/*", "zone_name": "apis.do" }
 
-		// International character domains - Data Layer
-		{ "pattern": "彡.io/*", "zone_name": "彡.io" },  // Data Layer
-		{ "pattern": "口.io/*", "zone_name": "口.io" },  // Nouns/Data Model
-		{ "pattern": "回.io/*", "zone_name": "回.io" }   // Things/Data Model
+		// Note: Additional domains to be configured once zones are added:
+		// - database.do, db.do (requires 'do' zone)
+		// - db.mw (requires 'db.mw' or 'mw' zone)
+		// - 彡.io (Data Layer) - requires zone addition
+		// - 口.io (Nouns) - requires zone addition
+		// - 回.io (Things) - requires zone addition
 	]
 
 	/**

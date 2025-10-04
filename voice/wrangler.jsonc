@@ -1,0 +1,25 @@
+/**
+ * Voice AI Generation Service
+ *
+ * Professional voiceovers and TTS using OpenAI, ElevenLabs, and Google Cloud
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "voice",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-07-08",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"observability": { "enabled": true },
+	"tail_consumers": [{ "service": "pipeline" }],
+	"routes": [
+		{ "pattern": "voice.services.do/*", "custom_domain": true }
+	],
+  "services": [
+		{ "binding": "DB", "service": "do-db" }
+	],
+	"r2_buckets": [
+		{ "binding": "AUDIO", "bucket_name": "voice-audio" }
+	],
+	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
+	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }]
+}

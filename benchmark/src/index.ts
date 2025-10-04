@@ -162,15 +162,49 @@ app.get('/benchmark', async (c) => {
 app.get('/status', (c) => {
   return c.json({
     thresholds: {
-      recentContent: { maxMs: 1000, description: 'Fetch 100 recent items' },
+      directLookup: {
+        maxMs: 500,
+        description: 'Direct ns+id lookup (MOST CRITICAL)',
+        note: 'ClickHouse does this in < 100ms. If R2 SQL > 500ms, consider caching layer.',
+        region: 'us-east-1',
+      },
+      recentContent: { maxMs: 500, description: 'Fetch 100 recent items', region: 'us-east-1' },
       fullTextSearch: { maxMs: 5000, description: 'Keyword search across markdown' },
       aggregations: { maxMs: 10000, description: 'Count content by namespace and language' },
       deduplication: { maxMs: 15000, description: 'Find duplicate content by hash' },
       historicalQueries: { maxMs: 2000, description: 'Get all versions of a document' },
     },
-    recommendation: {
-      r2SqlOnly: 'All benchmarks under thresholds - use R2 SQL ($34/month)',
-      withClickHouse: 'Some benchmarks over thresholds - add ClickHouse ($432/month)',
+    architectureOptions: {
+      option1: {
+        name: 'R2 SQL Only',
+        cost: '$34/month',
+        condition: 'All benchmarks pass (including Direct Lookup < 500ms)',
+        latency: {
+          directLookup: '< 500ms (cold)',
+          cached: 'N/A',
+        },
+      },
+      option2: {
+        name: 'R2 SQL + Cache Layer (SWR)',
+        cost: '$34/month + cache storage',
+        condition: 'Direct Lookup 500-2000ms, other benchmarks pass',
+        latency: {
+          directLookup: '500-2000ms (cold)',
+          cached: '< 50ms (hot, edge cache)',
+        },
+        strategy: 'Cloudflare Cache API with Stale-While-Revalidate',
+      },
+      option3: {
+        name: 'ClickHouse + R2 SQL',
+        cost: '$432/month',
+        condition: 'Direct Lookup > 2000ms or Full-Text Search > 5000ms',
+        latency: {
+          directLookup: '< 100ms (ClickHouse hot data)',
+          fullTextSearch: '< 1000ms (ClickHouse)',
+          coldData: '< 5000ms (R2 SQL archive)',
+        },
+        strategy: 'Hot data in ClickHouse, cold data in R2 SQL',
+      },
     },
   })
 })

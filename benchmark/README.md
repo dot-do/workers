@@ -14,7 +14,31 @@ We're evaluating whether **R2 SQL** (Parquet + Apache DataFusion) is performant 
 
 ## Benchmarks
 
-### 1. Recent Content (Threshold: < 1 second)
+### 1. Direct Lookup (Threshold: < 500ms) ⭐ MOST CRITICAL
+
+**Query a single document by namespace and ID** - the most common operation.
+
+**ClickHouse baseline:** < 100ms
+**R2 SQL acceptable:** < 500ms
+**Region:** us-east-1
+
+```sql
+SELECT
+  ulid, timestamp, mutation_type,
+  content_json, content_code, content_markdown, content_html, content_ast,
+  content_length, content_hash, content_language
+FROM events
+WHERE event_type = 'content'
+  AND entity_ns = 'en.wikipedia.org'
+  AND entity_id = 'TypeScript'
+ORDER BY timestamp DESC
+LIMIT 1
+```
+
+**If R2 SQL is 500-2000ms:** Consider Cloudflare Cache API + SWR pattern (first hit slow, subsequent < 50ms)
+**If R2 SQL > 2000ms:** Need ClickHouse
+
+### 2. Recent Content (Threshold: < 500ms)
 
 Fetch the 100 most recent content items.
 
@@ -28,7 +52,7 @@ ORDER BY timestamp DESC
 LIMIT 100
 ```
 
-### 2. Full-Text Search (Threshold: < 5 seconds)
+### 3. Full-Text Search (Threshold: < 5 seconds)
 
 Search markdown content for keywords.
 
@@ -47,7 +71,7 @@ ORDER BY timestamp DESC
 LIMIT 100
 ```
 
-### 3. Aggregations (Threshold: < 10 seconds)
+### 4. Aggregations (Threshold: < 10 seconds)
 
 Count content by namespace and language.
 
@@ -63,7 +87,7 @@ GROUP BY entity_ns, content_language
 ORDER BY count DESC
 ```
 
-### 4. Deduplication (Threshold: < 15 seconds)
+### 5. Deduplication (Threshold: < 15 seconds)
 
 Find duplicate content by hash.
 
@@ -81,7 +105,7 @@ HAVING COUNT(*) > 1
 ORDER BY duplicate_count DESC
 ```
 
-### 5. Historical Queries (Threshold: < 2 seconds)
+### 6. Historical Queries (Threshold: < 2 seconds)
 
 Get all versions of a document by entity_ns + entity_id.
 
@@ -318,25 +342,105 @@ pnpm typecheck
 - **PostgreSQL:** $69/month (Scale plan for additional load)
 - **Total:** ~$432/month
 
-## Expected Results
+## Architecture Options
 
-### Scenario 1: R2 SQL Passes (Best Case)
+### Option 1: R2 SQL Only ($34/month)
 
-All benchmarks under thresholds → Use R2 SQL only → **$34/month**
+**Condition:** All benchmarks pass, including Direct Lookup < 500ms
 
-### Scenario 2: R2 SQL Fails (Worst Case)
+**Latency:**
+- Direct Lookup: < 500ms (cold)
+- Recent Content: < 500ms
+- Full-Text Search: < 5s
 
-Some benchmarks over thresholds → Add ClickHouse → **$432/month**
+**Cost:** $34/month
 
-### Scenario 3: Hybrid (Middle Ground)
+**Best for:** Low traffic, cold data, batch processing
 
-- Recent content: R2 SQL ✅
-- Full-text search: ClickHouse (hot data) ✅
-- Aggregations: ClickHouse ✅
-- Deduplication: R2 SQL (batch job) ✅
-- Historical: R2 SQL (cold data) ✅
+### Option 2: R2 SQL + Cache Layer ($34/month + cache storage) ⭐ RECOMMENDED
 
-Cost: **$432/month** (need ClickHouse for real-time search)
+**Condition:** Direct Lookup 500-2000ms, other benchmarks pass
+
+**Strategy:** Cloudflare Cache API with Stale-While-Revalidate (SWR)
+
+**Latency:**
+- Direct Lookup: 500-2000ms (cold, first hit)
+- Direct Lookup: < 50ms (hot, from edge cache)
+- Cache hit ratio: ~80-90% for popular content
+
+**Implementation:**
+```typescript
+// Cache-first with SWR pattern
+const cache = caches.default
+const cacheKey = new Request(`https://cache/${ns}/${id}`)
+
+// Try cache first
+let response = await cache.match(cacheKey)
+
+if (response) {
+  // Cache hit - return immediately
+  // Optionally: revalidate in background if stale
+  return response
+}
+
+// Cache miss - fetch from R2 SQL
+response = await fetchFromR2SQL(ns, id)
+
+// Cache for 1 hour, stale-while-revalidate for 24 hours
+response.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400')
+await cache.put(cacheKey, response.clone())
+
+return response
+```
+
+**Cost:** $34/month + ~$0.50/month cache storage
+
+**Best for:** Medium-high traffic, popular content gets cached, acceptable first-hit latency
+
+### Option 3: ClickHouse + R2 SQL ($432/month)
+
+**Condition:** Direct Lookup > 2000ms OR Full-Text Search > 5000ms
+
+**Strategy:** Hot data in ClickHouse, cold data in R2 SQL
+
+**Latency:**
+- Direct Lookup: < 100ms (ClickHouse hot data)
+- Full-Text Search: < 1000ms (ClickHouse)
+- Cold Data: < 5000ms (R2 SQL archive)
+
+**Data Flow:**
+```
+Pipeline → ClickHouse (last 30 days, hot queries)
+         ↘ R2 SQL (all data, cold archive)
+
+Queries:
+- Recent/Popular → ClickHouse (< 100ms)
+- Historical/Rare → R2 SQL (< 5000ms)
+```
+
+**Cost:** $432/month
+
+**Best for:** High traffic, real-time analytics, sub-100ms latency required
+
+## Decision Framework
+
+```
+┌─────────────────────────────────────┐
+│ Direct Lookup Benchmark Results     │
+└─────────────────────────────────────┘
+              ↓
+         < 500ms?
+              ↓
+        Yes ──┴── No
+         ↓          ↓
+    Option 1    500-2000ms?
+    R2 SQL           ↓
+    $34/mo     Yes ──┴── No
+                ↓          ↓
+           Option 2   Option 3
+           + Cache    ClickHouse
+           $34/mo     $432/mo
+```
 
 ## Next Steps
 

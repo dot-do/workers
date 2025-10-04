@@ -1,16 +1,64 @@
 /**
  * Benchmark Implementations - R2 SQL Performance Testing
  *
- * Tests 5 key scenarios to determine if R2 SQL is performant enough for web content search.
+ * Tests 6 key scenarios to determine if R2 SQL is performant enough for web content search.
  */
 
 import type { BenchmarkResult, Env } from './types'
 
 /**
- * Benchmark 1: Recent Content (100 items)
+ * Benchmark 1: Direct Lookup (ns + id)
+ *
+ * Query a single document by namespace and ID (most common operation).
+ * Threshold: < 500ms (ClickHouse does this in < 100ms)
+ *
+ * This is the MOST CRITICAL benchmark - if R2 SQL can't do this fast, we need ClickHouse.
+ */
+async function benchmarkDirectLookup(env: Env): Promise<BenchmarkResult> {
+  const startTime = Date.now()
+
+  const query = `
+    SELECT
+      ulid, timestamp, mutation_type,
+      content_json, content_code, content_markdown, content_html, content_ast,
+      content_length, content_hash, content_language
+    FROM events
+    WHERE event_type = 'content'
+      AND entity_ns = 'en.wikipedia.org'
+      AND entity_id = 'TypeScript'
+    ORDER BY timestamp DESC
+    LIMIT 1
+  `
+
+  // TODO: Execute query when R2 SQL binding is available
+  // const results = await env.R2_SQL.query(query)
+
+  // Simulate query execution (100-600ms range)
+  await new Promise((resolve) => setTimeout(resolve, 100 + Math.random() * 500))
+
+  const durationMs = Date.now() - startTime
+  const threshold = 500
+
+  return {
+    name: 'Direct Lookup',
+    description: 'Get single document by ns+id (MOST CRITICAL)',
+    durationMs,
+    threshold,
+    passed: durationMs < threshold,
+    details: {
+      query,
+      entity_ns: 'en.wikipedia.org',
+      entity_id: 'TypeScript',
+      note: 'ClickHouse does this in < 100ms',
+    },
+  }
+}
+
+/**
+ * Benchmark 2: Recent Content (100 items)
  *
  * Query the 100 most recent content items.
- * Threshold: < 1 second
+ * Threshold: < 500ms (adjusted from 1s based on user feedback)
  */
 async function benchmarkRecentContent(env: Env): Promise<BenchmarkResult> {
   const startTime = Date.now()
@@ -34,7 +82,7 @@ async function benchmarkRecentContent(env: Env): Promise<BenchmarkResult> {
   await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000))
 
   const durationMs = Date.now() - startTime
-  const threshold = 1000
+  const threshold = 500
 
   return {
     name: 'Recent Content',
@@ -45,12 +93,13 @@ async function benchmarkRecentContent(env: Env): Promise<BenchmarkResult> {
     details: {
       query,
       limit: 100,
+      region: 'us-east-1',
     },
   }
 }
 
 /**
- * Benchmark 2: Full-Text Search
+ * Benchmark 3: Full-Text Search
  *
  * Search markdown content for keywords.
  * Threshold: < 5 seconds
@@ -97,7 +146,7 @@ async function benchmarkFullTextSearch(env: Env): Promise<BenchmarkResult> {
 }
 
 /**
- * Benchmark 3: Aggregations
+ * Benchmark 4: Aggregations
  *
  * Count content by namespace and language.
  * Threshold: < 10 seconds
@@ -139,7 +188,7 @@ async function benchmarkAggregations(env: Env): Promise<BenchmarkResult> {
 }
 
 /**
- * Benchmark 4: Deduplication
+ * Benchmark 5: Deduplication
  *
  * Find duplicate content by hash.
  * Threshold: < 15 seconds
@@ -183,7 +232,7 @@ async function benchmarkDeduplication(env: Env): Promise<BenchmarkResult> {
 }
 
 /**
- * Benchmark 5: Historical Queries
+ * Benchmark 6: Historical Queries
  *
  * Get all versions of a document by entity_ns + entity_id.
  * Threshold: < 2 seconds
@@ -229,27 +278,40 @@ async function benchmarkHistoricalQueries(env: Env): Promise<BenchmarkResult> {
  * Run benchmarks
  *
  * @param env Environment bindings
- * @param type Type of benchmarks to run (all, write, search, aggregate, dedup, history)
+ * @param type Type of benchmarks to run (all, lookup, recent, search, aggregate, dedup, history)
  */
-export async function runBenchmarks(env: Env, type: 'all' | 'recent' | 'search' | 'aggregate' | 'dedup' | 'history'): Promise<BenchmarkResult[]> {
+export async function runBenchmarks(
+  env: Env,
+  type: 'all' | 'lookup' | 'recent' | 'search' | 'aggregate' | 'dedup' | 'history'
+): Promise<BenchmarkResult[]> {
   const results: BenchmarkResult[] = []
 
+  // Benchmark 1: Direct Lookup (MOST CRITICAL)
+  if (type === 'all' || type === 'lookup') {
+    results.push(await benchmarkDirectLookup(env))
+  }
+
+  // Benchmark 2: Recent Content
   if (type === 'all' || type === 'recent') {
     results.push(await benchmarkRecentContent(env))
   }
 
+  // Benchmark 3: Full-Text Search
   if (type === 'all' || type === 'search') {
     results.push(await benchmarkFullTextSearch(env))
   }
 
+  // Benchmark 4: Aggregations
   if (type === 'all' || type === 'aggregate') {
     results.push(await benchmarkAggregations(env))
   }
 
+  // Benchmark 5: Deduplication
   if (type === 'all' || type === 'dedup') {
     results.push(await benchmarkDeduplication(env))
   }
 
+  // Benchmark 6: Historical Queries
   if (type === 'all' || type === 'history') {
     results.push(await benchmarkHistoricalQueries(env))
   }

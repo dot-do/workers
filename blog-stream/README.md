@@ -7,7 +7,7 @@ AI-powered blog post generation with streaming responses.
 ✅ **On-Demand Generation** - Generate blog posts on-the-fly when not found in DB
 ✅ **Streaming Responses** - Server-Sent Events (SSE) for real-time content streaming
 ✅ **Safety Validation** - Comprehensive title validation (SQL injection, XSS, path traversal)
-✅ **Multi-Provider AI** - Supports Anthropic Claude (via API) and Workers AI
+✅ **Workers AI Generation** - Uses OpenChat 3.5 model via Workers AI
 ✅ **Database Integration** - Automatic caching of generated posts
 ✅ **RPC Interface** - Service-to-service communication support
 
@@ -93,21 +93,18 @@ The worker validates blog post slugs against multiple attack vectors:
 - **Length Validation** - Max 200 characters
 - **Empty Slugs** - Rejects empty or dash-only slugs
 
-## AI Providers
+## AI Model
 
-### Anthropic Claude (Preferred)
-Uses `claude-3-5-sonnet-20241022` model via API.
+Uses **OpenChat 3.5** (`@cf/openchat/openchat-3.5-0106`) via Cloudflare Workers AI.
 
-**Setup:**
-Set `ANTHROPIC_API_KEY` secret:
-```bash
-wrangler secret put ANTHROPIC_API_KEY
-```
+**Benefits:**
+- ✅ No API keys required
+- ✅ Built-in to Workers platform
+- ✅ Fast streaming responses
+- ✅ Cost-effective at scale
+- ✅ Good quality blog content
 
-### Workers AI (Fallback)
-Uses `@cf/meta/llama-3.1-8b-instruct` model.
-
-No configuration required - automatically used if Anthropic key not set.
+No additional configuration needed - the AI binding is included in `wrangler.jsonc`.
 
 ## Usage Examples
 
@@ -205,7 +202,7 @@ interface BlogPost {
 
 ## Environment Variables
 
-- `ANTHROPIC_API_KEY` - (Optional) Anthropic API key for Claude access
+No environment variables required - all configuration is in `wrangler.jsonc`.
 
 ## Development
 

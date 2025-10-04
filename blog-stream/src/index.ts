@@ -12,7 +12,6 @@ import { stream, streamText } from 'hono/streaming'
 interface Env {
   DB_SERVICE: any
   AI: any
-  ANTHROPIC_API_KEY?: string
 }
 
 interface BlogPost {
@@ -84,32 +83,10 @@ Tone: Professional but conversational
 Length: ~800-1200 words
 Format: Markdown`
 
-  // Try Anthropic Claude first (via API)
-  if (env.ANTHROPIC_API_KEY) {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 4096,
-        stream: true,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    })
-
-    if (response.ok && response.body) {
-      return response.body
-    }
-  }
-
-  // Fallback to Workers AI
+  // Use Workers AI with GPT-OSS model
   const messages = [{ role: 'user' as const, content: prompt }]
 
-  return env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+  return env.AI.run('@cf/openchat/openchat-3.5-0106', {
     messages,
     stream: true
   })
@@ -187,34 +164,12 @@ app.get('/blog/:slug', async (c) => {
 
         const chunk = decoder.decode(value, { stream: true })
 
-        // Parse SSE format from Anthropic
-        if (c.env.ANTHROPIC_API_KEY) {
-          const lines = chunk.split('\n')
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6))
-                if (data.type === 'content_block_delta' && data.delta?.text) {
-                  const text = data.delta.text
-                  fullContent += text
-                  await stream.write(`data: ${JSON.stringify({
-                    type: 'content',
-                    text
-                  })}\n\n`)
-                }
-              } catch (e) {
-                // Skip invalid JSON
-              }
-            }
-          }
-        } else {
-          // Workers AI format
-          fullContent += chunk
-          await stream.write(`data: ${JSON.stringify({
-            type: 'content',
-            text: chunk
-          })}\n\n`)
-        }
+        // Workers AI streaming format - chunks are text
+        fullContent += chunk
+        await stream.write(`data: ${JSON.stringify({
+          type: 'content',
+          text: chunk
+        })}\n\n`)
       }
 
       // Save to database (fire and forget)

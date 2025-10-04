@@ -21,7 +21,9 @@
 
   // Service Bindings - connect to other workers (using actual deployed names)
   "services": [
-    { "binding": "DB", "service": "db" }
+    { "binding": "DB", "service": "db" },
+    { "binding": "DB_SERVICE", "service": "db" },
+    { "binding": "LOAD_SERVICE", "service": "load" }
     // Other services commented out until deployed
     // { "binding": "AI", "service": "ai" },
     // { "binding": "QUEUE", "service": "queue" }

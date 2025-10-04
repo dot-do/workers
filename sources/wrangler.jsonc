@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sources",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-15",
+  "workers_dev": false,
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "observability": {
+    "enabled": true
+  },
+
+  // Service Bindings - connect to other workers
+  "services": [
+    { "binding": "DB_SERVICE", "service": "db" },
+    { "binding": "LOAD_SERVICE", "service": "load" },
+    { "binding": "SCHEDULE_SERVICE", "service": "schedule" }
+  ]
+}

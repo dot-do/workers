@@ -1,0 +1,25 @@
+{
+  "name": "do-sources",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "types": "wrangler types worker.d.ts"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20250710.0",
+    "hono": "^4.8.4"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.19",
+    "@types/node": "^20.12.11",
+    "typescript": "^5.8.3",
+    "vitest": "~3.2.0",
+    "wrangler": "^4.24.0"
+  }
+}

@@ -7,6 +7,7 @@ import { cleanupExpiredSessions, cleanupExpiredApiKeys, cleanupOldGenerations } 
 import { generateMissingEmbeddings, generateMissingChunkEmbeddings } from './embeddings'
 import { updateAnalytics, backupDatabase } from './analytics'
 import { healthCheckServices, checkRateLimits } from './monitoring'
+import { importMCPServers, importPublicAPIs, importAllSources, verifyImportedData } from './imports'
 import type { TaskRegistry } from '../types'
 
 /**
@@ -29,6 +30,12 @@ export const taskRegistry: TaskRegistry = {
   // Monitoring tasks
   'health-check-services': healthCheckServices,
   'check-rate-limits': checkRateLimits,
+
+  // Import tasks
+  'import-mcp-servers': importMCPServers,
+  'import-public-apis': importPublicAPIs,
+  'import-all-sources': importAllSources,
+  'verify-imported-data': verifyImportedData,
 }
 
 /**
@@ -124,6 +131,46 @@ export const defaultTasks = [
     metadata: {
       description: 'Monitor API rate limit usage',
       category: 'monitoring',
+    },
+  },
+  {
+    name: 'import-mcp-servers',
+    schedule: '0 2 * * *',
+    handler: 'import-mcp-servers',
+    enabled: true,
+    metadata: {
+      description: 'Import MCP servers from registry (daily at 2am)',
+      category: 'imports',
+    },
+  },
+  {
+    name: 'import-public-apis',
+    schedule: '0 3 * * *',
+    handler: 'import-public-apis',
+    enabled: true,
+    metadata: {
+      description: 'Import public APIs from directories (daily at 3am)',
+      category: 'imports',
+    },
+  },
+  {
+    name: 'import-all-sources',
+    schedule: '0 4 * * 0',
+    handler: 'import-all-sources',
+    enabled: true,
+    metadata: {
+      description: 'Comprehensive import of all data sources (weekly on Sunday at 4am)',
+      category: 'imports',
+    },
+  },
+  {
+    name: 'verify-imported-data',
+    schedule: '0 5 * * *',
+    handler: 'verify-imported-data',
+    enabled: true,
+    metadata: {
+      description: 'Verify data integrity after imports (daily at 5am)',
+      category: 'imports',
     },
   },
 ]

@@ -6,6 +6,16 @@ import { WorkOSProvider } from './providers/workos'
 import type { EmailMessage, EmailResult, EmailStatus, EmailProvider, SendTemplateOptions, ListEmailsOptions, EmailLog } from './types'
 import { renderTemplate, listTemplates, getTemplate } from './templates'
 import { generateEmailId, formatEmailLog, isValidEmail, success, error } from './utils'
+import {
+  processColdEmail,
+  extractVariables,
+  validateVariables,
+  generateSampleVariables,
+  getColdEmailTemplate,
+  listColdEmailTemplates,
+  type ColdEmailOptions,
+  type ColdEmailResult,
+} from './cold-email'
 
 /**
  * Email Service - Transactional email delivery
@@ -191,6 +201,95 @@ export default class EmailService extends WorkerEntrypoint<Env> {
    */
   async getTemplate(name: string) {
     return getTemplate(name)
+  }
+
+  // ============================================================================
+  // COLD EMAIL METHODS
+  // ============================================================================
+
+  /**
+   * Send a cold email with tracking and personalization
+   */
+  async sendColdEmail(message: EmailMessage, options: ColdEmailOptions): Promise<ColdEmailResult> {
+    const trackingBaseUrl = this.env.TRACKING_BASE_URL || 'https://track.services.do'
+
+    // Process cold email (add tracking, personalization, unsubscribe)
+    const processed = processColdEmail(message, options, trackingBaseUrl)
+
+    // Send via email-sender service (respects warmup, rate limits)
+    let result: EmailResult
+
+    if (this.env.EMAIL_SENDER) {
+      result = await this.env.EMAIL_SENDER.send({
+        to: processed.message.to,
+        from: processed.message.from,
+        subject: processed.message.subject,
+        html: processed.message.html,
+        text: processed.message.text,
+        attachments: processed.message.attachments,
+        tags: processed.message.tags,
+        metadata: {
+          contactId: options.contactId,
+          campaignId: options.campaignId,
+          domainId: options.domainId,
+        },
+        options: {
+          domainId: options.domainId,
+          respectWarmup: options.respectWarmup,
+          respectRateLimits: options.respectRateLimits,
+          trackOpens: options.trackOpens,
+          trackClicks: options.trackClicks,
+        },
+      })
+    } else {
+      // Fallback to direct sending if email-sender not available
+      result = await this.send(processed.message, { userId: options.campaignId })
+    }
+
+    // Return extended result with cold email metadata
+    return {
+      ...result,
+      contactId: options.contactId,
+      campaignId: options.campaignId,
+      trackedLinks: processed.trackedLinks,
+      hasTrackingPixel: processed.hasTrackingPixel,
+      hasUnsubscribeLink: processed.hasUnsubscribeLink,
+    }
+  }
+
+  /**
+   * Get cold email template
+   */
+  async getColdEmailTemplate(id: string) {
+    return getColdEmailTemplate(id)
+  }
+
+  /**
+   * List cold email templates
+   */
+  async listColdEmailTemplates(category?: string) {
+    return listColdEmailTemplates(category as any)
+  }
+
+  /**
+   * Extract variables from template
+   */
+  async extractTemplateVariables(template: string) {
+    return extractVariables(template)
+  }
+
+  /**
+   * Validate template variables
+   */
+  async validateTemplateVariables(template: string, variables: Record<string, string>) {
+    return validateVariables(template, variables)
+  }
+
+  /**
+   * Generate sample variables
+   */
+  async getSampleVariables() {
+    return generateSampleVariables()
   }
 
   // ============================================================================
@@ -448,6 +547,149 @@ app.post('/webhooks/resend', async (c) => {
   } catch (err) {
     console.error('Webhook error:', err)
     return c.json(error('WEBHOOK_ERROR', err instanceof Error ? err.message : 'Unknown error'), 500)
+  }
+})
+
+// ============================================================================
+// COLD EMAIL ENDPOINTS
+// ============================================================================
+
+/**
+ * Send a cold email
+ */
+app.post('/cold-email/send', async (c) => {
+  try {
+    const body = await c.req.json<EmailMessage & ColdEmailOptions>()
+
+    // Validate
+    if (!body.to || !body.from || !body.subject || !body.contactId || !body.campaignId || !body.domainId) {
+      return c.json(error('INVALID_REQUEST', 'Missing required fields'), 400)
+    }
+
+    if (!body.html && !body.text) {
+      return c.json(error('INVALID_REQUEST', 'Email must have either HTML or text content'), 400)
+    }
+
+    // Create service instance
+    const service = new EmailService(c.env.ctx, c.env)
+
+    // Send cold email
+    const result = await service.sendColdEmail(
+      {
+        to: body.to,
+        from: body.from,
+        subject: body.subject,
+        html: body.html,
+        text: body.text,
+        attachments: body.attachments,
+      },
+      {
+        contactId: body.contactId,
+        campaignId: body.campaignId,
+        domainId: body.domainId,
+        variables: body.variables,
+        trackOpens: body.trackOpens,
+        trackClicks: body.trackClicks,
+        respectWarmup: body.respectWarmup,
+        respectRateLimits: body.respectRateLimits,
+        unsubscribeUrl: body.unsubscribeUrl,
+        listUnsubscribeHeader: body.listUnsubscribeHeader,
+      }
+    )
+
+    if (result.status === 'failed') {
+      return c.json(error('SEND_FAILED', result.error || 'Failed to send cold email', result), 500)
+    }
+
+    return c.json(success(result, 'Cold email sent successfully'))
+  } catch (err) {
+    return c.json(error('INTERNAL_ERROR', err instanceof Error ? err.message : 'Unknown error'), 500)
+  }
+})
+
+/**
+ * Get cold email templates
+ */
+app.get('/cold-email/templates', async (c) => {
+  try {
+    const category = c.req.query('category')
+    const service = new EmailService(c.env.ctx, c.env)
+    const templates = await service.listColdEmailTemplates(category)
+    return c.json(success(templates))
+  } catch (err) {
+    return c.json(error('INTERNAL_ERROR', err instanceof Error ? err.message : 'Unknown error'), 500)
+  }
+})
+
+/**
+ * Get specific cold email template
+ */
+app.get('/cold-email/templates/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const service = new EmailService(c.env.ctx, c.env)
+    const template = await service.getColdEmailTemplate(id)
+
+    if (!template) {
+      return c.json(error('NOT_FOUND', 'Template not found'), 404)
+    }
+
+    return c.json(success(template))
+  } catch (err) {
+    return c.json(error('INTERNAL_ERROR', err instanceof Error ? err.message : 'Unknown error'), 500)
+  }
+})
+
+/**
+ * Extract variables from template
+ */
+app.post('/cold-email/variables/extract', async (c) => {
+  try {
+    const { template } = await c.req.json<{ template: string }>()
+
+    if (!template) {
+      return c.json(error('INVALID_REQUEST', 'Template is required'), 400)
+    }
+
+    const service = new EmailService(c.env.ctx, c.env)
+    const variables = await service.extractTemplateVariables(template)
+
+    return c.json(success({ variables }))
+  } catch (err) {
+    return c.json(error('INTERNAL_ERROR', err instanceof Error ? err.message : 'Unknown error'), 500)
+  }
+})
+
+/**
+ * Validate template variables
+ */
+app.post('/cold-email/variables/validate', async (c) => {
+  try {
+    const { template, variables } = await c.req.json<{ template: string; variables: Record<string, string> }>()
+
+    if (!template) {
+      return c.json(error('INVALID_REQUEST', 'Template is required'), 400)
+    }
+
+    const service = new EmailService(c.env.ctx, c.env)
+    const validation = await service.validateTemplateVariables(template, variables || {})
+
+    return c.json(success(validation))
+  } catch (err) {
+    return c.json(error('INTERNAL_ERROR', err instanceof Error ? err.message : 'Unknown error'), 500)
+  }
+})
+
+/**
+ * Get sample variables
+ */
+app.get('/cold-email/variables/sample', async (c) => {
+  try {
+    const service = new EmailService(c.env.ctx, c.env)
+    const variables = await service.getSampleVariables()
+    return c.json(success(variables))
+  } catch (err) {
+    return c.json(error('INTERNAL_ERROR', err instanceof Error ? err.message : 'Unknown error'), 500)
   }
 })
 

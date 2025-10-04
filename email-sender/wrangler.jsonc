@@ -1,0 +1,38 @@
+{
+  "name": "email-sender",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Service bindings
+  "services": [
+    { "binding": "ESP_GATEWAY", "service": "esp-gateway" },
+    { "binding": "EMAIL_VALIDATION", "service": "email-validation" },
+    { "binding": "DNS_TOOLS", "service": "dns-tools" },
+    { "binding": "DB", "service": "db" }
+  ],
+
+  // KV namespace for caching
+  "kv_namespaces": [
+    {
+      "binding": "EMAIL_SENDER_KV",
+      "id": "email_sender_kv_production",
+      "preview_id": "email_sender_kv_preview"
+    }
+  ],
+
+  // Queue for async sending
+  "queues": {
+    "producers": [
+      {
+        "binding": "EMAIL_SEND_QUEUE",
+        "queue": "email-send-queue"
+      }
+    ]
+  },
+
+  // Environment variables
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+}

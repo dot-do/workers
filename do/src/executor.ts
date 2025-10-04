@@ -81,7 +81,7 @@ export async function executeCode(
     }
 
     // Load the worker with the code
-    const worker = env.LOADER.get(executionId, async () => {
+    const worker = await env.LOADER.get(executionId, async () => {
       const workerCode: WorkerCode = {
         compatibilityDate: env.DEFAULT_COMPATIBILITY_DATE || '2025-07-08',
         mainModule: 'main.js',

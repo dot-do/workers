@@ -7,13 +7,6 @@
   "observability": {
     "enabled": true
   },
-  // Custom domain routing
-  "routes": [
-    {
-      "pattern": "mcp.do/*",
-      "zone_name": "mcp.do"
-    }
-  ],
   // Service bindings - using actual deployed names
   "services": [
     { "binding": "DB", "service": "db" }

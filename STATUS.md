@@ -35,29 +35,31 @@ Successfully deployed **8 production-ready microservices** to Cloudflare Workers
 |---|---------|-----|--------|-------|
 | 1 | **db** | https://db.drivly.workers.dev | ✅ Healthy | ClickHouse working (PostgreSQL deprecated) |
 | 2 | **auth** | https://auth.drivly.workers.dev | 🚧 In Progress | Being fixed by another developer |
-| 3 | **schedule** | https://schedule.drivly.workers.dev | ⚠️ Needs Redeploy | Error 1042 - config updated, needs redeployment |
+| 3 | **schedule** | https://schedule.drivly.workers.dev | ✅ Healthy | Redeployed with updated config |
 | 4 | **webhooks** | https://webhooks.drivly.workers.dev | ✅ Healthy | OK (health endpoint added) |
 | 5 | **queue** | https://queue.drivly.workers.dev | ✅ Healthy | OK |
-| 6 | **mcp** | https://mcp.drivly.workers.dev | ⚠️ Needs Redeploy | 404 - custom domain routing added, needs redeployment |
-| 7 | **gateway** | https://gateway.drivly.workers.dev | ⚠️ Needs Redeploy | Error 1042 - config updated, needs redeployment |
+| 6 | **mcp** | https://mcp.drivly.workers.dev | ✅ Healthy | Redeployed (removed conflicting custom domain) |
+| 7 | **gateway** | https://gateway.drivly.workers.dev | ✅ Healthy | Redeployed with updated config |
 | 8 | **email** | https://email.drivly.workers.dev | ✅ Healthy | OK (export pattern fixed) |
 
 **Health Summary:**
-- ✅ 4 services healthy (db, queue, webhooks, email)
-- ⚠️ 3 services need redeployment (mcp, gateway, schedule) - configs updated by another agent
+- ✅ 7 services healthy (db, gateway, schedule, queue, webhooks, mcp, email)
 - 🚧 1 service in progress (auth - another developer)
 
 **Architecture Note:**
 - Database service is 100% ClickHouse (PostgreSQL deprecated - R2 SQL API not ready)
 - Vectorize support planned for vector/similarity search use cases
 
-**Next Steps:**
+**Completed:**
 - ✅ Fixed email service (error 1101) - Changed default export pattern
 - ✅ Fixed MCP service (error 1101) - Fixed env reference and binding
 - ✅ Added health endpoint to webhooks service
 - ✅ Deprecated PostgreSQL - ClickHouse-only architecture
 - ✅ Standardized naming convention - Changed from `do-*` prefix to short names
-- ⚠️ Redeploy 3 services (mcp, gateway, schedule) - configs updated, need redeployment (P0)
+- ✅ Redeployed 3 services (mcp, gateway, schedule) - All healthy
+- ✅ Fixed MCP custom domain conflict - Removed routes, workers.dev working
+
+**Next Steps:**
 - 🚧 Auth service being fixed by another developer (P0)
 - ⏳ Service-to-service RPC testing (P1)
 - ⏳ Add Vectorize support for vector search (P2)

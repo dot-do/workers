@@ -1,74 +1,66 @@
-/**
- * Wrangler Configuration - Human Service
- *
- * Human-in-the-loop task management with Durable Objects
- * https://developers.cloudflare.com/workers/wrangler/configuration/
- */
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "human",
   "main": "src/index.ts",
-  "compatibility_date": "2025-07-15",
-  "account_id": "b6641681fe423910342b9ffa1364c76d",
-
-  /**
-   * Observability
-   */
-  "observability": {
-    "enabled": true
-  },
-
-  /**
-   * Durable Objects Configuration
-   * Manages execution state for human functions
-   */
+  "compatibility_date": "2024-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  
+  // Durable Objects for state management
   "durable_objects": {
     "bindings": [
       {
-        "name": "HUMAN_EXECUTION",
-        "class_name": "HumanFunctionExecution",
+        "name": "HUMAN_FUNCTION",
+        "class_name": "HumanFunction",
         "script_name": "human"
       }
     ]
   },
-
-  /**
-   * Service Bindings
-   * Connect to other Workers services via RPC
-   */
+  
+  // KV for caching
+  "kv_namespaces": [
+    {
+      "binding": "HUMAN_KV",
+      "id": "your-kv-id",
+      "preview_id": "your-preview-kv-id"
+    }
+  ],
+  
+  // Service bindings
   "services": [
     {
-      "binding": "DB",
+      "binding": "DB_SERVICE",
       "service": "db"
     },
     {
-      "binding": "EMAIL",
+      "binding": "EMAIL_SERVICE",
       "service": "email"
-    },
-    {
-      "binding": "QUEUE",
-      "service": "queue"
-    },
-    {
-      "binding": "SCHEDULE",
-      "service": "schedule"
     }
   ],
-
-  /**
-   * Environment Variables
-   * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-   */
-  // "vars": {
-  //   "ENVIRONMENT": "production"
-  // },
-
-  /**
-   * Smart Placement
-   * Optimize worker placement based on service bindings
-   * https://developers.cloudflare.com/workers/configuration/smart-placement/
-   */
-  "placement": {
-    "mode": "smart"
-  }
+  
+  // Queue for async processing
+  "queues": {
+    "producers": [
+      {
+        "queue": "human-functions",
+        "binding": "QUEUE"
+      }
+    ]
+  },
+  
+  // Default configuration
+  "vars": {
+    "DEFAULT_TIMEOUT": "3600",
+    "DEFAULT_RETRIES": "3",
+    "MAX_CONCURRENT": "100"
+  },
+  
+  // Observability
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1.0
+  },
+  
+  // Secrets (use wrangler secret put)
+  // SLACK_BOT_TOKEN
+  // SLACK_SIGNING_SECRET
+  // SLACK_APP_TOKEN
 }

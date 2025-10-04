@@ -10,7 +10,7 @@
       "binding": "KV",
       "id": "esp_gateway_cache"
     }
-  ],
+  // ],
 
   // Queue for async sending
   "queues": {
@@ -28,7 +28,7 @@
       "binding": "DB",
       "service": "db"
     }
-  ],
+  // ],
 
   // Environment variables (ESP API keys via wrangler secret put)
   "vars": {
@@ -36,10 +36,10 @@
   },
 
   // Routes
-  "routes": [
+  // "routes": [
     {
       "pattern": "esp.email.do/*",
       "zone_name": "do"
     }
-  ]
+  // ]
 }

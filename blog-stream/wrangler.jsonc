@@ -26,20 +26,20 @@
       "binding": "DEPLOY_SERVICE",
       "service": "deploy"
     }
-  ],
+  // ],
 
   // Routes
-  "routes": [
+  // "routes": [
     {
       "pattern": "blog.apis.do/*",
       "zone_name": "apis.do"
     }
-  ],
+  // ],
 
   // Tail consumers (observability pipeline)
   "tail_consumers": [
     {
       "service": "pipeline"
     }
-  ]
+  // ]
 }

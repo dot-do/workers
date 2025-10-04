@@ -11,10 +11,10 @@
   "compatibility_flags": ["nodejs_compat"],
 
   // Routes
-  "routes": [
-    { "pattern": "numerics.api.mw/*", "zone_name": "api.mw" },
-    { "pattern": "numerics.apis.do/*", "zone_name": "apis.do" }
-  ],
+  // "routes": [
+    // { "pattern": "numerics.api.mw/*", "zone_name": "api.mw" },
+    // { "pattern": "numerics.apis.do/*", "zone_name": "apis.do" }
+  // ],
 
   // Observability
   "observability": {
@@ -25,7 +25,7 @@
   "services": [
     { "binding": "DB", "service": "db" },
     { "binding": "ANALYTICS", "service": "analytics" }
-  ],
+  // ],
 
   // KV for caching metric calculations (5min TTL)
   "kv_namespaces": [
@@ -33,7 +33,7 @@
       "binding": "METRICS_KV",
       "id": "numerics-metrics-cache"
     }
-  ],
+  // ],
 
   // Environment Variables
   "vars": {

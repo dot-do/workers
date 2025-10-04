@@ -5,12 +5,12 @@
   "node_compat": true,
   "account_id": "b6641681fe423910342b9ffa1364c76d",
   "workers_dev": true,
-  "routes": [
+  // "routes": [
     {
       "pattern": "mdx.do/*",
       "zone_name": "do"
     }
-  ],
+  // ],
 
   // Service bindings to renderer workers
   "services": [
@@ -38,7 +38,7 @@
     { "binding": "DIRECTORY_TAILWIND", "service": "mdx-directory-tailwind" },
     { "binding": "DIRECTORY_PICO", "service": "mdx-directory-picocss" },
     { "binding": "DIRECTORY_CHAKRA", "service": "mdx-directory-chakra" }
-  ],
+  // ],
 
   // KV namespace for MDX storage
   "kv_namespaces": [
@@ -47,7 +47,7 @@
       "id": "mdx-content-namespace-id",
       "preview_id": "mdx-content-preview-id"
     }
-  ],
+  // ],
 
   // R2 bucket for MDX storage
   "r2_buckets": [
@@ -56,5 +56,5 @@
       "bucket_name": "mdx-content",
       "preview_bucket_name": "mdx-content-preview"
     }
-  ]
+  // ]
 }

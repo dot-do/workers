@@ -12,12 +12,12 @@
   "compatibility_flags": ["nodejs_compat"],
 
   // Routes
-  "routes": [
-    { "pattern": "code-exec.api.mw/*", "zone_name": "api.mw" },
-    { "pattern": "code-exec.apis.do/*", "zone_name": "apis.do" },
-    { "pattern": "code.api.mw/*", "zone_name": "api.mw" },
-    { "pattern": "code.apis.do/*", "zone_name": "apis.do" }
-  ],
+  // "routes": [
+    // { "pattern": "code-exec.api.mw/*", "zone_name": "api.mw" },
+    // { "pattern": "code-exec.apis.do/*", "zone_name": "apis.do" },
+    // { "pattern": "code.api.mw/*", "zone_name": "api.mw" },
+    // { "pattern": "code.apis.do/*", "zone_name": "apis.do" }
+  // ],
 
   // Observability
   "observability": {
@@ -35,7 +35,7 @@
       "binding": "DISPATCHER",
       "namespace": "code-exec-sandbox"
     }
-  ],
+  // ],
 
   // Service Bindings (for RPC to other services)
   // Commented out for now - uncomment when db service is available

@@ -12,13 +12,13 @@
    */
   "services": [
     { "binding": "DB", "service": "db" }
-  ],
+  // ],
 
   /**
    * Routes - Expose via relationships.do domain
    */
-  "routes": [
-    { "pattern": "relationships.do/*", "zone_name": "do" },
-    { "pattern": "relationships.apis.do/*", "zone_name": "apis.do" }
-  ]
+  // "routes": [
+    // { "pattern": "relationships.do/*", "zone_name": "do" },
+    // { "pattern": "relationships.apis.do/*", "zone_name": "apis.do" }
+  // ]
 }

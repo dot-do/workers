@@ -11,7 +11,7 @@
       "binding": "DB",
       "service": "db"
     }
-  ],
+  // ],
 
   // Workers AI binding
   "ai": {

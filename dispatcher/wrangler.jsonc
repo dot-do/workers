@@ -19,7 +19,7 @@
       "binding": "DEVELOPMENT",
       "namespace": "dotdo-development"
     }
-  ],
+  // ],
 
   // Environment configuration
   "vars": {
@@ -28,7 +28,7 @@
 
   // Routes configuration (not deployed yet - Wave 2)
   // These will route all *.do/* traffic through this dispatcher
-  "routes": [
+  // "routes": [
     {
       "pattern": "*.do/*",
       "zone_name": "do"
@@ -37,5 +37,5 @@
       "pattern": "api.do/*",
       "zone_name": "do"
     }
-  ]
+  // ]
 }

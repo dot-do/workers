@@ -24,16 +24,28 @@
     "updatedAt": "2025-10-04T19:27:39.451Z"
   },
   {
-    "domain": "agents.do",
-    "service": "agents",
-    "binding": "AGENTS_SERVICE",
-    "requiresAuth": true,
+    "domain": "agent.do",
+    "service": "agent",
+    "binding": "AGENT_SERVICE",
+    "requiresAuth": false,
     "requiresAdmin": false,
     "metadata": {
-      "description": "Platform for deploying/managing autonomous digital workers",
+      "description": "AI code generation agent with WebSocket support",
       "category": "Agent"
     },
-    "updatedAt": "2025-10-04T19:27:39.450Z"
+    "updatedAt": "2025-10-04T20:00:00.000Z"
+  },
+  {
+    "domain": "agents.do",
+    "service": "agent",
+    "binding": "AGENT_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "AI code generation agent with WebSocket support (plural alias)",
+      "category": "Agent"
+    },
+    "updatedAt": "2025-10-04T20:00:00.000Z"
   },
   {
     "domain": "agi.do",
@@ -373,15 +385,15 @@
   },
   {
     "domain": "database.do",
-    "service": "database",
-    "binding": "DATABASE_SERVICE",
-    "requiresAuth": true,
+    "service": "db",
+    "binding": "DB_SERVICE",
+    "requiresAuth": false,
     "requiresAdmin": false,
     "metadata": {
-      "description": "AI-native data access (search, Create, Read, Update, Delete (CRUD), resources)",
+      "description": "Database RPC service - PostgreSQL/Neon and ClickHouse access",
       "category": "Data Layer"
     },
-    "updatedAt": "2025-10-04T19:27:39.450Z"
+    "updatedAt": "2025-10-04T20:00:00.000Z"
   },
   {
     "domain": "databases.do",
@@ -456,6 +468,18 @@
       "category": "Evaluation"
     },
     "updatedAt": "2025-10-04T19:27:39.451Z"
+  },
+  {
+    "domain": "fn.do",
+    "service": "fn",
+    "binding": "FN_SERVICE",
+    "requiresAuth": false,
+    "requiresAdmin": false,
+    "metadata": {
+      "description": "Intelligent function classification and execution service",
+      "category": "Function"
+    },
+    "updatedAt": "2025-10-04T20:00:00.000Z"
   },
   {
     "domain": "events.do",

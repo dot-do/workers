@@ -10,7 +10,7 @@
       "binding": "KV",
       "id": "email_validation_cache"
     }
-  ],
+  // ],
 
   // Queue for async bulk validation
   "queues": {
@@ -28,7 +28,7 @@
       "binding": "DB",
       "service": "db"
     }
-  ],
+  // ],
 
   // Environment variables (secrets via wrangler secret put)
   "vars": {
@@ -36,10 +36,10 @@
   },
 
   // Routes
-  "routes": [
+  // "routes": [
     {
       "pattern": "validation.email.do/*",
       "zone_name": "do"
     }
-  ]
+  // ]
 }

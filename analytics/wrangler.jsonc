@@ -11,10 +11,10 @@
   "compatibility_flags": ["nodejs_compat"],
 
   // Routes
-  "routes": [
-    { "pattern": "analytics.api.mw/*", "zone_name": "api.mw" },
-    { "pattern": "analytics.apis.do/*", "zone_name": "apis.do" }
-  ],
+  // "routes": [
+    // { "pattern": "analytics.api.mw/*", "zone_name": "api.mw" },
+    // { "pattern": "analytics.apis.do/*", "zone_name": "apis.do" }
+  // ],
 
   // Observability
   "observability": {
@@ -27,7 +27,7 @@
       "binding": "ANALYTICS",
       "dataset": "services_delivery_analytics"
     }
-  ],
+  // ],
 
   // R2 Buckets for long-term storage and R2 SQL
   "r2_buckets": [
@@ -36,7 +36,7 @@
       "bucket_name": "analytics-data",
       "jurisdiction": "us"
     }
-  ],
+  // ],
 
   // Service Bindings
   "services": [
@@ -44,7 +44,7 @@
     { "binding": "DOMAINS", "service": "domains" },
     { "binding": "DNS_TOOLS", "service": "dns-tools" },
     { "binding": "DOMAIN_MONITOR", "service": "domain-monitor" }
-  ],
+  // ],
 
   // KV for real-time aggregation cache
   "kv_namespaces": [
@@ -52,7 +52,7 @@
       "binding": "ANALYTICS_KV",
       "id": "analytics-realtime-cache"
     }
-  ],
+  // ],
 
   // Queue for async analytics processing
   "queues": {

@@ -1,0 +1,35 @@
+{
+  "name": "@dot-do/agent",
+  "version": "1.0.0",
+  "description": "AI Code Generation Agent Microservice",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "tsc",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "durable-objects",
+    "ai",
+    "code-generation",
+    "agent"
+  ],
+  "dependencies": {
+    "hono": "^4.6.19"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241231.0",
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.3",
+    "wrangler": "^3.103.0"
+  }
+}

@@ -6,6 +6,44 @@
 
 Created a unified `do` worker that serves as the single entry point for all platform services.
 
+### Security Architecture: SDK + Outbound Handler
+
+Instead of passing actual service bindings directly to user code (which would be a security risk), we use a more secure architecture:
+
+**User code receives:**
+- `env.DO` - Single service binding (optional, for SDK)
+- `env.__context` - Read-only user context
+- `env.__logRequest` - Logging utility
+
+**Outbound handler intercepts ALL fetch calls:**
+```typescript
+// User code makes a fetch call
+const result = await fetch('http://db/query', {
+  method: 'POST',
+  body: JSON.stringify({ sql: 'SELECT * FROM users' })
+})
+
+// Outbound handler intercepts this:
+// 1. Logs the request
+// 2. Checks if it's an internal service (db, auth, etc.)
+// 3. Adds context headers:
+//    - X-Request-ID
+//    - X-User-ID
+//    - X-User-Email
+//    - X-Authenticated
+//    - X-User-Role
+//    - X-User-Permissions
+// 4. Routes to appropriate service binding with context
+// 5. Returns response to user code
+```
+
+**Benefits:**
+- ✅ User code **never** gets direct access to service bindings
+- ✅ All service calls automatically include user context
+- ✅ Centralized logging of all requests
+- ✅ Works with any SDK that uses fetch() under the hood
+- ✅ Compatible with Cap'n Proto Web and other RPC protocols
+
 ### Architecture
 
 ```
@@ -103,6 +141,19 @@ const result = await env.DO.db_query('SELECT * FROM users')
 - `/rpc/:service/:method` endpoint
 - RPC methods for direct service binding calls
 
+### `/workers/do/src/executor.ts`
+- `executeCode()` - Main code execution function with authorization
+- **`createOutboundHandler()`** - Intercepts all fetch calls from user code
+  - Logs requests for debugging and audit
+  - Detects internal vs external service calls
+  - Injects user context as headers (X-User-ID, X-Authenticated, X-User-Role, etc.)
+  - Routes internal calls through service bindings with context
+  - Passes external calls through to native fetch()
+- Rate limiting and authorization checks
+- Cache support for repeated executions
+- Timeout handling
+- **Security:** User code only receives DO binding (optional) and read-only context
+
 ### `/workers/do/README.md`
 - Complete documentation
 - Usage examples
@@ -116,12 +167,14 @@ const result = await env.DO.db_query('SELECT * FROM users')
 
 ## Current Status
 
-✅ **DO Worker Complete**
+✅ **DO Worker Complete - SDK + Outbound Handler Architecture**
 - Deployed: https://do.drivly.workers.dev
 - Health check passing
 - All 8 service bindings configured
 - Context extraction working
 - HTTP + RPC interfaces implemented
+- **SDK injection with outbound handler** - User code never gets direct service access
+- Automatic context passing via headers
 
 ⚠️ **Services Need Updates**
 - Individual services don't have `/rpc/:method` endpoints yet

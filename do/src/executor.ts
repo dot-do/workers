@@ -100,9 +100,9 @@ export async function executeCode(
             authenticated: context.auth.authenticated,
             requestId: context.requestId
           } : undefined
-        },
-        // Outbound handler - inject context into all service calls
-        globalOutbound: context ? createOutboundHandler(context, env, requests) : undefined
+        }
+        // TODO: Re-enable globalOutbound once we fix the Fetcher type issue
+        // globalOutbound: context ? createOutboundHandler(context, env, requests) : undefined
       }
       return workerCode
     })
@@ -113,6 +113,12 @@ export async function executeCode(
     const timeoutId = setTimeout(() => controller.abort(), timeout)
 
     try {
+      // Debug: Check what worker object contains
+      console.log('Worker object type:', typeof worker)
+      console.log('Worker keys:', Object.keys(worker || {}))
+      console.log('Worker.fetch type:', typeof (worker as any)?.fetch)
+      console.log('Has fetch:', 'fetch' in (worker || {}))
+
       // Execute by calling the worker's fetch handler
       const fetchRequest = new Request('http://execute', { signal: controller.signal })
       const response = await worker.fetch(fetchRequest)
@@ -244,86 +250,89 @@ export default {
 /**
  * Create outbound handler to intercept fetch calls from user code
  * This proxies requests through the DO service with user context injected
+ * Returns a Fetcher object compatible with WorkerCode.globalOutbound
  */
 function createOutboundHandler(
   context: ServiceContext,
   env: Env,
   requests: RequestLog[]
-) {
-  return async (request: Request) => {
-    const url = new URL(request.url)
+): Fetcher {
+  return {
+    fetch: async (request: Request) => {
+      const url = new URL(request.url)
 
-    // Log the request
-    const log: RequestLog = {
-      url: request.url,
-      method: request.method,
-      timestamp: Date.now()
-    }
-    requests.push(log)
+      // Log the request
+      const log: RequestLog = {
+        url: request.url,
+        method: request.method,
+        timestamp: Date.now()
+      }
+      requests.push(log)
 
-    // Check if this is an internal service call
-    // Internal services use http:// with service names as hostnames
-    const isInternalService = url.protocol === 'http:' && [
-      'db', 'auth', 'gateway', 'schedule',
-      'webhooks', 'email', 'mcp', 'queue'
-    ].includes(url.hostname)
+      // Check if this is an internal service call
+      // Internal services use http:// with service names as hostnames
+      const isInternalService = url.protocol === 'http:' && [
+        'db', 'auth', 'gateway', 'schedule',
+        'webhooks', 'email', 'mcp', 'queue'
+      ].includes(url.hostname)
 
-    if (isInternalService) {
-      // Route through DO worker with context headers
-      const headers = new Headers(request.headers)
-      headers.set('X-Request-ID', context.requestId)
-      headers.set('X-User-ID', context.auth.user?.id || '')
-      headers.set('X-User-Email', context.auth.user?.email || '')
-      headers.set('X-Authenticated', String(context.auth.authenticated))
+      if (isInternalService) {
+        // Route through DO worker with context headers
+        const headers = new Headers(request.headers)
+        headers.set('X-Request-ID', context.requestId)
+        headers.set('X-User-ID', context.auth.user?.id || '')
+        headers.set('X-User-Email', context.auth.user?.email || '')
+        headers.set('X-Authenticated', String(context.auth.authenticated))
 
-      if (context.auth.user?.role) {
-        headers.set('X-User-Role', context.auth.user.role)
+        if (context.auth.user?.role) {
+          headers.set('X-User-Role', context.auth.user.role)
+        }
+
+        if (context.auth.user?.permissions) {
+          headers.set('X-User-Permissions', context.auth.user.permissions.join(','))
+        }
+
+        // Get the service binding from env
+        const serviceName = url.hostname.toUpperCase()
+        const serviceBinding = env[serviceName as keyof Env] as any
+
+        if (!serviceBinding || !serviceBinding.fetch) {
+          return new Response(
+            JSON.stringify({ error: `Service ${serviceName} not available` }),
+            { status: 503, headers: { 'Content-Type': 'application/json' } }
+          )
+        }
+
+        // Proxy to service with context
+        try {
+          const newRequest = new Request(request.url, {
+            method: request.method,
+            headers,
+            body: request.body
+          })
+
+          return await serviceBinding.fetch(newRequest)
+        } catch (error) {
+          return new Response(
+            JSON.stringify({
+              error: `Service ${serviceName} error: ${error instanceof Error ? error.message : 'Unknown error'}`
+            }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
+          )
+        }
       }
 
-      if (context.auth.user?.permissions) {
-        headers.set('X-User-Permissions', context.auth.user.permissions.join(','))
-      }
-
-      // Get the service binding from env
-      const serviceName = url.hostname.toUpperCase()
-      const serviceBinding = env[serviceName as keyof Env] as any
-
-      if (!serviceBinding || !serviceBinding.fetch) {
-        return new Response(
-          JSON.stringify({ error: `Service ${serviceName} not available` }),
-          { status: 503, headers: { 'Content-Type': 'application/json' } }
-        )
-      }
-
-      // Proxy to service with context
+      // External request - pass through
       try {
-        const newRequest = new Request(request.url, {
-          method: request.method,
-          headers,
-          body: request.body
-        })
-
-        return await serviceBinding.fetch(newRequest)
+        return await fetch(request)
       } catch (error) {
         return new Response(
           JSON.stringify({
-            error: `Service ${serviceName} error: ${error instanceof Error ? error.message : 'Unknown error'}`
+            error: `External fetch error: ${error instanceof Error ? error.message : 'Unknown error'}`
           }),
           { status: 500, headers: { 'Content-Type': 'application/json' } }
         )
       }
-    }
-
-    // External request - pass through
-    try {
-      return await fetch(request)
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error: `External fetch error: ${error instanceof Error ? error.message : 'Unknown error'}`
-        }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      )
     }
   }
 }

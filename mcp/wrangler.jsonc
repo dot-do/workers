@@ -26,11 +26,6 @@
   "vars": {
     "ENVIRONMENT": "production"
   },
-  // Migration to delete old Durable Object class from previous deployment
-  "migrations": [
-    {
-      "tag": "v1-cleanup-2025-10-04",
-      "deleted_classes": ["MyMCP"]
-    }
-  ]
+  // No migrations needed currently
+  // "migrations": []
 }

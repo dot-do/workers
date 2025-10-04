@@ -52,6 +52,15 @@ export const routes: RouteConfig[] = [
 
   // Claude Code service routes
   { pattern: /^\/claude-code\//, service: 'claude-code', binding: 'CLAUDE_CODE' },
+
+  // Agent service routes (Durable Objects)
+  { pattern: /^\/agent\//, service: 'agent', binding: 'AGENT' },
+
+  // Fn service routes (function classification and routing)
+  { pattern: /^\/fn\//, service: 'fn', binding: 'FN' },
+
+  // Admin CMS routes
+  { pattern: /^\/admin\//, service: 'app', binding: 'APP' },
 ]
 
 /**
@@ -65,6 +74,7 @@ export const domainRoutes: Record<string, keyof GatewayEnv> = {
   'queue.services.do': 'QUEUE',
   'api.services.do': 'DB', // Default to DB for main API domain
   'api.mw': 'DB',
+  'admin.do': 'APP', // Admin CMS
 }
 
 /**
@@ -116,6 +126,16 @@ export function requiresAuth(pathname: string, method: string): boolean {
   // Check if path starts with any public route
   if (publicRoutes.some(route => pathname.startsWith(route))) {
     return false
+  }
+
+  // Admin routes require authentication
+  if (pathname.startsWith('/admin/')) {
+    return true
+  }
+
+  // Agent and fn services require auth
+  if (pathname.startsWith('/agent/') || pathname.startsWith('/fn/')) {
+    return true
   }
 
   // All mutations require auth

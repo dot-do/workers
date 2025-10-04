@@ -32,7 +32,9 @@
 	 */
 	"services": [
 		// Core services - using actual deployed names
-		{ "binding": "DB", "service": "db" }
+		{ "binding": "DB", "service": "db" },
+		{ "binding": "AGENT", "service": "agent" },
+		{ "binding": "FN", "service": "fn" }
 		// Other services will be added as they're deployed
 		// { "binding": "AI", "service": "ai" },
 		// { "binding": "AUTH", "service": "auth" },

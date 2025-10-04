@@ -23,7 +23,7 @@
   "services": [
     { "binding": "DB", "service": "db" },
     { "binding": "QUEUE", "service": "queue" }
-  ],
+  // ],
 
   // Queue consumer - processes GitHub sync jobs
   "queues": {

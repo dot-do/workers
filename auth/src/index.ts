@@ -38,6 +38,13 @@ import * as middleware from './middleware'
  */
 export default class AuthService extends WorkerEntrypoint<AuthServiceEnv> {
   /**
+   * Handle HTTP requests via Hono app
+   */
+  fetch(request: Request): Response | Promise<Response> {
+    return app.fetch(request, this.env, this.ctx)
+  }
+
+  /**
    * Validate bearer token (API key or JWT)
    *
    * @implements RpcMethod

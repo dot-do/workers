@@ -11,10 +11,10 @@
   "compatibility_flags": ["nodejs_compat"],
 
   // Routes
-  "routes": [
-    { "pattern": "ai.api.mw/*", "zone_name": "api.mw" },
-    { "pattern": "ai.apis.do/*", "zone_name": "apis.do" }
-  ],
+  // "routes": [
+    // { "pattern": "ai.api.mw/*", "zone_name": "api.mw" },
+    // { "pattern": "ai.apis.do/*", "zone_name": "apis.do" }
+  // ],
 
   // Observability
   "observability": {
@@ -29,17 +29,17 @@
   // R2 Buckets (for media storage)
   "r2_buckets": [
     { "binding": "MEDIA_BUCKET", "bucket_name": "ai-media" }
-  ],
+  // ],
 
   // Service Bindings (for RPC to other services)
   "services": [
     { "binding": "DB", "service": "db" }
-  ],
+  // ],
 
   // Tail Consumers (for logging/monitoring)
   "tail_consumers": [
     { "service": "pipeline" }
-  ],
+  // ],
 
   // Queues (for async/background processing)
   "queues": {

@@ -4,7 +4,7 @@
  */
 
 import { cleanupExpiredSessions, cleanupExpiredApiKeys, cleanupOldGenerations } from './cleanup'
-import { generateMissingEmbeddings } from './embeddings'
+import { generateMissingEmbeddings, generateMissingChunkEmbeddings } from './embeddings'
 import { updateAnalytics, backupDatabase } from './analytics'
 import { healthCheckServices, checkRateLimits } from './monitoring'
 import type { TaskRegistry } from '../types'
@@ -20,6 +20,7 @@ export const taskRegistry: TaskRegistry = {
 
   // Embeddings tasks
   'generate-missing-embeddings': generateMissingEmbeddings,
+  'generate-missing-chunk-embeddings': generateMissingChunkEmbeddings,
 
   // Analytics tasks
   'update-analytics': updateAnalytics,
@@ -71,7 +72,17 @@ export const defaultTasks = [
     handler: 'generate-missing-embeddings',
     enabled: true,
     metadata: {
-      description: 'Generate embeddings for entities without them',
+      description: 'Generate embeddings for entities without them (ClickHouse)',
+      category: 'ai',
+    },
+  },
+  {
+    name: 'generate-missing-chunk-embeddings',
+    schedule: '@daily',
+    handler: 'generate-missing-chunk-embeddings',
+    enabled: true,
+    metadata: {
+      description: 'Generate embeddings for document chunks without them (ClickHouse)',
       category: 'ai',
     },
   },

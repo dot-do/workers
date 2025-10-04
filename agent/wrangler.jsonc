@@ -1,0 +1,67 @@
+{
+  "name": "agent",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+
+  // Durable Objects
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CODE_GENERATOR",
+        "class_name": "CodeGeneratorAgent"
+      }
+    ]
+  },
+
+  // Service Bindings
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db",
+      "environment": "production"
+    },
+    {
+      "binding": "AI_SERVICE",
+      "service": "ai",
+      "environment": "production"
+    },
+    {
+      "binding": "QUEUE",
+      "service": "queue",
+      "environment": "production"
+    }
+  ],
+
+  // R2 Buckets
+  "r2_buckets": [
+    {
+      "binding": "SANDBOX_BUCKET",
+      "bucket_name": "agent-sandbox"
+    },
+    {
+      "binding": "ASSETS_BUCKET",
+      "bucket_name": "agent-assets"
+    }
+  ],
+
+  // Environment Variables
+  "vars": {
+    "CUSTOM_DOMAIN": "agent.do"
+  },
+
+  // Development Settings
+  "dev": {
+    "port": 8787,
+    "local_protocol": "http"
+  },
+
+  // Migration Settings
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["CodeGeneratorAgent"]
+    }
+  ]
+}

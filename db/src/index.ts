@@ -11,6 +11,40 @@ import { clickhouse, sql } from './sql'
 import { getPostgresClient, checkPostgresHealth } from './postgres'
 
 /**
+ * Embedding model types - supports 10 model/dimension combinations
+ */
+export type EmbeddingModel =
+  | 'workers-ai' // legacy: Workers AI @cf/google/embeddinggemma-300m (768d)
+  | 'openai' // legacy: OpenAI text-embedding-ada-002 (1536d)
+  | 'gemma-128' // EmbeddingGemma 128 dimensions (MRL)
+  | 'gemma-256' // EmbeddingGemma 256 dimensions (MRL)
+  | 'gemma-512' // EmbeddingGemma 512 dimensions (MRL)
+  | 'gemma-768' // EmbeddingGemma 768 dimensions (MRL)
+  | 'gemini-128' // Google Gemini 128 dimensions
+  | 'gemini-768' // Google Gemini 768 dimensions
+  | 'gemini-1536' // Google Gemini 1536 dimensions
+  | 'gemini-3072' // Google Gemini 3072 dimensions
+
+/**
+ * Map embedding model name to ClickHouse column names
+ */
+function getModelColumns(model: EmbeddingModel): { embeddingColumn: string; timestampColumn: string } {
+  const columnMap: Record<EmbeddingModel, { embeddingColumn: string; timestampColumn: string }> = {
+    'workers-ai': { embeddingColumn: 'embeddingWorkersAI', timestampColumn: 'workersAIGeneratedAt' },
+    openai: { embeddingColumn: 'embeddingOpenAI', timestampColumn: 'openAIGeneratedAt' },
+    'gemma-128': { embeddingColumn: 'embeddingGemma128', timestampColumn: 'gemma128GeneratedAt' },
+    'gemma-256': { embeddingColumn: 'embeddingGemma256', timestampColumn: 'gemma256GeneratedAt' },
+    'gemma-512': { embeddingColumn: 'embeddingGemma512', timestampColumn: 'gemma512GeneratedAt' },
+    'gemma-768': { embeddingColumn: 'embeddingGemma768', timestampColumn: 'gemma768GeneratedAt' },
+    'gemini-128': { embeddingColumn: 'embeddingGemini128', timestampColumn: 'gemini128GeneratedAt' },
+    'gemini-768': { embeddingColumn: 'embeddingGemini768', timestampColumn: 'gemini768GeneratedAt' },
+    'gemini-1536': { embeddingColumn: 'embeddingGemini1536', timestampColumn: 'gemini1536GeneratedAt' },
+    'gemini-3072': { embeddingColumn: 'embeddingGemini3072', timestampColumn: 'gemini3072GeneratedAt' },
+  }
+  return columnMap[model]
+}
+
+/**
  * Database Service - Comprehensive database abstraction layer
  * Handles ALL data access for the platform (PostgreSQL + ClickHouse)
  *
@@ -170,6 +204,229 @@ export default class DatabaseService extends WorkerEntrypoint<Env> {
    */
   async sql(strings: TemplateStringsArray, ...values: unknown[]) {
     return sql(strings, ...values)
+  }
+
+  /**
+   * Execute raw ClickHouse SQL string (for RPC calls)
+   */
+  async executeSql(query: string) {
+    const resultSet = await clickhouse.query({ query, format: 'JSON' })
+    return resultSet.json()
+  }
+
+  // ============================================================================
+  // VECTOR SEARCH & EMBEDDINGS - RPC Methods
+  // ============================================================================
+
+  /**
+   * Get entities without embeddings for a specific model
+   * Used by schedule service to queue entities for embedding generation
+   */
+  async getEntitiesWithoutEmbeddings(options: {
+    ns?: string
+    limit?: number
+    model?: EmbeddingModel
+  } = {}) {
+    const { ns, limit = 100, model = 'workers-ai' } = options
+    const { embeddingColumn } = getModelColumns(model)
+
+    let query = `
+      SELECT t.ns, t.id, t.type, t.content
+      FROM graph_things t
+      LEFT JOIN graph_embeddings e ON t.ns = e.ns AND t.id = e.id
+      WHERE (e.${embeddingColumn} IS NULL OR length(e.${embeddingColumn}) = 0)
+    `
+
+    if (ns) {
+      query += ` AND t.ns = '${ns}'`
+    }
+
+    query += ` LIMIT ${limit}`
+
+    const result = await clickhouse.query({ query, format: 'JSON' })
+    const data = await result.json()
+    return data.data || []
+  }
+
+  /**
+   * Batch update embeddings for multiple entities
+   * Called by embeddings service after generating embeddings
+   */
+  async updateEmbeddingsBatch(embeddings: Array<{
+    ns: string
+    id: string
+    embedding: number[]
+    model: EmbeddingModel
+  }>) {
+    if (embeddings.length === 0) return { inserted: 0 }
+
+    const { embeddingColumn, timestampColumn } = getModelColumns(embeddings[0].model)
+
+    // Build INSERT statement
+    const values = embeddings.map((e) => {
+      const embeddingStr = `[${e.embedding.join(',')}]`
+      return `('${e.ns}', '${e.id}', ${embeddingStr}, now64(), now64(), now64())`
+    })
+
+    const query = `
+      INSERT INTO graph_embeddings (ns, id, ${embeddingColumn}, ${timestampColumn}, createdAt, updatedAt)
+      VALUES ${values.join(', ')}
+    `
+
+    await clickhouse.command({ query })
+    return { inserted: embeddings.length }
+  }
+
+  // ============================================================================
+  // CHUNKING - RPC Methods for document chunking
+  // ============================================================================
+
+  /**
+   * Create chunks for an entity
+   * Used when entity content is too large for single embedding
+   */
+  async createChunks(chunks: Array<{
+    ns: string
+    id: string
+    chunkIndex: number
+    chunkText: string
+    chunkTokens?: number
+    charStart?: number
+    charEnd?: number
+  }>) {
+    if (chunks.length === 0) return { inserted: 0 }
+
+    const values = chunks.map((c) => {
+      const text = c.chunkText.replace(/'/g, "''") // Escape single quotes
+      return `('${c.ns}', '${c.id}', ${c.chunkIndex}, '${text}', ${c.chunkTokens || 0}, ${c.charStart || 0}, ${c.charEnd || 0}, now64(), now64())`
+    })
+
+    const query = `
+      INSERT INTO graph_chunks (ns, id, chunkIndex, chunkText, chunkTokens, charStart, charEnd, createdAt, updatedAt)
+      VALUES ${values.join(', ')}
+    `
+
+    await clickhouse.command({ query })
+    return { inserted: chunks.length }
+  }
+
+  /**
+   * Get all chunks for an entity
+   */
+  async getChunks(ns: string, id: string) {
+    const query = `
+      SELECT ns, id, chunkIndex, chunkText, chunkTokens, charStart, charEnd, createdAt, updatedAt
+      FROM graph_chunks
+      WHERE ns = '${ns}' AND id = '${id}'
+      ORDER BY chunkIndex ASC
+    `
+
+    const result = await clickhouse.query({ query, format: 'JSON' })
+    const data = await result.json()
+    return data.data || []
+  }
+
+  /**
+   * Get chunks without embeddings for batch processing
+   */
+  async getChunksWithoutEmbeddings(options: {
+    ns?: string
+    limit?: number
+    model?: EmbeddingModel
+  } = {}) {
+    const { ns, limit = 100, model = 'workers-ai' } = options
+    const { embeddingColumn } = getModelColumns(model)
+
+    let query = `
+      SELECT c.ns, c.id, c.chunkIndex, c.chunkText
+      FROM graph_chunks c
+      LEFT JOIN graph_chunk_embeddings e ON c.ns = e.ns AND c.id = e.id AND c.chunkIndex = e.chunkIndex
+      WHERE (e.${embeddingColumn} IS NULL OR length(e.${embeddingColumn}) = 0)
+    `
+
+    if (ns) {
+      query += ` AND c.ns = '${ns}'`
+    }
+
+    query += ` LIMIT ${limit}`
+
+    const result = await clickhouse.query({ query, format: 'JSON' })
+    const data = await result.json()
+    return data.data || []
+  }
+
+  /**
+   * Batch update chunk embeddings
+   */
+  async updateChunkEmbeddingsBatch(embeddings: Array<{
+    ns: string
+    id: string
+    chunkIndex: number
+    embedding: number[]
+    model: EmbeddingModel
+  }>) {
+    if (embeddings.length === 0) return { inserted: 0 }
+
+    const { embeddingColumn, timestampColumn } = getModelColumns(embeddings[0].model)
+
+    const values = embeddings.map((e) => {
+      const embeddingStr = `[${e.embedding.join(',')}]`
+      return `('${e.ns}', '${e.id}', ${e.chunkIndex}, ${embeddingStr}, now64(), now64(), now64())`
+    })
+
+    const query = `
+      INSERT INTO graph_chunk_embeddings (ns, id, chunkIndex, ${embeddingColumn}, ${timestampColumn}, createdAt, updatedAt)
+      VALUES ${values.join(', ')}
+    `
+
+    await clickhouse.command({ query })
+    return { inserted: embeddings.length }
+  }
+
+  /**
+   * Vector search across chunks
+   * Useful for finding relevant chunks across all entities
+   */
+  async searchChunks(options: {
+    embedding: number[]
+    model?: EmbeddingModel
+    ns?: string
+    limit?: number
+    minScore?: number
+  }) {
+    const { embedding, model = 'workers-ai', ns, limit = 10, minScore = 0 } = options
+    const { embeddingColumn } = getModelColumns(model)
+
+    let query = `
+      SELECT
+        e.ns,
+        e.id,
+        e.chunkIndex,
+        c.chunkText,
+        c.chunkTokens,
+        t.type,
+        L2Distance(e.${embeddingColumn}, [${embedding.join(',')}]) AS distance,
+        1 / (1 + distance) AS score
+      FROM graph_chunk_embeddings e
+      INNER JOIN graph_chunks c ON e.ns = c.ns AND e.id = c.id AND e.chunkIndex = c.chunkIndex
+      INNER JOIN graph_things t ON e.ns = t.ns AND e.id = t.id
+      WHERE length(e.${embeddingColumn}) > 0
+    `
+
+    if (ns) {
+      query += ` AND e.ns = '${ns}'`
+    }
+
+    query += `
+      ORDER BY distance ASC
+      LIMIT ${limit}
+    `
+
+    const result = await clickhouse.query({ query, format: 'JSON' })
+    const data = await result.json()
+    const results = data.data || []
+
+    return minScore > 0 ? results.filter((r: any) => r.score >= minScore) : results
   }
 
   // ============================================================================
@@ -435,86 +692,260 @@ ORDER BY (ns, id, chunkIndex)
 PRIMARY KEY (ns, id, chunkIndex)
 SETTINGS index_granularity = 8192;
 
--- Embeddings Table: Store vector embeddings per entity or chunk
+-- Embeddings Table: Store vector embeddings per whole entity (not chunks)
+-- Note: Due to ClickHouse ReplacingMergeTree + vector index limitations,
+-- we use separate tables for entity vs chunk embeddings
 CREATE TABLE IF NOT EXISTS graph_embeddings (
   ns String,
   id String,                       -- Entity ID
-  chunkIndex Int32 DEFAULT -1,     -- -1 = whole entity, 0+ = chunk number
-  -- Workers AI model (768 dimensions)
+
+  -- Original Models (Legacy)
+  -- Workers AI @cf/google/embeddinggemma-300m (768 dimensions, legacy)
   embeddingWorkersAI Array(Float32) DEFAULT [],
   workersAIGeneratedAt DateTime64(3) DEFAULT 0,
-  -- OpenAI model (1536 dimensions)
+  -- OpenAI text-embedding-ada-002 (1536 dimensions, legacy)
   embeddingOpenAI Array(Float32) DEFAULT [],
   openAIGeneratedAt DateTime64(3) DEFAULT 0,
+
+  -- EmbeddingGemma (Cloudflare Workers AI) - Matryoshka Representation Learning
+  -- @cf/google/embeddinggemma-300m with variable dimensions (128, 256, 512, 768)
+  -- Truncate from 768 to smaller sizes for storage/speed optimization
+  embeddingGemma128 Array(Float32) DEFAULT [],
+  gemma128GeneratedAt DateTime64(3) DEFAULT 0,
+  embeddingGemma256 Array(Float32) DEFAULT [],
+  gemma256GeneratedAt DateTime64(3) DEFAULT 0,
+  embeddingGemma512 Array(Float32) DEFAULT [],
+  gemma512GeneratedAt DateTime64(3) DEFAULT 0,
+  embeddingGemma768 Array(Float32) DEFAULT [],
+  gemma768GeneratedAt DateTime64(3) DEFAULT 0,
+
+  -- Gemini (Google Gemini API) - Variable dimensions via output_dimensionality
+  -- gemini-embedding-001 supports 128-3072 dimensions
+  -- Recommended: 768, 1536, 3072 for optimal performance
+  embeddingGemini128 Array(Float32) DEFAULT [],
+  gemini128GeneratedAt DateTime64(3) DEFAULT 0,
+  embeddingGemini768 Array(Float32) DEFAULT [],
+  gemini768GeneratedAt DateTime64(3) DEFAULT 0,
+  embeddingGemini1536 Array(Float32) DEFAULT [],
+  gemini1536GeneratedAt DateTime64(3) DEFAULT 0,
+  embeddingGemini3072 Array(Float32) DEFAULT [],
+  gemini3072GeneratedAt DateTime64(3) DEFAULT 0,
+
   -- Metadata
   createdAt DateTime64(3) DEFAULT now64(),
   updatedAt DateTime64(3) DEFAULT now64(),
+
   -- Hash indexes for fast lookups
   nsHash UInt32 MATERIALIZED xxHash32(ns),
   idHash UInt32 MATERIALIZED xxHash32(id),
   INDEX bf_ns (nsHash) TYPE bloom_filter() GRANULARITY 4,
   INDEX bf_id (idHash) TYPE bloom_filter() GRANULARITY 4,
-  -- Vector similarity indexes (one per model)
-  INDEX workersai_idx embeddingWorkersAI TYPE vector_similarity(
-    'hnsw',
-    'L2Distance',
-    768
-  ) GRANULARITY 4,
-  INDEX openai_idx embeddingOpenAI TYPE vector_similarity(
-    'hnsw',
-    'L2Distance',
-    1536
-  ) GRANULARITY 4
+
+  -- Vector similarity indexes (one per model/dimension combination)
+  -- Legacy models
+  INDEX workersai_idx embeddingWorkersAI TYPE vector_similarity('hnsw', 'L2Distance', 768) GRANULARITY 4,
+  INDEX openai_idx embeddingOpenAI TYPE vector_similarity('hnsw', 'L2Distance', 1536) GRANULARITY 4,
+
+  -- EmbeddingGemma indexes
+  INDEX gemma128_idx embeddingGemma128 TYPE vector_similarity('hnsw', 'L2Distance', 128) GRANULARITY 4,
+  INDEX gemma256_idx embeddingGemma256 TYPE vector_similarity('hnsw', 'L2Distance', 256) GRANULARITY 4,
+  INDEX gemma512_idx embeddingGemma512 TYPE vector_similarity('hnsw', 'L2Distance', 512) GRANULARITY 4,
+  INDEX gemma768_idx embeddingGemma768 TYPE vector_similarity('hnsw', 'L2Distance', 768) GRANULARITY 4,
+
+  -- Gemini indexes
+  INDEX gemini128_idx embeddingGemini128 TYPE vector_similarity('hnsw', 'L2Distance', 128) GRANULARITY 4,
+  INDEX gemini768_idx embeddingGemini768 TYPE vector_similarity('hnsw', 'L2Distance', 768) GRANULARITY 4,
+  INDEX gemini1536_idx embeddingGemini1536 TYPE vector_similarity('hnsw', 'L2Distance', 1536) GRANULARITY 4,
+  INDEX gemini3072_idx embeddingGemini3072 TYPE vector_similarity('hnsw', 'L2Distance', 3072) GRANULARITY 4
+) ENGINE = ReplacingMergeTree(updatedAt)
+ORDER BY (ns, id)
+PRIMARY KEY (ns, id)
+SETTINGS index_granularity = 8192;
+
+-- Chunk Embeddings Table: Store vector embeddings per document chunk
+-- Note: Separate from graph_embeddings due to ClickHouse limitations
+-- Chunks use (ns, id, chunkIndex) primary key vs (ns, id) for whole entities
+CREATE TABLE IF NOT EXISTS graph_chunk_embeddings (
+  ns String,
+  id String,                       -- Parent entity ID
+  chunkIndex UInt32,               -- Chunk number (0-based)
+
+  -- Original Models (Legacy)
+  embeddingWorkersAI Array(Float32) DEFAULT [],
+  workersAIGeneratedAt DateTime64(3) DEFAULT 0,
+  embeddingOpenAI Array(Float32) DEFAULT [],
+  openAIGeneratedAt DateTime64(3) DEFAULT 0,
+
+  -- EmbeddingGemma (Cloudflare Workers AI) - Matryoshka Representation Learning
+  embeddingGemma128 Array(Float32) DEFAULT [],
+  gemma128GeneratedAt DateTime64(3) DEFAULT 0,
+  embeddingGemma256 Array(Float32) DEFAULT [],
+  gemma256GeneratedAt DateTime64(3) DEFAULT 0,
+  embeddingGemma512 Array(Float32) DEFAULT [],
+  gemma512GeneratedAt DateTime64(3) DEFAULT 0,
+  embeddingGemma768 Array(Float32) DEFAULT [],
+  gemma768GeneratedAt DateTime64(3) DEFAULT 0,
+
+  -- Gemini (Google Gemini API) - Variable dimensions
+  embeddingGemini128 Array(Float32) DEFAULT [],
+  gemini128GeneratedAt DateTime64(3) DEFAULT 0,
+  embeddingGemini768 Array(Float32) DEFAULT [],
+  gemini768GeneratedAt DateTime64(3) DEFAULT 0,
+  embeddingGemini1536 Array(Float32) DEFAULT [],
+  gemini1536GeneratedAt DateTime64(3) DEFAULT 0,
+  embeddingGemini3072 Array(Float32) DEFAULT [],
+  gemini3072GeneratedAt DateTime64(3) DEFAULT 0,
+
+  -- Metadata
+  createdAt DateTime64(3) DEFAULT now64(),
+  updatedAt DateTime64(3) DEFAULT now64(),
+
+  -- Hash indexes for fast lookups
+  nsHash UInt32 MATERIALIZED xxHash32(ns),
+  idHash UInt32 MATERIALIZED xxHash32(id),
+  INDEX bf_ns (nsHash) TYPE bloom_filter() GRANULARITY 4,
+  INDEX bf_id (idHash) TYPE bloom_filter() GRANULARITY 4,
+
+  -- Vector similarity indexes
+  INDEX workersai_idx embeddingWorkersAI TYPE vector_similarity('hnsw', 'L2Distance', 768) GRANULARITY 4,
+  INDEX openai_idx embeddingOpenAI TYPE vector_similarity('hnsw', 'L2Distance', 1536) GRANULARITY 4,
+  INDEX gemma128_idx embeddingGemma128 TYPE vector_similarity('hnsw', 'L2Distance', 128) GRANULARITY 4,
+  INDEX gemma256_idx embeddingGemma256 TYPE vector_similarity('hnsw', 'L2Distance', 256) GRANULARITY 4,
+  INDEX gemma512_idx embeddingGemma512 TYPE vector_similarity('hnsw', 'L2Distance', 512) GRANULARITY 4,
+  INDEX gemma768_idx embeddingGemma768 TYPE vector_similarity('hnsw', 'L2Distance', 768) GRANULARITY 4,
+  INDEX gemini128_idx embeddingGemini128 TYPE vector_similarity('hnsw', 'L2Distance', 128) GRANULARITY 4,
+  INDEX gemini768_idx embeddingGemini768 TYPE vector_similarity('hnsw', 'L2Distance', 768) GRANULARITY 4,
+  INDEX gemini1536_idx embeddingGemini1536 TYPE vector_similarity('hnsw', 'L2Distance', 1536) GRANULARITY 4,
+  INDEX gemini3072_idx embeddingGemini3072 TYPE vector_similarity('hnsw', 'L2Distance', 3072) GRANULARITY 4
 ) ENGINE = ReplacingMergeTree(updatedAt)
 ORDER BY (ns, id, chunkIndex)
 PRIMARY KEY (ns, id, chunkIndex)
 SETTINGS index_granularity = 8192;
 
--- Helper View: Join embeddings with things (whole entity only, no chunks)
+-- Helper View: Join embeddings with things (whole entity only)
 CREATE VIEW IF NOT EXISTS v_things_with_embeddings AS
 SELECT
   t.*,
   e.embeddingWorkersAI,
   e.workersAIGeneratedAt,
   e.embeddingOpenAI,
-  e.openAIGeneratedAt
+  e.openAIGeneratedAt,
+  e.embeddingGemma128,
+  e.gemma128GeneratedAt,
+  e.embeddingGemma256,
+  e.gemma256GeneratedAt,
+  e.embeddingGemma512,
+  e.gemma512GeneratedAt,
+  e.embeddingGemma768,
+  e.gemma768GeneratedAt,
+  e.embeddingGemini128,
+  e.gemini128GeneratedAt,
+  e.embeddingGemini768,
+  e.gemini768GeneratedAt,
+  e.embeddingGemini1536,
+  e.gemini1536GeneratedAt,
+  e.embeddingGemini3072,
+  e.gemini3072GeneratedAt
 FROM graph_things t
 LEFT JOIN graph_embeddings e
   ON t.ns = e.ns
-  AND t.id = e.id
-  AND e.chunkIndex = -1;
+  AND t.id = e.id;
 
--- Helper View: Join embeddings with chunks
+-- Helper View: Join chunks with their embeddings
 CREATE VIEW IF NOT EXISTS v_chunks_with_embeddings AS
 SELECT
   c.*,
   e.embeddingWorkersAI,
   e.workersAIGeneratedAt,
   e.embeddingOpenAI,
-  e.openAIGeneratedAt
+  e.openAIGeneratedAt,
+  e.embeddingGemma128,
+  e.gemma128GeneratedAt,
+  e.embeddingGemma256,
+  e.gemma256GeneratedAt,
+  e.embeddingGemma512,
+  e.gemma512GeneratedAt,
+  e.embeddingGemma768,
+  e.gemma768GeneratedAt,
+  e.embeddingGemini128,
+  e.gemini128GeneratedAt,
+  e.embeddingGemini768,
+  e.gemini768GeneratedAt,
+  e.embeddingGemini1536,
+  e.gemini1536GeneratedAt,
+  e.embeddingGemini3072,
+  e.gemini3072GeneratedAt
 FROM graph_chunks c
-LEFT JOIN graph_embeddings e
+LEFT JOIN graph_chunk_embeddings e
   ON c.ns = e.ns
   AND c.id = e.id
   AND c.chunkIndex = e.chunkIndex;
 
--- Helper View: Entity chunk summary
+-- Helper View: Entity chunk summary with all embedding models
 CREATE VIEW IF NOT EXISTS v_entity_chunk_stats AS
 SELECT
   ns,
   id,
   COUNT(*) AS totalChunks,
   SUM(chunkTokens) AS totalTokens,
+  -- Legacy models
   SUM(CASE WHEN e.embeddingWorkersAI IS NOT NULL AND length(e.embeddingWorkersAI) > 0 THEN 1 ELSE 0 END) AS chunksWithWorkersAI,
   SUM(CASE WHEN e.embeddingOpenAI IS NOT NULL AND length(e.embeddingOpenAI) > 0 THEN 1 ELSE 0 END) AS chunksWithOpenAI,
+  -- Gemma variants
+  SUM(CASE WHEN e.embeddingGemma128 IS NOT NULL AND length(e.embeddingGemma128) > 0 THEN 1 ELSE 0 END) AS chunksWithGemma128,
+  SUM(CASE WHEN e.embeddingGemma256 IS NOT NULL AND length(e.embeddingGemma256) > 0 THEN 1 ELSE 0 END) AS chunksWithGemma256,
+  SUM(CASE WHEN e.embeddingGemma512 IS NOT NULL AND length(e.embeddingGemma512) > 0 THEN 1 ELSE 0 END) AS chunksWithGemma512,
+  SUM(CASE WHEN e.embeddingGemma768 IS NOT NULL AND length(e.embeddingGemma768) > 0 THEN 1 ELSE 0 END) AS chunksWithGemma768,
+  -- Gemini variants
+  SUM(CASE WHEN e.embeddingGemini128 IS NOT NULL AND length(e.embeddingGemini128) > 0 THEN 1 ELSE 0 END) AS chunksWithGemini128,
+  SUM(CASE WHEN e.embeddingGemini768 IS NOT NULL AND length(e.embeddingGemini768) > 0 THEN 1 ELSE 0 END) AS chunksWithGemini768,
+  SUM(CASE WHEN e.embeddingGemini1536 IS NOT NULL AND length(e.embeddingGemini1536) > 0 THEN 1 ELSE 0 END) AS chunksWithGemini1536,
+  SUM(CASE WHEN e.embeddingGemini3072 IS NOT NULL AND length(e.embeddingGemini3072) > 0 THEN 1 ELSE 0 END) AS chunksWithGemini3072,
   MIN(c.createdAt) AS firstChunkCreated,
   MAX(c.updatedAt) AS lastChunkUpdated
 FROM graph_chunks c
-LEFT JOIN graph_embeddings e
+LEFT JOIN graph_chunk_embeddings e
   ON c.ns = e.ns
   AND c.id = e.id
   AND c.chunkIndex = e.chunkIndex
 GROUP BY ns, id;
+
+-- Model Summary: Count of embeddings by model
+CREATE VIEW IF NOT EXISTS v_embedding_model_summary AS
+SELECT
+  'workersai' AS model,
+  '768' AS dimensions,
+  COUNT(*) AS entityEmbeddings,
+  (SELECT COUNT(*) FROM graph_chunk_embeddings WHERE length(embeddingWorkersAI) > 0) AS chunkEmbeddings
+FROM graph_embeddings
+WHERE length(embeddingWorkersAI) > 0
+UNION ALL
+SELECT 'openai', '1536', COUNT(*), (SELECT COUNT(*) FROM graph_chunk_embeddings WHERE length(embeddingOpenAI) > 0)
+FROM graph_embeddings WHERE length(embeddingOpenAI) > 0
+UNION ALL
+SELECT 'gemma', '128', COUNT(*), (SELECT COUNT(*) FROM graph_chunk_embeddings WHERE length(embeddingGemma128) > 0)
+FROM graph_embeddings WHERE length(embeddingGemma128) > 0
+UNION ALL
+SELECT 'gemma', '256', COUNT(*), (SELECT COUNT(*) FROM graph_chunk_embeddings WHERE length(embeddingGemma256) > 0)
+FROM graph_embeddings WHERE length(embeddingGemma256) > 0
+UNION ALL
+SELECT 'gemma', '512', COUNT(*), (SELECT COUNT(*) FROM graph_chunk_embeddings WHERE length(embeddingGemma512) > 0)
+FROM graph_embeddings WHERE length(embeddingGemma512) > 0
+UNION ALL
+SELECT 'gemma', '768', COUNT(*), (SELECT COUNT(*) FROM graph_chunk_embeddings WHERE length(embeddingGemma768) > 0)
+FROM graph_embeddings WHERE length(embeddingGemma768) > 0
+UNION ALL
+SELECT 'gemini', '128', COUNT(*), (SELECT COUNT(*) FROM graph_chunk_embeddings WHERE length(embeddingGemini128) > 0)
+FROM graph_embeddings WHERE length(embeddingGemini128) > 0
+UNION ALL
+SELECT 'gemini', '768', COUNT(*), (SELECT COUNT(*) FROM graph_chunk_embeddings WHERE length(embeddingGemini768) > 0)
+FROM graph_embeddings WHERE length(embeddingGemini768) > 0
+UNION ALL
+SELECT 'gemini', '1536', COUNT(*), (SELECT COUNT(*) FROM graph_chunk_embeddings WHERE length(embeddingGemini1536) > 0)
+FROM graph_embeddings WHERE length(embeddingGemini1536) > 0
+UNION ALL
+SELECT 'gemini', '3072', COUNT(*), (SELECT COUNT(*) FROM graph_chunk_embeddings WHERE length(embeddingGemini3072) > 0)
+FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
 `
 
         // Split into statements

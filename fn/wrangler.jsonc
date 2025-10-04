@@ -1,0 +1,61 @@
+{
+  "name": "fn",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+
+  // Service Bindings
+  "services": [
+    {
+      "binding": "AI_SERVICE",
+      "service": "ai",
+      "environment": "production"
+    },
+    {
+      "binding": "AGENT_SERVICE",
+      "service": "agent",
+      "environment": "production"
+    },
+    {
+      "binding": "DB",
+      "service": "db",
+      "environment": "production"
+    },
+    {
+      "binding": "QUEUE_SERVICE",
+      "service": "queue",
+      "environment": "production"
+    }
+  ],
+
+  // Queue Consumers
+  "queues": {
+    "consumers": [
+      {
+        "queue": "function-execution",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "function-execution-dlq"
+      }
+    ],
+    "producers": [
+      {
+        "binding": "FUNCTION_QUEUE",
+        "queue": "function-execution"
+      }
+    ]
+  },
+
+  // Environment Variables
+  "vars": {
+    "DEFAULT_MODEL": "gpt-4o-mini"
+  },
+
+  // Development Settings
+  "dev": {
+    "port": 8788,
+    "local_protocol": "http"
+  }
+}

@@ -1,0 +1,64 @@
+/**
+ * App Service Configuration
+ *
+ * Admin CMS worker that proxies to Payload CMS Pages deployment
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "app",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-07-08",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"observability": { "enabled": true },
+
+	/**
+	 * Smart Placement - Let Cloudflare optimize worker placement
+	 */
+	"placement": { "mode": "smart" },
+
+	/**
+	 * Service Bindings - RPC connections to microservices
+	 */
+	"services": [
+		{ "binding": "DB", "service": "db" },
+		{ "binding": "AUTH", "service": "auth" }
+	],
+
+	/**
+	 * D1 Database - Payload CMS database
+	 * Run: wrangler d1 create admin
+	 * Then replace placeholder ID with actual ID
+	 */
+	"d1_databases": [
+		{
+			"binding": "D1",
+			"database_name": "admin",
+			"database_id": "placeholder-replace-with-actual-d1-id"
+		}
+	],
+
+	/**
+	 * R2 Bucket - Media storage
+	 * Run: wrangler r2 bucket create admin-media
+	 */
+	"r2_buckets": [
+		{
+			"binding": "MEDIA",
+			"bucket_name": "admin-media"
+		}
+	],
+
+	/**
+	 * Environment Variables
+	 */
+	"vars": {
+		"PAYLOAD_URL": "https://admin-payload.pages.dev"
+	}
+
+	/**
+	 * Secrets (set via CLI)
+	 *
+	 * wrangler secret put PAYLOAD_SECRET
+	 */
+	// PAYLOAD_SECRET
+}

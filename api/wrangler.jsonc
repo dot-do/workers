@@ -3,6 +3,7 @@
   "main": "src/index.ts",
   "compatibility_date": "2024-10-01",
   "compatibility_flags": ["nodejs_compat"],
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
 
   // Service bindings (all other workers via RPC)
   "services": [
@@ -17,7 +18,9 @@
     { "binding": "WAITLIST_SERVICE", "service": "waitlist-beta-management" },
     { "binding": "DO_SERVICE", "service": "do" },
     { "binding": "AI_SERVICE", "service": "ai" },
-    { "binding": "EMBEDDINGS_SERVICE", "service": "embeddings" }
+    { "binding": "EMBEDDINGS_SERVICE", "service": "embeddings" },
+    { "binding": "AGENT_SERVICE", "service": "agent" },
+    { "binding": "FN_SERVICE", "service": "fn" }
   ],
 
   // Dispatch namespaces (Workers for Platforms)

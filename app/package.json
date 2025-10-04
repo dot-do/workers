@@ -1,0 +1,29 @@
+{
+	"name": "@do/app",
+	"version": "1.0.0",
+	"description": "Admin CMS worker - proxies to Payload CMS",
+	"type": "module",
+	"scripts": {
+		"dev": "wrangler dev",
+		"build": "tsc && esbuild src/index.ts --bundle --format=esm --outfile=dist/index.js",
+		"deploy": "wrangler deploy",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"typecheck": "tsc --noEmit"
+	},
+	"keywords": ["admin", "cms", "payload", "cloudflare", "workers"],
+	"dependencies": {
+		"hono": "^4.7.11"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20250110.0",
+		"@types/node": "^22.0.0",
+		"esbuild": "^0.24.2",
+		"typescript": "^5.7.3",
+		"vitest": "^3.2.3",
+		"wrangler": "^3.103.0"
+	},
+	"engines": {
+		"node": ">=20"
+	}
+}

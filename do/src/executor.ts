@@ -18,6 +18,18 @@ export async function executeCode(
   const requests: RequestLog[] = []
 
   try {
+    // Check if Worker Loader is available
+    if (!env.LOADER) {
+      return {
+        success: false,
+        error: {
+          message: 'Worker Loader not available. This feature requires Cloudflare Workers with dynamic code execution enabled.'
+        },
+        logs,
+        executionTime: Date.now() - startTime
+      }
+    }
+
     // ========== AUTHORIZATION ==========
     // If context provided, check authorization
     if (context) {
@@ -35,7 +47,7 @@ export async function executeCode(
       }
 
       // Check code execution authorization
-      const authResult = authorizeCodeExecution(request, context)
+      const authResult = authorizeCodeExecution(request, context, env)
       if (!authResult.authorized) {
         return {
           success: false,
@@ -109,6 +121,20 @@ export async function executeCode(
 
       // Parse the result
       const result = await response.json() as { output?: any; logs?: string[]; error?: string; stack?: string }
+
+      // Check if there was an error in the user code
+      if (result.error) {
+        return {
+          success: false,
+          error: {
+            message: result.error,
+            stack: result.stack
+          },
+          logs: result.logs || logs,
+          requests: request.captureFetch ? requests : undefined,
+          executionTime: Date.now() - startTime
+        }
+      }
 
       const executionResponse: ExecuteCodeResponse = {
         success: true,

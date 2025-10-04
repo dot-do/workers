@@ -145,6 +145,19 @@ export async function executeCode(
     console.log('worker type:', typeof worker)
     console.log('worker keys:', Object.keys(worker || {}))
     console.log('worker.fetch:', typeof (worker as any)?.fetch)
+    console.log('worker.getEntrypoint:', typeof (worker as any)?.getEntrypoint)
+
+    // Check if Worker Loader returned a valid worker stub
+    if (!worker || (typeof (worker as any).fetch !== 'function' && typeof (worker as any).getEntrypoint !== 'function')) {
+      return {
+        success: false,
+        error: {
+          message: 'Worker Loader is not fully functional in this environment. This may be expected in local development. Worker Loader works fully in production with beta access.'
+        },
+        logs,
+        executionTime: Date.now() - startTime
+      }
+    }
 
     // Execute the code with timeout
     const timeout = request.timeout || parseInt(env.MAX_EXECUTION_TIME || '30000')
@@ -153,8 +166,24 @@ export async function executeCode(
 
     try {
       // Execute by calling the worker's fetch handler
+      // In local dev, we may need to use getEntrypoint() to get the default export
       const fetchRequest = new Request('http://execute', { signal: controller.signal })
-      const response = await worker.fetch(fetchRequest)
+      let response: Response
+
+      if (typeof (worker as any).fetch === 'function') {
+        // Production: Direct fetch on worker stub
+        response = await worker.fetch(fetchRequest)
+      } else if (typeof (worker as any).getEntrypoint === 'function') {
+        // Local dev: Get default export and call its fetch
+        const entrypoint = (worker as any).getEntrypoint()
+        if (entrypoint && typeof entrypoint.fetch === 'function') {
+          response = await entrypoint.fetch(fetchRequest)
+        } else {
+          throw new Error('Worker entrypoint does not have a fetch method')
+        }
+      } else {
+        throw new Error('Worker stub has neither fetch() nor getEntrypoint()')
+      }
 
       clearTimeout(timeoutId)
 

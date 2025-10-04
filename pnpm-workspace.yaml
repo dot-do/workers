@@ -22,6 +22,7 @@ packages:
   - 'esp-gateway'
   - 'email-sender'
   - 'email-campaigns'
+  - 'email-warming'
   # SDK packages (foundation packages)
   - '../sdk/packages/ai-generation'
   - '../sdk/packages/ai-embeddings'

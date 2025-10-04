@@ -1,0 +1,28 @@
+---
+$type: LandingPage
+$style: tailwind
+title: Test Landing Page
+---
+
+<Hero
+  title="Welcome to Our Product"
+  subtitle="The best solution for your needs"
+  cta="Get Started"
+  ctaLink="/signup"
+/>
+
+<Features
+  title="Why Choose Us"
+  features={[
+    { icon: "⚡", title: "Fast", description: "Lightning fast performance" },
+    { icon: "🔒", title: "Secure", description: "Bank-level security" },
+    { icon: "📱", title: "Mobile", description: "Works on any device" }
+  ]}
+/>
+
+<CTA
+  title="Ready to get started?"
+  description="Join thousands of happy customers"
+  primaryText="Start Free Trial"
+  primaryLink="/signup"
+/>

@@ -15,7 +15,7 @@
 		{ "pattern": "podcast.services.do/*", "custom_domain": true }
 	],
   "services": [
-		{ "binding": "DB", "service": "do-db" },
+		{ "binding": "DB", "service": "db" },
 		{ "binding": "VOICE", "service": "voice" }
 	],
 	"r2_buckets": [

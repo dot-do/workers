@@ -124,7 +124,7 @@ This document details the preparation of 4 core services for deployment to Worke
 "services": [
   {
     "binding": "DB",
-    "service": "do-db"
+    "service": "db"
   }
 ]
 ```
@@ -413,10 +413,10 @@ All services are configured to use the deployed service names:
 
 - `gateway` → binds to `db`
 - `db` → standalone (no service bindings)
-- `auth` → binds to `do-db`
+- `auth` → binds to `db`
 - `schedule` → binds to `db`
 
-**⚠️ Naming Inconsistency:** The `auth` service binds to `do-db` while others bind to `db`. This should be standardized in the future.
+**⚠️ Naming Inconsistency:** The `auth` service binds to `db` while others bind to `db`. This should be standardized in the future.
 
 ---
 

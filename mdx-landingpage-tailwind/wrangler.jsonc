@@ -1,0 +1,8 @@
+{
+  "name": "mdx-landingpage-tailwind",
+  "main": "src/index-simple.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "workers_dev": true
+}

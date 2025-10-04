@@ -15,7 +15,7 @@
 		{ "pattern": "voice.services.do/*", "custom_domain": true }
 	],
   "services": [
-		{ "binding": "DB", "service": "do-db" }
+		{ "binding": "DB", "service": "db" }
 	],
 	"r2_buckets": [
 		{ "binding": "AUDIO", "bucket_name": "voice-audio" }

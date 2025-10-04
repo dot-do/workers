@@ -108,12 +108,12 @@ This checks:
 
 ```bash
 # 1. Get health status (no auth required)
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
 
 # Expected: {"status":"healthy","timestamp":"...","services":[...]}
 
 # 2. Create API key (requires admin session - setup via WorkOS first)
-curl -X POST https://do-gateway.YOUR_SUBDOMAIN.workers.dev/auth/apikeys \
+curl -X POST https://gateway.YOUR_SUBDOMAIN.workers.dev/auth/apikeys \
   -H "Cookie: session=YOUR_SESSION_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"name":"Integration Test Key"}'
@@ -121,13 +121,13 @@ curl -X POST https://do-gateway.YOUR_SUBDOMAIN.workers.dev/auth/apikeys \
 # Expected: {"apiKey":"sk_live_...","id":"...","name":"Integration Test Key"}
 
 # 3. Test API key authentication
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/db/stats \
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/db/stats \
   -H "Authorization: Bearer sk_live_YOUR_KEY"
 
 # Expected: {"tables":{...},"total_records":...}
 
 # 4. Test invalid API key (should fail)
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/db/stats \
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/db/stats \
   -H "Authorization: Bearer sk_live_invalid"
 
 # Expected: {"error":"Invalid API key","code":"INVALID_API_KEY"}
@@ -147,7 +147,7 @@ curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/db/stats \
 ```bash
 # Send 70 requests rapidly
 for i in {1..70}; do
-  curl -s https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+  curl -s https://gateway.YOUR_SUBDOMAIN.workers.dev/health
 done
 
 # After ~60 requests, should get:
@@ -165,17 +165,17 @@ done
 
 ```bash
 # 1. List all scheduled tasks
-curl https://do-schedule.YOUR_SUBDOMAIN.workers.dev/tasks
+curl https://schedule.YOUR_SUBDOMAIN.workers.dev/tasks
 
 # Expected: {"tasks":[{"name":"cleanup-expired-sessions",...},...]}
 
 # 2. Execute task manually
-curl -X POST https://do-schedule.YOUR_SUBDOMAIN.workers.dev/tasks/cleanup-expired-sessions/execute
+curl -X POST https://schedule.YOUR_SUBDOMAIN.workers.dev/tasks/cleanup-expired-sessions/execute
 
 # Expected: {"status":"success","task":"cleanup-expired-sessions","executionTime":...}
 
 # 3. Get execution history
-curl https://do-schedule.YOUR_SUBDOMAIN.workers.dev/tasks/cleanup-expired-sessions/history
+curl https://schedule.YOUR_SUBDOMAIN.workers.dev/tasks/cleanup-expired-sessions/history
 
 # Expected: {"history":[{"timestamp":"...","status":"success",...}]}
 ```
@@ -268,17 +268,17 @@ curl https://do-email.YOUR_SUBDOMAIN.workers.dev/history?userId=USER_ID \
 
 ```bash
 # List available MCP servers
-curl https://do-mcp.YOUR_SUBDOMAIN.workers.dev/servers
+curl https://mcp.YOUR_SUBDOMAIN.workers.dev/servers
 
 # Expected: {"servers":["context7","deepwiki","memory","slack","github",...]}
 
 # Get GitHub tools
-curl https://do-mcp.YOUR_SUBDOMAIN.workers.dev/github/tools
+curl https://mcp.YOUR_SUBDOMAIN.workers.dev/github/tools
 
 # Expected: {"tools":[{"name":"github_search_repositories",...},...]}
 
 # Execute GitHub search
-curl -X POST https://do-mcp.YOUR_SUBDOMAIN.workers.dev/github/call \
+curl -X POST https://mcp.YOUR_SUBDOMAIN.workers.dev/github/call \
   -H "Content-Type: application/json" \
   -d '{
     "tool": "github_search_repositories",
@@ -288,7 +288,7 @@ curl -X POST https://do-mcp.YOUR_SUBDOMAIN.workers.dev/github/call \
 # Expected: {"result":{"items":[...]}}
 
 # Test memory store
-curl -X POST https://do-mcp.YOUR_SUBDOMAIN.workers.dev/memory/call \
+curl -X POST https://mcp.YOUR_SUBDOMAIN.workers.dev/memory/call \
   -H "Content-Type: application/json" \
   -d '{
     "tool": "create_entities",
@@ -330,11 +330,11 @@ brew install hyperfine  # macOS
 
 # Benchmark health check
 hyperfine --warmup 3 \
-  'curl -s https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health'
+  'curl -s https://gateway.YOUR_SUBDOMAIN.workers.dev/health'
 
 # Benchmark authenticated request
 hyperfine --warmup 3 \
-  'curl -s https://do-gateway.YOUR_SUBDOMAIN.workers.dev/db/stats \
+  'curl -s https://gateway.YOUR_SUBDOMAIN.workers.dev/db/stats \
    -H "Authorization: Bearer sk_live_YOUR_KEY"'
 
 # Benchmark DB query
@@ -363,7 +363,7 @@ This will:
 
 **1. Service Binding Error**
 ```
-Error: Worker binding "DB" refers to service "do-db", but no service is defined
+Error: Worker binding "DB" refers to service "db", but no service is defined
 ```
 
 **Fix:**
@@ -417,16 +417,16 @@ Rate limiting allows unlimited requests
 **View Real-Time Logs:**
 ```bash
 # Gateway logs
-wrangler tail do-gateway
+wrangler tail gateway
 
 # Database logs
 wrangler tail do-db
 
 # Auth logs
-wrangler tail do-auth
+wrangler tail auth
 
 # Filter for errors only
-wrangler tail do-gateway --status error
+wrangler tail gateway --status error
 ```
 
 **Cloudflare Dashboard:**

@@ -29,11 +29,11 @@
 - Commented out global-scope async ClickHouse initialization code (schema.ts:215-219)
 - Schema creation should be run via migration scripts, not at deploy time
 
-### 2. Gateway Service (do-gateway)
+### 2. Gateway Service (gateway)
 **Deployment:**
-- Name: `do-gateway`
+- Name: `gateway`
 - Version: feadc28e-95d8-431e-8ff9-2d5225f4be6b
-- URL: https://do-gateway.drivly.workers.dev
+- URL: https://gateway.drivly.workers.dev
 
 **Service Bindings:**
 - ✅ DB service connected
@@ -43,7 +43,7 @@
 - Environment: production
 
 **Fix Applied:**
-- Updated service binding from `do-db` to `db` (actual deployed name)
+- Updated service binding from `db` to `db` (actual deployed name)
 - Commented out undeployed service bindings until those services are deployed
 
 ---
@@ -58,7 +58,7 @@
 ### Deployments
 - ✅ **2/34 services** deployed (6%)
   - db
-  - do-gateway
+  - gateway
 - ⏳ **32/34 services** ready to deploy (pending credentials for some)
 
 ### Credentials Status
@@ -119,7 +119,7 @@ JWT_REFRESH_SECRET=mTXUvEEGORW1Q5XpXsA7Mivk88wmNFMB40wZADL8G7s=
 
 ### Service Name Consistency
 - Most services use simple names: `db`, `auth`, `email`
-- Gateway config had prefixed names: `do-db`, `do-auth`
+- Gateway config had prefixed names: `db`, `auth`
 - **Solution:** Use actual deployed names in service bindings
 
 ### Code Issues Found & Fixed
@@ -186,7 +186,7 @@ echo "YOUR_WORKOS_CLIENT_SECRET" | wrangler secret put WORKOS_CLIENT_SECRET
 
 ### Working Services
 1. **db service** responding at db.apis.do
-2. **gateway service** responding at do-gateway.drivly.workers.dev
+2. **gateway service** responding at gateway.drivly.workers.dev
 
 ### Verified Configurations
 - All wrangler configs have correct account ID

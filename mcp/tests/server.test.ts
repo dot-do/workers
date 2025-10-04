@@ -66,7 +66,7 @@ describe('MCP Server', () => {
       const data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.name).toBe('do-mcp-server')
+      expect(data.name).toBe('mcp-server')
       expect(data.protocol).toBe('mcp/2024-11-05')
       expect(data.capabilities).toHaveProperty('tools')
       expect(data.capabilities).toHaveProperty('resources')

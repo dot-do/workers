@@ -16,7 +16,7 @@
 	// 	{ "pattern": "email.services.do/*", "custom_domain": true }
 	// ],
   "services": [
-		{ "binding": "DB", "service": "do-db" }
+		{ "binding": "DB", "service": "db" }
 	],
 	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
 	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }]

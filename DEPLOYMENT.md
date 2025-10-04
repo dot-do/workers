@@ -119,7 +119,7 @@ wrangler secret put JWT_REFRESH_SECRET
 pnpm deploy
 
 # Test
-curl https://do-auth.YOUR_SUBDOMAIN.workers.dev/health
+curl https://auth.YOUR_SUBDOMAIN.workers.dev/health
 # Should return: {"status":"healthy","workos":"connected","db":"connected"}
 ```
 
@@ -137,7 +137,7 @@ wrangler kv:namespace create "GATEWAY_KV"
 pnpm deploy
 
 # Test
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
 # Should return: {"status":"healthy","timestamp":"...","services":[...]}
 ```
 
@@ -147,12 +147,12 @@ The gateway needs bindings to DB and Auth services. Update `gateway/wrangler.jso
 
 ```jsonc
 {
-  "name": "do-gateway",
+  "name": "gateway",
   "main": "src/index.ts",
   "compatibility_date": "2024-01-01",
   "services": [
-    { "binding": "DB", "service": "do-db" },
-    { "binding": "AUTH", "service": "do-auth" }
+    { "binding": "DB", "service": "db" },
+    { "binding": "AUTH", "service": "auth" }
   ],
   "kv_namespaces": [
     { "binding": "GATEWAY_KV", "id": "YOUR_KV_ID" }
@@ -164,11 +164,11 @@ Auth service needs binding to DB:
 
 ```jsonc
 {
-  "name": "do-auth",
+  "name": "auth",
   "main": "src/index.ts",
   "compatibility_date": "2024-01-01",
   "services": [
-    { "binding": "DB", "service": "do-db" }
+    { "binding": "DB", "service": "db" }
   ]
 }
 ```
@@ -182,17 +182,17 @@ Auth service needs binding to DB:
 curl https://do-db.YOUR_SUBDOMAIN.workers.dev/health
 
 # Auth
-curl https://do-auth.YOUR_SUBDOMAIN.workers.dev/health
+curl https://auth.YOUR_SUBDOMAIN.workers.dev/health
 
 # Gateway
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
 ```
 
 ### 2. Database Operations
 
 ```bash
 # Via Gateway
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/db/stats
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/db/stats
 
 # Direct to DB
 curl https://do-db.YOUR_SUBDOMAIN.workers.dev/stats
@@ -202,7 +202,7 @@ curl https://do-db.YOUR_SUBDOMAIN.workers.dev/stats
 
 ```bash
 # Create API key (need admin session first)
-curl -X POST https://do-gateway.YOUR_SUBDOMAIN.workers.dev/auth/apikeys \
+curl -X POST https://gateway.YOUR_SUBDOMAIN.workers.dev/auth/apikeys \
   -H "Cookie: session=YOUR_SESSION" \
   -H "Content-Type: application/json" \
   -d '{"name":"Test Key"}'
@@ -210,7 +210,7 @@ curl -X POST https://do-gateway.YOUR_SUBDOMAIN.workers.dev/auth/apikeys \
 # Response: {"apiKey":"sk_live_...","id":"..."}
 
 # Test API key
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/db/stats \
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/db/stats \
   -H "Authorization: Bearer sk_live_..."
 ```
 
@@ -219,7 +219,7 @@ curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/db/stats \
 ```bash
 # Send 70 requests rapidly to trigger rate limit
 for i in {1..70}; do
-  curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+  curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
 done
 
 # Should get 429 after 60 requests
@@ -234,10 +234,10 @@ done
 wrangler tail do-db
 
 # Auth logs
-wrangler tail do-auth
+wrangler tail auth
 
 # Gateway logs
-wrangler tail do-gateway
+wrangler tail gateway
 ```
 
 ### Metrics

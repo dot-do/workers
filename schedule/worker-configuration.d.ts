@@ -6,7 +6,7 @@ declare namespace Cloudflare {
 		mainModule: typeof import("./src/index");
 	}
 	interface Env {
-		DB: Fetcher /* do-db */;
+		DB: Fetcher /* db */;
 		AI: Fetcher /* do-ai */;
 		QUEUE: Fetcher /* do-queue */;
 	}

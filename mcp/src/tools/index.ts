@@ -6,6 +6,7 @@ import * as auth from './auth'
 import * as search from './search'
 import * as queue from './queue'
 import * as workflows from './workflows'
+import * as cli from './cli'
 
 /**
  * Tool Registry
@@ -17,7 +18,8 @@ const toolCategories = {
   auth,
   search,
   queue,
-  workflows
+  workflows,
+  cli
 }
 
 /**
@@ -33,7 +35,11 @@ export function listTools(authenticated: boolean): MCPTool[] {
 
   // Filter tools based on authentication
   if (!authenticated) {
-    const publicTools = ['db_search']
+    const publicTools = [
+      'db_search',
+      'cli_status',
+      'cli_login_url'
+    ]
     return allTools.filter(tool => publicTools.includes(tool.name))
   }
 

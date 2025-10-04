@@ -374,7 +374,7 @@ Required bindings in `wrangler.jsonc`:
 ```jsonc
 {
   "services": [
-    { "binding": "DB", "service": "do-db" },
+    { "binding": "DB", "service": "db" },
     { "binding": "AI", "service": "do-ai" },
     { "binding": "QUEUE", "service": "do-queue" }
   ]

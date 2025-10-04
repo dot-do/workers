@@ -136,13 +136,13 @@ cd gateway && pnpm deploy && cd ..
 # Replace YOUR_SUBDOMAIN with your Cloudflare subdomain
 
 # Check Gateway
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
 
 # Check Database
 curl https://do-db.YOUR_SUBDOMAIN.workers.dev/health
 
 # Check Auth
-curl https://do-auth.YOUR_SUBDOMAIN.workers.dev/health
+curl https://auth.YOUR_SUBDOMAIN.workers.dev/health
 
 # All should return: {"status":"healthy",...}
 ```
@@ -151,13 +151,13 @@ curl https://do-auth.YOUR_SUBDOMAIN.workers.dev/health
 
 | Service | URL Pattern | Purpose |
 |---------|------------|---------|
-| **Gateway** | `do-gateway.*.workers.dev` | API routing, auth, rate limiting |
+| **Gateway** | `gateway.*.workers.dev` | API routing, auth, rate limiting |
 | **Database** | `do-db.*.workers.dev` | PostgreSQL/ClickHouse RPC |
-| **Auth** | `do-auth.*.workers.dev` | WorkOS, JWT, API keys, RBAC |
-| **Schedule** | `do-schedule.*.workers.dev` | Cron jobs, scheduled tasks |
+| **Auth** | `auth.*.workers.dev` | WorkOS, JWT, API keys, RBAC |
+| **Schedule** | `schedule.*.workers.dev` | Cron jobs, scheduled tasks |
 | **Webhooks** | `do-webhooks.*.workers.dev` | External webhook processing |
 | **Email** | `do-email.*.workers.dev` | Transactional email via Resend |
-| **MCP** | `do-mcp.*.workers.dev` | AI agent integration |
+| **MCP** | `mcp.*.workers.dev` | AI agent integration |
 
 ## 🧪 Quick Tests
 
@@ -165,16 +165,16 @@ curl https://do-auth.YOUR_SUBDOMAIN.workers.dev/health
 
 ```bash
 # 1. Health check (no auth)
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
 
 # 2. Create API key (requires admin session via WorkOS first)
-curl -X POST https://do-gateway.YOUR_SUBDOMAIN.workers.dev/auth/apikeys \
+curl -X POST https://gateway.YOUR_SUBDOMAIN.workers.dev/auth/apikeys \
   -H "Cookie: session=YOUR_SESSION" \
   -H "Content-Type: application/json" \
   -d '{"name":"Test Key"}'
 
 # 3. Test API key
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/db/stats \
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/db/stats \
   -H "Authorization: Bearer sk_live_YOUR_KEY"
 ```
 
@@ -196,23 +196,23 @@ curl -X POST https://do-email.YOUR_SUBDOMAIN.workers.dev/templates/welcome \
 
 ```bash
 # List tasks
-curl https://do-schedule.YOUR_SUBDOMAIN.workers.dev/tasks
+curl https://schedule.YOUR_SUBDOMAIN.workers.dev/tasks
 
 # Execute task manually
-curl -X POST https://do-schedule.YOUR_SUBDOMAIN.workers.dev/tasks/health-check-services/execute
+curl -X POST https://schedule.YOUR_SUBDOMAIN.workers.dev/tasks/health-check-services/execute
 ```
 
 ### Test MCP Integration
 
 ```bash
 # List MCP servers
-curl https://do-mcp.YOUR_SUBDOMAIN.workers.dev/servers
+curl https://mcp.YOUR_SUBDOMAIN.workers.dev/servers
 
 # Get GitHub tools
-curl https://do-mcp.YOUR_SUBDOMAIN.workers.dev/github/tools
+curl https://mcp.YOUR_SUBDOMAIN.workers.dev/github/tools
 
 # Search GitHub
-curl -X POST https://do-mcp.YOUR_SUBDOMAIN.workers.dev/github/call \
+curl -X POST https://mcp.YOUR_SUBDOMAIN.workers.dev/github/call \
   -H "Content-Type: application/json" \
   -d '{
     "tool": "github_search_repositories",
@@ -238,7 +238,7 @@ curl -X POST https://do-mcp.YOUR_SUBDOMAIN.workers.dev/github/call \
 
 ### Service Binding Error
 ```
-Error: Worker binding "DB" refers to service "do-db", but no service is defined
+Error: Worker binding "DB" refers to service "db", but no service is defined
 ```
 **Fix:** Deploy DB service first, then redeploy dependent service
 
@@ -266,12 +266,12 @@ Error: WorkOS not configured
 
 ```bash
 # Real-time logs
-wrangler tail do-gateway
+wrangler tail gateway
 wrangler tail do-db
-wrangler tail do-auth
+wrangler tail auth
 
 # Filter for errors
-wrangler tail do-gateway --status error
+wrangler tail gateway --status error
 ```
 
 ### Cloudflare Dashboard

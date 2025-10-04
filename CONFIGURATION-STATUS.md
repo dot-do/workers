@@ -42,12 +42,12 @@
 
 #### Deployments (7 missing)
 - ❌ do-db
-- ❌ do-auth
-- ❌ do-schedule
+- ❌ auth
+- ❌ schedule
 - ❌ do-webhooks
 - ❌ do-email
-- ❌ do-mcp
-- ❌ do-gateway
+- ❌ mcp
+- ❌ gateway
 
 ## 🚀 Quick Configuration
 
@@ -207,9 +207,9 @@ cd gateway && pnpm deploy && cd ..
 
 ```bash
 # Check all services are healthy
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
 curl https://do-db.YOUR_SUBDOMAIN.workers.dev/health
-curl https://do-auth.YOUR_SUBDOMAIN.workers.dev/health
+curl https://auth.YOUR_SUBDOMAIN.workers.dev/health
 ```
 
 ## 🔍 Troubleshooting

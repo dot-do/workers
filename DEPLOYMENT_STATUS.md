@@ -10,10 +10,10 @@ Core services for Workers for Platforms have been successfully deployed to Cloud
 
 ## Deployed Services
 
-### 1. Deploy API Service (`do-deploy`)
+### 1. Deploy API Service (`deploy`)
 
-**Service Name:** `do-deploy`
-**URL:** https://do-deploy.drivly.workers.dev
+**Service Name:** `deploy`
+**URL:** https://deploy.drivly.workers.dev
 **Version ID:** c7e11632-6624-4b85-94df-82c75e0e641f
 **Deployment Time:** 2025-10-04 11:20:52 UTC
 **Upload Size:** 173.16 KiB (gzip: 32.77 KiB)
@@ -34,7 +34,7 @@ Core services for Workers for Platforms have been successfully deployed to Cloud
 
 **Health Check:**
 ```bash
-curl https://do-deploy.drivly.workers.dev/health
+curl https://deploy.drivly.workers.dev/health
 # Returns: {"error":"Missing API key"} (auth working correctly)
 ```
 
@@ -97,7 +97,7 @@ See [NAMESPACES.md](./NAMESPACES.md) for complete namespace documentation.
 
 ✅ **Service responds to requests:**
 ```bash
-curl https://do-deploy.drivly.workers.dev/
+curl https://deploy.drivly.workers.dev/
 # Returns: {"error":"Missing API key"}
 ```
 
@@ -203,7 +203,7 @@ Once dispatcher is routing, deploy core user workers to namespaces:
 **Deployment Method:**
 ```bash
 # Via Deploy API (requires API key with deploy permission)
-curl -X POST https://do-deploy.drivly.workers.dev/deploy \
+curl -X POST https://deploy.drivly.workers.dev/deploy \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{

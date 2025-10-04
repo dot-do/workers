@@ -406,6 +406,119 @@ ORDER BY count DESC;
       }
     })
 
+    // Admin endpoint - Apply vector search schema migration
+    app.post('/admin/migrate-vector-schema', async (c) => {
+      try {
+        const schemaSQL = `
+-- Create graph_embeddings table with vector indexes
+CREATE TABLE IF NOT EXISTS graph_embeddings (
+  ns String,
+  id String,
+  -- Workers AI model (768 dimensions)
+  embeddingWorkersAI Array(Float32) DEFAULT [],
+  workersAIGeneratedAt DateTime64(3) DEFAULT 0,
+  -- OpenAI model (1536 dimensions)
+  embeddingOpenAI Array(Float32) DEFAULT [],
+  openAIGeneratedAt DateTime64(3) DEFAULT 0,
+  -- Metadata
+  createdAt DateTime64(3) DEFAULT now64(),
+  updatedAt DateTime64(3) DEFAULT now64(),
+  -- Hash indexes for fast lookups
+  nsHash UInt32 MATERIALIZED xxHash32(ns),
+  idHash UInt32 MATERIALIZED xxHash32(id),
+  INDEX bf_ns (nsHash) TYPE bloom_filter() GRANULARITY 4,
+  INDEX bf_id (idHash) TYPE bloom_filter() GRANULARITY 4,
+  -- Vector similarity indexes (one per model)
+  INDEX workersai_idx embeddingWorkersAI TYPE vector_similarity(
+    'hnsw',
+    'L2Distance',
+    768
+  ) GRANULARITY 4,
+  INDEX openai_idx embeddingOpenAI TYPE vector_similarity(
+    'hnsw',
+    'L2Distance',
+    1536
+  ) GRANULARITY 4
+) ENGINE = ReplacingMergeTree(updatedAt)
+ORDER BY (ns, id)
+PRIMARY KEY (ns, id)
+SETTINGS index_granularity = 8192;
+
+-- Helper View: Join embeddings with things
+CREATE VIEW IF NOT EXISTS v_things_with_embeddings AS
+SELECT
+  t.*,
+  e.embeddingWorkersAI,
+  e.workersAIGeneratedAt,
+  e.embeddingOpenAI,
+  e.openAIGeneratedAt
+FROM graph_things t
+LEFT JOIN graph_embeddings e ON t.ns = e.ns AND t.id = e.id;
+`
+
+        // Split into statements
+        const statements = schemaSQL
+          .split(';')
+          .map((s) => s.trim())
+          .filter((s) => {
+            if (s.length === 0) return false
+            return s.includes('CREATE') || s.includes('ALTER') || s.includes('DROP')
+          })
+
+        const results = []
+        for (const statement of statements) {
+          try {
+            await clickhouse.command({
+              query: statement,
+              clickhouse_settings: {
+                enable_json_type: 1,
+                allow_experimental_vector_similarity_index: 1,
+              },
+            })
+            results.push({
+              success: true,
+              statement: statement.split('\\n')[0].substring(0, 80) + '...',
+            })
+          } catch (error: any) {
+            if (error.message?.includes('already exists') || error.message?.includes('ALREADY_EXISTS')) {
+              results.push({
+                success: true,
+                skipped: true,
+                statement: statement.split('\\n')[0].substring(0, 80) + '...',
+              })
+            } else {
+              results.push({
+                success: false,
+                error: error.message,
+                statement: statement.split('\\n')[0].substring(0, 80) + '...',
+              })
+            }
+          }
+        }
+
+        const successCount = results.filter((r) => r.success).length
+        const errorCount = results.filter((r) => !r.success).length
+
+        return c.json({
+          status: errorCount === 0 ? 'success' : 'partial',
+          summary: {
+            total: statements.length,
+            successful: successCount,
+            failed: errorCount,
+          },
+          results,
+        })
+      } catch (error: any) {
+        return c.json(
+          {
+            status: 'error',
+            error: error.message,
+          },
+          500
+        )
+      }
+    })
+
     // RPC over HTTP endpoint (for debugging)
     app.post('/rpc', async (c) => {
       const { method, params } = await c.req.json()

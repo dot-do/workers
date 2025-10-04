@@ -238,9 +238,8 @@ const handleCallback = async (c: any) => {
   }
 }
 
-// Register callback handler for both paths
+// Register callback handler
 app.get('/callback', handleCallback)
-app.get('/api/callback', handleCallback)
 
 /**
  * Poll for tokens - CLI uses this to retrieve tokens

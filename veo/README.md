@@ -160,7 +160,7 @@ CREATE TABLE veo_videos (
 The service is configured in `wrangler.jsonc`:
 
 - **R2 Bucket** - `veo-videos` for video storage
-- **Database** - Binds to `do-db` service
+- **Database** - Binds to `db` service
 - **Domain** - `veo.services.do/*`
 
 ## TODO

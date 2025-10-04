@@ -322,7 +322,7 @@ Add AUTH_SERVICE binding to all workers:
     },
     {
       "binding": "DB",
-      "service": "do-db"
+      "service": "db"
     }
     // ... other bindings
   ]

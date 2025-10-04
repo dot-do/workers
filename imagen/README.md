@@ -199,7 +199,7 @@ CREATE TABLE imagen_images (
 The service is configured in `wrangler.jsonc`:
 
 - **R2 Bucket** - `imagen-images` for image storage
-- **Database** - Binds to `do-db` service
+- **Database** - Binds to `db` service
 - **Domain** - `imagen.services.do/*`
 
 ## Comparison with Veo Service

@@ -42,7 +42,7 @@ export async function handleMCPRequest(c: Context<{ Bindings: Env }>): Promise<R
               resources: { subscribe: true, listChanged: true }
             },
             serverInfo: {
-              name: 'do-mcp-server',
+              name: 'mcp-server',
               version: '1.0.0'
             }
           },

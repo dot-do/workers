@@ -4,7 +4,7 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "do-analytics",
+  "name": "analytics",
   "main": "src/index.ts",
   "compatibility_date": "2025-07-08",
   "account_id": "b6641681fe423910342b9ffa1364c76d",
@@ -40,7 +40,7 @@
 
   // Service Bindings
   "services": [
-    { "binding": "DB", "service": "do-db" },
+    { "binding": "DB", "service": "db" },
     { "binding": "DOMAINS", "service": "domains" },
     { "binding": "DNS_TOOLS", "service": "dns-tools" },
     { "binding": "DOMAIN_MONITOR", "service": "domain-monitor" }

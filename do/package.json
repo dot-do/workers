@@ -1,18 +1,26 @@
 {
-  "name": "@dot-do/do",
+  "name": "do",
   "version": "1.0.0",
   "private": true,
-  "description": "DO Worker - RPC proxy for all services",
-  "main": "src/index.ts",
+  "type": "module",
+  "description": "Code execution worker using Dynamic Worker Loader",
   "scripts": {
-    "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "build": "wrangler deploy --dry-run --outdir=dist",
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "types": "wrangler types",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.19",
     "@cloudflare/workers-types": "^4.20250710.0",
     "typescript": "^5.8.3",
+    "vitest": "~3.2.0",
     "wrangler": "^4.24.0"
+  },
+  "dependencies": {
+    "hono": "^4.6.15"
   }
 }

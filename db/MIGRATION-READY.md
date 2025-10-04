@@ -1,8 +1,8 @@
 # ClickHouse Graph Schema Migration - READY TO DEPLOY
 
-## Status: ✅ Code Complete, ⏸️  Awaiting Authentication
+## Status: ✅ Code Complete, ✅ Endpoint Working, ⏸️ Awaiting Password
 
-All migration code is complete and ready. The only blocker is ClickHouse authentication.
+All migration code is complete and the admin endpoint is deployed. The migration endpoint successfully parses 8 SQL statements but all fail with authentication errors because CLICKHOUSE_PASSWORD is not set as a Wrangler secret.
 
 ## What's Complete
 
@@ -41,41 +41,77 @@ Code: 194. DB::Exception: default: Authentication failed: password is incorrect
 
 The password is stored as a Wrangler secret (not visible in wrangler.jsonc).
 
-## Solution Options
+## Current Status
 
-### Option 1: Get Password from ClickHouse Cloud (Recommended)
+**Migration Endpoint:** https://db.drivly.workers.dev/admin/migrate-graph-schema
+
+**Test Results:**
+```json
+{
+  "status": "partial",
+  "summary": {
+    "total": 8,
+    "successful": 0,
+    "failed": 8
+  },
+  "results": [
+    {
+      "success": false,
+      "error": "Authentication failed: password is incorrect"
+    }
+  ]
+}
+```
+
+All 8 SQL statements were parsed successfully but failed authentication.
+
+## Solution: Set ClickHouse Password
+
+### Step 1: Get Password from ClickHouse Cloud
 
 1. Visit https://clickhouse.cloud/
-2. Navigate to your service settings
-3. Copy or reset the password
-4. Update `.env` file:
+2. Navigate to service: `bkkj10mmgz.us-east-1.aws.clickhouse.cloud`
+3. Copy or reset the password for user `default`
+
+### Step 2: Set as Wrangler Secret
+
+```bash
+cd /Users/nathanclevenger/Projects/.do/workers/db
+
+# Set the password as a secret (will prompt for value)
+npx wrangler secret put CLICKHOUSE_PASSWORD
+
+# Redeploy to pick up the secret
+npx wrangler deploy
+```
+
+### Step 3: Run Migration
+
+```bash
+# Call the admin endpoint
+curl -X POST https://db.drivly.workers.dev/admin/migrate-graph-schema
+
+# Or use jq to format output
+curl -X POST https://db.drivly.workers.dev/admin/migrate-graph-schema -s | jq '.'
+```
+
+## Alternative: Run Locally (If Admin Endpoint Not Preferred)
+
+### Option A: Use Migration Script with Password
+
+1. Get password from ClickHouse Cloud
+2. Update `/Users/nathanclevenger/Projects/.do/workers/db/.env`:
    ```bash
-   CLICKHOUSE_PASSWORD=your_actual_password_here
+   CLICKHOUSE_PASSWORD=your_password_here
    ```
-5. Run migration:
+3. Run migration:
    ```bash
    pnpm tsx db/migrate-graph-schema.ts
    ```
 
-### Option 2: Use Wrangler Secret
+### Option B: Remove Admin Endpoint After Migration
 
-If password is stored as wrangler secret:
-
-```bash
-# Get the secret value (if you have it)
-npx wrangler secret put CLICKHOUSE_PASSWORD
-
-# Then run migration with wrangler dev --remote
-cd /Users/nathanclevenger/Projects/.do/workers/db
-npx wrangler dev --remote --env production
-
-# In another terminal, trigger migration via the worker
-# (requires adding an admin endpoint to db service)
-```
-
-### Option 3: Add Admin Endpoint to DB Worker
-
-Add this to `db/src/index.ts`:
+The admin endpoint in `db/src/index.ts` can be removed after successful migration:
 
 ```typescript
 // Admin routes (restricted)

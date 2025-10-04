@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "do-schedule",
+  "name": "schedule",
   "main": "src/index.ts",
   "compatibility_date": "2025-07-15",
   "account_id": "b6641681fe423910342b9ffa1364c76d",

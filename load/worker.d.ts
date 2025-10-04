@@ -3,7 +3,7 @@
 // Runtime types generated with workerd@1.20250705.0 2025-07-08 
 declare namespace Cloudflare {
 	interface Env {
-		db: Fetcher /* do-db */;
+		db: Fetcher /* db */;
 		yaml: Fetcher /* do-yaml */;
 	}
 }

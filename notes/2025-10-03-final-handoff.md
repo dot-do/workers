@@ -105,9 +105,9 @@ cd /Users/nathanclevenger/Projects/.do/workers
 
 ```bash
 # Check all services healthy
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
 curl https://do-db.YOUR_SUBDOMAIN.workers.dev/health
-curl https://do-auth.YOUR_SUBDOMAIN.workers.dev/health
+curl https://auth.YOUR_SUBDOMAIN.workers.dev/health
 ```
 
 ### 5. Run Integration Tests (15 minutes)

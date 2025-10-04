@@ -46,7 +46,7 @@ routes:
 # Add service bindings
 services:
   - binding: DEPLOY_SERVICE
-    service: do-deploy
+    service: deploy
   # Add other service bindings as needed
 
 # Add other bindings (KV, R2, D1, etc.) if needed

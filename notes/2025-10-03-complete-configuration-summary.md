@@ -208,9 +208,9 @@ cd auth && wrangler deploy
 
 ```bash
 # Check health endpoints
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
 curl https://do-db.YOUR_SUBDOMAIN.workers.dev/health
-curl https://do-auth.YOUR_SUBDOMAIN.workers.dev/health
+curl https://auth.YOUR_SUBDOMAIN.workers.dev/health
 
 # All should return: {"status":"healthy",...}
 ```
@@ -431,7 +431,7 @@ cat AUTOMATED-SETUP-COMPLETE.md
 ./scripts/deploy-all.sh
 
 # 5. Verify health
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
 ```
 
 ### Need Help?

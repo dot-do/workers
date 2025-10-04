@@ -14,7 +14,7 @@
 	"services": [
 		{
 			"binding": "DEPLOY_SERVICE",
-			"service": "do-deploy"
+			"service": "deploy"
 		},
 		{
 			"binding": "db",

@@ -28,21 +28,21 @@ interface ServiceCheck {
 const SERVICES = ['gateway', 'db', 'auth', 'schedule', 'webhooks', 'email', 'mcp']
 
 const EXPECTED_SERVICE_NAMES = {
-  gateway: 'do-gateway',
-  db: 'do-db',
-  auth: 'do-auth',
-  schedule: 'do-schedule',
+  gateway: 'gateway',
+  db: 'db',
+  auth: 'auth',
+  schedule: 'schedule',
   webhooks: 'do-webhooks',
   email: 'do-email',
-  mcp: 'do-mcp',
+  mcp: 'mcp',
 }
 
 const SERVICE_DEPENDENCIES = {
-  gateway: ['do-db', 'do-auth', 'do-schedule'],
-  auth: ['do-db'],
-  schedule: ['do-db'],
-  webhooks: ['do-db'],
-  email: ['do-db'],
+  gateway: ['db', 'auth', 'schedule'],
+  auth: ['db'],
+  schedule: ['db'],
+  webhooks: ['db'],
+  email: ['db'],
   mcp: [],
   db: [],
 }

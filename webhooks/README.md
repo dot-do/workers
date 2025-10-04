@@ -179,7 +179,7 @@ Configured in `wrangler.jsonc`:
 ```jsonc
 {
   "services": [
-    { "binding": "DB", "service": "do-db" },
+    { "binding": "DB", "service": "db" },
     { "binding": "QUEUE", "service": "do-queue" }
   ]
 }

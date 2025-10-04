@@ -284,5 +284,5 @@ Available MCP tools:
 
 **Created:** 2025-10-03
 **Status:** Production Ready
-**Service:** do-numerics
+**Service:** numerics
 **Routes:** numerics.apis.do, numerics.api.mw

@@ -193,9 +193,9 @@ This will deploy in dependency order:
 ```bash
 # Replace YOUR_SUBDOMAIN with your Cloudflare subdomain
 
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
 curl https://do-db.YOUR_SUBDOMAIN.workers.dev/health
-curl https://do-auth.YOUR_SUBDOMAIN.workers.dev/health
+curl https://auth.YOUR_SUBDOMAIN.workers.dev/health
 ```
 
 All should return `{"status":"healthy",...}`

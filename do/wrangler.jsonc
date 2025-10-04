@@ -4,40 +4,38 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-07-08",
   "account_id": "b6641681fe423910342b9ffa1364c76d",
-  "observability": { "enabled": true },
-
-  // Service bindings - connect to ALL other workers
-  "services": [
-    // Core services
-    { "binding": "DB_SERVICE", "service": "db" },
-    { "binding": "AUTH_SERVICE", "service": "auth" },
-    { "binding": "SCHEDULE_SERVICE", "service": "schedule" },
-    { "binding": "WEBHOOKS_SERVICE", "service": "webhooks" },
-    { "binding": "EMAIL_SERVICE", "service": "email" },
-    { "binding": "MCP_SERVICE", "service": "mcp" },
-    { "binding": "QUEUE_SERVICE", "service": "queue" },
-    { "binding": "WAITLIST_SERVICE", "service": "waitlist-beta-management" },
-
-    // AI services
-    { "binding": "AI_SERVICE", "service": "ai" },
-    { "binding": "EMBEDDINGS_SERVICE", "service": "embeddings" },
-
-    // Infrastructure
-    { "binding": "PIPELINE", "service": "pipeline" },
-    { "binding": "YAML", "service": "yaml" }
-
-    // Add more services as they become available:
-    // { "binding": "AGENTS_SERVICE", "service": "agents" },
-    // { "binding": "WORKFLOWS_SERVICE", "service": "workflows" },
-    // { "binding": "BUSINESS_SERVICE", "service": "business" },
-    // { "binding": "STRIPE_SERVICE", "service": "stripe" },
-    // { "binding": "GITHUB_SERVICE", "service": "github" }
+  "observability": {
+    "enabled": true
+  },
+  // Custom domain routing
+  "routes": [
+    {
+      "pattern": "do.do/*",
+      "zone_name": "do.do"
+    }
   ],
-
-  "dispatch_namespaces": [{ "binding": "workers", "namespace": "do" }],
-  "tail_consumers": [{ "service": "pipeline" }],
-
+  // Worker Loader binding for dynamic code execution
+  "worker_loaders": [
+    {
+      "binding": "LOADER"
+    }
+  ],
+  // Service bindings for providing to code
+  "services": [
+    { "binding": "DB", "service": "db" },
+    { "binding": "AI", "service": "ai" },
+    { "binding": "MCP", "service": "mcp" }
+  ],
+  // KV for caching code and results
+  "kv_namespaces": [
+    {
+      "binding": "CODE_CACHE",
+      "id": "CODE_CACHE_KV_ID_PLACEHOLDER"
+    }
+  ],
   "vars": {
-    "ENVIRONMENT": "production"
+    "ENVIRONMENT": "production",
+    "MAX_EXECUTION_TIME": "30000",
+    "DEFAULT_COMPATIBILITY_DATE": "2025-07-08"
   }
 }

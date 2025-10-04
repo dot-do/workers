@@ -1,0 +1,8 @@
+{
+  "content": "---\n$type: LandingPage\n$style: tailwind\ntitle: Test Page\n---\n\n<Hero title=\"Hello World\" subtitle=\"Test subtitle\" cta=\"Get Started\" ctaLink=\"/signup\" />\n\n<Features title=\"Why Choose Us\" features={[{\"icon\":\"⚡\",\"title\":\"Fast\",\"description\":\"Lightning fast\"},{\"icon\":\"🔒\",\"title\":\"Secure\",\"description\":\"Bank-level security\"}]} />",
+  "frontmatter": {
+    "$type": "LandingPage",
+    "$style": "tailwind",
+    "title": "Test Page"
+  }
+}

@@ -303,9 +303,9 @@ All microservices must be bound in `wrangler.jsonc`:
 ```jsonc
 {
   "services": [
-    { "binding": "DB", "service": "do-db" },
+    { "binding": "DB", "service": "db" },
     { "binding": "AI", "service": "do-ai" },
-    { "binding": "AUTH", "service": "do-auth" },
+    { "binding": "AUTH", "service": "auth" },
     // ... more services
   ]
 }

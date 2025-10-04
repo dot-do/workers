@@ -9,7 +9,7 @@
   "services": [
     {
       "binding": "DB",
-      "service": "do-db"
+      "service": "db"
     }
   ],
 

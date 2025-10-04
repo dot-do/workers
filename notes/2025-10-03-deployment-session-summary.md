@@ -9,12 +9,12 @@ Continued from previous session to deploy all 34 microservices that don't requir
 ### Infrastructure Services (3)
 1. ✅ **pipeline** - https://pipeline.drivly.workers.dev
 2. ✅ **queue** - https://queue.drivly.workers.dev (with background-jobs queue)
-3. ✅ **do-schedule** - https://do-schedule.drivly.workers.dev (3 cron triggers)
+3. ✅ **schedule** - https://schedule.drivly.workers.dev (3 cron triggers)
 
 ### Integration Services (9)
 4. ✅ **domains** - https://domains.drivly.workers.dev
 5. ✅ **webhooks** - https://webhooks.drivly.workers.dev (routes commented out due to conflict)
-6. ✅ **do-mcp** - https://do-mcp.drivly.workers.dev
+6. ✅ **mcp** - https://mcp.drivly.workers.dev
 7. ✅ **yaml** - yaml.apis.do/*
 8. ✅ **markdown** - markdown.fetch.do/*, md.fetch.do/*, scrape.md/*
 9. ✅ **load** - https://load.drivly.workers.dev
@@ -34,14 +34,14 @@ Continued from previous session to deploy all 34 microservices that don't requir
 
 ## Previously Deployed (from earlier sessions)
 - ✅ **db** - https://db.mw/*, https://db.apis.do/*
-- ✅ **do-gateway** - https://do-gateway.drivly.workers.dev
+- ✅ **gateway** - https://gateway.drivly.workers.dev
 
 ## Services with Configuration Issues
 
 ### Need Service Binding Fixes
 - ❌ **ai** - Route conflict with "generate" service
 - ❌ **batch** - References "things" instead of "db"
-- ❌ **analytics** - Wrong KV namespace, references "do-db" instead of "db"
+- ❌ **analytics** - Wrong KV namespace, references "db" instead of "db"
 
 ### Need Dependencies/Build Fixes
 - ❌ **generate** - Missing npm packages: "ai", "@openrouter/ai-sdk-provider"
@@ -99,7 +99,7 @@ All services updated from prefixed names (do-db, do-queue, do-ai) to actual depl
 
 ### Service Naming
 - Workers deploy with simple names: `db`, `queue`, `auth`
-- NOT prefixed names: `do-db`, `do-queue`, `do-auth`
+- NOT prefixed names: `db`, `do-queue`, `auth`
 - Service bindings must match deployed names
 
 ### Route Conflicts

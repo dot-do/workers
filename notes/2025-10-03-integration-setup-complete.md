@@ -13,7 +13,7 @@ Successfully completed the integration testing infrastructure for all 7 producti
 ### 1. ✅ Service Fixes
 
 **Auth Service Binding Fix:**
-- Fixed service binding from `"db"` to `"do-db"` to match actual service name
+- Fixed service binding from `"db"` to `"db"` to match actual service name
 - File: `auth/wrangler.jsonc` line 11
 - Ensures consistent naming across all services
 
@@ -177,7 +177,7 @@ Reorganized todo list to reflect:
 ### Modified Files (3)
 
 1. **auth/wrangler.jsonc**
-   - Fixed service binding: `"db"` → `"do-db"`
+   - Fixed service binding: `"db"` → `"db"`
    - Line 11
 
 2. **STATUS.md**
@@ -294,9 +294,9 @@ Reorganized todo list to reflect:
 
 6. **Verify Health Checks**
    ```bash
-   curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+   curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
    curl https://do-db.YOUR_SUBDOMAIN.workers.dev/health
-   curl https://do-auth.YOUR_SUBDOMAIN.workers.dev/health
+   curl https://auth.YOUR_SUBDOMAIN.workers.dev/health
    ```
 
 ### Medium Term - Testing Phase

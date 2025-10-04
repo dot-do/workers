@@ -209,7 +209,7 @@ This handles:
 
 ### 5. Verify Deployments
 ```bash
-curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
 ```
 
 ### 6. Run Integration Tests
@@ -367,7 +367,7 @@ User can:
 
 5. **Verify health checks:**
    ```bash
-   curl https://do-gateway.YOUR_SUBDOMAIN.workers.dev/health
+   curl https://gateway.YOUR_SUBDOMAIN.workers.dev/health
    ```
 
 6. **Run integration tests:**

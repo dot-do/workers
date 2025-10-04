@@ -2,6 +2,7 @@
   "name": "agent",
   "main": "src/index.ts",
   "compatibility_date": "2025-01-08",
+  "workers_dev": false,
   "compatibility_flags": ["nodejs_compat"],
   "account_id": "b6641681fe423910342b9ffa1364c76d",
 
@@ -50,6 +51,14 @@
   "vars": {
     "CUSTOM_DOMAIN": "agent.do"
   },
+
+  // Routes - International character domain
+  "routes": [
+    {
+      "pattern": "人.io/*",
+      "zone_name": "人.io"
+    }
+  ],
 
   // Development Settings
   "dev": {

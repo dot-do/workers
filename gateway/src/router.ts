@@ -58,9 +58,6 @@ export const routes: RouteConfig[] = [
 
   // Fn service routes (function classification and routing)
   { pattern: /^\/fn\//, service: 'fn', binding: 'FN' },
-
-  // Admin CMS routes
-  { pattern: /^\/admin\//, service: 'app', binding: 'APP' },
 ]
 
 /**
@@ -68,7 +65,23 @@ export const routes: RouteConfig[] = [
  * Maps domains to default services
  */
 export const domainRoutes: Record<string, keyof GatewayEnv> = {
+  // Database service domains
   'db.services.do': 'DB',
+  'database.do': 'DB',       // database.do/api → db worker
+  'db.mw': 'DB',             // db.mw → db worker
+  'apis.do': 'DB',           // apis.do/db → db worker (via gateway)
+
+  // International character domains - Data Layer
+  '彡.io': 'DB',             // Data Layer (彡 = shape/pattern/database)
+  '口.io': 'DB',             // Data Model - Nouns (口 = mouth/noun)
+  '回.io': 'DB',             // Data Model - Things (回 = rotation/thing)
+
+  // International character domains - Other services
+  '入.io': 'FN',             // Functions (入 = enter/function)
+  '巛.io': 'WORKFLOWS',      // Workflows (巛 = flow/river) - TODO: add binding
+  '人.io': 'AGENT',          // Agents (人 = person/agent)
+
+  // Other service domains
   'ai.services.do': 'AI',
   'auth.services.do': 'AUTH',
   'queue.services.do': 'QUEUE',
@@ -128,11 +141,6 @@ export function requiresAuth(pathname: string, method: string): boolean {
     return false
   }
 
-  // Admin routes require authentication
-  if (pathname.startsWith('/admin/')) {
-    return true
-  }
-
   // Agent and fn services require auth
   if (pathname.startsWith('/agent/') || pathname.startsWith('/fn/')) {
     return true
@@ -152,7 +160,7 @@ export function requiresAuth(pathname: string, method: string): boolean {
  */
 export function requiresAdmin(pathname: string, method: string): boolean {
   // Admin-only routes
-  const adminRoutes = ['/admin/', '/batch/', '/schedule/']
+  const adminRoutes = ['/batch/', '/schedule/']
 
   // Check if path starts with any admin route
   if (adminRoutes.some(route => pathname.startsWith(route))) {

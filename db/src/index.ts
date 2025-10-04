@@ -1027,6 +1027,293 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
       }
     })
 
+    // ============================================================================
+    // REST API - THINGS
+    // ============================================================================
+
+    // List things with pagination
+    app.get('/api/things', async (c) => {
+      try {
+        const ns = c.req.query('ns') || 'default'
+        const page = parseInt(c.req.query('page') || '1')
+        const limit = parseInt(c.req.query('limit') || '20')
+        const type = c.req.query('type')
+        const visibility = c.req.query('visibility')
+
+        const options: things.ListOptions = {
+          page,
+          limit,
+          ...(type && { type }),
+          ...(visibility && { visibility }),
+        }
+
+        const result = await this.list(ns, options)
+        return c.json(result)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    })
+
+    // Get single thing
+    app.get('/api/things/:ns/:id', async (c) => {
+      try {
+        const ns = c.req.param('ns')
+        const id = c.req.param('id')
+        const result = await this.get(ns, id)
+
+        if (!result) {
+          return c.json({ error: 'Thing not found' }, 404)
+        }
+
+        return c.json(result)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    })
+
+    // Create thing
+    app.post('/api/things', async (c) => {
+      try {
+        const body = await c.req.json()
+        const result = await this.upsert(body)
+        return c.json(result, 201)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 400)
+      }
+    })
+
+    // Update thing
+    app.put('/api/things/:ns/:id', async (c) => {
+      try {
+        const ns = c.req.param('ns')
+        const id = c.req.param('id')
+        const body = await c.req.json()
+
+        const result = await this.upsert({ ...body, ns, id })
+        return c.json(result)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 400)
+      }
+    })
+
+    // Delete thing
+    app.delete('/api/things/:ns/:id', async (c) => {
+      try {
+        const ns = c.req.param('ns')
+        const id = c.req.param('id')
+        const result = await this.delete(ns, id)
+        return c.json(result)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    })
+
+    // Count things
+    app.get('/api/things/count/:ns', async (c) => {
+      try {
+        const ns = c.req.param('ns')
+        const type = c.req.query('type')
+        const visibility = c.req.query('visibility')
+
+        const filters: { type?: string; visibility?: string } = {}
+        if (type) filters.type = type
+        if (visibility) filters.visibility = visibility
+
+        const result = await this.count(ns, filters)
+        return c.json({ count: result })
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    })
+
+    // ============================================================================
+    // REST API - RELATIONSHIPS
+    // ============================================================================
+
+    // List relationships
+    app.get('/api/relationships', async (c) => {
+      try {
+        const ns = c.req.query('ns') || 'default'
+        const page = parseInt(c.req.query('page') || '1')
+        const limit = parseInt(c.req.query('limit') || '20')
+        const predicate = c.req.query('predicate')
+
+        const options: relationships.RelationshipListOptions = {
+          page,
+          limit,
+          ...(predicate && { predicate }),
+        }
+
+        const result = await this.listRelationships(ns, options)
+        return c.json(result)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    })
+
+    // Get relationships for a thing (outgoing)
+    app.get('/api/relationships/:ns/:id', async (c) => {
+      try {
+        const ns = c.req.param('ns')
+        const id = c.req.param('id')
+        const predicate = c.req.query('predicate')
+        const page = parseInt(c.req.query('page') || '1')
+        const limit = parseInt(c.req.query('limit') || '20')
+
+        const options: relationships.RelationshipListOptions = {
+          page,
+          limit,
+          ...(predicate && { predicate }),
+        }
+
+        const result = await this.getRelationships(ns, id, options)
+        return c.json(result)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    })
+
+    // Get incoming relationships for a thing
+    app.get('/api/relationships/:ns/:id/incoming', async (c) => {
+      try {
+        const ns = c.req.param('ns')
+        const id = c.req.param('id')
+        const predicate = c.req.query('predicate')
+        const page = parseInt(c.req.query('page') || '1')
+        const limit = parseInt(c.req.query('limit') || '20')
+
+        const options: relationships.RelationshipListOptions = {
+          page,
+          limit,
+          ...(predicate && { predicate }),
+        }
+
+        const result = await this.getIncomingRelationships(ns, id, options)
+        return c.json(result)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    })
+
+    // Create relationship
+    app.post('/api/relationships', async (c) => {
+      try {
+        const body = await c.req.json()
+        const result = await this.upsertRelationship(body)
+        return c.json(result, 201)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 400)
+      }
+    })
+
+    // Delete relationship
+    app.delete('/api/relationships/:ns/:id', async (c) => {
+      try {
+        const ns = c.req.param('ns')
+        const id = c.req.param('id')
+        const result = await this.deleteRelationship(ns, id)
+        return c.json(result)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    })
+
+    // ============================================================================
+    // REST API - SEARCH
+    // ============================================================================
+
+    // Full-text search
+    app.get('/api/search', async (c) => {
+      try {
+        const query = c.req.query('q') || ''
+        const ns = c.req.query('ns')
+        const limit = parseInt(c.req.query('limit') || '10')
+        const minScore = parseFloat(c.req.query('minScore') || '0')
+
+        const options: search.VectorSearchOptions = {
+          ...(ns && { ns }),
+          limit,
+          minScore,
+        }
+
+        const result = await this.search(query, undefined, options)
+        return c.json(result)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    })
+
+    // Vector similarity search
+    app.post('/api/search/vector', async (c) => {
+      try {
+        const body = await c.req.json()
+        const { embedding, ns, limit = 10, minScore = 0, model = 'workers-ai' } = body
+
+        if (!embedding || !Array.isArray(embedding)) {
+          return c.json({ error: 'embedding array is required' }, 400)
+        }
+
+        const options: search.VectorSearchOptions = {
+          ...(ns && { ns }),
+          limit,
+          minScore,
+          model,
+        }
+
+        const result = await this.vectorSearch(embedding, options)
+        return c.json(result)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    })
+
+    // Hybrid search (text + vector)
+    app.post('/api/search/hybrid', async (c) => {
+      try {
+        const body = await c.req.json()
+        const { query, embedding, ns, limit = 10, minScore = 0, model = 'workers-ai' } = body
+
+        if (!query || !embedding || !Array.isArray(embedding)) {
+          return c.json({ error: 'query and embedding array are required' }, 400)
+        }
+
+        const options: search.VectorSearchOptions = {
+          ...(ns && { ns }),
+          limit,
+          minScore,
+          model,
+        }
+
+        const result = await this.search(query, embedding, options)
+        return c.json(result)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    })
+
+    // Search chunks (vector search across document chunks)
+    app.post('/api/search/chunks', async (c) => {
+      try {
+        const body = await c.req.json()
+        const { embedding, ns, limit = 10, minScore = 0, model = 'workers-ai' } = body
+
+        if (!embedding || !Array.isArray(embedding)) {
+          return c.json({ error: 'embedding array is required' }, 400)
+        }
+
+        const result = await this.searchChunks({
+          embedding,
+          ...(ns && { ns }),
+          limit,
+          minScore,
+          model,
+        })
+        return c.json(result)
+      } catch (error: any) {
+        return c.json({ error: error.message }, 500)
+      }
+    })
+
     // RPC over HTTP endpoint (for debugging)
     app.post('/rpc', async (c) => {
       const { method, params } = await c.req.json()
@@ -1042,7 +1329,7 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         description: 'Comprehensive database abstraction layer for the platform',
         interfaces: {
           rpc: 'WorkerEntrypoint methods for service-to-service calls',
-          http: 'REST API for health checks and debugging',
+          http: 'REST API for CRUD operations, search, and analytics',
           mcp: 'AI agent tools (coming soon)',
         },
         endpoints: {
@@ -1050,6 +1337,27 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
           stats: '/stats',
           types: '/types?ns=onet',
           activity: '/activity?limit=100',
+          things: {
+            list: 'GET /api/things?ns=default&page=1&limit=20',
+            get: 'GET /api/things/:ns/:id',
+            create: 'POST /api/things',
+            update: 'PUT /api/things/:ns/:id',
+            delete: 'DELETE /api/things/:ns/:id',
+            count: 'GET /api/things/count/:ns',
+          },
+          relationships: {
+            list: 'GET /api/relationships?ns=default&page=1&limit=20',
+            get: 'GET /api/relationships/:ns/:id',
+            incoming: 'GET /api/relationships/:ns/:id/incoming',
+            create: 'POST /api/relationships',
+            delete: 'DELETE /api/relationships/:ns/:id',
+          },
+          search: {
+            text: 'GET /api/search?q=query&ns=default&limit=10',
+            vector: 'POST /api/search/vector',
+            hybrid: 'POST /api/search/hybrid',
+            chunks: 'POST /api/search/chunks',
+          },
           rpc: 'POST /rpc',
         },
       })

@@ -94,18 +94,47 @@ export default {
  * Determine which worker to route to based on URL
  *
  * Routing strategies:
- * 1. Subdomain-based: gateway.do → gateway worker
- * 2. Path-based: /api/db/* → db worker
- * 3. Default: api.do or do → gateway worker
+ * 1. International character domains (彡.io, 口.io, etc.)
+ * 2. Subdomain-based: gateway.do → gateway worker
+ * 3. Path-based: /api/db/* → db worker
+ * 4. Domain-based: database.do, apis.do, etc.
+ * 5. Default: api.do or do → gateway worker
  */
 function determineWorker(url: URL): string | null {
   const hostname = url.hostname
   const path = url.pathname
 
   // List of valid worker services
-  const validWorkers = ['gateway', 'db', 'auth', 'schedule', 'webhooks', 'email', 'mcp', 'queue']
+  const validWorkers = ['gateway', 'db', 'auth', 'schedule', 'webhooks', 'email', 'mcp', 'queue', 'fn', 'agent', 'workflows']
 
-  // Strategy 1: Subdomain-based routing
+  // Strategy 1: International character domain routing
+  // Maps semantic character domains to services
+  const internationalDomainMap: Record<string, string> = {
+    '彡.io': 'db',       // Data Layer (彡 = shape/pattern/database)
+    '口.io': 'db',       // Data Model - Nouns (口 = mouth/noun)
+    '回.io': 'db',       // Data Model - Things (回 = rotation/thing)
+    '入.io': 'fn',       // Functions (入 = enter/function)
+    '巛.io': 'workflows', // Workflows (巛 = flow/river)
+    '人.io': 'agent',    // Agents (人 = person/agent)
+  }
+
+  if (internationalDomainMap[hostname]) {
+    return internationalDomainMap[hostname]
+  }
+
+  // Strategy 2: Standard domain routing
+  // Maps standard domains to services
+  const domainMap: Record<string, string> = {
+    'database.do': 'db',
+    'db.mw': 'db',
+    'apis.do': 'gateway',  // apis.do routes through gateway
+  }
+
+  if (domainMap[hostname]) {
+    return domainMap[hostname]
+  }
+
+  // Strategy 3: Subdomain-based routing
   // Examples:
   //   - gateway.do → gateway
   //   - db.do → db
@@ -115,7 +144,7 @@ function determineWorker(url: URL): string | null {
     return subdomain
   }
 
-  // Strategy 2: Path-based routing
+  // Strategy 4: Path-based routing
   // Examples:
   //   - /api/db/* → db
   //   - /api/auth/* → auth
@@ -128,7 +157,7 @@ function determineWorker(url: URL): string | null {
     }
   }
 
-  // Strategy 3: Default routing
+  // Strategy 5: Default routing
   // Root domain or api subdomain defaults to gateway
   if (hostname === 'do' || hostname === 'api.do' || subdomain === 'api') {
     return 'gateway'

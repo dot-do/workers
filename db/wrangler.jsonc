@@ -14,17 +14,27 @@
 		"nodejs_compat",
 		"nodejs_compat_populate_process_env"
 	],
-	// Routes temporarily disabled - will configure after deployment
-	// "routes": [
-	// 	{ "pattern": "*/*", "zone_name": "db.mw" },
-	// 	{ "pattern": "db.apis.do/*", "zone_name": "apis.do" }
-	// ],
 	"vars": {
 		"CLICKHOUSE_URL": "https://bkkj10mmgz.us-east-1.aws.clickhouse.cloud:8443",
 		"CLICKHOUSE_DATABASE": "default",
 		"CLICKHOUSE_USERNAME": "default"
 	},
-	"placement": { "mode": "smart" }
+	"placement": { "mode": "smart" },
+
+	/**
+	 * Routes - Direct domain access to DB service
+	 * Configure DNS to point these domains to Cloudflare Workers
+	 */
+	"routes": [
+		// Primary database domain
+		{ "pattern": "database.do/*", "zone_name": "database.do" },
+		{ "pattern": "db.mw/*", "zone_name": "db.mw" },
+
+		// International character domains - Data Layer
+		{ "pattern": "彡.io/*", "zone_name": "彡.io" },  // Data Layer
+		{ "pattern": "口.io/*", "zone_name": "口.io" },  // Nouns/Data Model
+		{ "pattern": "回.io/*", "zone_name": "回.io" }   // Things/Data Model
+	]
 
 	/**
 	 * Bindings

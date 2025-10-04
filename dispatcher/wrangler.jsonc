@@ -26,9 +26,9 @@
     "ENVIRONMENT": "production"
   },
 
-  // Routes configuration (not deployed yet - Wave 2)
-  // These will route all *.do/* traffic through this dispatcher
-  // "routes": [
+  // Routes configuration
+  // Routes all *.do/* traffic and international character domains through this dispatcher
+  "routes": [
     {
       "pattern": "*.do/*",
       "zone_name": "do"
@@ -37,5 +37,5 @@
       "pattern": "api.do/*",
       "zone_name": "do"
     }
-  // ]
+  ]
 }

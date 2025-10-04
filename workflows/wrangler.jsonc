@@ -18,12 +18,23 @@
 			"binding": "MY_WORKFLOW",
 			"class_name": "MyWorkflow"
 		}
-	]
+	],
+
+	/**
+	 * Routes - International character domain
+	 */
+	"routes": [
+		{
+			"pattern": "巛.io/*",
+			"zone_name": "巛.io"
+		}
+	],
+
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
 	 */
-	// "placement": { "mode": "smart" },
+	"placement": { "mode": "smart" }
 
 	/**
 	 * Bindings

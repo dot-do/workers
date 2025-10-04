@@ -9,17 +9,19 @@
 	"name": "gateway",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
+  "workers_dev": false,
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
 	"observability": { "enabled": true },
 
 	/**
 	 * Routes - Gateway handles all traffic
-	 * Uncomment to route specific domains through this gateway
 	 */
-	// "routes": [
-	// 	{ "pattern": "api.services.do/*", "zone_name": "services.do" },
-	// 	{ "pattern": "*.api.mw/*", "zone_name": "api.mw" }
-	// ],
+	"routes": [
+		// Primary API domains
+		{ "pattern": "api.services.do/*", "zone_name": "services.do" },
+		{ "pattern": "apis.do/*", "zone_name": "apis.do" },
+		{ "pattern": "*.api.mw/*", "zone_name": "api.mw" }
+	],
 
 	/**
 	 * Smart Placement - Let Cloudflare optimize worker placement
@@ -33,17 +35,18 @@
 	"services": [
 		// Core services - using actual deployed names
 		{ "binding": "DB", "service": "db" },
+		{ "binding": "AUTH", "service": "auth" },
 		{ "binding": "AGENT", "service": "agent" },
-		{ "binding": "FN", "service": "fn" }
+		{ "binding": "FN", "service": "fn" },
+		{ "binding": "APP", "service": "app" },
+		{ "binding": "WORKFLOWS", "service": "workflows" }
 		// Other services will be added as they're deployed
 		// { "binding": "AI", "service": "ai" },
-		// { "binding": "AUTH", "service": "auth" },
 		// { "binding": "RELATIONSHIPS", "service": "relationships" },
 		// { "binding": "EMBEDDINGS", "service": "embeddings" },
 		// { "binding": "QUEUE", "service": "queue" },
 		// { "binding": "BATCH", "service": "batch" },
 		// { "binding": "SCHEDULE", "service": "schedule" },
-		// { "binding": "WORKFLOWS", "service": "workflows" },
 		// { "binding": "CODE_EXEC", "service": "code-exec" },
 		// { "binding": "CLAUDE_CODE", "service": "claude-code" },
 		// { "binding": "EVENTS", "service": "events" }

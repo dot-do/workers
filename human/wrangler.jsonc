@@ -1,0 +1,74 @@
+/**
+ * Wrangler Configuration - Human Service
+ *
+ * Human-in-the-loop task management with Durable Objects
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "human",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-15",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+
+  /**
+   * Observability
+   */
+  "observability": {
+    "enabled": true
+  },
+
+  /**
+   * Durable Objects Configuration
+   * Manages execution state for human functions
+   */
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "HUMAN_EXECUTION",
+        "class_name": "HumanFunctionExecution",
+        "script_name": "human"
+      }
+    ]
+  },
+
+  /**
+   * Service Bindings
+   * Connect to other Workers services via RPC
+   */
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db"
+    },
+    {
+      "binding": "EMAIL",
+      "service": "email"
+    },
+    {
+      "binding": "QUEUE",
+      "service": "queue"
+    },
+    {
+      "binding": "SCHEDULE",
+      "service": "schedule"
+    }
+  ],
+
+  /**
+   * Environment Variables
+   * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
+   */
+  // "vars": {
+  //   "ENVIRONMENT": "production"
+  // },
+
+  /**
+   * Smart Placement
+   * Optimize worker placement based on service bindings
+   * https://developers.cloudflare.com/workers/configuration/smart-placement/
+   */
+  "placement": {
+    "mode": "smart"
+  }
+}

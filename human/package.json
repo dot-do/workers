@@ -1,0 +1,39 @@
+{
+  "name": "@do/human",
+  "version": "0.1.0",
+  "description": "Human-in-the-loop function execution with routing, UI, and lifecycle hooks",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'"
+  },
+  "dependencies": {
+    "zod": "^3.22.4",
+    "react": "^18.2.0",
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240117.0",
+    "@types/react": "^18.2.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0",
+    "wrangler": "^3.22.0",
+    "@vitest/coverage-v8": "^1.2.0"
+  },
+  "keywords": [
+    "human-in-the-loop",
+    "function-execution",
+    "cloudflare-workers",
+    "routing",
+    "ui",
+    "lifecycle-hooks"
+  ]
+}

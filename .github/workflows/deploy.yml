@@ -1,0 +1,459 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'gateway/**'
+      - 'db/**'
+      - 'auth/**'
+      - 'schedule/**'
+      - 'webhooks/**'
+      - 'email/**'
+      - 'mcp/**'
+      - 'queue/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to deploy (or "all" for all services)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - gateway
+          - db
+          - auth
+          - schedule
+          - webhooks
+          - email
+          - mcp
+          - queue
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+concurrency:
+  group: deploy-${{ github.ref }}-${{ inputs.environment || 'production' }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8.15.2'
+
+jobs:
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      gateway: ${{ steps.changes.outputs.gateway }}
+      db: ${{ steps.changes.outputs.db }}
+      auth: ${{ steps.changes.outputs.auth }}
+      schedule: ${{ steps.changes.outputs.schedule }}
+      webhooks: ${{ steps.changes.outputs.webhooks }}
+      email: ${{ steps.changes.outputs.email }}
+      mcp: ${{ steps.changes.outputs.mcp }}
+      queue: ${{ steps.changes.outputs.queue }}
+      deploy-all: ${{ steps.check-deploy-all.outputs.deploy-all }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check for manual deployment
+        id: check-deploy-all
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            if [ "${{ inputs.service }}" == "all" ]; then
+              echo "deploy-all=true" >> $GITHUB_OUTPUT
+            else
+              echo "deploy-all=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "deploy-all=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Detect changes
+        id: changes
+        run: |
+          # If manual deployment of specific service, only deploy that
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.service }}" != "all" ]; then
+            SERVICE="${{ inputs.service }}"
+            echo "$SERVICE=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # If manual deployment of all services, deploy everything
+          if [ "${{ steps.check-deploy-all.outputs.deploy-all }}" == "true" ]; then
+            echo "gateway=true" >> $GITHUB_OUTPUT
+            echo "db=true" >> $GITHUB_OUTPUT
+            echo "auth=true" >> $GITHUB_OUTPUT
+            echo "schedule=true" >> $GITHUB_OUTPUT
+            echo "webhooks=true" >> $GITHUB_OUTPUT
+            echo "email=true" >> $GITHUB_OUTPUT
+            echo "mcp=true" >> $GITHUB_OUTPUT
+            echo "queue=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Otherwise detect changes from git diff
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+
+          for service in gateway db auth schedule webhooks email mcp queue; do
+            if echo "$CHANGED_FILES" | grep -q "^${service}/"; then
+              echo "${service}=true" >> $GITHUB_OUTPUT
+            else
+              echo "${service}=false" >> $GITHUB_OUTPUT
+            fi
+          done
+
+  deploy-db:
+    name: Deploy DB Service
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.db == 'true'
+    environment:
+      name: ${{ inputs.environment || 'production' }}
+      url: https://db.workers.services.do
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy DB service
+        run: |
+          cd db
+          pnpm wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Smoke test
+        run: |
+          sleep 5
+          curl -f https://db.workers.services.do/health || exit 1
+
+  deploy-auth:
+    name: Deploy Auth Service
+    runs-on: ubuntu-latest
+    needs: [detect-changes, deploy-db]
+    if: needs.detect-changes.outputs.auth == 'true'
+    environment:
+      name: ${{ inputs.environment || 'production' }}
+      url: https://auth.workers.services.do
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy Auth service
+        run: |
+          cd auth
+          pnpm wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Smoke test
+        run: |
+          sleep 5
+          curl -f https://auth.workers.services.do/health || exit 1
+
+  deploy-schedule:
+    name: Deploy Schedule Service
+    runs-on: ubuntu-latest
+    needs: [detect-changes, deploy-db]
+    if: needs.detect-changes.outputs.schedule == 'true'
+    environment:
+      name: ${{ inputs.environment || 'production' }}
+      url: https://schedule.workers.services.do
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy Schedule service
+        run: |
+          cd schedule
+          pnpm wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Smoke test
+        run: |
+          sleep 5
+          curl -f https://schedule.workers.services.do/health || exit 1
+
+  deploy-webhooks:
+    name: Deploy Webhooks Service
+    runs-on: ubuntu-latest
+    needs: [detect-changes, deploy-db]
+    if: needs.detect-changes.outputs.webhooks == 'true'
+    environment:
+      name: ${{ inputs.environment || 'production' }}
+      url: https://webhooks.workers.services.do
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy Webhooks service
+        run: |
+          cd webhooks
+          pnpm wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Smoke test
+        run: |
+          sleep 5
+          curl -f https://webhooks.workers.services.do/health || exit 1
+
+  deploy-email:
+    name: Deploy Email Service
+    runs-on: ubuntu-latest
+    needs: [detect-changes, deploy-db]
+    if: needs.detect-changes.outputs.email == 'true'
+    environment:
+      name: ${{ inputs.environment || 'production' }}
+      url: https://email.workers.services.do
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy Email service
+        run: |
+          cd email
+          pnpm wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Smoke test
+        run: |
+          sleep 5
+          curl -f https://email.workers.services.do/health || exit 1
+
+  deploy-mcp:
+    name: Deploy MCP Service
+    runs-on: ubuntu-latest
+    needs: [detect-changes, deploy-db]
+    if: needs.detect-changes.outputs.mcp == 'true'
+    environment:
+      name: ${{ inputs.environment || 'production' }}
+      url: https://mcp.workers.services.do
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy MCP service
+        run: |
+          cd mcp
+          pnpm wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Smoke test
+        run: |
+          sleep 5
+          curl -f https://mcp.workers.services.do/health || exit 1
+
+  deploy-queue:
+    name: Deploy Queue Service
+    runs-on: ubuntu-latest
+    needs: [detect-changes, deploy-db]
+    if: needs.detect-changes.outputs.queue == 'true'
+    environment:
+      name: ${{ inputs.environment || 'production' }}
+      url: https://queue.workers.services.do
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy Queue service
+        run: |
+          cd queue
+          pnpm wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Smoke test
+        run: |
+          sleep 5
+          curl -f https://queue.workers.services.do/health || exit 1
+
+  deploy-gateway:
+    name: Deploy Gateway Service
+    runs-on: ubuntu-latest
+    needs: [detect-changes, deploy-db, deploy-auth, deploy-schedule, deploy-webhooks, deploy-email, deploy-mcp, deploy-queue]
+    if: |
+      always() &&
+      needs.detect-changes.outputs.gateway == 'true' &&
+      !contains(needs.*.result, 'failure')
+    environment:
+      name: ${{ inputs.environment || 'production' }}
+      url: https://api.services.do
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy Gateway service (last)
+        run: |
+          cd gateway
+          pnpm wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Smoke test
+        run: |
+          sleep 5
+          curl -f https://api.services.do/health || exit 1
+
+  notify-deployment:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-gateway, deploy-db, deploy-auth, deploy-schedule, deploy-webhooks, deploy-email, deploy-mcp, deploy-queue]
+    if: always()
+    steps:
+      - name: Check deployment status
+        run: |
+          echo "🚀 Deployment Summary:"
+          echo "Gateway: ${{ needs.deploy-gateway.result }}"
+          echo "DB: ${{ needs.deploy-db.result }}"
+          echo "Auth: ${{ needs.deploy-auth.result }}"
+          echo "Schedule: ${{ needs.deploy-schedule.result }}"
+          echo "Webhooks: ${{ needs.deploy-webhooks.result }}"
+          echo "Email: ${{ needs.deploy-email.result }}"
+          echo "MCP: ${{ needs.deploy-mcp.result }}"
+          echo "Queue: ${{ needs.deploy-queue.result }}"
+
+      - name: Send notification on failure
+        if: contains(needs.*.result, 'failure')
+        run: |
+          echo "❌ Deployment failed! Check the logs for details."
+          exit 1
+
+      - name: Send notification on success
+        if: "!contains(needs.*.result, 'failure')"
+        run: |
+          echo "✅ Deployment successful!"

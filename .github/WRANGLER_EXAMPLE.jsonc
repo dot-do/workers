@@ -1,0 +1,265 @@
+/**
+ * Example Wrangler Configuration for Multi-Environment Deployments
+ *
+ * This file demonstrates how to configure staging and production environments
+ * for Cloudflare Workers services.
+ *
+ * Copy this pattern to your service's wrangler.jsonc and customize as needed.
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+
+  // Default configuration (production)
+  "name": "my-service",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-08",
+  "account_id": "your-account-id-here",
+
+  /**
+   * Environment-specific configurations
+   */
+  "env": {
+    /**
+     * Staging Environment
+     * - Separate databases and resources
+     * - Lower rate limits for testing
+     * - Debug logging enabled
+     */
+    "staging": {
+      "name": "my-service-staging",
+      "routes": [
+        {
+          "pattern": "staging.api.services.do/*",
+          "zone_name": "services.do"
+        }
+      ],
+      "vars": {
+        "ENVIRONMENT": "staging",
+        "LOG_LEVEL": "debug",
+        "RATE_LIMIT_PER_MINUTE": 1000
+      },
+      "services": [
+        {
+          "binding": "DB",
+          "service": "db-staging"
+        }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "KV",
+          "id": "staging-kv-namespace-id"
+        }
+      ],
+      "d1_databases": [
+        {
+          "binding": "D1",
+          "database_name": "my-service-staging",
+          "database_id": "staging-d1-database-id"
+        }
+      ]
+    },
+
+    /**
+     * Production Environment
+     * - Production databases and resources
+     * - Higher rate limits
+     * - Info-level logging
+     * - Observability enabled
+     */
+    "production": {
+      "name": "my-service",
+      "routes": [
+        {
+          "pattern": "api.services.do/*",
+          "zone_name": "services.do"
+        }
+      ],
+      "vars": {
+        "ENVIRONMENT": "production",
+        "LOG_LEVEL": "info",
+        "RATE_LIMIT_PER_MINUTE": 10000
+      },
+      "services": [
+        {
+          "binding": "DB",
+          "service": "db"
+        }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "KV",
+          "id": "production-kv-namespace-id"
+        }
+      ],
+      "d1_databases": [
+        {
+          "binding": "D1",
+          "database_name": "my-service",
+          "database_id": "production-d1-database-id"
+        }
+      ],
+      "observability": {
+        "enabled": true
+      }
+    }
+  },
+
+  /**
+   * Default values (used if environment not specified)
+   * These apply to both staging and production unless overridden
+   */
+  "placement": {
+    "mode": "smart"
+  },
+
+  /**
+   * Common configuration
+   */
+  "compatibility_flags": [],
+
+  /**
+   * Build configuration
+   */
+  "build": {
+    "command": "pnpm build"
+  }
+}
+
+/**
+ * Deployment Commands
+ *
+ * Deploy to staging:
+ *   wrangler deploy --env staging
+ *
+ * Deploy to production:
+ *   wrangler deploy --env production
+ *   # or
+ *   wrangler deploy
+ *
+ * Preview deployment:
+ *   wrangler deploy --dry-run
+ *
+ * Tail logs:
+ *   wrangler tail --env staging
+ *   wrangler tail --env production
+ */
+
+/**
+ * GitHub Actions Integration
+ *
+ * In your workflow:
+ *
+ * - name: Deploy to staging
+ *   run: |
+ *     cd my-service
+ *     pnpm wrangler deploy --env staging
+ *   env:
+ *     CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+ *
+ * - name: Deploy to production
+ *   run: |
+ *     cd my-service
+ *     pnpm wrangler deploy --env production
+ *   env:
+ *     CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+ */
+
+/**
+ * Service-Specific Examples
+ */
+
+// GATEWAY SERVICE
+{
+  "name": "do-gateway",
+  "env": {
+    "staging": {
+      "routes": [
+        { "pattern": "staging.api.services.do/*", "zone_name": "services.do" }
+      ],
+      "services": [
+        { "binding": "DB", "service": "db-staging" },
+        { "binding": "AUTH", "service": "auth-staging" }
+      ]
+    },
+    "production": {
+      "routes": [
+        { "pattern": "api.services.do/*", "zone_name": "services.do" }
+      ],
+      "services": [
+        { "binding": "DB", "service": "db" },
+        { "binding": "AUTH", "service": "auth" }
+      ]
+    }
+  }
+}
+
+// DATABASE SERVICE
+{
+  "name": "db",
+  "env": {
+    "staging": {
+      "vars": {
+        "POOL_SIZE": 5,
+        "CONNECTION_TIMEOUT": 10000
+      }
+      // DATABASE_URL set via: wrangler secret put DATABASE_URL --env staging
+    },
+    "production": {
+      "vars": {
+        "POOL_SIZE": 20,
+        "CONNECTION_TIMEOUT": 5000
+      }
+      // DATABASE_URL set via: wrangler secret put DATABASE_URL --env production
+    }
+  }
+}
+
+// AUTH SERVICE
+{
+  "name": "auth",
+  "env": {
+    "staging": {
+      "vars": {
+        "SESSION_TIMEOUT": 3600,
+        "WORKOS_REDIRECT_URI": "https://staging.services.do/auth/callback"
+      }
+      // WORKOS_API_KEY set via: wrangler secret put WORKOS_API_KEY --env staging
+    },
+    "production": {
+      "vars": {
+        "SESSION_TIMEOUT": 86400,
+        "WORKOS_REDIRECT_URI": "https://services.do/auth/callback"
+      }
+      // WORKOS_API_KEY set via: wrangler secret put WORKOS_API_KEY --env production
+    }
+  }
+}
+
+/**
+ * Environment Best Practices
+ *
+ * 1. Separate Resources
+ *    - Use different databases for staging/production
+ *    - Use different KV namespaces
+ *    - Use different service bindings
+ *
+ * 2. Configuration
+ *    - Keep staging close to production (same code, different config)
+ *    - Use environment variables for differences
+ *    - Store secrets separately per environment
+ *
+ * 3. Testing
+ *    - Always deploy to staging first
+ *    - Run smoke tests in staging
+ *    - Monitor staging for issues
+ *    - Only promote to production after validation
+ *
+ * 4. URLs
+ *    - staging.api.services.do
+ *    - api.services.do
+ *
+ * 5. Monitoring
+ *    - Enable observability in production
+ *    - Use different log levels per environment
+ *    - Monitor error rates per environment
+ */

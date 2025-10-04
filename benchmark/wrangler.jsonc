@@ -18,5 +18,11 @@
       "pipeline": "events-realtime",
       "binding": "PIPELINE"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2_BUCKET",
+      "bucket_name": "events-realtime"
+    }
   ]
 }

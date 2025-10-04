@@ -30,6 +30,7 @@ packages:
   - 'lead-enrichment'
   - 'waitlist-beta-management'
   - 'referral-program'
+  - 'social-media-automation'
   - 'ads-campaigns'
   - 'ads-audiences'
   - 'ads-creatives'

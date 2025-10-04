@@ -1,0 +1,63 @@
+{
+  "name": "social-media-automation",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "observability": {
+    "enabled": true
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "production",
+      "database_id": "your-d1-database-id"
+    }
+  ],
+
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "your-kv-namespace-id"
+    }
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "STORAGE_SERVICE",
+      "bucket_name": "social-media-content"
+    }
+  ],
+
+  "queues": {
+    "consumers": [
+      {
+        "queue": "social-queue",
+        "max_batch_size": 10,
+        "max_batch_timeout": 30
+      }
+    ],
+    "producers": [
+      {
+        "binding": "SOCIAL_QUEUE",
+        "queue": "social-queue"
+      }
+    ]
+  },
+
+  "services": [
+    {
+      "binding": "EMAIL_SERVICE",
+      "service": "email"
+    },
+    {
+      "binding": "ANALYTICS_SERVICE",
+      "service": "analytics"
+    }
+  ],
+
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+}

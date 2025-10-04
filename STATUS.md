@@ -33,7 +33,7 @@ Successfully deployed **8 production-ready microservices** to Cloudflare Workers
 
 | # | Service | URL | Status | Notes |
 |---|---------|-----|--------|-------|
-| 1 | **do-db** | https://do-db.drivly.workers.dev | ⚠️ Degraded | Needs DATABASE_URL configured |
+| 1 | **do-db** | https://do-db.drivly.workers.dev | ⚠️ Degraded | Needs CLICKHOUSE_PASSWORD (PostgreSQL deprecated) |
 | 2 | **auth** | https://auth.drivly.workers.dev | 🚧 In Progress | Being fixed by another developer |
 | 3 | **do-schedule** | https://do-schedule.drivly.workers.dev | ✅ Healthy | OK |
 | 4 | **webhooks** | https://webhooks.drivly.workers.dev | ✅ Healthy | OK (health endpoint added) |
@@ -44,16 +44,22 @@ Successfully deployed **8 production-ready microservices** to Cloudflare Workers
 
 **Health Summary:**
 - ✅ 6 services healthy (gateway, schedule, queue, webhooks, mcp, email)
-- ⚠️ 1 service needs configuration (db - DATABASE_URL)
+- ⚠️ 1 service needs configuration (db - CLICKHOUSE_PASSWORD)
 - 🚧 1 service in progress (auth - another developer)
+
+**Architecture Note:**
+- Database service is 100% ClickHouse (PostgreSQL deprecated - R2 SQL API not ready)
+- Vectorize support planned for vector/similarity search use cases
 
 **Next Steps:**
 - ✅ Fixed email service (error 1101) - Changed default export pattern
 - ✅ Fixed MCP service (error 1101) - Fixed env reference and do-db binding
 - ✅ Added health endpoint to webhooks service
+- ✅ Deprecated PostgreSQL - ClickHouse-only architecture
 - ⏳ Auth service being fixed by another developer
-- ⏳ Configure DATABASE_URL and other production secrets (P0)
+- ⏳ Configure CLICKHOUSE_PASSWORD secret (P0)
 - ⏳ Service-to-service RPC testing (P1)
+- ⏳ Add Vectorize support for vector search (P2)
 - ⏳ Configure custom domains (*.do) (P2)
 - ⏳ GitHub Actions deployment automation (P2)
 

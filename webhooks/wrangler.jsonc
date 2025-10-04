@@ -23,5 +23,18 @@
   "services": [
     { "binding": "DB", "service": "db" },
     { "binding": "QUEUE", "service": "queue" }
-  ]
+  ],
+
+  // Queue consumer - processes GitHub sync jobs
+  "queues": {
+    "consumers": [
+      {
+        "queue": "github-sync",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "github-sync-dlq"
+      }
+    ]
+  }
 }

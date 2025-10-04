@@ -7,6 +7,7 @@ import { handleWorkOSWebhook } from './handlers/workos'
 import { handleGitHubWebhook } from './handlers/github'
 import { handleResendWebhook } from './handlers/resend'
 import { storeWebhookEvent, checkIdempotency } from './utils'
+import { handleQueueMessage } from './queue'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -299,4 +300,8 @@ app.post('/events/:provider/:eventId/retry', async (c) => {
   }
 })
 
-export default app
+// Export both HTTP handler and queue handler
+export default {
+  fetch: app.fetch,
+  queue: handleQueueMessage,
+}

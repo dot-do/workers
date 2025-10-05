@@ -1,20 +1,56 @@
+# numerics
+
 # Numerics Dashboard Worker
 
 Real-time KPI metrics API in Numerics JSON format for Apple ecosystem dashboards (Apple TV, Apple Watch, iPhone, Mac).
 
 ## Overview
 
-This worker provides 16 critical business metrics for the Services.Delivery platform in a format compatible with [Numerics Dashboard](https://numericsdashboard.app/). Metrics are cached in KV with a 5-minute TTL and can be accessed via REST API or MCP tools.
+This worker provides 16 critical business metrics for the Services.Delivery platform in a format compatible with [Numerics Dashboard](https://numericsdashboard.app/). Metrics are cached in KV with a 5-minute TTL for fast dashboard refreshes across all Apple devices, with API key authentication for secure access.
 
 ## Features
 
-- **16 KPI Metrics** - Funnel, revenue, marketplace, creator, and platform metrics
-- **Numerics JSON Format** - Native widget support (number, line graph, named line graph)
-- **KV-Based Caching** - 5-minute TTL for fast dashboard refreshes
-- **API Key Authentication** - Secure access control
-- **MCP Integration** - AI-accessible metrics via Model Context Protocol
-- **Rate Limiting** - Per-widget request limits
-- **Real-time Updates** - Live data from Analytics and DB services
+- ✅ **16 KPI Metrics** - Funnel, revenue, marketplace, creator, and platform metrics
+- ✅ **Numerics JSON Format** - Native widget support (number, line graph, named line graph)
+- ✅ **KV-Based Caching** - 5-minute TTL for fast dashboard refreshes
+- ✅ **API Key Authentication** - Secure access control via Bearer token
+- ✅ **MCP Integration** - AI-accessible metrics via Model Context Protocol
+- ✅ **Rate Limiting** - Per-widget request limits
+- ✅ **Real-time Updates** - Live data from Analytics and DB services
+- ✅ **Multi-Device Support** - Optimized for Apple TV, Watch, iPhone, Mac
+- ✅ **OKR Tracking** - 2025Q4 $1M ARR goal monitoring
+- ✅ **Development Mode** - No API key required when not configured
+
+## Architecture
+
+```
+┌─────────────┐
+│  Numerics   │  ◄── Apple TV / Watch / iPhone / Mac
+│     App     │      Polls every 5 minutes
+└──────┬──────┘
+       │
+       │ HTTPS + Bearer Auth
+       │
+       ▼
+┌──────────────┐
+│   numerics/  │  ◄── This Worker
+│   Worker     │      - KV cache (5min TTL)
+└──────┬───────┘      - Metric calculations
+       │
+       │ RPC Bindings
+       │
+       ├────────────┬──────────────┐
+       ▼            ▼              ▼
+   ┌─────────┐  ┌──────────┐  ┌──────────┐
+   │   DB    │  │Analytics │  │  KV NS   │
+   │ Service │  │ Service  │  │  Cache   │
+   └─────────┘  └──────────┘  └──────────┘
+```
+
+**Service Dependencies:**
+- **DB Service** (binding: `DB`) - Database queries for transactional data
+- **Analytics Service** (binding: `ANALYTICS`) - Real-time event tracking and aggregation
+- **KV Namespace** (binding: `METRICS_KV`) - Metric caching (5-minute TTL)
 
 ## API Endpoints
 
@@ -138,52 +174,7 @@ Set API key via Wrangler:
 wrangler secret put NUMERICS_API_KEY
 ```
 
-Development mode (no API key configured) allows all requests.
-
-## Development
-
-```bash
-# Install dependencies
-pnpm install
-
-# Type check
-pnpm typecheck
-
-# Run tests
-pnpm test
-
-# Development mode (local)
-pnpm dev
-
-# Deploy to production
-pnpm deploy
-```
-
-## Architecture
-
-```
-┌─────────────┐
-│  Numerics   │  ◄── Apple TV / Watch / iPhone / Mac
-│     App     │      Polls every 5 minutes
-└──────┬──────┘
-       │
-       │ HTTPS + Bearer Auth
-       │
-       ▼
-┌──────────────┐
-│   numerics/  │  ◄── This Worker
-│   Worker     │      - KV cache (5min TTL)
-└──────┬───────┘      - Metric calculations
-       │
-       │ RPC Bindings
-       │
-       ├────────────┬──────────────┐
-       ▼            ▼              ▼
-   ┌─────────┐  ┌──────────┐  ┌──────────┐
-   │   DB    │  │Analytics │  │  Other   │
-   │ Service │  │ Service  │  │ Services │
-   └─────────┘  └──────────┘  └──────────┘
-```
+**Development mode** (no API key configured) allows all requests.
 
 ## Numerics Dashboard Setup
 
@@ -191,18 +182,18 @@ pnpm deploy
 
 Focus on high-level OKR metrics:
 
-- ARR (Annual Recurring Revenue) - $1M target
-- GMV (Gross Marketplace Volume) - Growth rate
-- MRR (Monthly Recurring Revenue) - Monthly target
-- Active Users - Engagement metric
+- **ARR** (Annual Recurring Revenue) - $1M target
+- **GMV** (Gross Marketplace Volume) - Growth rate
+- **MRR** (Monthly Recurring Revenue) - Monthly target
+- **Active Users** - Engagement metric
 
 ### Apple Watch - Quick Glance
 
 Essential metrics at a glance:
 
-- MRR - Current month
-- Visitors - Today vs. yesterday
-- Active Users - Current vs. previous
+- **MRR** - Current month
+- **Visitors** - Today vs. yesterday
+- **Active Users** - Current vs. previous
 
 ### iPhone - Full Funnel
 
@@ -225,11 +216,7 @@ All 16 metrics with historical trends:
 
 Access metrics via Model Context Protocol for AI agents:
 
-```typescript
-// Example MCP tool call
-const mrr = await mcp.call('metrics.mrr', { period: 'month', compare: true })
-// Returns: { current: 83500, previous: 52180 }
-```
+
 
 Available MCP tools:
 
@@ -250,11 +237,21 @@ Available MCP tools:
 - `metrics.functions`
 - `metrics.apiCalls`
 
-## Dependencies
+## Caching Strategy
 
-- **DB Service** - Database queries for transactional data
-- **Analytics Service** - Real-time event tracking and aggregation
-- **KV Namespace** - Metric caching (5-minute TTL)
+### KV Cache (5-minute TTL)
+
+
+
+### Cache Invalidation
+
+```bash
+# Clear all cached metrics
+DELETE /api/cache
+
+# Or invalidate specific metric via code
+await invalidateMetricCache('mrr', env)
+```
 
 ## Configuration
 
@@ -273,16 +270,117 @@ Available MCP tools:
 - `ANALYTICS` - Analytics service binding
 - `METRICS_KV` - KV namespace for caching
 
+## Implementation
+
+### Types
+
+
+
+### Cache Layer
+
+
+
+### Metrics Calculations
+
+
+
+### Main Service
+
+
+
+## Usage Examples
+
+### Fetch MRR Metric
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://numerics.apis.do/api/metrics/mrr?period=month&compare=true"
+```
+
+**Response:**
+```json
+{
+  "postfix": "USD",
+  "data": [
+    { "value": 83500 },
+    { "value": 52180 }
+  ]
+}
+```
+
+### Fetch Dispute Rate (with alert color)
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://numerics.apis.do/api/metrics/dispute-rate?period=month"
+```
+
+**Response:**
+```json
+{
+  "postfix": "%",
+  "color": "#FF6B6B",
+  "data": [{ "value": 2.3 }]
+}
+```
+
+### List All Metrics
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  https://numerics.apis.do/api/metrics
+```
+
+### Clear Cache
+
+```bash
+curl -X DELETE \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  https://numerics.apis.do/api/cache
+```
+
+## Development
+
+```bash
+# Install dependencies
+pnpm install
+
+# Type check
+pnpm typecheck
+
+# Run tests
+pnpm test
+
+# Development mode (local)
+pnpm dev
+
+# Deploy to production
+pnpm deploy
+```
+
 ## Related Documentation
 
 - [Numerics JSON API Docs](https://docs.numericsdashboard.app/json-api)
-- [Services.Delivery OKRs](../../../README.md) - 2025Q4 $1M ARR goal
+- [Services.Delivery OKRs](../../README.md) - 2025Q4 $1M ARR goal
 - [Analytics Service](../analytics/README.md) - Data source
 - [Database Service](../db/README.md) - Transaction data
 
+## Tech Stack
+
+- **Hono** - Fast web framework
+- **KV Namespace** - Fast metric caching
+- **RPC** - Service-to-service communication
+- **Numerics** - Apple ecosystem dashboard app
+- **TypeScript** - Type-safe development
+
 ---
 
-**Created:** 2025-10-03
-**Status:** Production Ready
-**Service:** numerics
-**Routes:** numerics.apis.do, numerics.api.mw
+**Generated from:** numerics.mdx
+
+**Build command:** `tsx scripts/build-mdx-worker.ts numerics.mdx`
+
+---
+
+**Generated from:** numerics.mdx
+
+**Build command:** `tsx scripts/build-mdx-worker.ts numerics.mdx`

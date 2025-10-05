@@ -1,4 +1,36 @@
 /**
+ * Type definitions for App Service
+ */
+
+export interface AppEnv {
+  // Service bindings
+  DB: any // Database service
+  AUTH: any // Auth service
+
+  // D1 database (for Payload CMS)
+  D1: D1Database
+
+  // R2 bucket (for media storage)
+  MEDIA: R2Bucket
+
+  // Environment variables
+  PAYLOAD_SECRET: string
+  PAYLOAD_URL?: string // Optional: custom Payload Pages URL
+}
+
+export interface HealthResponse {
+  status: string
+  timestamp: string
+}
+
+export interface ProxyError {
+  error: string
+  message: string
+  service: string
+}
+
+
+/**
  * App Service - Admin CMS Worker
  *
  * Proxies requests to Payload CMS deployed on Cloudflare Pages
@@ -19,22 +51,6 @@ import { WorkerEntrypoint } from 'cloudflare:workers'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
-export interface AppEnv {
-  // Service bindings
-  DB: any // Database service
-  AUTH: any // Auth service
-
-  // D1 database (for Payload CMS)
-  D1: D1Database
-
-  // R2 bucket (for media storage)
-  MEDIA: R2Bucket
-
-  // Environment variables
-  PAYLOAD_SECRET: string
-  PAYLOAD_URL?: string // Optional: custom Payload Pages URL
-}
-
 /**
  * App Service RPC Interface
  */
@@ -49,13 +65,14 @@ export class AppService extends WorkerEntrypoint<AppEnv> {
   /**
    * Get app health status
    */
-  async health(): Promise<{ status: string; timestamp: string }> {
+  async health(): Promise<HealthResponse> {
     return {
       status: 'healthy',
       timestamp: new Date().toISOString(),
     }
   }
 }
+
 
 // ==================== HTTP Interface ====================
 
@@ -111,6 +128,7 @@ app.all('*', async c => {
     )
   }
 })
+
 
 // ==================== Worker Export ====================
 

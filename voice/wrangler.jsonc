@@ -1,7 +1,6 @@
 /**
- * Voice AI Generation Service
- *
- * Professional voiceovers and TTS using OpenAI, ElevenLabs, and Google Cloud
+ * voice Worker Configuration
+ * Generated from voice.mdx
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
@@ -9,17 +8,42 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
-	"observability": { "enabled": true },
-	"tail_consumers": [{ "service": "pipeline" }],
-	"routes": [
-		{ "pattern": "voice.services.do/*", "custom_domain": true }
+	"observability": {
+		"enabled": true
+	},
+	"services": [
+		{
+			"binding": "DB",
+			"service": "db"
+		}
 	],
-  "services": [
-		{ "binding": "DB", "service": "db" }
+	"routes": [
+		{
+			"pattern": "voice.services.do/*",
+			"custom_domain": true
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
 	],
 	"r2_buckets": [
-		{ "binding": "AUDIO", "bucket_name": "voice-audio" }
+		{
+			"binding": "AUDIO",
+			"bucket_name": "voice-audio"
+		}
 	],
-	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
-	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }]
+	"dispatch_namespaces": [
+		{
+			"binding": "do",
+			"namespace": "do"
+		}
+	],
+	"pipelines": [
+		{
+			"pipeline": "events-realtime",
+			"binding": "pipeline"
+		}
+	]
 }

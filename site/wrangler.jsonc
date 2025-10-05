@@ -1,0 +1,51 @@
+/**
+ * site Worker Configuration
+ * Generated from site.mdx
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "site",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-07-08",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"observability": {
+		"enabled": true
+	},
+	"services": [
+		{
+			"binding": "DB",
+			"service": "db"
+		},
+		{
+			"binding": "STORAGE",
+			"service": "storage"
+		}
+	],
+	"vars": {
+		"ENVIRONMENT": "production",
+		"CACHE_TTL": "3600"
+	},
+	"routes": [
+		{
+			"pattern": "site.apis.do/*",
+			"zone_name": "apis.do"
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "SITE_CACHE",
+			"id": "site-templates-cache"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "SITES",
+			"bucket_name": "sites"
+		}
+	]
+}

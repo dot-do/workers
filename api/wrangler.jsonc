@@ -1,60 +1,135 @@
+/**
+ * api Worker Configuration
+ * Generated from api.mdx
+ */
 {
-  "name": "api",
-  "main": "src/index.ts",
-  "compatibility_date": "2024-10-01",
-  "compatibility_flags": ["nodejs_compat"],
-  "account_id": "b6641681fe423910342b9ffa1364c76d",
-
-  // Service bindings (core workers only - add more as they're deployed)
-  "services": [
-    { "binding": "DB_SERVICE", "service": "db" },
-    { "binding": "AUTH_SERVICE", "service": "auth" },
-    { "binding": "AGENT_SERVICE", "service": "agent" },
-    { "binding": "FN_SERVICE", "service": "fn" },
-    { "binding": "GATEWAY_SERVICE", "service": "gateway" }
-  ],
-
-  // Dispatch namespaces (Workers for Platforms)
-  "dispatch_namespaces": [
-    { "binding": "PRODUCTION", "namespace": "dotdo-production" },
-    { "binding": "STAGING", "namespace": "dotdo-staging" },
-    { "binding": "DEVELOPMENT", "namespace": "dotdo-development" }
-  ],
-
-  // KV namespace for caching
-  "kv_namespaces": [
-    {
-      "binding": "KV",
-      "id": "fda17266fb2a4c5491e1ae00e2ab89ce"
-    }
-  ],
-
-  // Routes - Managed via Cloudflare Custom Domains for SaaS
-  // No explicit routes needed - domains point to api.drivly.workers.dev via DNS
-
-  // Workers Assets for domain routing config
-  // Note: In production, upload domain-routes.json via Assets API
-  "assets": {
-    "directory": "./assets",
-    "binding": "ASSETS"
-  },
-
-  // Environment variable
-  "vars": {
-    "ENVIRONMENT": "production"
-  },
-
-  // Development overrides
-  "env": {
-    "development": {
-      "vars": {
-        "ENVIRONMENT": "development"
-      }
-    },
-    "staging": {
-      "vars": {
-        "ENVIRONMENT": "staging"
-      }
-    }
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "api",
+	"main": "src/index.ts",
+	"compatibility_date": "2024-10-01",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"assets": {
+		"directory": "./assets",
+		"binding": "ASSETS"
+	},
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"services": [
+		{
+			"binding": "DB_SERVICE",
+			"service": "db"
+		},
+		{
+			"binding": "AUTH_SERVICE",
+			"service": "auth"
+		},
+		{
+			"binding": "AGENT_SERVICE",
+			"service": "agent"
+		},
+		{
+			"binding": "FN_SERVICE",
+			"service": "fn"
+		},
+		{
+			"binding": "GATEWAY_SERVICE",
+			"service": "gateway"
+		},
+		{
+			"binding": "SCHEDULE_SERVICE",
+			"service": "schedule"
+		},
+		{
+			"binding": "WEBHOOKS_SERVICE",
+			"service": "webhooks"
+		},
+		{
+			"binding": "EMAIL_SERVICE",
+			"service": "email"
+		},
+		{
+			"binding": "MCP_SERVICE",
+			"service": "mcp"
+		},
+		{
+			"binding": "QUEUE_SERVICE",
+			"service": "queue"
+		},
+		{
+			"binding": "WAITLIST_SERVICE",
+			"service": "waitlist"
+		},
+		{
+			"binding": "DO_SERVICE",
+			"service": "do"
+		},
+		{
+			"binding": "AI_SERVICE",
+			"service": "ai"
+		},
+		{
+			"binding": "EMBEDDINGS_SERVICE",
+			"service": "embeddings"
+		},
+		{
+			"binding": "STRIPE_SERVICE",
+			"service": "stripe"
+		},
+		{
+			"binding": "GITHUB_SERVICE",
+			"service": "github"
+		},
+		{
+			"binding": "ANTHROPIC_SERVICE",
+			"service": "anthropic"
+		},
+		{
+			"binding": "AGENTS_SERVICE",
+			"service": "agents"
+		},
+		{
+			"binding": "WORKFLOWS_SERVICE",
+			"service": "workflows"
+		},
+		{
+			"binding": "BUSINESS_SERVICE",
+			"service": "business"
+		}
+	],
+	"vars": {
+		"ENVIRONMENT": "production"
+	},
+	"env": {
+		"development": {
+			"vars": {
+				"ENVIRONMENT": "development"
+			}
+		},
+		"staging": {
+			"vars": {
+				"ENVIRONMENT": "staging"
+			}
+		}
+	},
+	"kv_namespaces": [
+		{
+			"binding": "KV",
+			"id": "fda17266fb2a4c5491e1ae00e2ab89ce"
+		}
+	],
+	"dispatch_namespaces": [
+		{
+			"binding": "PRODUCTION",
+			"namespace": "dotdo-production"
+		},
+		{
+			"binding": "STAGING",
+			"namespace": "dotdo-staging"
+		},
+		{
+			"binding": "DEVELOPMENT",
+			"namespace": "dotdo-development"
+		}
+	]
 }

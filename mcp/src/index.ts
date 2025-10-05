@@ -4,11 +4,14 @@ import { cors } from 'hono/cors'
 import { handleMCPRequest } from './server'
 import type { Env } from './types'
 
+// Export Sandbox Durable Object class for real code execution
+export { Sandbox } from '@cloudflare/sandbox'
+
 /**
  * MCP Server - Exposes all platform capabilities as AI-accessible tools
  *
  * Implements the Model Context Protocol (MCP) JSON-RPC 2.0 server
- * Provides 20+ tools organized by category for database, AI, auth, search, queue, and workflows
+ * Provides 20+ tools organized by category for database, AI, auth, search, queue, workflows, and sandboxes
  */
 export class MCPServer extends WorkerEntrypoint<Env> {
   async fetch(request: Request): Promise<Response> {

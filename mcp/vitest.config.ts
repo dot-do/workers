@@ -27,7 +27,9 @@ export default defineWorkersConfig({
                 headers: { 'Content-Type': 'application/json' }
               })
             }
-          }
+          },
+          // Disable Durable Objects for unit tests (requires real container runtime)
+          durableObjects: {}
         }
       }
     }

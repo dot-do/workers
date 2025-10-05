@@ -6,6 +6,8 @@ import * as auth from './auth'
 import * as search from './search'
 import * as queue from './queue'
 import * as workflows from './workflows'
+import * as sandbox from './sandbox'
+import * as code from './code'
 
 /**
  * Tool Registry
@@ -17,7 +19,9 @@ const toolCategories = {
   auth,
   search,
   queue,
-  workflows
+  workflows,
+  sandbox,
+  code
 }
 
 /**

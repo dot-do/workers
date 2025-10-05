@@ -24,6 +24,13 @@
       "id": "f84c06e2a01942a5b287dd2cdd78b7ab"
     }
   ],
+  "d1_databases": [
+    {
+      "binding": "WORKER_REGISTRY_DB",
+      "database_name": "worker-registry-db",
+      "database_id": "PLACEHOLDER_TO_BE_CREATED"
+    }
+  ],
   "vars": {
     "ENVIRONMENT": "production"
   },
@@ -52,7 +59,22 @@
       "binding": "TENANT",
       "namespace": "dotdo-tenant"
     }
+  ],
+  // Durable Objects for sandbox instances
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SANDBOX",
+        "class_name": "Sandbox",
+        "script_name": "mcp"
+      }
+    ]
+  },
+  // Migrations for Durable Objects
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["Sandbox"]
+    }
   ]
-  // No migrations needed currently
-  // "migrations": []
 }

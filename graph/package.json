@@ -1,25 +1,30 @@
 {
-  "name": "@dot-do/graph",
-  "version": "0.1.0",
+  "name": "cloudflare-data-poc-graph",
+  "version": "1.0.0",
+  "description": "Schema.org URI-based Graph Database POC using Cloudflare D1",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "db:create": "wrangler d1 create graph-db",
+    "db:init": "wrangler d1 execute graph-db --file=./schema.sql",
+    "db:migrate": "wrangler d1 execute graph-db --file=./schema.sql --remote",
+    "db:query": "wrangler d1 execute graph-db --command",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "format": "prettier --write ."
   },
   "dependencies": {
-    "@dot-do/graph-api": "workspace:*",
-    "@dot-do/graph-types": "workspace:*",
-    "hono": "^4.7.11"
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "hono": "^4.6.14",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250110.0",
-    "@types/node": "^22.10.5",
-    "typescript": "^5.7.3",
+    "@types/node": "^22.10.1",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
     "vitest": "^2.1.8",
-    "wrangler": "^3.105.0"
+    "wrangler": "^3.94.0"
   }
 }

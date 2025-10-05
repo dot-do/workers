@@ -1,18 +1,11 @@
-/**
- * Graph Service Worker - Wrangler Configuration
- *
- * For more details: https://developers.cloudflare.com/workers/wrangler/configuration/
- */
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "graph",
   "main": "src/index.ts",
-  "compatibility_date": "2025-07-08",
+  "compatibility_date": "2025-01-03",
+  "node_compat": true,
   "account_id": "b6641681fe423910342b9ffa1364c76d",
-  "observability": {
-    "enabled": true
-  },
-  // Database binding - will be configured for ClickHouse or R2 SQL
+
+  // D1 Database binding
   "d1_databases": [
     {
       "binding": "DB",
@@ -20,21 +13,34 @@
       "database_id": "05c719f3-1a96-48fe-a9d1-e43ce1a8badc"
     }
   ],
-  // Service bindings for auth
-  "services": [
-    {
-      "binding": "AUTH_SERVICE",
-      "service": "auth"
-    }
-  ]
-  // TODO: Add Durable Objects binding after initial deployment
-  // "durable_objects": {
-  //   "bindings": [
-  //     {
-  //       "name": "GRAPH_DO",
-  //       "class_name": "GraphDO",
-  //       "script_name": "graph"
-  //     }
-  //   ]
-  // }
+
+  // R2 Bucket for backups (optional) - disabled for now
+  // "r2_buckets": [
+  //   {
+  //     "binding": "BUCKET",
+  //     "bucket_name": "graph-backups"
+  //   }
+  // ],
+
+  // Environment variables
+  "vars": {
+    "ENVIRONMENT": "development"
+  },
+
+  // Build configuration - use wrangler's built-in bundling
+  // "build": {
+  //   "command": "tsc && esbuild src/index.ts --bundle --outfile=dist/index.js --format=esm",
+  //   "watch_dirs": ["src"]
+  // },
+
+  // Development configuration
+  "dev": {
+    "port": 8787,
+    "local_protocol": "http"
+  },
+
+  // Observability
+  "observability": {
+    "enabled": true
+  }
 }

@@ -1,21 +1,29 @@
 {
-  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2021",
-    "lib": ["ES2021"],
-    "module": "ESNext",
+    "target": "ES2022",
+    "module": "ES2022",
+    "lib": ["ES2022"],
     "moduleResolution": "bundler",
-    "types": ["@cloudflare/workers-types"],
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
+    "types": ["@cloudflare/workers-types", "node"],
+
     "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
     "skipLibCheck": true,
-    "baseUrl": ".",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "outDir": "./dist",
+    "rootDir": "./src",
+
     "paths": {
-      "@dot-do/graph-types": ["../packages/graph-types/src/index.ts"],
-      "@dot-do/graph-api": ["../packages/graph-api/src/index.ts"]
+      "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*", "../packages/*/src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "tests"]
 }

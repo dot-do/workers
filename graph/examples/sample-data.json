@@ -1,0 +1,214 @@
+{
+  "things": [
+    {
+      "id": "https://schema.org/Person/john-doe",
+      "type": "Person",
+      "properties": {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "jobTitle": "Senior Software Engineer",
+        "description": "Full-stack developer with expertise in TypeScript and Cloudflare Workers",
+        "worksFor": "https://schema.org/Organization/acme-corp",
+        "knows": [
+          "https://schema.org/Person/jane-smith",
+          "https://schema.org/Person/bob-jones"
+        ]
+      },
+      "source": "apps",
+      "namespace": "default"
+    },
+    {
+      "id": "https://schema.org/Person/jane-smith",
+      "type": "Person",
+      "properties": {
+        "name": "Jane Smith",
+        "email": "jane@example.com",
+        "jobTitle": "Product Manager",
+        "description": "Product leader with 10+ years of experience",
+        "worksFor": "https://schema.org/Organization/acme-corp"
+      },
+      "source": "apps",
+      "namespace": "default"
+    },
+    {
+      "id": "https://schema.org/Person/bob-jones",
+      "type": "Person",
+      "properties": {
+        "name": "Bob Jones",
+        "email": "bob@example.com",
+        "jobTitle": "Designer",
+        "description": "UX/UI designer focused on user-centered design",
+        "worksFor": "https://schema.org/Organization/acme-corp"
+      },
+      "source": "apps",
+      "namespace": "default"
+    },
+    {
+      "id": "https://schema.org/Organization/acme-corp",
+      "type": "Organization",
+      "properties": {
+        "name": "ACME Corporation",
+        "legalName": "ACME Corp Inc.",
+        "url": "https://acme.com",
+        "description": "Leading provider of innovative SaaS solutions",
+        "foundingDate": "2020-01-01",
+        "numberOfEmployees": 50,
+        "location": "San Francisco, CA"
+      },
+      "source": "brands",
+      "namespace": "default"
+    },
+    {
+      "id": "https://schema.org/Product/task-manager",
+      "type": "Product",
+      "properties": {
+        "name": "Task Manager Pro",
+        "description": "Professional task management application for teams",
+        "brand": "ACME Corporation",
+        "category": "Software",
+        "url": "https://tasks.acme.com",
+        "offers": "https://schema.org/Offer/task-manager-pro-plan"
+      },
+      "source": "apps",
+      "namespace": "default"
+    },
+    {
+      "id": "https://schema.org/Product/time-tracker",
+      "type": "Product",
+      "properties": {
+        "name": "Time Tracker",
+        "description": "Time tracking and productivity tool",
+        "brand": "ACME Corporation",
+        "category": "Software",
+        "url": "https://time.acme.com"
+      },
+      "source": "apps",
+      "namespace": "default"
+    },
+    {
+      "id": "https://schema.org/Offer/task-manager-pro-plan",
+      "type": "Offer",
+      "properties": {
+        "name": "Task Manager Pro Plan",
+        "price": 29.99,
+        "priceCurrency": "USD",
+        "description": "Monthly subscription for Task Manager Pro",
+        "availability": "InStock",
+        "itemOffered": "https://schema.org/Product/task-manager"
+      },
+      "source": "apps",
+      "namespace": "default"
+    }
+  ],
+  "relationships": [
+    {
+      "subject": "https://schema.org/Person/john-doe",
+      "predicate": "https://schema.org/worksFor",
+      "object": "https://schema.org/Organization/acme-corp",
+      "properties": {
+        "since": "2020-06-01",
+        "department": "Engineering"
+      },
+      "namespace": "default"
+    },
+    {
+      "subject": "https://schema.org/Person/jane-smith",
+      "predicate": "https://schema.org/worksFor",
+      "object": "https://schema.org/Organization/acme-corp",
+      "properties": {
+        "since": "2020-03-15",
+        "department": "Product"
+      },
+      "namespace": "default"
+    },
+    {
+      "subject": "https://schema.org/Person/bob-jones",
+      "predicate": "https://schema.org/worksFor",
+      "object": "https://schema.org/Organization/acme-corp",
+      "properties": {
+        "since": "2020-08-01",
+        "department": "Design"
+      },
+      "namespace": "default"
+    },
+    {
+      "subject": "https://schema.org/Person/john-doe",
+      "predicate": "https://schema.org/knows",
+      "object": "https://schema.org/Person/jane-smith",
+      "properties": {
+        "relationship": "colleague"
+      },
+      "namespace": "default"
+    },
+    {
+      "subject": "https://schema.org/Person/john-doe",
+      "predicate": "https://schema.org/knows",
+      "object": "https://schema.org/Person/bob-jones",
+      "properties": {
+        "relationship": "colleague"
+      },
+      "namespace": "default"
+    },
+    {
+      "subject": "https://schema.org/Person/jane-smith",
+      "predicate": "https://schema.org/knows",
+      "object": "https://schema.org/Person/bob-jones",
+      "properties": {
+        "relationship": "colleague"
+      },
+      "namespace": "default"
+    },
+    {
+      "subject": "https://schema.org/Organization/acme-corp",
+      "predicate": "https://schema.org/makesOffer",
+      "object": "https://schema.org/Product/task-manager",
+      "properties": {
+        "since": "2020-01-01"
+      },
+      "namespace": "default"
+    },
+    {
+      "subject": "https://schema.org/Organization/acme-corp",
+      "predicate": "https://schema.org/makesOffer",
+      "object": "https://schema.org/Product/time-tracker",
+      "properties": {
+        "since": "2021-01-01"
+      },
+      "namespace": "default"
+    },
+    {
+      "subject": "https://schema.org/Person/john-doe",
+      "predicate": "https://schema.org/author",
+      "object": "https://schema.org/Product/task-manager",
+      "properties": {
+        "role": "lead developer"
+      },
+      "namespace": "default"
+    },
+    {
+      "subject": "https://schema.org/Person/jane-smith",
+      "predicate": "https://schema.org/contributor",
+      "object": "https://schema.org/Product/task-manager",
+      "properties": {
+        "role": "product owner"
+      },
+      "namespace": "default"
+    },
+    {
+      "subject": "https://schema.org/Person/bob-jones",
+      "predicate": "https://schema.org/contributor",
+      "object": "https://schema.org/Product/task-manager",
+      "properties": {
+        "role": "designer"
+      },
+      "namespace": "default"
+    },
+    {
+      "subject": "https://schema.org/Product/task-manager",
+      "predicate": "https://schema.org/offers",
+      "object": "https://schema.org/Offer/task-manager-pro-plan",
+      "properties": {},
+      "namespace": "default"
+    }
+  ]
+}

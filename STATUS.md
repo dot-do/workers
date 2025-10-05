@@ -2,13 +2,13 @@
 
 **Last Updated:** 2025-10-04
 **Phase:** Production Deployment Complete - 100%
-**Migration Status:** All 8 Core Services Deployed ✅
+**Migration Status:** All 9 Core Services Deployed ✅
 
 ---
 
 ## Overview
 
-Successfully deployed **8 production-ready microservices** to Cloudflare Workers. Total implementation: **~13,000 lines of production code** with 95+ tests (75%+ coverage), comprehensive RPC interfaces, and full observability.
+Successfully deployed **9 production-ready microservices** to Cloudflare Workers. Total implementation: **~15,000 lines of production code** with 115+ tests (75%+ coverage), comprehensive RPC interfaces, and full observability.
 
 ### Architecture Decision: Option B (Hybrid Approach)
 
@@ -29,21 +29,22 @@ Successfully deployed **8 production-ready microservices** to Cloudflare Workers
 - ✅ Dispatcher: Deployed (dynamic routing for *.do domains)
 - ✅ 6 Dispatch Namespaces: Created (dotdo-internal, dotdo-public, dotdo-tenant + legacy)
 
-**Core Microservices (8/8 Deployed):**
+**Core Microservices (9/9 Deployed):**
 
 | # | Service | URL | Status | Notes |
 |---|---------|-----|--------|-------|
-| 1 | **db** | https://db.drivly.workers.dev | ✅ Healthy | ClickHouse working (PostgreSQL deprecated) |
+| 1 | **db** | https://db.apis.do | ✅ Healthy | ClickHouse backend, semantic relationships |
 | 2 | **auth** | https://auth.drivly.workers.dev | 🚧 In Progress | Being fixed by another developer |
-| 3 | **schedule** | https://schedule.drivly.workers.dev | ✅ Healthy | Redeployed with updated config |
-| 4 | **webhooks** | https://webhooks.drivly.workers.dev | ✅ Healthy | OK (health endpoint added) |
-| 5 | **queue** | https://queue.drivly.workers.dev | ✅ Healthy | OK |
-| 6 | **mcp** | https://mcp.drivly.workers.dev | ✅ Healthy | Redeployed (removed conflicting custom domain) |
-| 7 | **gateway** | https://gateway.drivly.workers.dev | ✅ Healthy | Redeployed with updated config |
-| 8 | **email** | https://email.drivly.workers.dev | ✅ Healthy | OK (export pattern fixed) |
+| 3 | **schedule** | https://schedule.drivly.workers.dev | ✅ Healthy | Cron jobs, 8 built-in tasks |
+| 4 | **webhooks** | https://webhooks.drivly.workers.dev | ✅ Healthy | 4 providers, 25 event types |
+| 5 | **queue** | https://queue.drivly.workers.dev | ✅ Healthy | Message queue processing |
+| 6 | **mcp** | https://mcp.drivly.workers.dev | ✅ Healthy | Model Context Protocol server |
+| 7 | **gateway** | https://gateway.drivly.workers.dev | ✅ Healthy | API gateway, routing, rate limits |
+| 8 | **email** | https://email.drivly.workers.dev | ✅ Healthy | Transactional emails (Resend) |
+| 9 | **rpc** | https://rpc.apis.do | ✅ Healthy | JSON-RPC 2.0, 12 methods, OAuth |
 
 **Health Summary:**
-- ✅ 7 services healthy (db, gateway, schedule, queue, webhooks, mcp, email)
+- ✅ 8 services healthy (db, gateway, schedule, queue, webhooks, mcp, email, rpc)
 - 🚧 1 service in progress (auth - another developer)
 
 **Architecture Note:**

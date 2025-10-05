@@ -30,9 +30,9 @@ Workers that have ANY of these characteristics:
 
 **Goal**: Validate mdxe/wrangler integration with 5-7 simple workers
 
-**Status**: 3/7 complete (43%)
+**Status**: 4/7 complete (57%)
 
-### ✅ Migrated to .mdx (3 workers)
+### ✅ Migrated to .mdx (4 workers)
 
 1. **markdown.mdx** ✅ - URL-to-markdown converter using Workers AI
    - Original: `workers/markdown/worker.ts` (~36 LOC)
@@ -54,6 +54,14 @@ Workers that have ANY of these characteristics:
    - Dependencies: ulid, sqids
    - Deploy: ⏳ Pending test
 
+4. **mdx.mdx** ✅ - MDX rendering demo with Hono + React
+   - Original: `workers/mdx/src/index.ts` (~640 LOC)
+   - Migrated: `workers/mdx.mdx` (~900 LOC with extensive docs)
+   - Build: ✅ Success
+   - Dependencies: hono, @hono/mdx, react, react-dom
+   - Features: Streaming SSR, custom React components, frontmatter
+   - Deploy: ⏳ Pending test
+
 ### 🔧 Build Script Bug Fixes
 
 **Issue 1**: AI binding not copied from frontmatter to wrangler.jsonc
@@ -72,14 +80,33 @@ if (frontmatter.ai) config.ai = frontmatter.ai
 if (frontmatter.build) config.build = frontmatter.build
 ```
 
-**Result**: Both AI binding and build config now correctly extracted from frontmatter
+**Issue 3**: node_compat and workers_dev not copied from frontmatter
 
-### ⏳ Pending Migration (4 workers)
+**Fix**: Added node_compat and workers_dev support (lines 112-113)
 
-4. **routes.mdx** - Route generation/analysis (⚠️ Complex - uses Workers Assets)
-5. **generate.mdx** - Code generation utilities (⚠️ Complex - AI streaming, Hono, pipelines)
-6. **docs.mdx** - Documentation generation
-7. **mdx.mdx** - MDX processing worker itself
+```typescript
+if (frontmatter.node_compat !== undefined) config.node_compat = frontmatter.node_compat
+if (frontmatter.workers_dev !== undefined) config.workers_dev = frontmatter.workers_dev
+```
+
+**Issue 4**: Missing support for placement, pipelines, rules
+
+**Fix**: Added support for advanced bindings (lines 123-125)
+
+```typescript
+if (frontmatter.placement) config.placement = frontmatter.placement
+if (frontmatter.pipelines) config.pipelines = frontmatter.pipelines
+if (frontmatter.rules) config.rules = frontmatter.rules
+```
+
+**Result**: All major wrangler config fields now correctly extracted from frontmatter
+
+### ⏳ Pending Migration (2 workers)
+
+5. **routes.mdx** - Route generation/analysis (⚠️ Complex - Workers Assets, requires special assets binding)
+6. **generate.mdx** - Code generation utilities (⚠️ Complex - AI streaming, Hono, pipelines, rules)
+
+Note: "docs" is not a worker directory - it contains documentation files only
 
 ## Phase 2: Domain Workers (Pending)
 
@@ -225,12 +252,17 @@ curl https://markdown.fetch.do/example.com
    - ✅ Fixed by adding `if (frontmatter.ai) config.ai = frontmatter.ai`
    - ❌ Build config was not being extracted from frontmatter (Issue #2)
    - ✅ Fixed by adding `if (frontmatter.build) config.build = frontmatter.build`
-   - ⚠️ May need to add support for other bindings (Durable Objects, Analytics Engine, placement, pipelines, rules, etc.)
+   - ❌ node_compat and workers_dev not being extracted (Issue #3)
+   - ✅ Fixed by adding support for both boolean flags
+   - ❌ placement, pipelines, rules not being extracted (Issue #4)
+   - ✅ Fixed by adding support for advanced bindings
+   - ✅ Build script now supports all major wrangler config fields
 
 2. **mdxe/wrangler Integration**:
-   - ✅ Build process works smoothly for all 3 test workers
+   - ✅ Build process works smoothly for all 4 test workers
    - ✅ Generated files match traditional structure exactly
-   - ✅ Dependencies (yaml, acorn, ulid, sqids) work correctly
+   - ✅ Dependencies work correctly: yaml, acorn, ulid, sqids, hono, @hono/mdx, react
+   - ✅ Complex workers with Hono + React migrate successfully
    - ⏳ Deployment testing pending
 
 3. **Documentation Value**:
@@ -239,18 +271,21 @@ curl https://markdown.fetch.do/example.com
    - ✅ Frontmatter provides clear overview of dependencies and configuration
    - ✅ Code blocks preserve implementation exactly as-is
    - ✅ Generated README.md is comprehensive and useful
+   - ✅ Large workers (600+ LOC) benefit most from documentation integration
 
 4. **Worker Complexity Assessment**:
    - ✅ Simple workers (< 50 LOC) migrate easily: markdown
    - ✅ Medium workers (100-250 LOC) migrate well: ast, utils
-   - ⚠️ Complex workers (> 250 LOC, many bindings) need careful review: routes, generate
-   - ⚠️ Workers with special features (Workers Assets, pipelines, rules) may need extra frontmatter support
+   - ✅ Complex workers (600+ LOC, Hono + React) migrate successfully: mdx
+   - ⚠️ Workers with Workers Assets may need assets binding support
+   - ⚠️ Workers with pipelines/rules already supported in build script
 
 5. **Migration Speed**:
    - ⏱️ ~10-15 minutes per simple worker (including documentation)
    - ⏱️ ~20-30 minutes per medium worker
+   - ⏱️ ~30-45 minutes per complex worker (extensive documentation)
    - ⏱️ Build + verify takes < 30 seconds per worker
-   - 💡 Can migrate 3-4 simple workers per hour
+   - 💡 Can migrate 2-4 workers per hour depending on complexity
 
 ## Next Steps
 

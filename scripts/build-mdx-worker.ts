@@ -109,6 +109,8 @@ function generateWranglerConfig(frontmatter: WorkerFrontmatter): string {
   if (frontmatter.observability) config.observability = frontmatter.observability
   if (frontmatter.ai) config.ai = frontmatter.ai
   if (frontmatter.build) config.build = frontmatter.build
+  if (frontmatter.node_compat !== undefined) config.node_compat = frontmatter.node_compat
+  if (frontmatter.workers_dev !== undefined) config.workers_dev = frontmatter.workers_dev
   if (frontmatter.services) config.services = frontmatter.services
   if (frontmatter.vars) config.vars = frontmatter.vars
   if (frontmatter.routes) config.routes = frontmatter.routes
@@ -118,6 +120,9 @@ function generateWranglerConfig(frontmatter: WorkerFrontmatter): string {
   if (frontmatter.d1_databases) config.d1_databases = frontmatter.d1_databases
   if (frontmatter.queues) config.queues = frontmatter.queues
   if (frontmatter.dispatch_namespaces) config.dispatch_namespaces = frontmatter.dispatch_namespaces
+  if (frontmatter.placement) config.placement = frontmatter.placement
+  if (frontmatter.pipelines) config.pipelines = frontmatter.pipelines
+  if (frontmatter.rules) config.rules = frontmatter.rules
 
   // Format as JSONC with comments
   const jsonc = JSON.stringify(config, null, '\t')

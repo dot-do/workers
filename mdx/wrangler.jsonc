@@ -1,14 +1,19 @@
+/**
+ * mdx Worker Configuration
+ * Generated from mdx.mdx
+ */
 {
-  "name": "mdx",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-01-01",
-  "node_compat": true,
-  "account_id": "b6641681fe423910342b9ffa1364c76d",
-  "workers_dev": true,
-  // "routes": [
-    {
-      "pattern": "mdx.do/*",
-      "zone_name": "do"
-    }
-  // ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "mdx",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-01-01",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"node_compat": true,
+	"workers_dev": true,
+	"routes": [
+		{
+			"pattern": "mdx.do/*",
+			"zone_name": "do"
+		}
+	]
 }

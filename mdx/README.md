@@ -1,138 +1,134 @@
+# mdx
+
 # MDX Demo Worker
 
-A comprehensive demonstration of the `@hono/mdx` package running on Cloudflare Workers.
+A Cloudflare Worker demonstrating **@hono/mdx** package functionality with streaming SSR and custom React components.
 
 ## Features
 
-This worker showcases all major features of @hono/mdx:
-
-- ✅ **Basic MDX rendering** - Simple markdown to HTML conversion
-- ✅ **Custom React components** - Button, Card, Alert, CodeBlock components
-- ✅ **Streaming SSR** - Progressive rendering with React 19
-- ✅ **Static rendering** - Non-streaming mode for complete HTML
-- ✅ **Frontmatter parsing** - YAML frontmatter support
-- ✅ **Dynamic content** - Runtime content generation
-- ✅ **Error handling** - Custom 404 and error pages
+- ✅ **MDX Rendering** - Render MDX content with full Markdown + JSX support
+- ✅ **Custom React Components** - Button, Card, Alert, CodeBlock components
+- ✅ **Streaming SSR** - Progressive rendering with React 19's renderToReadableStream
+- ✅ **Non-Streaming Mode** - Static rendering for SEO/email
+- ✅ **Frontmatter Parsing** - YAML frontmatter support
+- ✅ **Dynamic Content** - Query params and request headers
+- ✅ **Hono Framework** - Fast, lightweight routing
 
 ## Available Routes
 
 ### Basic Examples
-- `/` - Home page with navigation
-- `/hello` - Simple MDX rendering
-- `/frontmatter` - Frontmatter parsing demo
-- `/components` - Custom React components showcase
+
+- **GET /** - Home page with navigation
+- **GET /hello** - Simple MDX rendering
+- **GET /frontmatter** - Frontmatter parsing demo
+- **GET /components** - Custom React components showcase
 
 ### Advanced Examples
-- `/streaming` - Streaming SSR demonstration
-- `/non-streaming` - Static rendering demonstration
-- `/dynamic` - Dynamic content with query parameters
+
+- **GET /streaming** - Streaming SSR demo
+- **GET /non-streaming** - Static rendering demo
+- **GET /dynamic** - Dynamic content generation
 
 ### Documentation
-- `/about` - About @hono/mdx
-- `/api` - API documentation
 
-## Development
-
-```bash
-# Install dependencies
-pnpm install
-
-# Start development server
-pnpm dev
-
-# Deploy to Cloudflare Workers
-pnpm deploy
-
-# Run tests
-pnpm test
-
-# Type check
-pnpm typecheck
-```
+- **GET /about** - About @hono/mdx
+- **GET /api** - API documentation
 
 ## Custom Components
 
-The worker includes four custom React components:
+### Button Component
 
-### Button
-```tsx
+Styled button with variant support:
+
+```jsx
 <Button>Click me!</Button>
 <Button variant="secondary">Secondary</Button>
 ```
 
-### Card
-```tsx
-<Card title="Title">
-  Content goes here
+### Card Component
+
+Container with optional title:
+
+```jsx
+<Card title="Welcome">
+  Content here
 </Card>
 ```
 
-### Alert
-```tsx
+### Alert Component
+
+Colored alerts with different types:
+
+```jsx
 <Alert type="info">Info message</Alert>
 <Alert type="warning">Warning message</Alert>
 <Alert type="error">Error message</Alert>
 <Alert type="success">Success message</Alert>
 ```
 
-### CodeBlock
-```tsx
-<CodeBlock language="typescript">
-  const hello = 'world'
+### CodeBlock Component
+
+Syntax-highlighted code blocks:
+
+```jsx
+<CodeBlock language="javascript">
+  const x = 42
 </CodeBlock>
 ```
 
-## Deployment
+## Streaming vs Non-Streaming
 
-This worker is configured to deploy to `mdx.do/*` routes.
+### Streaming SSR
 
-Update `wrangler.jsonc` to change the deployment configuration:
+- **Faster TTFB** - Browser receives HTML immediately
+- **Progressive Rendering** - Content appears incrementally
+- **Better UX** - Users see content sooner
 
-```jsonc
-{
-  "name": "mdx",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-01-01",
-  "routes": [
-    {
-      "pattern": "mdx.do/*",
-      "zone_name": "do"
-    }
-  ]
-}
-```
 
-## Implementation Details
 
-The worker uses:
-- **Hono** - Ultrafast web framework
-- **@hono/mdx** - MDX rendering with streaming support
-- **React 19** - For component rendering
-- **Cloudflare Workers** - Edge runtime deployment
+### Static Rendering
 
-All pages are rendered using the `c.mdx()` helper provided by the MDX middleware:
+- **Complete HTML** - Server waits until all content rendered
+- **SEO-Friendly** - Better for some crawlers
+- **Email/PDF** - Required for non-streaming clients
 
-```typescript
-import { mdx } from '@hono/mdx'
 
-app.use('*', mdx({
-  components: { Button, Card, Alert, CodeBlock },
-  compileOptions: { development: true }
-}))
 
-app.get('/', (c) => c.mdx(\`# Hello World!\`))
-```
+## Dynamic Content
 
-## Testing Locally
+Access query parameters and headers:
 
-```bash
-# Start dev server (usually http://localhost:8787)
-pnpm dev
 
-# Visit in browser
-open http://localhost:8787
-```
 
-## License
+## Dependencies
 
-MIT
+- `hono` - Fast, lightweight web framework
+- `@hono/mdx` - MDX rendering for Hono
+- `react` - React library
+- `react-dom` - React DOM renderer
+
+## Implementation
+
+
+
+## Use Cases
+
+1. **Documentation Sites** - Render docs with custom components
+2. **Landing Pages** - Create marketing pages with MDX
+3. **Blog Posts** - Write content in Markdown with JSX
+4. **Interactive Demos** - Combine content and components
+5. **API Documentation** - Generate API docs from MDX
+
+## Benefits
+
+- **Developer Experience** - Write content in familiar Markdown syntax
+- **Flexibility** - Mix content and interactive components
+- **Performance** - Streaming SSR for fast page loads
+- **Edge Deployment** - Run at the edge for global performance
+- **Type Safety** - Full TypeScript support
+
+---
+
+**Generated from:** mdx.mdx
+
+**Build command:** `tsx scripts/build-mdx-worker.ts mdx.mdx`

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/wrangler/main/config-schema.json",
+  "name": "universal-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-08",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Service bindings for RPC
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db"
+    },
+    {
+      "binding": "AUTH",
+      "service": "auth"
+    }
+  ],
+
+  // Environment variables (secrets via wrangler secret put)
+  "vars": {
+    "ENVIRONMENT": "development"
+  }
+
+  // Secrets to configure:
+  // - ANTHROPIC_API_KEY: Anthropic API key for Claude 3.5
+  // - ENCRYPTION_SECRET: Secret for OAuth token encryption
+  //
+  // Set with: wrangler secret put ANTHROPIC_API_KEY
+  //           wrangler secret put ENCRYPTION_SECRET
+}

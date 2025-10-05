@@ -16,10 +16,10 @@ JSON-RPC 2.0 compatible service for cross-worker communication with integrated O
 ### HTTP API
 
 ```
-GET  /health        - Health check
-GET  /capabilities  - List available RPC methods
-POST /rpc           - Execute RPC methods
-POST /rpc/json      - Alternative RPC endpoint
+GET  /api/health         - Health check (protocol-router built-in)
+GET  /api/capabilities   - List available protocols (protocol-router built-in)
+GET  /api/methods        - List available CapnWeb RPC methods (service-specific)
+POST /rpc                - Execute RPC methods (JSON-RPC 2.0)
 ```
 
 ### RPC Methods
@@ -27,11 +27,17 @@ POST /rpc/json      - Alternative RPC endpoint
 #### System Methods
 
 ```typescript
-// Test connectivity
+// Test connectivity (no auth)
 rpc('system.ping') → { pong: true, timestamp: number }
 
-// Get system info
+// Get system info (no auth)
 rpc('system.info') → { service, version, protocol, uptime }
+
+// Get protocol capabilities (no auth) - NEW
+rpc('capabilities') → { protocols: [...], serviceRoutes: [...], timestamp }
+
+// List CapnWeb methods (no auth) - NEW
+rpc('rpc.listMethods') → [{ name, description, requiresAuth }, ...]
 ```
 
 #### Authentication Methods
@@ -75,6 +81,25 @@ rpc('db.batchUpsert', { entities: [{ ns, id, type, data }, ...] })
 ### HTTP (cURL)
 
 ```bash
+# Health check
+curl https://rpc.do/api/health
+
+# Get protocol capabilities (REST)
+curl https://rpc.do/api/capabilities
+
+# Get CapnWeb methods (REST)
+curl https://rpc.do/api/methods
+
+# Get protocol capabilities (RPC)
+curl https://rpc.do/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"method":"capabilities","params":{},"id":"1"}'
+
+# List CapnWeb methods (RPC)
+curl https://rpc.do/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"method":"rpc.listMethods","params":{},"id":"1"}'
+
 # Ping (no auth)
 curl https://rpc.do/rpc \
   -H "Content-Type: application/json" \

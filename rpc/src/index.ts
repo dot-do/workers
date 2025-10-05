@@ -72,8 +72,8 @@ export class RpcService extends WorkerEntrypoint<Env> {
  */
 const api = new Hono<{ Bindings: Env }>()
 
-// Capabilities endpoint
-api.get('/capabilities', async (c) => {
+// Custom RPC methods endpoint (in addition to built-in /api/capabilities)
+api.get('/methods', async (c) => {
   const service = new RpcService(c.executionCtx, c.env)
   const methods = await service.listMethods()
 
@@ -91,6 +91,11 @@ api.get('/capabilities', async (c) => {
  */
 async function handleRpc(method: string, params: any, context: any) {
   const service = new RpcService(context.executionCtx, context.env)
+
+  // Handle built-in rpc.listMethods (lists CapnWeb methods)
+  if (method === 'rpc.listMethods' || method === 'listMethods') {
+    return await service.listMethods()
+  }
 
   // Create RPC context
   const rpcContext: RpcContext = {

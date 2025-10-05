@@ -22,6 +22,18 @@ const mockEnv: AuthServiceEnv = {
       return { changes: 1 }
     },
   },
+  SESSIONS_KV: {
+    // Mock KV namespace
+    async get(key: string) {
+      return null
+    },
+    async put(key: string, value: string, options?: any) {
+      return undefined
+    },
+    async delete(key: string) {
+      return undefined
+    },
+  } as KVNamespace,
 }
 
 describe('Auth Service - RPC Interface', () => {

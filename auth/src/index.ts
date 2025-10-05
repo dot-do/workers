@@ -26,6 +26,7 @@ import * as apikeys from './apikeys'
 import * as sessions from './sessions'
 import * as rbac from './rbac'
 import * as middleware from './middleware'
+import * as oauthEndpoints from './oauth-endpoints'
 
 /**
  * Auth Service RPC Interface
@@ -236,7 +237,13 @@ app.use('*', async (c, next) => {
 // Health check
 app.get('/health', c => c.json({ status: 'ok', service: 'auth', timestamp: new Date().toISOString() }))
 
-// WorkOS OAuth routes
+// OAuth Authentication Endpoints
+app.get('/login', oauthEndpoints.handleLogin)
+app.get('/callback', oauthEndpoints.handleCallback)
+app.post('/logout', oauthEndpoints.handleLogout)
+app.post('/refresh', oauthEndpoints.handleRefresh)
+
+// Legacy WorkOS OAuth route (keep for backward compatibility)
 app.get('/authorize', async c => {
   const redirectUri = c.req.query('redirect_uri') || `${new URL(c.req.url).origin}/callback`
   const state = c.req.query('state')
@@ -247,6 +254,8 @@ app.get('/authorize', async c => {
   return c.redirect(url)
 })
 
+// Old callback route - REMOVED (now handled by oauthEndpoints.handleCallback above)
+/*
 app.get('/callback', async c => {
   const code = c.req.query('code')
   const state = c.req.query('state')
@@ -293,6 +302,7 @@ app.get('/callback', async c => {
     return error('AUTH_FAILED', err instanceof Error ? err.message : 'Authentication failed', 500)
   }
 })
+*/
 
 // API key management
 app.post('/apikeys', async c => {

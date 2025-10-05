@@ -111,8 +111,8 @@ export interface AuthServiceEnv {
   // Service bindings
   DB: any // Database service RPC binding
 
-  // KV for sessions (optional, can use DB)
-  SESSIONS_KV?: KVNamespace
+  // KV for sessions
+  SESSIONS_KV: KVNamespace
 
   // Rate limiting KV
   RATE_LIMIT_KV?: KVNamespace

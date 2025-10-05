@@ -11,6 +11,7 @@
 	"observability": {
 		"enabled": true
 	},
+	"workers_dev": true,
 	"services": [
 		{
 			"binding": "DB_SERVICE",
@@ -19,16 +20,6 @@
 		{
 			"binding": "AI_SERVICE",
 			"service": "ai"
-		},
-		{
-			"binding": "DEPLOY_SERVICE",
-			"service": "deploy"
-		}
-	],
-	"routes": [
-		{
-			"pattern": "blog.apis.do/*",
-			"zone_name": "apis.do"
 		}
 	],
 	"tail_consumers": [

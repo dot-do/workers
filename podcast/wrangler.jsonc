@@ -11,6 +11,7 @@
 	"observability": {
 		"enabled": true
 	},
+	"workers_dev": true,
 	"services": [
 		{
 			"binding": "DB",
@@ -21,21 +22,9 @@
 			"service": "voice"
 		}
 	],
-	"routes": [
-		{
-			"pattern": "podcast.services.do",
-			"custom_domain": true
-		}
-	],
 	"tail_consumers": [
 		{
 			"service": "pipeline"
-		}
-	],
-	"r2_buckets": [
-		{
-			"binding": "AUDIO",
-			"bucket_name": "podcast-audio"
 		}
 	],
 	"dispatch_namespaces": [

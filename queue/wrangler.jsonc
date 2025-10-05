@@ -1,76 +1,45 @@
 /**
- * Wrangler Configuration - Queue Service
- *
- * Background job processing service with Cloudflare Queues
- * https://developers.cloudflare.com/workers/wrangler/configuration/
+ * queue Worker Configuration
+ * Generated from queue.mdx
  */
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "queue",
-  "main": "worker.ts",
-  "compatibility_date": "2025-07-15",
-  "workers_dev": false,
-  "account_id": "b6641681fe423910342b9ffa1364c76d",
-
-  /**
-   * Observability
-   */
-  "observability": {
-    "enabled": true
-  },
-
-  /**
-   * Service Bindings
-   * Connect to other Workers services via RPC
-   */
-  "services": [
-    {
-      "binding": "DB",
-      "service": "db"
-    },
-    {
-      "binding": "AI",
-      "service": "ai"
-    }
-  ],
-
-  /**
-   * Queue Configuration
-   * Producer: Send jobs to the queue
-   * Consumer: Process jobs from the queue
-   */
-  "queues": {
-    "producers": [
-      {
-        "binding": "JOB_QUEUE",
-        "queue": "background-jobs"
-      }
-    ],
-    "consumers": [
-      {
-        "queue": "background-jobs",
-        "max_batch_size": 100,
-        "max_batch_timeout": 30,
-        "max_retries": 3,
-        "dead_letter_queue": "background-jobs-dlq"
-      }
-    ]
-  },
-
-  /**
-   * Environment Variables
-   * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-   */
-  // "vars": {
-  //   "ENVIRONMENT": "production"
-  // },
-
-  /**
-   * Smart Placement
-   * Optimize worker placement based on service bindings
-   * https://developers.cloudflare.com/workers/configuration/smart-placement/
-   */
-  "placement": {
-    "mode": "smart"
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "queue",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-07-15",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"observability": {
+		"enabled": true
+	},
+	"workers_dev": false,
+	"services": [
+		{
+			"binding": "DB",
+			"service": "db"
+		},
+		{
+			"binding": "AI",
+			"service": "ai"
+		}
+	],
+	"queues": {
+		"producers": [
+			{
+				"binding": "JOB_QUEUE",
+				"queue": "background-jobs"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "background-jobs",
+				"max_batch_size": 100,
+				"max_batch_timeout": 30,
+				"max_retries": 3,
+				"dead_letter_queue": "background-jobs-dlq"
+			}
+		]
+	},
+	"placement": {
+		"mode": "smart"
+	}
 }

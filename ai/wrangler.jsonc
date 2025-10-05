@@ -66,5 +66,9 @@
   // - OPENAI_API_KEY: OpenAI API key for text generation and image generation
   // - ANTHROPIC_API_KEY: Anthropic API key for Claude models (or use OPENROUTER_API_KEY)
   // - OPENROUTER_API_KEY: OpenRouter API key (alternative to Anthropic direct)
-  // - REPLICATE_API_KEY: Replicate API key for music generation (Stable Audio 2.5)
+  // - REPLICATE_API_KEY: Replicate API key for music generation (Stable Audio 2.5) and video (Luma Ray, Kling v2.1)
+  // - VEO_API_KEY: Google Veo 3 API key for high-quality video generation (or use GOOGLE_GENERATIVE_AI_API_KEY)
+  // - GOOGLE_GENERATIVE_AI_API_KEY: Google Generative AI API key (for Veo 3)
+  // - RUNWAY_API_KEY: Runway Gen-3 API key for video generation with camera control
+  // - LUMA_API_KEY: Luma Dream Machine API key for fast video generation
 }

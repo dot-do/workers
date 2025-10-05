@@ -169,6 +169,53 @@ export interface MusicGenerationResponse {
 }
 
 /**
+ * Video generation options
+ */
+export interface VideoGenerationOptions {
+  provider?: 'veo' | 'runway' | 'luma' | 'replicate'
+  model?: string
+  duration?: number // 4-10 seconds depending on provider
+  aspectRatio?: '16:9' | '9:16' | '1:1'
+  resolution?: '720p' | '1080p' | '4k'
+  fps?: number // 24, 30, 60
+  negativePrompt?: string
+  seed?: number
+
+  // Advanced options
+  generateAudio?: boolean // Veo 3 native audio
+  cameraMovement?: string // Runway camera control
+  styleReference?: string // Image or style URL
+  firstFrame?: string // Image-to-video URL
+  lastFrame?: string // Video extension URL
+}
+
+/**
+ * Video generation response
+ */
+export interface VideoGenerationResponse {
+  video: ArrayBuffer
+  videoUrl?: string // R2 URL for the uploaded video
+  model: string
+  provider: string
+  duration: number
+  resolution: string
+  aspectRatio: string
+  fps: number
+  format: string
+  cost?: number
+  latency: number
+  usage: {
+    seconds: number
+    frames: number
+  }
+  metadata?: {
+    hasAudio?: boolean
+    cameraMovement?: string
+    seed?: number
+  }
+}
+
+/**
  * List generation options
  */
 export interface ListOptions extends GenerateOptions {
@@ -264,6 +311,10 @@ export interface AIServiceEnv extends Env {
   ANTHROPIC_API_KEY: string
   OPENROUTER_API_KEY?: string
   REPLICATE_API_KEY?: string
+  VEO_API_KEY?: string
+  GOOGLE_GENERATIVE_AI_API_KEY?: string
+  RUNWAY_API_KEY?: string
+  LUMA_API_KEY?: string
   CLOUDFLARE_ACCOUNT_ID: string
   AI: Ai
   MEDIA_BUCKET: R2Bucket
@@ -273,7 +324,7 @@ export interface AIServiceEnv extends Env {
 /**
  * Background job types
  */
-export type BackgroundJobType = 'generate' | 'analyze' | 'embed' | 'generateImage' | 'generateSpeech' | 'generateMusic' | 'list' | 'research' | 'code'
+export type BackgroundJobType = 'generate' | 'analyze' | 'embed' | 'generateImage' | 'generateSpeech' | 'generateMusic' | 'generateVideo' | 'list' | 'research' | 'code'
 
 /**
  * Background job request

@@ -24,6 +24,8 @@ import type {
   SpeechGenerationResponse,
   MusicGenerationOptions,
   MusicGenerationResponse,
+  VideoGenerationOptions,
+  VideoGenerationResponse,
 } from './types'
 import { calculateCost } from 'ai-models'
 
@@ -354,6 +356,81 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
         style: options?.style,
         mood: options?.mood,
         bpm: options?.bpm,
+        seed: options?.seed,
+      },
+    }
+  }
+
+  /**
+   * RPC Method: Generate video with full response metadata
+   */
+  async generateVideo(prompt: string, options?: VideoGenerationOptions): Promise<VideoGenerationResponse> {
+    const startTime = Date.now()
+    const provider = options?.provider || 'luma'
+    const duration = Math.min(options?.duration || 5, 10) // Max 10 seconds
+    const aspectRatio = options?.aspectRatio || '16:9'
+    const resolution = options?.resolution || '1080p'
+    const fps = options?.fps || 30
+
+    // Initialize provider based on selection
+    let videoProvider: any
+    let model: string
+
+    if (provider === 'veo') {
+      const { VeoProvider } = await import('./providers/veo')
+      videoProvider = new VeoProvider(this.env)
+      model = options?.model || videoProvider.getDefaultVideoModel()
+    } else if (provider === 'runway') {
+      const { RunwayProvider } = await import('./providers/runway')
+      videoProvider = new RunwayProvider(this.env)
+      model = options?.model || videoProvider.getDefaultVideoModel()
+    } else if (provider === 'luma') {
+      const { LumaProvider } = await import('./providers/luma')
+      videoProvider = new LumaProvider(this.env)
+      model = options?.model || videoProvider.getDefaultVideoModel()
+    } else if (provider === 'replicate') {
+      const { ReplicateProvider } = await import('./providers/replicate')
+      videoProvider = new ReplicateProvider(this.env)
+      model = options?.model || videoProvider.getDefaultVideoModel()
+    } else {
+      throw new Error(`Unsupported video provider: ${provider}`)
+    }
+
+    // Generate video
+    const video = await videoProvider.generateVideo(prompt, options)
+    const latency = Date.now() - startTime
+
+    // Upload video to R2
+    const { uploadVideoToR2 } = await import('./r2')
+    const r2Url = await uploadVideoToR2(this.env, video, 'mp4')
+
+    // Calculate cost
+    let cost: number
+    if (provider === 'replicate') {
+      cost = videoProvider.getEstimatedVideoCost(duration, model)
+    } else {
+      cost = videoProvider.getEstimatedCost(duration, resolution)
+    }
+
+    return {
+      video,
+      videoUrl: r2Url,
+      model,
+      provider,
+      duration,
+      resolution,
+      aspectRatio,
+      fps,
+      format: 'mp4',
+      cost,
+      latency,
+      usage: {
+        seconds: duration,
+        frames: duration * fps,
+      },
+      metadata: {
+        hasAudio: options?.generateAudio,
+        cameraMovement: options?.cameraMovement,
         seed: options?.seed,
       },
     }
@@ -826,6 +903,34 @@ Answer:`
         })
       }
 
+      // POST /ai/generate-video - Generate video
+      if (pathname === '/ai/generate-video' && request.method === 'POST') {
+        const body = await request.json() as any
+        const { prompt, ...options } = body
+
+        if (!prompt) {
+          return Response.json({ error: 'Prompt is required' }, { status: 400 })
+        }
+
+        const response = await this.generateVideo(prompt, options)
+
+        // Return full JSON response with metadata
+        return Response.json({
+          videoUrl: response.videoUrl,
+          model: response.model,
+          provider: response.provider,
+          duration: response.duration,
+          resolution: response.resolution,
+          aspectRatio: response.aspectRatio,
+          fps: response.fps,
+          format: response.format,
+          cost: response.cost,
+          latency: response.latency,
+          usage: response.usage,
+          metadata: response.metadata,
+        })
+      }
+
       // POST /ai/list - Generate structured list
       if (pathname === '/ai/list' && request.method === 'POST') {
         const body = await request.json() as any
@@ -921,8 +1026,8 @@ Answer:`
       if (pathname === '/ai/health' && request.method === 'GET') {
         return Response.json({
           status: 'healthy',
-          providers: ['openai', 'anthropic', 'workers-ai', 'replicate'],
-          capabilities: ['text', 'image', 'speech', 'music', 'embeddings', 'analysis', 'list', 'research', 'code'],
+          providers: ['openai', 'anthropic', 'workers-ai', 'replicate', 'veo', 'runway', 'luma'],
+          capabilities: ['text', 'image', 'speech', 'music', 'video', 'embeddings', 'analysis', 'list', 'research', 'code'],
           modes: ['sync', 'async', 'batch'],
           timestamp: new Date().toISOString(),
         })

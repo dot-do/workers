@@ -22,6 +22,8 @@ import type {
   ImageGenerationResponse,
   SpeechGenerationOptions,
   SpeechGenerationResponse,
+  MusicGenerationOptions,
+  MusicGenerationResponse,
 } from './types'
 import { calculateCost } from 'ai-models'
 
@@ -312,6 +314,49 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
    */
   async say(text: string, options?: SpeechGenerationOptions): Promise<SpeechGenerationResponse> {
     return await this.generateSpeech(text, options)
+  }
+
+  /**
+   * RPC Method: Generate music with full response metadata
+   */
+  async generateMusic(prompt: string, options?: MusicGenerationOptions): Promise<MusicGenerationResponse> {
+    const startTime = Date.now()
+    const provider = options?.provider || 'replicate'
+    const model = options?.model || 'stability-ai/stable-audio-open-1.0'
+    const duration = Math.min(options?.duration || 30, 180) // Max 180 seconds
+    const format = options?.format || 'mp3'
+
+    // Initialize Replicate provider
+    const { ReplicateProvider } = await import('./providers/replicate')
+    const replicateProvider = new ReplicateProvider(this.env)
+
+    // Generate music
+    const audio = await replicateProvider.generateMusic(prompt, options)
+    const latency = Date.now() - startTime
+
+    // Upload audio to R2
+    const { uploadAudioToR2 } = await import('./r2')
+    const r2Url = await uploadAudioToR2(this.env, audio, format, 'music')
+
+    return {
+      audio,
+      audioUrl: r2Url,
+      model,
+      provider,
+      duration,
+      format,
+      cost: replicateProvider.getEstimatedCost(duration),
+      latency,
+      usage: {
+        seconds: duration,
+      },
+      metadata: {
+        style: options?.style,
+        mood: options?.mood,
+        bpm: options?.bpm,
+        seed: options?.seed,
+      },
+    }
   }
 
   /**
@@ -756,6 +801,31 @@ Answer:`
         })
       }
 
+      // POST /ai/generate-music - Generate music
+      if (pathname === '/ai/generate-music' && request.method === 'POST') {
+        const body = await request.json() as any
+        const { prompt, ...options } = body
+
+        if (!prompt) {
+          return Response.json({ error: 'Prompt is required' }, { status: 400 })
+        }
+
+        const response = await this.generateMusic(prompt, options)
+
+        // Return full JSON response with metadata
+        return Response.json({
+          audioUrl: response.audioUrl,
+          model: response.model,
+          provider: response.provider,
+          duration: response.duration,
+          format: response.format,
+          cost: response.cost,
+          latency: response.latency,
+          usage: response.usage,
+          metadata: response.metadata,
+        })
+      }
+
       // POST /ai/list - Generate structured list
       if (pathname === '/ai/list' && request.method === 'POST') {
         const body = await request.json() as any
@@ -851,8 +921,8 @@ Answer:`
       if (pathname === '/ai/health' && request.method === 'GET') {
         return Response.json({
           status: 'healthy',
-          providers: ['openai', 'anthropic', 'workers-ai'],
-          capabilities: ['text', 'image', 'speech', 'embeddings', 'analysis', 'list', 'research', 'code'],
+          providers: ['openai', 'anthropic', 'workers-ai', 'replicate'],
+          capabilities: ['text', 'image', 'speech', 'music', 'embeddings', 'analysis', 'list', 'research', 'code'],
           modes: ['sync', 'async', 'batch'],
           timestamp: new Date().toISOString(),
         })

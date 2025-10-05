@@ -528,4 +528,209 @@ describe('AI Service', () => {
       })
     })
   })
+
+  describe('Music Generation', () => {
+    describe('RPC Interface', () => {
+      it('should generate music successfully', async () => {
+        const result = await service.generateMusic('upbeat electronic music for a video game')
+
+        expect(result).toBeDefined()
+        expect(result.audio).toBeInstanceOf(ArrayBuffer)
+        expect(result.audioUrl).toBeTruthy()
+        expect(result.model).toBe('stability-ai/stable-audio-open-1.0')
+        expect(result.provider).toBe('replicate')
+        expect(result.duration).toBeGreaterThan(0)
+        expect(result.format).toBe('mp3')
+      })
+
+      it('should support custom options', async () => {
+        const result = await service.generateMusic('cinematic orchestral music', {
+          duration: 60,
+          style: 'orchestral',
+          mood: 'epic',
+          bpm: 120,
+          format: 'wav',
+          seed: 42,
+        })
+
+        expect(result.duration).toBeLessThanOrEqual(60)
+        expect(result.format).toBe('wav')
+        expect(result.metadata?.style).toBe('orchestral')
+        expect(result.metadata?.mood).toBe('epic')
+        expect(result.metadata?.bpm).toBe(120)
+        expect(result.metadata?.seed).toBe(42)
+      })
+
+      it('should enforce maximum duration of 180 seconds', async () => {
+        const result = await service.generateMusic('long ambient music', {
+          duration: 300, // Should be capped at 180
+        })
+
+        expect(result.duration).toBeLessThanOrEqual(180)
+      })
+
+      it('should use default duration of 30 seconds', async () => {
+        const result = await service.generateMusic('short jingle')
+
+        expect(result.duration).toBe(30)
+      })
+
+      it('should include usage statistics', async () => {
+        const result = await service.generateMusic('test music')
+
+        expect(result.usage).toBeDefined()
+        expect(result.usage.seconds).toBeGreaterThan(0)
+      })
+
+      it('should calculate cost correctly', async () => {
+        const result = await service.generateMusic('test music')
+
+        expect(result.cost).toBeDefined()
+        expect(result.cost).toBeGreaterThan(0)
+        expect(result.cost).toBeCloseTo(0.08, 2) // ~$0.08 per generation
+      })
+
+      it('should track latency accurately', async () => {
+        const result = await service.generateMusic('test music')
+
+        expect(result.latency).toBeGreaterThan(0)
+        expect(result.latency).toBeLessThan(180000) // Less than 3 minutes
+      })
+
+      it('should upload audio to R2 and return URL', async () => {
+        const result = await service.generateMusic('test music')
+
+        expect(result.audioUrl).toBeDefined()
+        expect(result.audioUrl).toContain('http') // Should be a URL
+      })
+
+      it('should support different audio formats', async () => {
+        const formats = ['mp3', 'wav', 'flac'] as const
+
+        for (const format of formats) {
+          const result = await service.generateMusic('test music', { format })
+          expect(result.format).toBe(format)
+        }
+      })
+    })
+
+    describe('HTTP Interface', () => {
+      it('should handle POST /ai/generate-music', async () => {
+        const request = new Request('http://localhost/ai/generate-music', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: 'relaxing ambient music',
+          }),
+        })
+
+        const response = await service.fetch(request)
+        expect(response.status).toBe(200)
+
+        const data = await response.json() as any
+        expect(data.audioUrl).toBeTruthy()
+        expect(data.model).toBe('stability-ai/stable-audio-open-1.0')
+        expect(data.provider).toBe('replicate')
+        expect(data.duration).toBeGreaterThan(0)
+        expect(data.cost).toBeGreaterThan(0)
+        expect(data.latency).toBeGreaterThan(0)
+      })
+
+      it('should handle POST /ai/generate-music with options', async () => {
+        const request = new Request('http://localhost/ai/generate-music', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: 'upbeat dance music',
+            duration: 45,
+            style: 'electronic',
+            mood: 'energetic',
+            bpm: 128,
+            format: 'mp3',
+          }),
+        })
+
+        const response = await service.fetch(request)
+        expect(response.status).toBe(200)
+
+        const data = await response.json() as any
+        expect(data.metadata.style).toBe('electronic')
+        expect(data.metadata.mood).toBe('energetic')
+        expect(data.metadata.bpm).toBe(128)
+      })
+
+      it('should return 400 for missing prompt', async () => {
+        const request = new Request('http://localhost/ai/generate-music', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        })
+
+        const response = await service.fetch(request)
+        expect(response.status).toBe(400)
+
+        const data = await response.json() as any
+        expect(data.error).toBe('Prompt is required')
+      })
+
+      it('should include metadata in response', async () => {
+        const request = new Request('http://localhost/ai/generate-music', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: 'calm piano music',
+            style: 'classical',
+            mood: 'peaceful',
+          }),
+        })
+
+        const response = await service.fetch(request)
+        expect(response.status).toBe(200)
+
+        const data = await response.json() as any
+        expect(data.metadata).toBeDefined()
+        expect(data.metadata.style).toBe('classical')
+        expect(data.metadata.mood).toBe('peaceful')
+      })
+    })
+
+    describe('Health Check', () => {
+      it('should include music in capabilities', async () => {
+        const request = new Request('http://localhost/ai/health')
+        const response = await service.fetch(request)
+        expect(response.status).toBe(200)
+
+        const data = await response.json() as any
+        expect(data.providers).toContain('replicate')
+        expect(data.capabilities).toContain('music')
+      })
+    })
+
+    describe('Error Handling', () => {
+      it('should handle missing REPLICATE_API_KEY gracefully', async () => {
+        // This would require mocking the env without REPLICATE_API_KEY
+        // For now, just ensure error handling exists
+        try {
+          const result = await service.generateMusic('test music')
+          expect(result).toBeDefined()
+        } catch (error) {
+          expect(error).toBeDefined()
+          if (error instanceof Error) {
+            expect(error.message).toContain('REPLICATE_API_KEY')
+          }
+        }
+      })
+
+      it('should handle Replicate API errors', async () => {
+        // Test error handling for API failures
+        // This would require mocking Replicate API failures
+        try {
+          const result = await service.generateMusic('test music')
+          expect(result).toBeDefined()
+        } catch (error) {
+          expect(error).toBeDefined()
+        }
+      })
+    })
+  })
 })

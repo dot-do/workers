@@ -132,6 +132,43 @@ export interface SpeechGenerationResponse {
 }
 
 /**
+ * Music generation options
+ */
+export interface MusicGenerationOptions {
+  provider?: 'replicate' | 'stable-audio'
+  model?: string // e.g., 'stability-ai/stable-audio-open-1.0', 'meta/musicgen'
+  duration?: number // Duration in seconds (default: 30, max: 180)
+  style?: string // Music style/genre (e.g., 'electronic', 'classical', 'jazz')
+  mood?: string // Mood descriptor (e.g., 'upbeat', 'relaxed', 'dramatic')
+  bpm?: number // Beats per minute (60-180)
+  format?: 'mp3' | 'wav' | 'flac'
+  seed?: number // For reproducibility
+}
+
+/**
+ * Music generation response
+ */
+export interface MusicGenerationResponse {
+  audio: ArrayBuffer
+  audioUrl?: string // R2 URL for the uploaded audio
+  model: string
+  provider: string
+  duration: number
+  format: string
+  cost?: number
+  latency: number
+  usage?: {
+    seconds: number // Audio duration generated
+  }
+  metadata?: {
+    style?: string
+    mood?: string
+    bpm?: number
+    seed?: number
+  }
+}
+
+/**
  * List generation options
  */
 export interface ListOptions extends GenerateOptions {
@@ -226,6 +263,7 @@ export interface AIServiceEnv extends Env {
   OPENAI_API_KEY: string
   ANTHROPIC_API_KEY: string
   OPENROUTER_API_KEY?: string
+  REPLICATE_API_KEY?: string
   CLOUDFLARE_ACCOUNT_ID: string
   AI: Ai
   MEDIA_BUCKET: R2Bucket
@@ -235,7 +273,7 @@ export interface AIServiceEnv extends Env {
 /**
  * Background job types
  */
-export type BackgroundJobType = 'generate' | 'analyze' | 'embed' | 'generateImage' | 'generateSpeech' | 'list' | 'research' | 'code'
+export type BackgroundJobType = 'generate' | 'analyze' | 'embed' | 'generateImage' | 'generateSpeech' | 'generateMusic' | 'list' | 'research' | 'code'
 
 /**
  * Background job request

@@ -4,11 +4,14 @@ Multi-provider AI generation microservice with support for OpenAI, Anthropic (Cl
 
 ## Features
 
-- **Multi-Provider Support**: OpenAI (GPT-5, GPT-4o), Anthropic (Claude Sonnet 4.5), Workers AI (Llama 3.1)
+- **Multi-Provider Support**: OpenAI (GPT-5, GPT-4o), Anthropic (Claude Sonnet 4.5), Workers AI (Llama 3.1), Replicate (Stable Audio)
 - **Automatic Fallback**: Seamless failover between providers on errors
 - **Streaming Support**: Server-Sent Events (SSE) for real-time text generation
 - **Embeddings**: Generate vector embeddings for semantic search
 - **Content Analysis**: AI-powered content analysis (sentiment, topics, etc.)
+- **Image Generation**: Create images with DALL-E 3 and other models
+- **Speech Synthesis**: Text-to-speech with OpenAI TTS
+- **Music Generation**: AI-generated music with Replicate Stable Audio 2.5
 - **Cost Tracking**: Automatic cost calculation per request
 - **MCP Tools**: Model Context Protocol integration for LLM agents
 - **RPC Interface**: Service bindings for inter-worker communication
@@ -22,10 +25,12 @@ workers/ai/
 │   ├── index.ts                 # Main AIService class
 │   ├── types.ts                 # TypeScript types
 │   ├── mcp.ts                   # MCP tools
+│   ├── r2.ts                    # R2 storage utilities
 │   └── providers/
-│       ├── openai.ts            # OpenAI provider
+│       ├── openai.ts            # OpenAI provider (text, images, speech)
 │       ├── anthropic.ts         # Anthropic/Claude provider
-│       └── workers-ai.ts        # Workers AI provider
+│       ├── workers-ai.ts        # Workers AI provider
+│       └── replicate.ts         # Replicate provider (music)
 ├── tests/
 │   └── ai-service.test.ts       # Comprehensive tests
 ├── worker.ts                    # Worker entry point
@@ -49,6 +54,7 @@ Set via `wrangler secret put`:
 wrangler secret put OPENAI_API_KEY
 wrangler secret put ANTHROPIC_API_KEY
 wrangler secret put OPENROUTER_API_KEY  # Alternative to ANTHROPIC_API_KEY
+wrangler secret put REPLICATE_API_KEY   # For music generation
 ```
 
 Update `wrangler.jsonc`:
@@ -158,7 +164,7 @@ Response:
 
 ```bash
 curl -X POST https://ai.api.mw/ai/analyze \
-  -H "Content-Type: application/json" \
+  -H "Content-Type": "application/json" \
   -d '{
     "content": "This product is absolutely amazing! Best purchase ever!",
     "analysis": "sentiment",
@@ -166,6 +172,51 @@ curl -X POST https://ai.api.mw/ai/analyze \
     "model": "gpt-4o"
   }'
 ```
+
+#### Generate Music
+
+```bash
+curl -X POST https://ai.api.mw/ai/generate-music \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "upbeat electronic music for a video game",
+    "duration": 30,
+    "style": "electronic",
+    "mood": "energetic",
+    "bpm": 128,
+    "format": "mp3"
+  }'
+```
+
+Response:
+
+```json
+{
+  "audioUrl": "https://r2.example.com/music/abc123.mp3",
+  "model": "stability-ai/stable-audio-open-1.0",
+  "provider": "replicate",
+  "duration": 30,
+  "format": "mp3",
+  "cost": 0.08,
+  "latency": 45000,
+  "usage": {
+    "seconds": 30
+  },
+  "metadata": {
+    "style": "electronic",
+    "mood": "energetic",
+    "bpm": 128
+  }
+}
+```
+
+**Options:**
+- `duration` - Audio duration in seconds (default: 30, max: 180)
+- `style` - Music style/genre (e.g., 'electronic', 'classical', 'jazz')
+- `mood` - Mood descriptor (e.g., 'upbeat', 'relaxed', 'dramatic')
+- `bpm` - Beats per minute (60-180)
+- `format` - Audio format: `mp3` (default), `wav`, `flac`
+- `seed` - Random seed for reproducibility
 
 ### MCP Tools (for LLM Agents)
 
@@ -202,6 +253,8 @@ The AI service exposes MCP tools for use by AI agents:
 
 - **Models**: gpt-5, gpt-5-mini, gpt-5-nano, gpt-4o, gpt-4o-mini
 - **Embeddings**: text-embedding-3-small, text-embedding-3-large
+- **Images**: dall-e-3
+- **Speech**: tts-1, tts-1-hd
 - **Gateway**: Cloudflare AI Gateway
 - **Cost**: Variable by model
 
@@ -217,6 +270,13 @@ The AI service exposes MCP tools for use by AI agents:
 - **Models**: @cf/meta/llama-3.1-8b-instruct
 - **Embeddings**: @cf/baai/bge-base-en-v1.5, @cf/google/embeddinggemma-300m
 - **Cost**: Free (within generous limits)
+
+### Replicate
+
+- **Music Models**: stability-ai/stable-audio-open-1.0, meta/musicgen, riffusion/riffusion
+- **Duration**: 30-180 seconds per generation
+- **Formats**: mp3, wav, flac
+- **Cost**: ~$0.08 per generation
 
 ## Automatic Fallback
 
@@ -334,6 +394,9 @@ Routes:
 - `/ai/stream` → Streaming
 - `/ai/embed` → Embeddings
 - `/ai/analyze` → Content analysis
+- `/ai/generate-image` → Image generation
+- `/ai/generate-speech` → Speech synthesis
+- `/ai/generate-music` → Music generation
 - `/ai/health` → Health check
 
 ## Success Criteria
@@ -343,8 +406,11 @@ Routes:
 ✅ Embedding generation (text → vector)
 ✅ Provider fallback working
 ✅ Content analysis functionality
+✅ Image generation with OpenAI DALL-E 3
+✅ Speech synthesis with OpenAI TTS
+✅ Music generation with Replicate Stable Audio 2.5
 ✅ Gateway routes /ai/* correctly
-✅ Generation latency <2s (p95)
+✅ Generation latency <2s for text (p95)
 ✅ All tests passing (80%+ coverage)
 ⏳ Deployed to staging
 

@@ -63,7 +63,8 @@
   }
 
   // Required secrets (set via: wrangler secret put <NAME>):
-  // - OPENAI_API_KEY: OpenAI API key
-  // - ANTHROPIC_API_KEY: Anthropic API key (or use OPENROUTER_API_KEY)
+  // - OPENAI_API_KEY: OpenAI API key for text generation and image generation
+  // - ANTHROPIC_API_KEY: Anthropic API key for Claude models (or use OPENROUTER_API_KEY)
   // - OPENROUTER_API_KEY: OpenRouter API key (alternative to Anthropic direct)
+  // - REPLICATE_API_KEY: Replicate API key for music generation (Stable Audio 2.5)
 }

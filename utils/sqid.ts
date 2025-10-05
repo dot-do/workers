@@ -51,3 +51,92 @@ export function sqidToUlid(id: string): string {
 
   return tsPart + randPart;                  // 26-char ULID
 }
+
+// ============================================================================
+// TIMESTAMP HELPERS
+// ============================================================================
+
+/**
+ * Extract timestamp (milliseconds since epoch) from a Sqid
+ * @param sqid The Sqid to extract timestamp from
+ * @returns Timestamp in milliseconds
+ */
+export function extractTimestampFromSquid(sqid: string): number {
+  const [t48] = sqids.decode(sqid);
+  if (t48 === undefined) throw new Error('Invalid Sqid');
+  return t48;
+}
+
+/**
+ * Extract timestamp (milliseconds since epoch) from a ULID
+ * @param ulid The ULID to extract timestamp from
+ * @returns Timestamp in milliseconds
+ */
+export function extractTimestampFromUlid(ulid: string): number {
+  if (!isValid(ulid)) throw new Error('Invalid ULID');
+  return decodeTime(ulid);
+}
+
+/**
+ * Create a new Sqid with a specific or current timestamp
+ * @param timestamp Optional timestamp in milliseconds (defaults to now)
+ * @returns New Sqid with encoded timestamp
+ */
+export function createSquidWithTimestamp(timestamp?: number): string {
+  timestamp = timestamp ?? Date.now();
+
+  // Generate random 80-bit value
+  const randomBytes = new Uint8Array(10);
+  crypto.getRandomValues(randomBytes);
+
+  // Convert to bigint
+  let randBig = 0n;
+  for (let i = 0; i < 10; i++) {
+    randBig = (randBig << 8n) | BigInt(randomBytes[i]);
+  }
+
+  // Split into hi (40 bits) and lo (40 bits)
+  const hi = Number(randBig >> 40n);
+  const lo = Number(randBig & ((1n << 40n) - 1n));
+
+  return sqids.encode([timestamp, hi, lo]);
+}
+
+/**
+ * Create a new ULID with a specific or current timestamp
+ * @param timestamp Optional timestamp in milliseconds (defaults to now)
+ * @returns New ULID with encoded timestamp
+ */
+export function createUlidWithTimestamp(timestamp?: number): string {
+  timestamp = timestamp ?? Date.now();
+
+  // Generate random 80-bit value
+  const randomBytes = new Uint8Array(10);
+  crypto.getRandomValues(randomBytes);
+
+  // Convert to bigint
+  let randBig = 0n;
+  for (let i = 0; i < 10; i++) {
+    randBig = (randBig << 8n) | BigInt(randomBytes[i]);
+  }
+
+  // Encode timestamp and random parts
+  const tsPart = encodeTime(timestamp);
+  const randPart = bigIntToBase32(randBig, 16);
+
+  return tsPart + randPart;
+}
+
+/**
+ * Check if a string is a valid Sqid
+ * @param id The string to check
+ * @returns true if valid Sqid, false otherwise
+ */
+export function isValidSquid(id: string): boolean {
+  try {
+    const decoded = sqids.decode(id);
+    return decoded.length === 3 && decoded[0] !== undefined;
+  } catch {
+    return false;
+  }
+}

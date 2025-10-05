@@ -19,6 +19,14 @@ A Cloudflare Worker that provides utility functions for ID conversion and markdo
 - **ulidToSqid** - Convert ULID to Sqid format
 - **sqidToUlid** - Convert Sqid back to ULID format
 
+### Timestamp Operations
+
+- **extractTimestampFromSquid** - Extract millisecond timestamp from Sqid
+- **extractTimestampFromUlid** - Extract millisecond timestamp from ULID
+- **createSquidWithTimestamp** - Create new Sqid with specific or current timestamp
+- **createUlidWithTimestamp** - Create new ULID with specific or current timestamp
+- **isValidSquid** - Validate Sqid format
+
 ### Markdown Processing
 
 - **toMarkdown** - Convert content to markdown using Workers AI
@@ -37,6 +45,24 @@ curl "https://utils.do/ulidToSqid?u=01ARZ3NDEKTSV4RRFFQ69G5FAV"
 # Convert Sqid to ULID
 curl "https://utils.do/sqidToUlid?id=abc123"
 
+# Extract timestamp from Sqid (returns milliseconds since epoch)
+curl "https://utils.do/extractTimestampFromSquid?sqid=abc123"
+
+# Extract timestamp from ULID
+curl "https://utils.do/extractTimestampFromUlid?ulid=01ARZ3NDEKTSV4RRFFQ69G5FAV"
+
+# Create Sqid with specific timestamp
+curl "https://utils.do/createSquidWithTimestamp?timestamp=1704067200000"
+
+# Create Sqid with current timestamp (default)
+curl "https://utils.do/createSquidWithTimestamp"
+
+# Create ULID with specific timestamp
+curl "https://utils.do/createUlidWithTimestamp?timestamp=1704067200000"
+
+# Validate Sqid format
+curl "https://utils.do/isValidSquid?id=abc123"
+
 # Convert to markdown (via AI binding)
 curl "https://utils.do/toMarkdown?blob=..."
 ```
@@ -52,8 +78,24 @@ curl "https://utils.do/toMarkdown?blob=..."
 }
 
 // In your worker
+
+// ID conversion
 const sqid = await env.UTILS_SERVICE.ulidToSqid('01ARZ3NDEKTSV4RRFFQ69G5FAV')
 const ulid = await env.UTILS_SERVICE.sqidToUlid('abc123')
+
+// Timestamp operations
+const timestamp = await env.UTILS_SERVICE.extractTimestampFromSquid('abc123')
+const ulidTimestamp = await env.UTILS_SERVICE.extractTimestampFromUlid('01ARZ3NDEKTSV4RRFFQ69G5FAV')
+
+// Create IDs with timestamps
+const newSquid = await env.UTILS_SERVICE.createSquidWithTimestamp() // current time
+const specificSquid = await env.UTILS_SERVICE.createSquidWithTimestamp(1704067200000)
+const newUlid = await env.UTILS_SERVICE.createUlidWithTimestamp()
+
+// Validation
+const isValid = await env.UTILS_SERVICE.isValidSquid('abc123')
+
+// Markdown conversion
 const markdown = await env.UTILS_SERVICE.toMarkdown({ blob })
 ```
 
@@ -78,9 +120,32 @@ const markdown = await env.UTILS_SERVICE.toMarkdown({ blob })
 ### Conversion
 
 The worker converts between formats while preserving:
-- **Timestamp** - Original creation time from ULID
+- **Timestamp** - Original creation time from ULID (48 bits, millisecond precision)
 - **Randomness** - Full 80 bits of entropy
 - **Reversibility** - Bidirectional conversion
+
+### Timestamp Encoding
+
+Both ULID and Sqid encode timestamps:
+- **Precision**: Milliseconds since Unix epoch
+- **Range**: 0 to 281,474,976,710,655 (until year 8920)
+- **Sortable**: IDs with earlier timestamps sort before later ones
+- **Extractable**: Timestamps can be retrieved from IDs without conversion
+
+**Example:**
+```ts
+const timestamp = 1704067200000 // 2024-01-01 00:00:00 UTC
+const sqid = createSquidWithTimestamp(timestamp)
+const ulid = createUlidWithTimestamp(timestamp)
+
+// Later, extract the timestamp
+const extractedFromSquid = extractTimestampFromSquid(sqid) // 1704067200000
+const extractedFromUlid = extractTimestampFromUlid(ulid)   // 1704067200000
+
+// Convert between formats while preserving timestamp
+const convertedSquid = ulidToSqid(ulid)
+const extractedFromConverted = extractTimestampFromSquid(convertedSquid) // Still 1704067200000
+```
 
 ## Implementation
 

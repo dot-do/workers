@@ -53,10 +53,83 @@ export function sqidToUlid(args: { id?: string }): string {
   return tsPart + randPart
 }
 
+// Timestamp helpers
+export function extractTimestampFromSquid(args: { sqid?: string }): number {
+  const sqid = args.sqid || ''
+  const [t48] = sqids.decode(sqid)
+  if (t48 === undefined) throw new Error('Invalid Sqid')
+  return t48
+}
+
+export function extractTimestampFromUlid(args: { ulid?: string }): number {
+  const ulid = args.ulid || ''
+  if (!isValid(ulid)) throw new Error('Invalid ULID')
+  return decodeTime(ulid)
+}
+
+export function createSquidWithTimestamp(args: { timestamp?: number }): string {
+  const timestamp = args.timestamp ?? Date.now()
+
+  // Generate random 80-bit value
+  const randomBytes = new Uint8Array(10)
+  crypto.getRandomValues(randomBytes)
+
+  // Convert to bigint
+  let randBig = 0n
+  for (let i = 0; i < 10; i++) {
+    randBig = (randBig << 8n) | BigInt(randomBytes[i])
+  }
+
+  // Split into hi (40 bits) and lo (40 bits)
+  const hi = Number(randBig >> 40n)
+  const lo = Number(randBig & ((1n << 40n) - 1n))
+
+  return sqids.encode([timestamp, hi, lo])
+}
+
+export function createUlidWithTimestamp(args: { timestamp?: number }): string {
+  const timestamp = args.timestamp ?? Date.now()
+
+  // Generate random 80-bit value
+  const randomBytes = new Uint8Array(10)
+  crypto.getRandomValues(randomBytes)
+
+  // Convert to bigint
+  let randBig = 0n
+  for (let i = 0; i < 10; i++) {
+    randBig = (randBig << 8n) | BigInt(randomBytes[i])
+  }
+
+  // Encode timestamp and random parts
+  const tsPart = encodeTime(timestamp)
+  const randPart = bigIntToBase32(randBig, 16)
+
+  return tsPart + randPart
+}
+
+export function isValidSquid(args: { id?: string }): boolean {
+  const id = args.id || ''
+  try {
+    const decoded = sqids.decode(id)
+    return decoded.length === 3 && decoded[0] !== undefined
+  } catch {
+    return false
+  }
+}
+
 export const toMarkdown = env?.ai?.toMarkdown as any
 
 // Collect all exported functions
-const pkg = { ulidToSqid, sqidToUlid, toMarkdown }
+const pkg = {
+  ulidToSqid,
+  sqidToUlid,
+  extractTimestampFromSquid,
+  extractTimestampFromUlid,
+  createSquidWithTimestamp,
+  createUlidWithTimestamp,
+  isValidSquid,
+  toMarkdown,
+}
 
 // RPC class with dynamic method binding
 class RPC extends WorkerEntrypoint {

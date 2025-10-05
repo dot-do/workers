@@ -255,7 +255,30 @@ GET /prompts
 
 ### RPC Interface
 
+```ts
+const voiceService = env.VOICE_SERVICE
 
+// Generate single voiceover
+const voice = await voiceService.generateVoice({
+  text: 'Hello world',
+  provider: 'openai',
+  voice: 'alloy',
+})
+
+// Generate batch
+const batch = await voiceService.generateBatch({
+  voices: [
+    { text: '...', provider: 'openai', voice: 'nova' },
+    { text: '...', provider: 'elevenlabs', voice: 'rachel' }
+  ]
+})
+
+// Generate test batch
+const test = await voiceService.generateTestBatch()
+
+// Get voice by ID
+const voice = await voiceService.getVoice('01HXYZ...')
+```
 
 ## Provider Comparison
 
@@ -724,7 +747,7 @@ curl https://voice.services.do/voices/01HXYZ...
 **Status:** Experimental (TODO: API integrations)
 **Domain:** voice.services.do
 
-## Code
+## Implementation
 
 ---
 

@@ -1,24 +1,23 @@
-// Example MCP tool call
-const mrr = await mcp.call('metrics.mrr', { period: 'month', compare: true })
-// Returns: { current: 83500, previous: 52180 }
-
-
-// Cache key format: metric:{metricName}:{period}:{compare}
-const cacheKey = `metric:mrr:month:compare`
-
-// Write to cache with TTL
-await METRICS_KV.put(cacheKey, JSON.stringify(result), {
-  expirationTtl: 300 // 5 minutes
-})
-
-// Read from cache
-const cached = await METRICS_KV.get(cacheKey)
-
-
 /**
- * Numerics Dashboard Service Types
- * TypeScript definitions for Numerics JSON API format
+ * Numerics Dashboard Worker - Real-Time Metrics API
+ *
+ * Provides 16 KPI metrics in Numerics JSON format for Apple ecosystem dashboards
+ * (Apple TV, Apple Watch, iPhone, Mac)
+ *
+ * Features:
+ * - Numerics JSON API format
+ * - KV-based caching (5min TTL)
+ * - API key authentication
+ * - Rate limiting
+ * - MCP tool definitions
  */
+
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+
+// ============================================================================
+// Types
+// ============================================================================
 
 export interface Env {
   DB: any // Database service binding
@@ -29,50 +28,31 @@ export interface Env {
   ENVIRONMENT: string
 }
 
-/**
- * Numerics Widget Data Point
- */
 export interface NumericsDataPoint {
   value: number
   name?: string // Optional for named line graphs
 }
 
-/**
- * Numerics JSON Widget Response
- * https://docs.numericsdashboard.app/json-api
- */
 export interface NumericsWidget {
   postfix: string // Unit label (e.g., "Visitors", "USD", "%", "★")
   data: NumericsDataPoint[] // 1-31 data points
   color?: string // Optional color override (hex)
 }
 
-/**
- * Time Period for Metrics Queries
- */
 export type MetricsPeriod = 'today' | 'week' | 'month' | 'quarter' | 'year'
 
-/**
- * Metrics Cache Key
- */
 export interface MetricsCacheKey {
   metric: string
   period: MetricsPeriod
   compare: boolean
 }
 
-/**
- * Internal Metric Calculation Result
- */
 export interface MetricResult {
   current: number
   previous?: number
   timeseries?: Array<{ timestamp: string; value: number; name?: string }>
 }
 
-/**
- * Supported Metrics
- */
 export type MetricName =
   | 'visitors'
   | 'signups'
@@ -91,9 +71,6 @@ export type MetricName =
   | 'functions'
   | 'api-calls'
 
-/**
- * Metric Metadata
- */
 export interface MetricMeta {
   name: MetricName
   postfix: string
@@ -104,63 +81,38 @@ export interface MetricMeta {
   cacheKey: string
 }
 
+// ============================================================================
+// Cache Layer
+// ============================================================================
 
-/**
- * Metrics Caching Layer
- * KV-based caching with configurable TTL
- */
-
-import type { Env, MetricsCacheKey, MetricResult } from './types'
-
-/**
- * Generate cache key from metric parameters
- */
 export function generateCacheKey(params: MetricsCacheKey): string {
   return `metric:${params.metric}:${params.period}:${params.compare ? 'compare' : 'current'}`
 }
 
-/**
- * Get cached metric result
- */
 export async function getCachedMetric(key: string, env: Env): Promise<MetricResult | null> {
   try {
     const cached = await env.METRICS_KV.get(key)
-
-    if (!cached) {
-      return null
-    }
-
-    const result: MetricResult = JSON.parse(cached)
-    return result
+    if (!cached) return null
+    return JSON.parse(cached) as MetricResult
   } catch (error) {
     console.error('Error reading from cache:', error)
     return null
   }
 }
 
-/**
- * Cache metric result
- */
 export async function cacheMetric(key: string, result: MetricResult, env: Env): Promise<void> {
   try {
-    const ttl = parseInt(env.CACHE_TTL || '300', 10) // Default 5 minutes
-
-    await env.METRICS_KV.put(key, JSON.stringify(result), {
-      expirationTtl: ttl,
-    })
+    const ttl = parseInt(env.CACHE_TTL || '300', 10)
+    await env.METRICS_KV.put(key, JSON.stringify(result), { expirationTtl: ttl })
   } catch (error) {
     console.error('Error writing to cache:', error)
   }
 }
 
-/**
- * Invalidate cached metric
- */
 export async function invalidateMetricCache(metric: string, env: Env): Promise<void> {
   try {
     const periods = ['today', 'week', 'month', 'quarter', 'year']
-    const variants = [true, false] // compare variants
-
+    const variants = [true, false]
     for (const period of periods) {
       for (const compare of variants) {
         const key = generateCacheKey({ metric, period: period as any, compare })
@@ -172,14 +124,9 @@ export async function invalidateMetricCache(metric: string, env: Env): Promise<v
   }
 }
 
-/**
- * Clear all cached metrics
- */
 export async function clearAllCache(env: Env): Promise<void> {
   try {
-    // List all keys with 'metric:' prefix and delete them
     const list = await env.METRICS_KV.list({ prefix: 'metric:' })
-
     for (const key of list.keys) {
       await env.METRICS_KV.delete(key.name)
     }
@@ -188,17 +135,10 @@ export async function clearAllCache(env: Env): Promise<void> {
   }
 }
 
+// ============================================================================
+// Metrics Calculations
+// ============================================================================
 
-/**
- * Metrics Calculation Functions
- * Aggregates data from DB and Analytics services
- */
-
-import type { Env, MetricResult, MetricsPeriod } from './types'
-
-/**
- * Get date range for period
- */
 function getPeriodRange(period: MetricsPeriod): { start: Date; end: Date; previousStart: Date; previousEnd: Date } {
   const now = new Date()
   const end = new Date(now)
@@ -242,50 +182,6 @@ function getPeriodRange(period: MetricsPeriod): { start: Date; end: Date; previo
   return { start, end, previousStart, previousEnd }
 }
 
-/**
- * Get metric calculation
- * Routes to appropriate metric calculator
- */
-export async function getMetric(metric: string, env: Env, period: MetricsPeriod): Promise<MetricResult | null> {
-  switch (metric) {
-    case 'visitors':
-      return getVisitors(env, period)
-    case 'signups':
-      return getSignups(env, period)
-    case 'active-users':
-      return getActiveUsers(env, period)
-    case 'mrr':
-      return getMRR(env, period)
-    case 'arr':
-      return getARR(env, period)
-    case 'gmv':
-      return getGMV(env, period)
-    case 'gmv-growth':
-      return getGMVGrowth(env, period)
-    case 'services-listed':
-      return getServicesListed(env, period)
-    case 'services-active':
-      return getServicesActive(env, period)
-    case 'providers':
-      return getProviders(env, period)
-    case 'service-rating':
-      return getServiceRating(env, period)
-    case 'dispute-rate':
-      return getDisputeRate(env, period)
-    case 'creators':
-      return getCreators(env, period)
-    case 'top-creators-revenue':
-      return getTopCreatorsRevenue(env, period)
-    case 'functions':
-      return getFunctions(env, period)
-    case 'api-calls':
-      return getAPICalls(env, period)
-    default:
-      return null
-  }
-}
-
-// Individual metric calculators would query DB and Analytics services
 async function getVisitors(env: Env, period: MetricsPeriod): Promise<MetricResult> {
   return { current: 45280, previous: 38450 }
 }
@@ -359,26 +255,31 @@ async function getAPICalls(env: Env, period: MetricsPeriod): Promise<MetricResul
   return { current: 125000, previous: 98000 }
 }
 
+export async function getMetric(metric: string, env: Env, period: MetricsPeriod): Promise<MetricResult | null> {
+  switch (metric) {
+    case 'visitors': return getVisitors(env, period)
+    case 'signups': return getSignups(env, period)
+    case 'active-users': return getActiveUsers(env, period)
+    case 'mrr': return getMRR(env, period)
+    case 'arr': return getARR(env, period)
+    case 'gmv': return getGMV(env, period)
+    case 'gmv-growth': return getGMVGrowth(env, period)
+    case 'services-listed': return getServicesListed(env, period)
+    case 'services-active': return getServicesActive(env, period)
+    case 'providers': return getProviders(env, period)
+    case 'service-rating': return getServiceRating(env, period)
+    case 'dispute-rate': return getDisputeRate(env, period)
+    case 'creators': return getCreators(env, period)
+    case 'top-creators-revenue': return getTopCreatorsRevenue(env, period)
+    case 'functions': return getFunctions(env, period)
+    case 'api-calls': return getAPICalls(env, period)
+    default: return null
+  }
+}
 
-/**
- * Numerics Dashboard Worker - Real-Time Metrics API
- *
- * Provides 16 KPI metrics in Numerics JSON format for Apple ecosystem dashboards
- * (Apple TV, Apple Watch, iPhone, Mac)
- *
- * Features:
- * - Numerics JSON API format
- * - KV-based caching (5min TTL)
- * - API key authentication
- * - Rate limiting
- * - MCP tool definitions
- */
-
-import { Hono } from 'hono'
-import { cors } from 'hono/cors'
-import type { Env, NumericsWidget, MetricsPeriod, MetricName } from './types'
-import { getMetric } from './metrics'
-import { generateCacheKey, getCachedMetric, cacheMetric, clearAllCache } from './cache'
+// ============================================================================
+// HTTP API
+// ============================================================================
 
 const app = new Hono<{ Bindings: Env }>()
 

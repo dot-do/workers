@@ -216,7 +216,11 @@ All 16 metrics with historical trends:
 
 Access metrics via Model Context Protocol for AI agents:
 
-
+```ts
+// Example MCP tool call
+const mrr = await mcp.call('metrics.mrr', { period: 'month', compare: true })
+// Returns: { current: 83500, previous: 52180 }
+```
 
 Available MCP tools:
 
@@ -241,7 +245,18 @@ Available MCP tools:
 
 ### KV Cache (5-minute TTL)
 
+```ts
+// Cache key format: metric:{metricName}:{period}:{compare}
+const cacheKey = `metric:mrr:month:compare`
 
+// Write to cache with TTL
+await METRICS_KV.put(cacheKey, JSON.stringify(result), {
+  expirationTtl: 300 // 5 minutes
+})
+
+// Read from cache
+const cached = await METRICS_KV.get(cacheKey)
+```
 
 ### Cache Invalidation
 
@@ -271,20 +286,6 @@ await invalidateMetricCache('mrr', env)
 - `METRICS_KV` - KV namespace for caching
 
 ## Implementation
-
-### Types
-
-
-
-### Cache Layer
-
-
-
-### Metrics Calculations
-
-
-
-### Main Service
 
 
 

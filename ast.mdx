@@ -143,7 +143,8 @@ function removePositions(node: any): any {
 
 // Helper function to extract and parse code blocks
 function extractAndParseCodeBlocks(content: string): ASTResult['jsCodeBlocks'] {
-  const codeBlockRegex = /```(javascript|js|jsx|typescript|ts|tsx)\n([\s\S]*?)```/g
+  // Regex to match code blocks with language identifier
+  const codeBlockRegex = new RegExp('```(javascript|js|jsx|typescript|ts|tsx)\\n([\\s\\S]*?)```', 'g')
   const blocks: ASTResult['jsCodeBlocks'] = []
 
   let match

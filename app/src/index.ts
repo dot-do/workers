@@ -1,36 +1,4 @@
 /**
- * Type definitions for App Service
- */
-
-export interface AppEnv {
-  // Service bindings
-  DB: any // Database service
-  AUTH: any // Auth service
-
-  // D1 database (for Payload CMS)
-  D1: D1Database
-
-  // R2 bucket (for media storage)
-  MEDIA: R2Bucket
-
-  // Environment variables
-  PAYLOAD_SECRET: string
-  PAYLOAD_URL?: string // Optional: custom Payload Pages URL
-}
-
-export interface HealthResponse {
-  status: string
-  timestamp: string
-}
-
-export interface ProxyError {
-  error: string
-  message: string
-  service: string
-}
-
-
-/**
  * App Service - Admin CMS Worker
  *
  * Proxies requests to Payload CMS deployed on Cloudflare Pages
@@ -72,7 +40,6 @@ export class AppService extends WorkerEntrypoint<AppEnv> {
     }
   }
 }
-
 
 // ==================== HTTP Interface ====================
 
@@ -128,7 +95,6 @@ app.all('*', async c => {
     )
   }
 })
-
 
 // ==================== Worker Export ====================
 

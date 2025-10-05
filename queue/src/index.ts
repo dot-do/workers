@@ -123,7 +123,6 @@ case 'custom-job':
 
 import { WorkerEntrypoint } from 'cloudflare:workers'
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
 
 // ============================================================================
 // Types
@@ -696,9 +695,9 @@ export async function queue(batch: MessageBatch<any>, env: Env): Promise<void> {
 // HTTP API (Optional)
 // ============================================================================
 
-const app = new Hono<{ Bindings: Env }>()
+import { protocolRouter } from '@dot-do/protocol-router'
 
-app.use('/*', cors())
+const app = new Hono<{ Bindings: Env }>()
 
 /**
  * POST /jobs - Enqueue a new job
@@ -727,9 +726,9 @@ app.post('/jobs', async (c) => {
 })
 
 /**
- * GET /jobs/:id - Get job status
+ * GET /api/jobs/:id - Get job status
  */
-app.get('/jobs/:id', async (c) => {
+app.get('/api/jobs/:id', async (c) => {
   try {
     const service = new QueueService(c.env.ctx, c.env)
     const jobId = c.req.param('id')
@@ -753,9 +752,9 @@ app.get('/jobs/:id', async (c) => {
 })
 
 /**
- * GET /jobs - List jobs
+ * GET /api/jobs - List jobs
  */
-app.get('/jobs', async (c) => {
+app.get('/api/jobs', async (c) => {
   try {
     const service = new QueueService(c.env.ctx, c.env)
 
@@ -788,9 +787,9 @@ app.get('/jobs', async (c) => {
 })
 
 /**
- * POST /jobs/:id/retry - Retry a failed job
+ * POST /api/jobs/:id/retry - Retry a failed job
  */
-app.post('/jobs/:id/retry', async (c) => {
+app.post('/api/jobs/:id/retry', async (c) => {
   try {
     const service = new QueueService(c.env.ctx, c.env)
     const jobId = c.req.param('id')
@@ -823,9 +822,9 @@ app.post('/jobs/:id/retry', async (c) => {
 })
 
 /**
- * DELETE /jobs/:id - Cancel a job
+ * DELETE /api/jobs/:id - Cancel a job
  */
-app.delete('/jobs/:id', async (c) => {
+app.delete('/api/jobs/:id', async (c) => {
   try {
     const service = new QueueService(c.env.ctx, c.env)
     const jobId = c.req.param('id')
@@ -858,9 +857,9 @@ app.delete('/jobs/:id', async (c) => {
 })
 
 /**
- * GET /stats - Get queue statistics
+ * GET /api/stats - Get queue statistics
  */
-app.get('/stats', async (c) => {
+app.get('/api/stats', async (c) => {
   try {
     const service = new QueueService(c.env.ctx, c.env)
     const stats = await service.getStats()
@@ -880,18 +879,16 @@ app.get('/stats', async (c) => {
   }
 })
 
-/**
- * GET /health - Health check
- */
-app.get('/health', (c) => {
-  return c.json({
-    status: 'ok',
-    service: 'queue',
-    timestamp: new Date().toISOString(),
-  })
+const router = protocolRouter({
+  api: app,
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    headers: ['Content-Type', 'Authorization'],
+  },
 })
 
 export default {
-  fetch: app.fetch,
+  fetch: router.fetch,
   queue,
 }

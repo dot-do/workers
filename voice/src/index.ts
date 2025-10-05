@@ -1,27 +1,3 @@
-const voiceService = env.VOICE_SERVICE
-
-// Generate single voiceover
-const voice = await voiceService.generateVoice({
-  text: 'Hello world',
-  provider: 'openai',
-  voice: 'alloy',
-})
-
-// Generate batch
-const batch = await voiceService.generateBatch({
-  voices: [
-    { text: '...', provider: 'openai', voice: 'nova' },
-    { text: '...', provider: 'elevenlabs', voice: 'rachel' }
-  ]
-})
-
-// Generate test batch
-const test = await voiceService.generateTestBatch()
-
-// Get voice by ID
-const voice = await voiceService.getVoice('01HXYZ...')
-
-
 /**
  * Voice AI Generation Service
  *
@@ -31,6 +7,7 @@ const voice = await voiceService.getVoice('01HXYZ...')
 import { Hono } from 'hono'
 import { WorkerEntrypoint } from 'cloudflare:workers'
 import { ulid } from 'ulid'
+import { z } from 'zod'
 
 // ============================================================================
 // Types
@@ -38,16 +15,10 @@ import { ulid } from 'ulid'
 
 export type VoiceProvider = 'openai' | 'elevenlabs' | 'google'
 export type AudioFormat = 'mp3' | 'wav' | 'opus' | 'aac' | 'flac'
-
-// OpenAI voices
 export type OpenAIVoice = 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'
 export type OpenAIModel = 'tts-1' | 'tts-1-hd' | 'gpt-4o-mini-tts'
-
-// ElevenLabs voices (examples - actual list is much larger)
 export type ElevenLabsVoice = 'rachel' | 'clyde' | 'domi' | 'dave' | 'fin' | 'sarah' | 'antoni' | 'thomas' | 'charlie' | 'emily'
 export type ElevenLabsModel = 'eleven_multilingual_v2' | 'eleven_turbo_v2' | 'eleven_flash_v2'
-
-// Google voices (examples)
 export type GoogleVoice = 'en-US-Neural2-A' | 'en-US-Neural2-C' | 'en-US-Neural2-D' | 'en-US-Neural2-E' | 'en-US-Neural2-F' | 'en-US-Studio-O' | 'en-US-Chirp-3-HD'
 
 export interface Env {
@@ -66,12 +37,12 @@ export interface VoiceGenerationRequest {
   voice?: string
   model?: string
   format?: AudioFormat
-  speed?: number // 0.25 to 4.0
-  pitch?: number // -20 to 20 (semitones)
-  emotion?: string // for steerable TTS
-  style?: string // professional, conversational, dramatic, etc.
+  speed?: number
+  pitch?: number
+  emotion?: string
+  style?: string
   language?: string
-  ssml?: boolean // use SSML tags
+  ssml?: boolean
   metadata?: Record<string, any>
 }
 
@@ -83,7 +54,7 @@ export interface VoiceGenerationResponse {
   voice: string
   audioUrl?: string
   r2Key?: string
-  duration?: number // seconds
+  duration?: number
   error?: string
   createdAt: string
   completedAt?: string
@@ -144,8 +115,6 @@ export interface VoicePromptTemplate {
 // ============================================================================
 // Validation Schemas
 // ============================================================================
-
-import { z } from 'zod'
 
 export const providerSchema = z.enum(['openai', 'elevenlabs', 'google']).default('openai')
 export const formatSchema = z.enum(['mp3', 'wav', 'opus', 'aac', 'flac']).default('mp3')

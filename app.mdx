@@ -569,9 +569,9 @@ export interface ProxyError {
 }
 ```
 
-### RPC Service
+### Implementation
 
-```ts
+```typescript
 /**
  * App Service - Admin CMS Worker
  *
@@ -614,11 +614,7 @@ export class AppService extends WorkerEntrypoint<AppEnv> {
     }
   }
 }
-```
 
-### HTTP Interface
-
-```ts
 // ==================== HTTP Interface ====================
 
 type HonoEnv = {
@@ -673,11 +669,7 @@ app.all('*', async c => {
     )
   }
 })
-```
 
-### Worker Export
-
-```ts
 // ==================== Worker Export ====================
 
 export default {

@@ -505,17 +505,40 @@ wrangler r2 object get admin-media test.txt
 
 ### Type Definitions
 
+```ts
+/**
+ * Type definitions for App Service
+ */
 
+export interface AppEnv {
+  // Service bindings
+  DB: any // Database service
+  AUTH: any // Auth service
 
-### RPC Service
+  // D1 database (for Payload CMS)
+  D1: D1Database
 
+  // R2 bucket (for media storage)
+  MEDIA: R2Bucket
 
+  // Environment variables
+  PAYLOAD_SECRET: string
+  PAYLOAD_URL?: string // Optional: custom Payload Pages URL
+}
 
-### HTTP Interface
+export interface HealthResponse {
+  status: string
+  timestamp: string
+}
 
+export interface ProxyError {
+  error: string
+  message: string
+  service: string
+}
+```
 
-
-### Worker Export
+### Implementation
 
 
 

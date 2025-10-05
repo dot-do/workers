@@ -93,7 +93,7 @@ Code blocks are parsed if they have one of these language tags:
 
 ## Implementation
 
-(javascript|js|jsx|typescript|ts|tsx)\n([\s\S]*?)```/g
+(javascript|js|jsx|typescript|ts|tsx)\\n([\\s\\S]*?)```', 'g')
   const blocks: ASTResult['jsCodeBlocks'] = []
 
   let match

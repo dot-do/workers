@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "blog-stream",
+	"name": "blog",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-01-08",
 	"account_id": "b6641681fe423910342b9ffa1364c76d",

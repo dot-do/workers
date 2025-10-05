@@ -108,11 +108,14 @@ function generateWranglerConfig(frontmatter: WorkerFrontmatter): string {
   if (frontmatter.account_id) config.account_id = frontmatter.account_id
   if (frontmatter.observability) config.observability = frontmatter.observability
   if (frontmatter.ai) config.ai = frontmatter.ai
+  if (frontmatter.assets) config.assets = frontmatter.assets
   if (frontmatter.build) config.build = frontmatter.build
+  if (frontmatter.compatibility_flags) config.compatibility_flags = frontmatter.compatibility_flags
   if (frontmatter.node_compat !== undefined) config.node_compat = frontmatter.node_compat
   if (frontmatter.workers_dev !== undefined) config.workers_dev = frontmatter.workers_dev
   if (frontmatter.services) config.services = frontmatter.services
   if (frontmatter.vars) config.vars = frontmatter.vars
+  if (frontmatter.env) config.env = frontmatter.env
   if (frontmatter.routes) config.routes = frontmatter.routes
   if (frontmatter.tail_consumers) config.tail_consumers = frontmatter.tail_consumers
   if (frontmatter.kv_namespaces) config.kv_namespaces = frontmatter.kv_namespaces

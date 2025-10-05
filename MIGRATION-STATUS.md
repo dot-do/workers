@@ -30,9 +30,9 @@ Workers that have ANY of these characteristics:
 
 **Goal**: Validate mdxe/wrangler integration with 5-7 simple workers
 
-**Status**: 4/7 complete (57%)
+**Status**: 5/6 complete (83%)
 
-### ✅ Migrated to .mdx (4 workers)
+### ✅ Migrated to .mdx (5 workers)
 
 1. **markdown.mdx** ✅ - URL-to-markdown converter using Workers AI
    - Original: `workers/markdown/worker.ts` (~36 LOC)
@@ -60,6 +60,14 @@ Workers that have ANY of these characteristics:
    - Build: ✅ Success
    - Dependencies: hono, @hono/mdx, react, react-dom
    - Features: Streaming SSR, custom React components, frontmatter
+   - Deploy: ⏳ Pending test
+
+5. **routes.mdx** ✅ - Domain inventory served via Workers Assets
+   - Original: `workers/routes/src/index.ts` (~196 LOC)
+   - Migrated: `workers/routes.mdx` (~600 LOC with comprehensive docs)
+   - Build: ✅ Success
+   - Dependencies: None (only Workers Assets binding)
+   - Features: Workers Assets, CORS, API refresh endpoint, statistics
    - Deploy: ⏳ Pending test
 
 ### 🔧 Build Script Bug Fixes
@@ -99,11 +107,20 @@ if (frontmatter.pipelines) config.pipelines = frontmatter.pipelines
 if (frontmatter.rules) config.rules = frontmatter.rules
 ```
 
-**Result**: All major wrangler config fields now correctly extracted from frontmatter
+**Issue 5**: Missing support for Workers Assets, compatibility_flags, env
 
-### ⏳ Pending Migration (2 workers)
+**Fix**: Added support for Workers Assets and environment config (lines 111, 113, 118)
 
-5. **routes.mdx** - Route generation/analysis (⚠️ Complex - Workers Assets, requires special assets binding)
+```typescript
+if (frontmatter.assets) config.assets = frontmatter.assets
+if (frontmatter.compatibility_flags) config.compatibility_flags = frontmatter.compatibility_flags
+if (frontmatter.env) config.env = frontmatter.env
+```
+
+**Result**: Build script now supports all major wrangler config fields including Workers Assets
+
+### ⏳ Pending Migration (1 worker)
+
 6. **generate.mdx** - Code generation utilities (⚠️ Complex - AI streaming, Hono, pipelines, rules)
 
 Note: "docs" is not a worker directory - it contains documentation files only
@@ -277,7 +294,8 @@ curl https://markdown.fetch.do/example.com
    - ✅ Simple workers (< 50 LOC) migrate easily: markdown
    - ✅ Medium workers (100-250 LOC) migrate well: ast, utils
    - ✅ Complex workers (600+ LOC, Hono + React) migrate successfully: mdx
-   - ⚠️ Workers with Workers Assets may need assets binding support
+   - ✅ Workers with Workers Assets migrate successfully: routes
+   - ✅ Workers Assets, compatibility_flags, env now fully supported
    - ⚠️ Workers with pipelines/rules already supported in build script
 
 5. **Migration Speed**:
@@ -286,6 +304,12 @@ curl https://markdown.fetch.do/example.com
    - ⏱️ ~30-45 minutes per complex worker (extensive documentation)
    - ⏱️ Build + verify takes < 30 seconds per worker
    - 💡 Can migrate 2-4 workers per hour depending on complexity
+
+6. **Code Block Syntax**:
+   - ✅ Use `typescript` for main implementation code blocks
+   - ✅ Use `ts`, `javascript`, or `js` for example/documentation code blocks
+   - ⚠️ Build script extracts ALL `typescript` code blocks and concatenates them
+   - 💡 This prevents example code from being included in worker implementation
 
 ## Next Steps
 

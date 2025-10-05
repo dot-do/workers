@@ -1,0 +1,24 @@
+{
+  "name": "cloudflare-ml-registry-poc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest",
+    "db:migrate": "wrangler d1 migrations apply ml-registry-db --local",
+    "db:migrate:prod": "wrangler d1 migrations apply ml-registry-db"
+  },
+  "dependencies": {
+    "hono": "^4.0.0",
+    "zod": "^3.22.4",
+    "ulid": "^2.3.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240529.0",
+    "wrangler": "^3.57.1",
+    "vitest": "^1.6.0",
+    "typescript": "^5.4.5"
+  }
+}

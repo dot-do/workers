@@ -1,0 +1,51 @@
+{
+  "name": "models",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-11-01",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+
+  "observability": {
+    "enabled": true
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "models-db",
+      "database_id": "4f06758c-a582-4967-a795-0cae4f5b80a6"
+    }
+  ],
+
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "a6ccdfa3512d4ca2ad83c23574866b8a"
+    }
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "MODEL_ARTIFACTS",
+      "bucket_name": "model-artifacts"
+    }
+  ],
+
+  "ai": {
+    "binding": "AI"
+  },
+
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS",
+      "dataset": "model_metrics"
+    }
+  ],
+
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+}

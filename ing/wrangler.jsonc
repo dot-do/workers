@@ -1,0 +1,36 @@
+{
+  "name": "ing",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Service bindings
+  "services": [
+    { "binding": "DB_SERVICE", "service": "db" },
+    { "binding": "AUTH_SERVICE", "service": "auth" }
+  ],
+
+  // Routes
+  "routes": [
+    { "pattern": "*.ing.as/*", "zone_name": "ing.as" },
+    { "pattern": "ing.as/*", "zone_name": "ing.as" }
+  ],
+
+  // Queue consumer
+  "queues": {
+    "consumers": [
+      {
+        "queue": "semantic-triples",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "semantic-triples-dlq"
+      }
+    ]
+  },
+
+  // Environment variables
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+}

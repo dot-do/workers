@@ -1,0 +1,33 @@
+{
+  "name": "ing",
+  "version": "1.0.0",
+  "description": "Semantic triple network worker for .do ecosystem",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "semantic",
+    "triple",
+    "rdf",
+    "graph",
+    "sparql",
+    "cloudflare-workers"
+  ],
+  "author": "dot-do",
+  "license": "MIT",
+  "dependencies": {
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240512.0",
+    "typescript": "^5.5.2",
+    "vitest": "^2.0.0",
+    "wrangler": "^3.60.0"
+  }
+}

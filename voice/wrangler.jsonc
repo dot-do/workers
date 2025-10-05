@@ -19,7 +19,7 @@
 	],
 	"routes": [
 		{
-			"pattern": "voice.services.do/*",
+			"pattern": "voice.services.do",
 			"custom_domain": true
 		}
 	],

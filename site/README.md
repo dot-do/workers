@@ -301,7 +301,17 @@ curl -X POST https://site.apis.do/api/templates/landing-page/deploy \
 
 ### shadcn/ui Components
 
+```ts
+import components from "https://mdxui.org/shadcn/LandingPage"
 
+const MDXContent = () => {
+  return (
+    <MDXProvider components={components}>
+      <YourMDXContent />
+    </MDXProvider>
+  )
+}
+```
 
 ### Custom Components
 
@@ -380,7 +390,30 @@ pnpm build
 
 ## RPC Interface
 
+```ts
+export class SiteService extends WorkerEntrypoint<Env> {
+  // Create new site
+  async createSite(config: SiteConfig): Promise<Site>
 
+  // Get site by domain
+  async getSite(domain: string): Promise<Site | null>
+
+  // Update site
+  async updateSite(id: string, updates: Partial<SiteConfig>): Promise<Site>
+
+  // Delete site
+  async deleteSite(id: string): Promise<void>
+
+  // Deploy template
+  async deployTemplate(templateId: string, domain: string, config: any): Promise<Site>
+
+  // Get page content
+  async getPage(domain: string, path: string): Promise<string>
+
+  // Upload asset
+  async uploadAsset(domain: string, path: string, content: ArrayBuffer): Promise<string>
+}
+```
 
 ## Types
 

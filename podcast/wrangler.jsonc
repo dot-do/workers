@@ -23,7 +23,7 @@
 	],
 	"routes": [
 		{
-			"pattern": "podcast.services.do/*",
+			"pattern": "podcast.services.do",
 			"custom_domain": true
 		}
 	],

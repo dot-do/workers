@@ -1,38 +1,3 @@
-import components from "https://mdxui.org/shadcn/LandingPage"
-
-const MDXContent = () => {
-  return (
-    <MDXProvider components={components}>
-      <YourMDXContent />
-    </MDXProvider>
-  )
-}
-
-
-export class SiteService extends WorkerEntrypoint<Env> {
-  // Create new site
-  async createSite(config: SiteConfig): Promise<Site>
-
-  // Get site by domain
-  async getSite(domain: string): Promise<Site | null>
-
-  // Update site
-  async updateSite(id: string, updates: Partial<SiteConfig>): Promise<Site>
-
-  // Delete site
-  async deleteSite(id: string): Promise<void>
-
-  // Deploy template
-  async deployTemplate(templateId: string, domain: string, config: any): Promise<Site>
-
-  // Get page content
-  async getPage(domain: string, path: string): Promise<string>
-
-  // Upload asset
-  async uploadAsset(domain: string, path: string, content: ArrayBuffer): Promise<string>
-}
-
-
 /**
  * Site Worker - MDX Website Hosting
  *
@@ -44,15 +9,141 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { cache } from 'hono/cache'
 import { ulid } from 'ulid'
-import { siteConfigSchema, templateSchema } from './schema'
-import type {
-  Env,
-  SiteConfig,
-  Site,
-  Template,
-  SiteRoute,
-  Component,
-} from './types'
+import { z } from 'zod'
+
+// Type Definitions
+interface Env {
+  SITES: R2Bucket
+  SITE_CACHE: KVNamespace
+  DB: any
+  STORAGE: any
+  ENVIRONMENT: string
+  CACHE_TTL: string
+  pipeline: any
+}
+
+interface SiteConfig {
+  id: string
+  domain: string
+  title: string
+  description?: string
+  template: string
+  theme?: {
+    primaryColor?: string
+    font?: string
+    customCSS?: string
+  }
+  routes: SiteRoute[]
+  assets?: {
+    images?: string
+    fonts?: string
+    scripts?: string
+  }
+  seo?: {
+    keywords?: string[]
+    ogImage?: string
+    twitterCard?: string
+  }
+}
+
+interface SiteRoute {
+  path: string
+  file: string
+  layout?: string
+}
+
+interface Site {
+  id: string
+  config: SiteConfig
+  createdAt: string
+  updatedAt: string
+  status: 'draft' | 'published' | 'archived'
+  analytics?: {
+    views: number
+    visitors: number
+    lastViewed?: string
+  }
+}
+
+interface Template {
+  id: string
+  name: string
+  description: string
+  preview?: string
+  files: {
+    [path: string]: string
+  }
+  config: TemplateConfig
+}
+
+interface TemplateConfig {
+  customizable: string[]
+  defaults: Record<string, any>
+  requiredFields: string[]
+}
+
+interface Component {
+  name: string
+  source: string
+  props: ComponentProp[]
+  examples?: string[]
+}
+
+interface ComponentProp {
+  name: string
+  type: string
+  required: boolean
+  default?: any
+  description?: string
+}
+
+// Validation Schemas
+const siteThemeSchema = z.object({
+  primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
+  font: z.string().optional(),
+  customCSS: z.string().optional(),
+})
+
+const siteRouteSchema = z.object({
+  path: z.string().startsWith('/'),
+  file: z.string().endsWith('.mdx'),
+  layout: z.string().optional(),
+})
+
+const siteConfigSchema = z.object({
+  id: z.string(),
+  domain: z.string(),
+  title: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
+  template: z.string(),
+  theme: siteThemeSchema.optional(),
+  routes: z.array(siteRouteSchema),
+  assets: z.object({
+    images: z.string().optional(),
+    fonts: z.string().optional(),
+    scripts: z.string().optional(),
+  }).optional(),
+  seo: z.object({
+    keywords: z.array(z.string()).optional(),
+    ogImage: z.string().url().optional(),
+    twitterCard: z.string().optional(),
+  }).optional(),
+})
+
+const templateConfigSchema = z.object({
+  customizable: z.array(z.string()),
+  defaults: z.record(z.any()),
+  requiredFields: z.array(z.string()),
+})
+
+const templateSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1).max(100),
+  description: z.string().max(500),
+  preview: z.string().url().optional(),
+  files: z.record(z.string()),
+  config: templateConfigSchema,
+})
 
 // Built-in templates
 const TEMPLATES: Record<string, Template> = {

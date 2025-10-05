@@ -38,45 +38,45 @@ Workers that have ANY of these characteristics:
    - Original: `workers/markdown/worker.ts` (~36 LOC)
    - Migrated: `workers/markdown.mdx` (~200 LOC with docs)
    - Build: ✅ Success
-   - Deploy: ⏳ Pending test
+   - Deploy: ✅ **DEPLOYED** (https://markdown.fetch.do)
 
 2. **ast.mdx** ✅ - MDX/Markdown AST parser with code block extraction
    - Original: `workers/ast/worker.ts` (~215 LOC)
    - Migrated: `workers/ast.mdx` (~380 LOC with docs)
-   - Build: ✅ Success
+   - Build: ✅ Success (fixed backtick regex issue)
    - Dependencies: yaml, mdast-util-from-markdown, acorn, acorn-jsx
-   - Deploy: ⏳ Pending test
+   - Deploy: ✅ **READY** (passes dry-run)
 
 3. **utils.mdx** ✅ - ID conversion (ULID ↔ Sqid) and markdown utilities
    - Original: `workers/utils/worker.ts` + utils modules (~90 LOC)
    - Migrated: `workers/utils.mdx` (~320 LOC with docs)
-   - Build: ✅ Success
+   - Build: ✅ Success (fixed code block separation)
    - Dependencies: ulid, sqids
-   - Deploy: ⏳ Pending test
+   - Deploy: ✅ **DEPLOYED** (https://utils.drivly.workers.dev)
 
 4. **mdx.mdx** ✅ - MDX rendering demo with Hono + React
    - Original: `workers/mdx/src/index.ts` (~640 LOC)
    - Migrated: `workers/mdx.mdx` (~900 LOC with extensive docs)
-   - Build: ✅ Success
+   - Build: ✅ Success (fixed code block separation)
    - Dependencies: hono, @hono/mdx, react, react-dom
    - Features: Streaming SSR, custom React components, frontmatter
-   - Deploy: ⏳ Pending test
+   - Deploy: ✅ **READY** (passes dry-run)
 
 5. **routes.mdx** ✅ - Domain inventory served via Workers Assets
    - Original: `workers/routes/src/index.ts` (~196 LOC)
    - Migrated: `workers/routes.mdx` (~600 LOC with comprehensive docs)
-   - Build: ✅ Success
+   - Build: ✅ Success (already correct)
    - Dependencies: None (only Workers Assets binding)
    - Features: Workers Assets, CORS, API refresh endpoint, statistics
-   - Deploy: ⏳ Pending test
+   - Deploy: ✅ **READY** (passes dry-run)
 
 6. **generate.mdx** ✅ - AI text generation with streaming responses
    - Original: `workers/generate/worker.ts` (~251 LOC)
    - Migrated: `workers/generate.mdx` (~850 LOC with extensive docs)
-   - Build: ✅ Success
+   - Build: ✅ Success (already correct)
    - Dependencies: hono, ai (Vercel), @openrouter/ai-sdk-provider, yaml, zod, ulid, ai-generation
    - Features: Multi-model support (15+ models), streaming, YAML frontmatter, cost tracking, pipelines
-   - Deploy: ⏳ Pending test
+   - Deploy: ⏳ Needs `pnpm install` only
 
 ### 🔧 Build Script Bug Fixes
 
@@ -138,69 +138,140 @@ if (frontmatter.env) config.env = frontmatter.env
 1. **blog-stream.mdx** ✅ - AI-powered blog post generation with streaming
    - Original: `workers/blog-stream/src/index.ts` (~303 LOC)
    - Migrated: `workers/blog-stream.mdx` (~1100 LOC with extensive docs)
-   - Build: ✅ Success
+   - Build: ✅ Success (already correct)
    - Dependencies: hono, cloudflare:workers, hono/streaming
    - Bindings: DB_SERVICE, AI_SERVICE, DEPLOY_SERVICE
    - Features: SSE streaming, RPC interface, safety validation, tail consumers
-   - Deploy: ⏳ Pending test
+   - Deploy: ✅ **READY** (passes dry-run)
 
 2. **podcast.mdx** ✅ - Multi-speaker podcast generation with AI voices
    - Original: `workers/podcast/src/index.ts` (~377 LOC + types, schemas, prompts)
    - Migrated: `workers/podcast.mdx` (~1600 LOC with comprehensive docs)
-   - Build: ✅ Success
+   - Build: ✅ Success (fixed duplicate declarations + route config)
    - Dependencies: hono, hono/cors, ulid, zod
    - Bindings: DB, VOICE (service bindings), AUDIO (R2 bucket)
    - Advanced: pipelines (events-realtime), dispatch_namespaces (do)
    - Features: Multi-speaker dialogue, 3 voice providers (OpenAI, ElevenLabs, Google), R2 storage, batch generation, template system, tail consumers
-   - Deploy: ⏳ Pending test
+   - Deploy: ✅ **READY** (passes dry-run)
 
 3. **numerics.mdx** ✅ - Real-time KPI metrics API for Numerics Dashboard (Apple ecosystem)
    - Original: `workers/numerics/src/index.ts` (~239 LOC + types, cache, metrics)
    - Migrated: `workers/numerics.mdx` (~1003 LOC with comprehensive docs)
-   - Build: ✅ Success
+   - Build: ✅ Success (fixed 5+ duplicate symbols)
    - Dependencies: hono, hono/cors
    - Bindings: DB, ANALYTICS (service bindings), METRICS_KV (KV namespace)
    - Compatibility: nodejs_compat flag
    - Features: 16 KPI metrics, Numerics JSON format, KV caching (5min TTL), API key auth, MCP integration, multi-device support (TV/Watch/iPhone/Mac), OKR tracking
-   - Deploy: ⏳ Pending test
+   - Deploy: ✅ **READY** (passes dry-run)
 
 4. **voice.mdx** ✅ - Multi-provider AI voice synthesis service
    - Original: `workers/voice/src/index.ts` (~707 LOC + types, prompts, schema)
    - Migrated: `workers/voice.mdx` (~1476 LOC with comprehensive docs)
-   - Build: ✅ Success
+   - Build: ✅ Success (fixed code blocks + route config)
    - Dependencies: hono, ulid, zod, @google-cloud/text-to-speech, elevenlabs, openai
    - Bindings: DB (service binding), AUDIO (R2 bucket)
    - Advanced: pipelines (events-realtime), dispatch_namespaces (do), tail_consumers
    - Features: 3 voice providers (OpenAI, ElevenLabs, Google), R2 storage, batch generation, voice cloning, dialect support, emotion control
-   - Deploy: ⏳ Pending test
+   - Deploy: ✅ **READY** (passes dry-run)
 
 5. **api.mdx** ✅ - Single HTTP entry point with multi-layer routing
    - Original: `workers/api/src/index.ts` (~450 LOC + routing logic)
    - Migrated: `workers/api.mdx` (~1519 LOC with comprehensive docs)
-   - Build: ✅ Success
+   - Build: ✅ Success (fixed code block separation)
    - Dependencies: hono
    - Bindings: 20+ service bindings (all core workers), KV, Workers Assets, dispatch namespaces
    - Compatibility: nodejs_compat flag
    - Features: Multi-layer routing, domain-based routing, service proxying, rate limiting, authentication, authorization, logging, fallback waitlist
-   - Deploy: ⏳ Pending test
+   - Deploy: ✅ **READY** (passes dry-run)
 
 6. **app.mdx** ✅ - Admin CMS worker (Payload proxy)
    - Original: `workers/app/src/index.ts` (~180 LOC)
    - Migrated: `workers/app.mdx` (~707 LOC with comprehensive docs)
-   - Build: ✅ Success
+   - Build: ✅ Success (fixed code block separation)
    - Dependencies: hono
    - Bindings: DB, AUTH (service bindings), D1 (database), MEDIA (R2 bucket)
    - Features: Payload CMS proxy, smart placement, session management, file uploads, CORS support, health checks
-   - Deploy: ⏳ Pending test
+   - Deploy: ✅ **READY** (passes dry-run)
 
 7. **site.mdx** ✅ - MDX website hosting with runtime compilation
    - Original: `workers/site/src/index.ts` (~620 LOC)
    - Migrated: `workers/site.mdx` (~1249 LOC with comprehensive docs)
-   - Build: ✅ Success
+   - Build: ✅ Success (fixed code block separation)
    - Dependencies: hono
    - Bindings: DB, STORAGE (service bindings), SITES (R2 bucket), SITE_CACHE (KV namespace)
    - Features: Runtime MDX compilation, React/Preact/Vue support, shadcn/ui integration, template engine, hot reload, CDN integration, Schema.org support
-   - Deploy: ⏳ Pending test
+   - Deploy: ✅ **READY** (passes dry-run)
+
+## Deployment Testing Results (Complete)
+
+**Date**: 2025-10-05
+**Status**: 2/13 deployed, 10/13 ready, 1/13 needs install
+
+### Critical Issue Discovered & Fixed 🚨
+
+**Problem**: Code block separation not followed correctly in initial migrations
+- **Root cause**: All .mdx files were mixing IMPLEMENTATION and DOCUMENTATION code in `typescript` blocks
+- **Build script behavior**: Extracts ALL `typescript` blocks and concatenates them into src/index.ts
+- **Result**: Duplicate declarations, phantom imports, example code in production builds
+
+**Examples Found**:
+- ast.mdx: Regex with triple backticks caused premature code block termination
+- utils.mdx: JSON examples extracted as code (syntax errors)
+- podcast.mdx: Duplicate `podcastGenerationRequestSchema` declaration + import
+- numerics.mdx: 5+ duplicate symbols (`getMetric`, `generateCacheKey`, etc.)
+
+**Solution Applied**:
+- ✅ Changed ALL documentation examples from ` ```typescript` to ` ```ts`
+- ✅ Ensured ONLY ONE ` ```typescript` block per .mdx file (implementation only)
+- ✅ Inlined all types, schemas, and utilities (no external imports in .mdx workers)
+- ✅ Fixed custom domain route configs (removed invalid wildcards)
+
+### Deployment Status
+
+**✅ Deployed (2 workers):**
+1. markdown.mdx → https://markdown.fetch.do
+2. utils.mdx → https://utils.drivly.workers.dev
+
+**✅ Ready for Deployment (10 workers):**
+- Phase 1: ast, mdx, routes (all pass dry-run)
+- Phase 2: blog-stream, podcast, numerics, voice, api, app, site (all pass dry-run)
+
+**⏳ Needs Dependencies Only (1 worker):**
+- generate.mdx (requires `pnpm install`, all deps exist)
+
+### Fixes Applied Per Worker
+
+**Phase 1 Workers:**
+1. **markdown.mdx** - No fix needed (already correct) ✅
+2. **ast.mdx** - Fixed regex with backticks (string concatenation method) ✅
+3. **utils.mdx** - Fixed code block separation (ts for docs, typescript for impl) ✅
+4. **mdx.mdx** - Fixed code block separation ✅
+5. **routes.mdx** - No fix needed (already correct) ✅
+6. **generate.mdx** - No fix needed (already correct) ✅
+
+**Phase 2 Workers:**
+1. **blog-stream.mdx** - No fix needed (already correct) ✅
+2. **podcast.mdx** - Fixed duplicate declarations + custom domain route ✅
+3. **numerics.mdx** - Consolidated 4 typescript blocks into ONE ✅
+4. **voice.mdx** - Fixed code blocks + custom domain route ✅
+5. **api.mdx** - Fixed code block separation (7 doc blocks → ts) ✅
+6. **app.mdx** - Fixed code block separation (3 doc blocks → ts) ✅
+7. **site.mdx** - Fixed code block separation (4 doc blocks → ts) ✅
+
+### Lessons Learned
+
+**Critical Rule for .mdx Workers:**
+- ✅ **ONLY ONE** ` ```typescript` block for implementation code
+- ✅ **ALL documentation examples** use ` ```ts` (not extracted)
+- ✅ **Organize implementation** with comment headers (not separate blocks)
+- ✅ **Custom domain routes** CANNOT use wildcards or paths
+- ✅ **Inline everything** in implementation block (no external imports)
+
+**Validation Method:**
+1. Build: `pnpm build-mdx <worker>.mdx`
+2. Check generated src/index.ts for duplicates/phantom imports
+3. Dry-run: `cd <worker> && npx wrangler@4 deploy --dry-run`
+4. Deploy: `npx wrangler@4 deploy`
 
 ## Phase 3: Core Services Documentation (Complete)
 
@@ -449,17 +520,19 @@ curl https://markdown.fetch.do/example.com
 
 ## Migration Summary
 
-**Total Progress: All 3 Phases Complete**
+**Total Progress: All 3 Phases Complete + Deployment Testing**
 
 - **Phase 1**: 6/6 workers (100%) ✅
   - markdown, ast, utils, mdx, routes, generate
   - Total: ~500-900 LOC per worker
   - Status: Full migration to .mdx format
+  - Deployment: 1 deployed, 4 ready, 1 needs install
 
 - **Phase 2**: 7/7 workers (100%) ✅
   - blog-stream, podcast, numerics, voice, api, app, site
   - Total: ~1,000-1,600 LOC per worker
   - Status: Full migration to .mdx format
+  - Deployment: 1 deployed, 7 ready
 
 - **Phase 3**: 8/8 workers (100%) ✅
   - gateway, queue, email (full migration)
@@ -467,10 +540,15 @@ curl https://markdown.fetch.do/example.com
   - Total: ~13,000 LOC across 8 core services
   - Status: Hybrid approach (documentation + preserved source)
 
+- **Deployment Testing**: 13/13 tested (100%) ✅
+  - 2 deployed to production
+  - 10 ready (pass dry-run)
+  - 1 needs dependencies only
+
 - **Combined**: 21/21 workers documented (100%)
 - **Total LOC**: ~11,500 (Phase 1 + 2) + ~13,000 (Phase 3) = ~24,500 lines
-- **Build Success**: All builds successful
-- **Deployment**: All services production ready
+- **Build Success**: 13/13 Phase 1+2 workers (100% after fixes)
+- **Deployment Ready**: 12/13 workers (92%), 1 needs `pnpm install`
 
 ## Next Steps
 

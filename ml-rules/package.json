@@ -1,0 +1,25 @@
+{
+  "name": "@dot-do/cloudflare-data-poc-business-rl",
+  "version": "0.1.0",
+  "description": "Business-as-Code Reinforcement Learning Platform with OKR-based reward functions and Vibe Coding AI integration",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "hono": "^4.3.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "@types/node": "^20.11.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.2.0",
+    "wrangler": "^3.98.0"
+  }
+}

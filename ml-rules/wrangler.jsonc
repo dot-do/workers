@@ -1,0 +1,70 @@
+{
+  "name": "ml-rules",
+  "compatibility_date": "2024-11-27",
+  "main": "src/index.ts",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+
+  // Observability
+  "observability": {
+    "enabled": true
+  },
+
+  // AI Bindings
+  "ai": {
+    "binding": "AI"
+  },
+
+  // D1 Database for OKRs, policies, experiments
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ml-rules-db",
+      "database_id": "6c90c3a3-5556-4559-ae9e-12daeb154557"
+    }
+  ],
+
+  // R2 for policy checkpoints and experiment history
+  "r2_buckets": [
+    {
+      "binding": "CHECKPOINTS",
+      "bucket_name": "ml-models"
+    }
+  ],
+
+  // Analytics Engine for metrics collection
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS",
+      "dataset": "ml_rule_evaluations"
+    }
+  ],
+
+  // KV for real-time counters and state
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "8e3ecc3fc714444a9ffffd7ea3064098"
+    }
+  ],
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB_SERVICE",
+      "service": "db"
+    },
+    {
+      "binding": "AUTH_SERVICE",
+      "service": "auth"
+    }
+  ],
+
+  // Environment variables
+  "vars": {
+    "ENVIRONMENT": "production",
+    "MAX_EPISODE_LENGTH": "100",
+    "LEARNING_RATE": "0.001",
+    "DISCOUNT_FACTOR": "0.99",
+    "EXPLORATION_RATE": "0.1"
+  }
+}

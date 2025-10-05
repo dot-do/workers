@@ -552,18 +552,35 @@ curl https://markdown.fetch.do/example.com
 
 ## Production Deployment Status (2025-10-05)
 
-### Deployed Workers (5/21 - 24%)
+### Deployed Workers (8/21 - 38%)
+
+**Phase 1 .mdx Workers (5/6)**
 1. ✅ markdown.mdx → https://markdown.fetch.do
 2. ✅ utils.mdx → https://utils.drivly.workers.dev
 3. ✅ ast.mdx → https://ast.drivly.workers.dev
 4. ✅ mdx.mdx → https://mdx.drivly.workers.dev
 5. ✅ routes.mdx → https://routes.drivly.workers.dev
+6. ⏳ generate.mdx → needs `pnpm install`
 
-### Critical Blocker
-⚠️ **db service has syntax error preventing deployment**
-- Location: `workers/db/src/index.ts:109`
-- Error: `Unexpected "]"` in embedding array
-- Impact: Blocks 15 remaining workers (7 domain + 8 core)
+**Core Services (3/8)**
+1. ✅ db → https://db.drivly.workers.dev
+2. ✅ auth → https://auth.drivly.workers.dev
+3. ✅ schedule → https://schedule.drivly.workers.dev
+4. ⏳ webhooks → needs `pnpm install @dot-do/protocol-router`
+5. ⏳ email → needs source restore + deploy
+6. ⏳ queue → needs source restore + deploy
+7. ⏳ gateway → needs source restore + deploy
+8. ⏳ mcp → needs source restore + deploy
+
+**Domain Workers (0/7)**
+- blog-stream, podcast, numerics, voice, api, app, site → blocked until core services deployed
+
+### Resolution: db Service Fixed ✅
+The issue was wrangler.jsonc pointing to wrong file:
+- ❌ Before: `main: "src/index.ts"` (documentation examples with syntax errors)
+- ✅ After: `main: "worker.ts"` (actual implementation)
+
+Auth + schedule also restored from git (Phase 3 sources were overwritten by .mdx builds)
 
 **See:** `/notes/2025-10-05-deployment-status.md` for complete deployment procedure
 

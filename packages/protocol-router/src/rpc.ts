@@ -5,7 +5,7 @@
  */
 
 import type { Context } from 'hono'
-import type { RpcHandler, JsonRpcRequest, JsonRpcResponse, JsonRpcErrorCode } from './types'
+import type { RpcHandler, JsonRpcRequest, JsonRpcResponse, JsonRpcErrorCode, ProtocolRouterConfig } from './types'
 
 /**
  * Create JSON-RPC error response
@@ -49,7 +49,7 @@ export function validateRpcRequest(data: any): data is JsonRpcRequest {
 /**
  * Handle RPC request
  */
-export async function handleRpcRequest(handler: RpcHandler, c: Context): Promise<Response> {
+export async function handleRpcRequest(handler: RpcHandler, c: Context, config?: ProtocolRouterConfig): Promise<Response> {
   try {
     // Parse request body
     const body = await c.req.json().catch(() => null)
@@ -65,7 +65,7 @@ export async function handleRpcRequest(handler: RpcHandler, c: Context): Promise
           if (!validateRpcRequest(request)) {
             return createRpcError(-32600 as JsonRpcErrorCode, 'Invalid Request', undefined, (request as any).id)
           }
-          return await executeRpcMethod(handler, request, c)
+          return await executeRpcMethod(handler, request, c, config)
         })
       )
       return c.json(responses)
@@ -76,7 +76,7 @@ export async function handleRpcRequest(handler: RpcHandler, c: Context): Promise
       return c.json(createRpcError(-32600 as JsonRpcErrorCode, 'Invalid Request'), 400)
     }
 
-    const response = await executeRpcMethod(handler, body, c)
+    const response = await executeRpcMethod(handler, body, c, config)
     return c.json(response)
   } catch (error: any) {
     console.error('RPC handler error:', error)
@@ -87,8 +87,81 @@ export async function handleRpcRequest(handler: RpcHandler, c: Context): Promise
 /**
  * Execute single RPC method
  */
-async function executeRpcMethod(handler: RpcHandler, request: JsonRpcRequest, c: Context): Promise<JsonRpcResponse> {
+async function executeRpcMethod(handler: RpcHandler, request: JsonRpcRequest, c: Context, config?: ProtocolRouterConfig): Promise<JsonRpcResponse> {
   try {
+    // Check for built-in capabilities method
+    if (config && (request.method === 'capabilities' || request.method === 'system.capabilities')) {
+      const capabilities: any = {
+        protocols: [],
+        timestamp: new Date().toISOString(),
+      }
+
+      if (config.rpc) {
+        capabilities.protocols.push({
+          name: 'rpc',
+          version: '2.0',
+          spec: 'JSON-RPC 2.0',
+          endpoint: '/rpc',
+        })
+      }
+
+      if (config.api) {
+        capabilities.protocols.push({
+          name: 'rest',
+          spec: 'REST API',
+          endpoint: '/api',
+        })
+      }
+
+      if (config.mcp) {
+        capabilities.protocols.push({
+          name: 'mcp',
+          version: '2024-11-05',
+          spec: 'Model Context Protocol',
+          endpoint: '/mcp',
+          tools: config.mcp.tools?.length || 0,
+        })
+      }
+
+      if (config.graphql) {
+        capabilities.protocols.push({
+          name: 'graphql',
+          spec: 'GraphQL',
+          endpoint: '/graphql',
+        })
+      }
+
+      if (config.docs) {
+        capabilities.protocols.push({
+          name: 'docs',
+          spec: 'OpenAPI 3.1',
+          endpoint: '/docs',
+        })
+      }
+
+      if (config.events) {
+        capabilities.protocols.push({
+          name: 'events',
+          spec: 'Analytics Event Capture',
+          endpoint: '/e',
+        })
+      }
+
+      if (config.admin) {
+        capabilities.protocols.push({
+          name: 'admin',
+          spec: 'Admin CLI',
+          endpoint: '/$',
+        })
+      }
+
+      if (config.serviceRoutes) {
+        capabilities.serviceRoutes = Object.keys(config.serviceRoutes)
+      }
+
+      return createRpcSuccess(capabilities, request.id)
+    }
+
     let result: any
 
     // Check if handler is WorkerEntrypoint

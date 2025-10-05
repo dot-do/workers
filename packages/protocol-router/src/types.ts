@@ -81,6 +81,40 @@ export type DocsHandler = {
 }
 
 /**
+ * Analytics Event
+ */
+export interface AnalyticsEvent {
+  name: string
+  properties?: Record<string, any>
+  timestamp?: number
+  userId?: string
+  sessionId?: string
+}
+
+/**
+ * Event Handler
+ */
+export type EventHandler = (event: AnalyticsEvent, context: any) => Promise<void>
+
+/**
+ * Admin CLI Configuration
+ */
+export interface AdminConfig {
+  enabled: boolean
+  requireAuth?: boolean
+  allowedServices?: string[]
+}
+
+/**
+ * Service Routes Configuration
+ * Maps service names to binding names
+ * Example: { db: 'DB_SERVICE', ai: 'AI_SERVICE' }
+ */
+export interface ServiceRoutesConfig {
+  [serviceName: string]: string
+}
+
+/**
  * Protocol Router Configuration
  */
 export interface ProtocolRouterConfig {
@@ -113,6 +147,27 @@ export interface ProtocolRouterConfig {
    * Exposed at `/docs`
    */
   docs?: DocsHandler
+
+  /**
+   * Analytics event capture
+   * Exposed at `/e`
+   */
+  events?: EventHandler | {
+    handler: EventHandler
+    analyticsService?: string
+  }
+
+  /**
+   * Admin CLI
+   * Exposed at `/$/*`
+   */
+  admin?: AdminConfig
+
+  /**
+   * Direct service routing
+   * Exposed at `/service.method` or `/service/method`
+   */
+  serviceRoutes?: ServiceRoutesConfig
 
   /**
    * Custom middleware to run before protocol routing

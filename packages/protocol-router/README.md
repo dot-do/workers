@@ -1,16 +1,18 @@
 # @dot-do/protocol-router
 
-Multi-protocol router for Cloudflare Workers. Expose your service via RPC, REST, MCP, GraphQL, and auto-generated documentation.
+Multi-protocol router for Cloudflare Workers. Expose your service via RPC, REST, MCP, GraphQL, analytics, admin CLI, and direct service routing.
 
 ## Features
 
-- ✅ **JSON-RPC 2.0** - Efficient service-to-service communication
-- ✅ **REST API** - Standard HTTP/JSON endpoints via Hono
+- ✅ **JSON-RPC 2.0** - Efficient service-to-service communication with built-in `capabilities` method
+- ✅ **REST API** - Standard HTTP/JSON endpoints via Hono with `/api/health` and `/api/capabilities`
 - ✅ **MCP (Model Context Protocol)** - AI agent integration
 - ✅ **Auto Documentation** - OpenAPI specs with Scalar UI
+- ✅ **Analytics Events** - `/e` endpoint for event capture (GET pixel + POST bulk)
+- ✅ **Admin CLI** - RESTful admin commands at `/$/*` (e.g., `/$.db.query`)
+- ✅ **Direct Service Routing** - Call services directly via `/service.method` or `/service/method`
 - 🚧 **GraphQL** - Coming soon
 - ✅ **CORS** - Configurable cross-origin support
-- ✅ **Health Checks** - `/health` and `/capabilities` endpoints
 
 ## Installation
 
@@ -88,19 +90,23 @@ export default { fetch: app.fetch }
 
 | Endpoint | Protocol | Description |
 |----------|----------|-------------|
-| `POST /rpc` | JSON-RPC 2.0 | RPC method calls (single or batch) |
-| `GET /api/*` | REST | REST API routes |
-| `POST /api/*` | REST | REST API routes |
+| `POST /rpc` | JSON-RPC 2.0 | RPC method calls (single or batch) with built-in `capabilities` method |
+| `GET/POST /api/*` | REST | REST API routes with `/api/health` and `/api/capabilities` |
 | `POST /mcp` | MCP | Model Context Protocol for AI agents |
 | `POST /graphql` | GraphQL | GraphQL queries (future) |
 | `GET /docs` | HTTP | OpenAPI documentation (Scalar UI) |
+| `GET/POST /e` | Analytics | Event capture (GET = 1x1 pixel, POST = bulk events) |
+| `ALL /$/*` | Admin CLI | RESTful admin commands (e.g., `/$.db.query`) |
+| `ALL /service.*` | Direct | Direct service routing (e.g., `/db.query` or `/db/query`) |
 
-### Meta Endpoints
+### Built-in Endpoints
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /health` | Health check (always returns 200) |
-| `GET /capabilities` | List available protocols and versions |
+| `GET /api/health` | Health check (always returns 200) |
+| `GET /api/capabilities` | List available protocols via REST |
+| `POST /rpc` with method `capabilities` | List available protocols via RPC |
+| `GET /mcp` | MCP server metadata |
 
 ## Usage Examples
 
@@ -152,17 +158,217 @@ curl -X POST https://myservice.do/mcp \
   }'
 ```
 
+### Analytics Events
+
+```bash
+# GET request - 1x1 pixel tracking
+curl "https://myservice.do/e?event=pageview&url=/home&user_id=123"
+
+# POST request - Bulk events
+curl -X POST https://myservice.do/e \
+  -H "Content-Type: application/json" \
+  -d '[
+    {"name":"pageview","properties":{"url":"/home"},"userId":"123"},
+    {"name":"button_click","properties":{"button":"signup"}}
+  ]'
+```
+
+### Admin CLI
+
+```bash
+# Dot notation: /$.service.method
+curl -X POST https://myservice.do/$.db.query \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"sql":"SELECT * FROM users LIMIT 10"}'
+
+# Slash notation: $/service/method
+curl https://myservice.do/$/ai/models/list \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+
+# Nested methods: /$.service.nested.method
+curl https://myservice.do/$.ai.embeddings.generate \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Hello world"}'
+```
+
+### Direct Service Routing
+
+```bash
+# Dot notation: /service.method
+curl -X POST https://myservice.do/db.query \
+  -H "Content-Type: application/json" \
+  -d '{"sql":"SELECT * FROM items"}'
+
+# Slash notation: /service/method
+curl https://myservice.do/ai/models/list
+
+# Nested methods: /service.nested.method
+curl -X POST https://myservice.do/ai.embeddings.generate \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Example text"}'
+```
+
+### RPC Capabilities
+
+```bash
+# Query capabilities via RPC
+curl -X POST https://myservice.do/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"capabilities","id":"1"}'
+
+# Response:
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "protocols": [
+      {"name":"rpc","version":"2.0","spec":"JSON-RPC 2.0","endpoint":"/rpc"},
+      {"name":"rest","spec":"REST API","endpoint":"/api"},
+      {"name":"mcp","version":"2024-11-05","endpoint":"/mcp","tools":3},
+      {"name":"events","spec":"Analytics Event Capture","endpoint":"/e"},
+      {"name":"admin","spec":"Admin CLI","endpoint":"/$"}
+    ],
+    "serviceRoutes": ["db", "ai", "do"],
+    "timestamp": "2025-10-04T20:00:00.000Z"
+  },
+  "id": "1"
+}
+```
+
 ### Documentation
 
 Visit `https://myservice.do/docs` in your browser to see interactive API documentation powered by Scalar.
 
 ## Configuration
 
+### Full Configuration Example
+
+```typescript
+protocolRouter({
+  // RPC handler
+  rpc: new MyService(ctx, env),
+
+  // REST API
+  api: new Hono(),
+
+  // MCP server
+  mcp: {
+    tools: [/* ... */],
+    resources: [/* ... */],
+    prompts: [/* ... */]
+  },
+
+  // Analytics events
+  events: async (event, context) => {
+    console.log('Event:', event.name, event.properties)
+    // Store in database, send to analytics service, etc.
+  },
+
+  // Admin CLI
+  admin: {
+    enabled: true,
+    requireAuth: true,
+    allowedServices: ['db', 'ai'] // Optional: restrict to specific services
+  },
+
+  // Direct service routing
+  serviceRoutes: {
+    db: 'DB_SERVICE',      // Maps /db.* to env.DB_SERVICE
+    ai: 'AI_SERVICE',      // Maps /ai.* to env.AI_SERVICE
+    do: 'DO_SERVICE'       // Maps /do.* to env.DO_SERVICE
+  },
+
+  // Documentation
+  docs: {
+    config: {
+      title: 'My API',
+      version: '1.0.0'
+    },
+    generate: async () => ({ /* OpenAPI spec */ })
+  },
+
+  // CORS
+  cors: {
+    origin: ['https://example.com'],
+    methods: ['GET', 'POST'],
+    headers: ['Content-Type', 'Authorization'],
+    credentials: true
+  },
+
+  // Custom middleware
+  middleware: [
+    async (c, next) => {
+      console.log(`Request: ${c.req.method} ${c.req.path}`)
+      await next()
+    }
+  ]
+})
+```
+
+### Analytics Events
+
+```typescript
+protocolRouter({
+  events: async (event, context) => {
+    // event.name - Event name (e.g., 'pageview', 'button_click')
+    // event.properties - Custom properties
+    // event.timestamp - Event timestamp
+    // event.userId - User ID (from header or query param)
+    // event.sessionId - Session ID (from header or query param)
+
+    // Store in database
+    await context.env.DB_SERVICE.insert('events', event)
+
+    // Or send to external analytics
+    await fetch('https://analytics.example.com/events', {
+      method: 'POST',
+      body: JSON.stringify(event)
+    })
+  }
+})
+```
+
+### Admin CLI
+
+```typescript
+protocolRouter({
+  admin: {
+    enabled: true,
+    requireAuth: true,           // Require Authorization header
+    allowedServices: ['db', 'ai'] // Optional: restrict to specific services
+  },
+  serviceRoutes: {
+    db: 'DB_SERVICE',
+    ai: 'AI_SERVICE'
+  }
+})
+
+// Usage:
+// POST /$.db.query → env.DB_SERVICE.query(params)
+// GET  $/ai/models/list → env.AI_SERVICE.models.list()
+```
+
+### Direct Service Routing
+
+```typescript
+protocolRouter({
+  serviceRoutes: {
+    db: 'DB_SERVICE',   // /db.* → env.DB_SERVICE.*
+    ai: 'AI_SERVICE',   // /ai.* → env.AI_SERVICE.*
+    do: 'DO_SERVICE'    // /do.* → env.DO_SERVICE.*
+  }
+})
+
+// Usage (no authentication required):
+// POST /db.query → env.DB_SERVICE.query(params)
+// GET  /ai/models/list → env.AI_SERVICE.models.list()
+```
+
 ### CORS
 
 ```typescript
 protocolRouter({
-  // ... handlers
   cors: {
     origin: ['https://example.com', 'https://app.example.com'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -176,7 +382,6 @@ protocolRouter({
 
 ```typescript
 protocolRouter({
-  // ... handlers
   middleware: [
     async (c, next) => {
       console.log(`Request: ${c.req.method} ${c.req.path}`)
@@ -277,14 +482,28 @@ Full TypeScript support with exported types:
 
 ```typescript
 import type {
+  // Configuration
   ProtocolRouterConfig,
+  AdminConfig,
+  ServiceRoutesConfig,
+
+  // Handlers
   RpcHandler,
   RestHandler,
   McpHandler,
   McpTool,
   DocsHandler,
+  EventHandler,
+
+  // Analytics
+  AnalyticsEvent,
+
+  // JSON-RPC
   JsonRpcRequest,
   JsonRpcResponse,
+  JsonRpcErrorCode,
+
+  // MCP
   McpRequest,
   McpResponse
 } from '@dot-do/protocol-router'

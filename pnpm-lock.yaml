@@ -2701,12 +2701,18 @@ importers:
       '@ai-sdk/openai':
         specifier: ^2.0.42
         version: 2.0.42(zod@3.25.76)
+      '@cloudflare/sandbox':
+        specifier: ^0.3.2
+        version: 0.3.3
       ai:
         specifier: ^5.0.60
         version: 5.0.60(zod@3.25.76)
       hono:
         specifier: ^4.6.15
         version: 4.9.9
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.8.19
@@ -3516,6 +3522,10 @@ packages:
       '@clickhouse/client-common': 1.12.1
     dev: false
 
+  /@cloudflare/containers@0.0.28:
+    resolution: {integrity: sha512-wzR9UWcGvZ9znd4elkXklilPcHX6srncsjSkx696SZRZyTygNbWsLlHegvc1C+e9gn28HRZU3dLiAzXiC9IY1w==}
+    dev: false
+
   /@cloudflare/kv-asset-handler@0.3.4:
     resolution: {integrity: sha512-YLPHc8yASwjNkmcDMQMY35yiWjoKAKnhUbPRszBRS0YgH+IXtsMp61j+yTcnCE3oO2DgP0U3iejLC8FTtKDC8Q==}
     engines: {node: '>=16.13'}
@@ -3529,6 +3539,12 @@ packages:
     dependencies:
       mime: 3.0.0
     dev: true
+
+  /@cloudflare/sandbox@0.3.3:
+    resolution: {integrity: sha512-0gZOl0L/kU+DdI+txs9z3Lcy0Tc64uwDDjyZNjty+xXSjBA20WYoVBmF8THbs2pna7zJxfpW6nTnuzd6BPNT7Q==}
+    dependencies:
+      '@cloudflare/containers': 0.0.28
+    dev: false
 
   /@cloudflare/unenv-preset@2.0.2(unenv@2.0.0-rc.14)(workerd@1.20250718.0):
     resolution: {integrity: sha512-nyzYnlZjjV5xT3LizahG1Iu6mnrCaxglJ04rZLpDwlDVDZ7v46lNsfxhV3A/xtfgQuSHmLnc6SVI+KwBpc3Lwg==}

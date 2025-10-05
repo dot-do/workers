@@ -1,67 +1,113 @@
 /**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
+ * Workflows Worker - Event-Driven Automation Platform
+ * Zapier/Make.com alternative on Cloudflare infrastructure
  */
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "workflows",
-	"main": "src/index.ts",
-	"compatibility_date": "2025-07-15",
-	"account_id": "b6641681fe423910342b9ffa1364c76d",
-	"observability": {
-		"enabled": true,
-		"head_sampling_rate": 1
-	},
-	"workflows": [
-		{
-			"name": "workflows-hello-world",
-			"binding": "MY_WORKFLOW",
-			"class_name": "MyWorkflow"
-		}
-	],
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "workflows",
+  "main": "index.ts",
+  "compatibility_date": "2025-10-01",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "compatibility_flags": ["nodejs_compat"],
 
-	/**
-	 * Routes - International character domain
-	 */
-	"routes": [
-		{
-			"pattern": "巛.io/*",
-			"zone_name": "巛.io"
-		}
-	],
+  /**
+   * Observability
+   */
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
 
-	/**
-	 * Smart Placement
-	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-	 */
-	"placement": { "mode": "smart" }
+  /**
+   * Routes - Deploy to workflows.do
+   */
+  "routes": [
+    {
+      "pattern": "workflows.do/*",
+      "zone_name": "workflows.do"
+    },
+    {
+      "pattern": "automation.apis.do/*",
+      "zone_name": "apis.do"
+    }
+  ],
 
-	/**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
+  /**
+   * D1 Database - Workflow Definitions
+   */
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "workflows-db",
+      "database_id": "89bb0573-79ac-4b68-a5c7-26f9d0a89251"
+    }
+  ],
 
-	/**
-	 * Environment Variables
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-	 */
-	// "vars": { "MY_VARIABLE": "production_value" },
-	/**
-	 * Note: Use secrets to store sensitive data.
-	 * https://developers.cloudflare.com/workers/configuration/secrets/
-	 */
+  /**
+   * KV Namespaces - Workflow State & Caching
+   */
+  "kv_namespaces": [
+    {
+      "binding": "WORKFLOW_STATE",
+      "id": "5070c4f409aa420986e29764e01cc0bd"
+    },
+    {
+      "binding": "CACHE",
+      "id": "a2866b73415449ee90e363b2f487dcba"
+    }
+  ],
 
-	/**
-	 * Static Assets
-	 * https://developers.cloudflare.com/workers/static-assets/binding/
-	 */
-	// "assets": { "directory": "./public/", "binding": "ASSETS" },
+  /**
+   * Queues - Event Buffering & Batching
+   */
+  "queues": {
+    "producers": [
+      {
+        "binding": "EVENT_QUEUE",
+        "queue": "events"
+      },
+      {
+        "binding": "WORKFLOW_QUEUE",
+        "queue": "workflows"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "events",
+        "max_batch_size": 100,
+        "max_batch_timeout": 30,
+        "max_retries": 3,
+        "dead_letter_queue": "events-dlq"
+      },
+      {
+        "queue": "workflows",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 5,
+        "dead_letter_queue": "workflows-dlq"
+      }
+    ]
+  },
 
-	/**
-	 * Service Bindings (communicate between multiple Workers)
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-	 */
-	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
+  /**
+   * Environment Variables
+   */
+  "vars": {
+    "ENVIRONMENT": "production",
+    "MAX_WORKFLOW_STEPS": "100",
+    "EVENT_RETENTION_DAYS": "90"
+  },
+
+  /**
+   * Smart Placement
+   */
+  "placement": {
+    "mode": "smart"
+  }
+
+  /**
+   * Required secrets (set via: wrangler secret put <NAME>):
+   * - WEBHOOK_SECRET: For secure webhooks
+   * - ENCRYPTION_KEY: For sensitive data
+   */
 }

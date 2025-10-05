@@ -40,5 +40,31 @@
 				"dead_letter_queue": "github-sync-dlq"
 			}
 		]
-	}
+	},
+	"dispatch_namespaces": [
+		{
+			"binding": "PRODUCTION",
+			"namespace": "dotdo-production"
+		},
+		{
+			"binding": "STAGING",
+			"namespace": "dotdo-staging"
+		},
+		{
+			"binding": "DEVELOPMENT",
+			"namespace": "dotdo-development"
+		},
+		{
+			"binding": "PUBLIC",
+			"namespace": "dotdo-public"
+		},
+		{
+			"binding": "INTERNAL",
+			"namespace": "dotdo-internal"
+		},
+		{
+			"binding": "TENANT",
+			"namespace": "dotdo-tenant"
+		}
+	]
 }

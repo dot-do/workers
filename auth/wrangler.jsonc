@@ -35,5 +35,31 @@
 			"binding": "SESSIONS_KV",
 			"id": "482dfcdea486493fbe1d548fa29a21e7"
 		}
+	],
+	"dispatch_namespaces": [
+		{
+			"binding": "PRODUCTION",
+			"namespace": "dotdo-production"
+		},
+		{
+			"binding": "STAGING",
+			"namespace": "dotdo-staging"
+		},
+		{
+			"binding": "DEVELOPMENT",
+			"namespace": "dotdo-development"
+		},
+		{
+			"binding": "PUBLIC",
+			"namespace": "dotdo-public"
+		},
+		{
+			"binding": "INTERNAL",
+			"namespace": "dotdo-internal"
+		},
+		{
+			"binding": "TENANT",
+			"namespace": "dotdo-tenant"
+		}
 	]
 }

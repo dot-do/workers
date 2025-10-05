@@ -541,16 +541,33 @@ curl https://markdown.fetch.do/example.com
   - Status: Hybrid approach (documentation + preserved source)
 
 - **Deployment Testing**: 13/13 tested (100%) ✅
-  - 2 deployed to production
-  - 10 ready (pass dry-run)
-  - 1 needs dependencies only
+  - 5 deployed to production (markdown, utils, ast, mdx, routes)
+  - 7 blocked by core service dependencies
+  - 1 needs dependencies only (generate)
 
 - **Combined**: 21/21 workers documented (100%)
 - **Total LOC**: ~11,500 (Phase 1 + 2) + ~13,000 (Phase 3) = ~24,500 lines
 - **Build Success**: 13/13 Phase 1+2 workers (100% after fixes)
 - **Deployment Ready**: 12/13 workers (92%), 1 needs `pnpm install`
 
-## Next Steps
+## Production Deployment Status (2025-10-05)
+
+### Deployed Workers (5/21 - 24%)
+1. ✅ markdown.mdx → https://markdown.fetch.do
+2. ✅ utils.mdx → https://utils.drivly.workers.dev
+3. ✅ ast.mdx → https://ast.drivly.workers.dev
+4. ✅ mdx.mdx → https://mdx.drivly.workers.dev
+5. ✅ routes.mdx → https://routes.drivly.workers.dev
+
+### Critical Blocker
+⚠️ **db service has syntax error preventing deployment**
+- Location: `workers/db/src/index.ts:109`
+- Error: `Unexpected "]"` in embedding array
+- Impact: Blocks 15 remaining workers (7 domain + 8 core)
+
+**See:** `/notes/2025-10-05-deployment-status.md` for complete deployment procedure
+
+## Migration Progress (Next Steps)
 
 1. ✅ Fix build script AI binding bug
 2. ✅ Fix build script build config bug

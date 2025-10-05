@@ -1,0 +1,367 @@
+name: Deploy to Namespaces (Workers for Platforms)
+
+# Deploy workers to dispatch namespaces via Deploy API
+# Uses authenticated Deploy API instead of direct Cloudflare credentials
+# Supports both tier-based (internal/public/tenant) and environment-based (production/staging/development) namespaces
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'gateway/**'
+      - 'db/**'
+      - 'auth/**'
+      - 'schedule/**'
+      - 'webhooks/**'
+      - 'email/**'
+      - 'mcp/**'
+      - 'queue/**'
+      - 'ing/**'
+      - 'scripts/deploy-all-workers.mdx'
+      - '.github/workflows/deploy-namespace.yml'
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to deploy (or "all")'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - gateway
+          - db
+          - auth
+          - schedule
+          - webhooks
+          - email
+          - mcp
+          - queue
+          - ing
+      tier:
+        description: 'Deployment tier (3-tier architecture)'
+        required: false
+        type: choice
+        options:
+          - internal
+          - public
+          - tenant
+      environment:
+        description: 'Deployment environment (legacy)'
+        required: false
+        type: choice
+        options:
+          - production
+          - staging
+          - development
+
+concurrency:
+  group: deploy-namespace-${{ github.ref }}-${{ inputs.tier || inputs.environment || 'auto' }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20'
+  BUN_VERSION: '1.1.0'
+
+jobs:
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.changes.outputs.services }}
+      deploy-all: ${{ steps.check.outputs.deploy-all }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check deployment mode
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            if [ "${{ inputs.service }}" == "all" ]; then
+              echo "deploy-all=true" >> $GITHUB_OUTPUT
+            else
+              echo "deploy-all=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            # Auto-detect based on changed files
+            echo "deploy-all=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Detect changed services
+        id: changes
+        run: |
+          SERVICES=()
+
+          # Manual deployment of specific service
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.service }}" != "all" ]; then
+            SERVICES=("${{ inputs.service }}")
+          # Manual deployment of all services
+          elif [ "${{ steps.check.outputs.deploy-all }}" == "true" ]; then
+            SERVICES=(gateway db auth schedule webhooks email mcp queue ing)
+          # Auto-detect from git changes
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+
+            for service in gateway db auth schedule webhooks email mcp queue ing; do
+              if echo "$CHANGED_FILES" | grep -q "^${service}/"; then
+                SERVICES+=("$service")
+              fi
+            done
+
+            # Also deploy if deploy-all-workers.mdx changed
+            if echo "$CHANGED_FILES" | grep -q "scripts/deploy-all-workers.mdx"; then
+              SERVICES=(gateway db auth schedule webhooks email mcp queue ing)
+            fi
+          fi
+
+          # Convert array to JSON
+          SERVICES_JSON=$(printf '%s\n' "${SERVICES[@]}" | jq -R . | jq -s .)
+          echo "services=$SERVICES_JSON" >> $GITHUB_OUTPUT
+
+  deploy-via-api:
+    name: Deploy Workers via Deploy API
+    runs-on: ubuntu-latest
+    needs: [detect-changes]
+    if: needs.detect-changes.outputs.deploy-all == 'true' || fromJSON(needs.detect-changes.outputs.services)[0] != null
+    environment:
+      name: ${{ inputs.tier || inputs.environment || 'production' }}
+      url: https://deploy.do/deployments
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Deploy all services
+        if: needs.detect-changes.outputs.deploy-all == 'true'
+        run: |
+          cd scripts
+          bun run-mdx.bun.ts deploy-all-workers.mdx
+        env:
+          DEPLOY_API_KEY: ${{ secrets.DEPLOY_API_KEY }}
+
+      - name: Deploy individual services
+        if: needs.detect-changes.outputs.deploy-all != 'true'
+        run: |
+          SERVICES='${{ needs.detect-changes.outputs.services }}'
+
+          # Deploy each service via Deploy API
+          echo "$SERVICES" | jq -r '.[]' | while read service; do
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "Deploying: $service"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            # Build service
+            cd "$service"
+            bun run build || exit 1
+
+            # Read and encode bundle
+            if [ ! -f "dist/index.js" ]; then
+              echo "❌ Bundle not found: $service/dist/index.js"
+              exit 1
+            fi
+
+            SCRIPT_B64=$(cat dist/index.js | base64)
+
+            # Get git metadata
+            COMMIT=$(git rev-parse HEAD)
+            BRANCH=$(git rev-parse --abbrev-ref HEAD)
+            AUTHOR=$(git config user.email)
+
+            # Determine tier or environment
+            TIER="${{ inputs.tier }}"
+            ENVIRONMENT="${{ inputs.environment }}"
+
+            # Prepare deployment request
+            if [ -n "$TIER" ]; then
+              # Use tier-based deployment
+              PAYLOAD=$(jq -n \
+                --arg service "$service" \
+                --arg tier "$TIER" \
+                --arg script "$SCRIPT_B64" \
+                --arg commit "$COMMIT" \
+                --arg branch "$BRANCH" \
+                --arg author "$AUTHOR" \
+                --arg version "${{ github.run_number }}" \
+                '{
+                  service: $service,
+                  tier: $tier,
+                  script: $script,
+                  metadata: {
+                    commit: $commit,
+                    branch: $branch,
+                    author: $author,
+                    version: $version
+                  }
+                }')
+            else
+              # Use environment-based deployment (legacy)
+              ENVIRONMENT=${ENVIRONMENT:-production}
+              PAYLOAD=$(jq -n \
+                --arg service "$service" \
+                --arg environment "$ENVIRONMENT" \
+                --arg script "$SCRIPT_B64" \
+                --arg commit "$COMMIT" \
+                --arg branch "$BRANCH" \
+                --arg author "$AUTHOR" \
+                --arg version "${{ github.run_number }}" \
+                '{
+                  service: $service,
+                  environment: $environment,
+                  script: $script,
+                  metadata: {
+                    commit: $commit,
+                    branch: $branch,
+                    author: $author,
+                    version: $version
+                  }
+                }')
+            fi
+
+            # Deploy via API
+            RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST https://deploy.do/deploy \
+              -H "Authorization: Bearer ${{ secrets.DEPLOY_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d "$PAYLOAD")
+
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | head -n-1)
+
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+              echo "✅ Deployed $service"
+              echo "$BODY" | jq .
+            else
+              echo "❌ Failed to deploy $service (HTTP $HTTP_CODE)"
+              echo "$BODY"
+              exit 1
+            fi
+
+            cd ..
+          done
+
+      - name: Verify deployments
+        run: |
+          echo "🔍 Verifying deployments..."
+
+          SERVICES='${{ needs.detect-changes.outputs.services }}'
+
+          # Wait for deployments to propagate
+          sleep 10
+
+          # Health check each service
+          echo "$SERVICES" | jq -r '.[]' | while read service; do
+            # Determine URL based on tier/environment
+            TIER="${{ inputs.tier }}"
+            ENVIRONMENT="${{ inputs.environment }}"
+
+            if [ -n "$TIER" ]; then
+              if [ "$TIER" == "internal" ]; then
+                URL="https://${service}.internal.do/health"
+              elif [ "$TIER" == "public" ]; then
+                URL="https://${service}.do/health"
+              else
+                URL="https://${service}.${TIER}.do/health"
+              fi
+            else
+              ENVIRONMENT=${ENVIRONMENT:-production}
+              if [ "$ENVIRONMENT" == "production" ]; then
+                URL="https://${service}.do/health"
+              else
+                URL="https://${service}.${ENVIRONMENT}.do/health"
+              fi
+            fi
+
+            echo "Testing: $URL"
+
+            MAX_RETRIES=5
+            RETRY_COUNT=0
+
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              if curl -f -s "$URL" > /dev/null; then
+                echo "✅ $service is healthy"
+                break
+              fi
+
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "⏳ Retrying health check ($RETRY_COUNT/$MAX_RETRIES)..."
+                sleep 5
+              else
+                echo "❌ Health check failed for $service after $MAX_RETRIES attempts"
+                exit 1
+              fi
+            done
+          done
+
+          echo "✅ All deployments verified"
+
+  notify:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [deploy-via-api]
+    if: always()
+    steps:
+      - name: Check status
+        run: |
+          if [ "${{ needs.deploy-via-api.result }}" == "success" ]; then
+            echo "✅ Deployment successful!"
+            echo ""
+            echo "📊 Summary:"
+            echo "  Services: ${{ needs.detect-changes.outputs.services }}"
+            echo "  Tier: ${{ inputs.tier || 'N/A' }}"
+            echo "  Environment: ${{ inputs.environment || 'production' }}"
+            echo "  Commit: ${{ github.sha }}"
+            echo ""
+            echo "🔗 View deployments:"
+            echo "  https://deploy.do/deployments"
+          else
+            echo "❌ Deployment failed!"
+            echo ""
+            echo "Check logs for details:"
+            echo "  ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            exit 1
+          fi
+
+      - name: Create deployment issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Deployment Failed: ${context.sha.substring(0, 7)}`,
+              body: `
+              # Deployment Failure
+
+              The deployment via Deploy API failed.
+
+              ## Details
+
+              - **Services**: ${{ needs.detect-changes.outputs.services }}
+              - **Tier**: ${{ inputs.tier || 'N/A' }}
+              - **Environment**: ${{ inputs.environment || 'production' }}
+              - **Commit**: ${context.sha}
+              - **Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+              ## Next Steps
+
+              1. Review the deployment logs
+              2. Check Deploy API status
+              3. Verify DEPLOY_API_KEY is valid
+              4. Check worker-namespaces.json configuration
+              5. Fix the issue and retry
+
+              cc: @${{ github.actor }}
+              `,
+              labels: ['deployment-failure', 'workers-for-platforms', 'automated']
+            });

@@ -514,9 +514,9 @@ Track podcast generation metrics via tail consumers:
 
 ## Implementation
 
-### Types
+### Types (Documentation)
 
-```typescript
+```ts
 /**
  * Type definitions for Podcast AI generation service
  */
@@ -603,9 +603,9 @@ export interface PodcastTemplate {
 }
 ```
 
-### Validation Schemas
+### Validation Schemas (Documentation)
 
-```typescript
+```ts
 /**
  * Zod validation schemas for Podcast AI generation
  */
@@ -643,7 +643,7 @@ export const podcastGenerationRequestSchema = z.object({
 })
 ```
 
-### Main Service
+### Main Service (Implementation)
 
 ```typescript
 /**
@@ -656,16 +656,129 @@ import { WorkerEntrypoint } from 'cloudflare:workers'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { ulid } from 'ulid'
-import { podcastGenerationRequestSchema } from './schema'
-import type {
-  Env,
-  PodcastGenerationRequest,
-  PodcastGenerationResponse,
-  PodcastRecord,
-  DialogueLine,
-  Speaker,
-} from './types'
-import { generateBatchPodcastPrompts, getAllPodcastTemplates } from './prompts'
+import { z } from 'zod'
+
+// Type definitions
+export type PodcastFormat = 'deep-dive' | 'interview' | 'debate' | 'news-discussion' | 'storytelling'
+export type SpeakerRole = 'host' | 'guest' | 'narrator' | 'character' | 'expert'
+
+export interface Env {
+  AUDIO: R2Bucket
+  DB: any
+  VOICE: any
+  OPENAI_API_KEY: string
+  ELEVENLABS_API_KEY: string
+  GOOGLE_CLOUD_API_KEY: string
+  pipeline: any
+  do: any
+}
+
+export interface Speaker {
+  id: string
+  name: string
+  role: SpeakerRole
+  provider: 'openai' | 'elevenlabs' | 'google'
+  voice: string
+  description?: string
+}
+
+export interface DialogueLine {
+  speaker: string
+  text: string
+  emotion?: string
+  pause?: number
+}
+
+export interface PodcastGenerationRequest {
+  title: string
+  format: PodcastFormat
+  topic?: string
+  speakers: Speaker[]
+  dialogue: DialogueLine[]
+  duration?: number
+  backgroundMusic?: boolean
+  metadata?: Record<string, any>
+}
+
+export interface PodcastGenerationResponse {
+  id: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  title: string
+  format: PodcastFormat
+  speakers: Speaker[]
+  audioUrl?: string
+  r2Key?: string
+  duration?: number
+  error?: string
+  createdAt: string
+  completedAt?: string
+  metadata?: Record<string, any>
+}
+
+export interface PodcastRecord {
+  id: string
+  title: string
+  format: string
+  topic: string | null
+  speakers: string
+  dialogue: string
+  status: string
+  audioUrl: string | null
+  r2Key: string | null
+  duration: number | null
+  error: string | null
+  createdAt: string
+  completedAt: string | null
+  metadata: string | null
+}
+
+export interface PodcastTemplate {
+  name: string
+  format: PodcastFormat
+  topic: string
+  speakers: Speaker[]
+  dialogue: DialogueLine[]
+}
+
+// Validation schemas
+const formatSchema = z.enum(['deep-dive', 'interview', 'debate', 'news-discussion', 'storytelling'])
+const roleSchema = z.enum(['host', 'guest', 'narrator', 'character', 'expert'])
+
+const speakerSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  role: roleSchema,
+  provider: z.enum(['openai', 'elevenlabs', 'google']),
+  voice: z.string(),
+  description: z.string().optional(),
+})
+
+const dialogueLineSchema = z.object({
+  speaker: z.string(),
+  text: z.string().min(1).max(5000),
+  emotion: z.string().optional(),
+  pause: z.number().min(0).max(10).optional(),
+})
+
+const podcastGenerationRequestSchema = z.object({
+  title: z.string().min(1).max(200),
+  format: formatSchema,
+  topic: z.string().max(500).optional(),
+  speakers: z.array(speakerSchema).min(1).max(10),
+  dialogue: z.array(dialogueLineSchema).min(1).max(500),
+  duration: z.number().min(1).max(180).optional(),
+  backgroundMusic: z.boolean().optional(),
+  metadata: z.record(z.any()).optional(),
+})
+
+// Placeholder for templates (would normally be imported)
+function generateBatchPodcastPrompts(): PodcastTemplate[] {
+  return []
+}
+
+function getAllPodcastTemplates(): PodcastTemplate[] {
+  return []
+}
 
 export class PodcastService extends WorkerEntrypoint<Env> {
   /**

@@ -330,31 +330,765 @@ The API worker is implemented with:
 
 ### Type Definitions
 
+```ts
+/**
+ * Type definitions for API worker
+ */
 
+export interface Env {
+  // Service bindings (all other workers)
+  DB_SERVICE: any
+  AUTH_SERVICE: any
+  GATEWAY_SERVICE: any
+  SCHEDULE_SERVICE: any
+  WEBHOOKS_SERVICE: any
+  EMAIL_SERVICE: any
+  MCP_SERVICE: any
+  QUEUE_SERVICE: any
+  WAITLIST_SERVICE: any
+  DO_SERVICE: any
+
+  // AI services
+  AI_SERVICE: any
+  EMBEDDINGS_SERVICE: any
+
+  // Integration services
+  STRIPE_SERVICE: any
+  GITHUB_SERVICE: any
+  ANTHROPIC_SERVICE: any
+
+  // Domain services
+  AGENTS_SERVICE: any
+  WORKFLOWS_SERVICE: any
+  BUSINESS_SERVICE: any
+
+  // Dispatch namespaces (Workers for Platforms)
+  PRODUCTION: DispatchNamespace
+  STAGING: DispatchNamespace
+  DEVELOPMENT: DispatchNamespace
+
+  // Storage
+  KV: KVNamespace // For caching domain routes
+  ASSETS: any // Workers Assets for domain routing config
+
+  // Environment variables
+  ENVIRONMENT: 'production' | 'staging' | 'development'
+}
+
+export interface ApiContext {
+  requestId: string
+  startTime: number
+  env: Env
+  executionCtx: ExecutionContext
+  auth?: AuthContext
+  rateLimitInfo?: {
+    limit: number
+    remaining: number
+    reset: number
+  }
+}
+
+export interface AuthContext {
+  userId: string
+  email: string
+  isAdmin: boolean
+  permissions: string[]
+  sessionId?: string
+  apiKey?: string
+}
+
+export interface DomainRoute {
+  domain: string
+  service: string
+  binding: string
+  requiresAuth?: boolean
+  requiresAdmin?: boolean
+  metadata?: Record<string, any>
+  updatedAt: string
+}
+
+export interface RouteConfig {
+  service: string
+  binding: string
+  path: string
+  requiresAuth: boolean
+  requiresAdmin: boolean
+  metadata?: Record<string, any>
+}
+
+export interface DomainRoutesCache {
+  routes: DomainRoute[]
+  lastUpdated: number
+  expiresAt: number
+}
+
+export interface PathRouteRule {
+  pattern: RegExp
+  service: string
+  binding: string
+  requiresAuth: boolean
+  requiresAdmin: boolean
+}
+
+export interface RateLimitConfig {
+  maxRequests: number
+  windowMs: number
+  keyPrefix: string
+}
+```
 
 ### Utility Functions
 
+```ts
+/**
+ * Utility functions for API worker
+ */
 
+import { ulid } from 'ulid'
+
+/**
+ * Generate a unique request ID
+ */
+export function generateRequestId(): string {
+  return ulid()
+}
+
+/**
+ * Extract client IP from request
+ */
+export function getClientIp(request: Request): string {
+  return request.headers.get('cf-connecting-ip') || 'unknown'
+}
+
+/**
+ * Extract user agent from request
+ */
+export function getUserAgent(request: Request): string {
+  return request.headers.get('user-agent') || 'unknown'
+}
+
+/**
+ * Check if request is from internal service
+ */
+export function isInternalRequest(request: Request): boolean {
+  // Check for internal service header
+  const internalHeader = request.headers.get('x-internal-service')
+  return internalHeader === 'true'
+}
+
+/**
+ * Sleep for a given number of milliseconds
+ */
+export function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+/**
+ * Parse JSON safely
+ */
+export function safeJsonParse<T>(json: string, fallback: T): T {
+  try {
+    return JSON.parse(json)
+  } catch {
+    return fallback
+  }
+}
+```
 
 ### Authentication Middleware
 
+```ts
+/**
+ * Authentication middleware
+ */
 
+/**
+ * Authenticate a request using various methods:
+ * 1. Bearer token (Authorization: Bearer <token>)
+ * 2. API key (X-API-Key: <key>)
+ * 3. Session cookie
+ */
+export async function authenticateRequest(request: Request, ctx: ApiContext): Promise<AuthContext | null> {
+  // Try Bearer token
+  const authHeader = request.headers.get('authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.substring(7)
+    const auth = await validateBearerToken(token, ctx)
+    if (auth) return auth
+  }
+
+  // Try API key
+  const apiKey = request.headers.get('x-api-key')
+  if (apiKey) {
+    const auth = await validateApiKey(apiKey, ctx)
+    if (auth) return auth
+  }
+
+  // Try session cookie
+  const cookie = request.headers.get('cookie')
+  if (cookie) {
+    const sessionId = extractSessionFromCookie(cookie)
+    if (sessionId) {
+      const auth = await validateSession(sessionId, ctx)
+      if (auth) return auth
+    }
+  }
+
+  return null
+}
+
+/**
+ * Validate Bearer token via AUTH_SERVICE
+ */
+async function validateBearerToken(token: string, ctx: ApiContext): Promise<AuthContext | null> {
+  try {
+    const result = await ctx.env.AUTH_SERVICE.validateToken(token)
+    if (!result || !result.valid) return null
+
+    return {
+      userId: result.user.id,
+      email: result.user.email,
+      isAdmin: result.user.role === 'admin',
+      permissions: result.user.permissions || [],
+      sessionId: result.sessionId,
+    }
+  } catch (error) {
+    console.error('[Auth] Bearer token validation error:', error)
+    return null
+  }
+}
+
+/**
+ * Validate API key via AUTH_SERVICE
+ */
+async function validateApiKey(apiKey: string, ctx: ApiContext): Promise<AuthContext | null> {
+  try {
+    const result = await ctx.env.AUTH_SERVICE.validateApiKey(apiKey)
+    if (!result || !result.valid) return null
+
+    return {
+      userId: result.user.id,
+      email: result.user.email,
+      isAdmin: result.user.role === 'admin',
+      permissions: result.permissions || [],
+      apiKey,
+    }
+  } catch (error) {
+    console.error('[Auth] API key validation error:', error)
+    return null
+  }
+}
+
+/**
+ * Validate session via AUTH_SERVICE
+ */
+async function validateSession(sessionId: string, ctx: ApiContext): Promise<AuthContext | null> {
+  try {
+    const result = await ctx.env.AUTH_SERVICE.validateSession(sessionId)
+    if (!result || !result.valid) return null
+
+    return {
+      userId: result.user.id,
+      email: result.user.email,
+      isAdmin: result.user.role === 'admin',
+      permissions: result.user.permissions || [],
+      sessionId,
+    }
+  } catch (error) {
+    console.error('[Auth] Session validation error:', error)
+    return null
+  }
+}
+
+/**
+ * Extract session ID from cookie string
+ */
+function extractSessionFromCookie(cookie: string): string | null {
+  const match = cookie.match(/session=([^;]+)/)
+  return match ? match[1] : null
+}
+
+/**
+ * Check if a route requires authentication
+ */
+export function requiresAuth(pathname: string, method: string): boolean {
+  // Public routes (no auth required)
+  const publicRoutes = [
+    /^\/health$/,
+    /^\/api\/public\//,
+    /^\/waitlist/,
+  ]
+
+  return !publicRoutes.some(pattern => pattern.test(pathname))
+}
+
+/**
+ * Check if a route requires admin access
+ */
+export function requiresAdmin(pathname: string, method: string): boolean {
+  // Admin routes
+  const adminRoutes = [
+    /^\/api\/admin\//,
+    /^\/api\/users\/.*\/ban$/,
+    /^\/api\/deploy$/,
+  ]
+
+  return adminRoutes.some(pattern => pattern.test(pathname))
+}
+```
 
 ### Rate Limiting Middleware
 
+```ts
+/**
+ * Rate limiting middleware
+ */
 
+const DEFAULT_RATE_LIMIT: RateLimitConfig = {
+  maxRequests: 100,
+  windowMs: 60000, // 1 minute
+  keyPrefix: 'ratelimit',
+}
+
+/**
+ * Check rate limit for request
+ * Returns Response if rate limit exceeded, null otherwise
+ */
+export async function rateLimitCheck(request: Request, ctx: ApiContext): Promise<Response | null> {
+  const config = DEFAULT_RATE_LIMIT
+
+  // Determine rate limit key (by user ID or IP)
+  const key = ctx.auth ? `user:${ctx.auth.userId}` : `ip:${getClientIp(request)}`
+  const rateLimitKey = `${config.keyPrefix}:${key}`
+
+  try {
+    // Get current count from KV
+    const currentValue = await ctx.env.KV.get(rateLimitKey)
+    const current = currentValue ? parseInt(currentValue, 10) : 0
+
+    if (current >= config.maxRequests) {
+      // Rate limit exceeded
+      const ttl = await ctx.env.KV.getWithMetadata(rateLimitKey)
+      const resetTime = ttl.metadata?.resetTime || Date.now() + config.windowMs
+
+      return new Response(
+        JSON.stringify({
+          error: 'Rate limit exceeded',
+          message: `Too many requests. Please try again later.`,
+          limit: config.maxRequests,
+          resetTime: new Date(resetTime).toISOString(),
+          requestId: ctx.requestId,
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-RateLimit-Limit': config.maxRequests.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(resetTime).toISOString(),
+            'Retry-After': Math.ceil((resetTime - Date.now()) / 1000).toString(),
+          },
+        }
+      )
+    }
+
+    // Increment counter
+    const newCount = current + 1
+    const resetTime = Date.now() + config.windowMs
+    await ctx.env.KV.put(rateLimitKey, newCount.toString(), {
+      expirationTtl: Math.ceil(config.windowMs / 1000),
+      metadata: { resetTime },
+    })
+
+    // Add rate limit headers to context for later use
+    ctx.rateLimitInfo = {
+      limit: config.maxRequests,
+      remaining: config.maxRequests - newCount,
+      reset: resetTime,
+    }
+
+    return null
+  } catch (error) {
+    console.error('[RateLimit] Error:', error)
+    // Don't block requests on rate limit errors
+    return null
+  }
+}
+```
 
 ### Logging Middleware
 
+```ts
+/**
+ * Request/response logging middleware
+ */
 
+/**
+ * Log incoming request
+ */
+export function logRequest(request: Request, ctx: ApiContext): void {
+  const url = new URL(request.url)
+  const ip = getClientIp(request)
+  const userAgent = getUserAgent(request)
+
+  console.log(
+    JSON.stringify({
+      type: 'request',
+      requestId: ctx.requestId,
+      timestamp: new Date().toISOString(),
+      method: request.method,
+      url: url.pathname + url.search,
+      hostname: url.hostname,
+      ip,
+      userAgent,
+      userId: ctx.auth?.userId,
+    })
+  )
+}
+
+/**
+ * Log outgoing response
+ */
+export function logResponse(request: Request, response: Response, ctx: ApiContext): void {
+  const duration = Date.now() - ctx.startTime
+  const url = new URL(request.url)
+
+  console.log(
+    JSON.stringify({
+      type: 'response',
+      requestId: ctx.requestId,
+      timestamp: new Date().toISOString(),
+      method: request.method,
+      url: url.pathname + url.search,
+      status: response.status,
+      duration,
+      userId: ctx.auth?.userId,
+    })
+  )
+
+  // Log to analytics queue (async, don't await)
+  ctx.executionCtx.waitUntil(
+    logToAnalytics({
+      requestId: ctx.requestId,
+      timestamp: new Date().toISOString(),
+      method: request.method,
+      url: url.pathname + url.search,
+      hostname: url.hostname,
+      status: response.status,
+      duration,
+      userId: ctx.auth?.userId,
+      ip: getClientIp(request),
+      userAgent: getUserAgent(request),
+    }, ctx)
+  )
+}
+
+/**
+ * Add metrics headers to response
+ */
+export function addMetrics(response: Response, ctx: ApiContext): Response {
+  const duration = Date.now() - ctx.startTime
+
+  const newResponse = new Response(response.body, response)
+  newResponse.headers.set('X-Request-Id', ctx.requestId)
+  newResponse.headers.set('X-Response-Time', `${duration}ms`)
+
+  if (ctx.rateLimitInfo) {
+    newResponse.headers.set('X-RateLimit-Limit', ctx.rateLimitInfo.limit.toString())
+    newResponse.headers.set('X-RateLimit-Remaining', ctx.rateLimitInfo.remaining.toString())
+    newResponse.headers.set('X-RateLimit-Reset', new Date(ctx.rateLimitInfo.reset).toISOString())
+  }
+
+  return newResponse
+}
+
+/**
+ * Log request/response data to analytics service
+ */
+async function logToAnalytics(data: any, ctx: ApiContext): Promise<void> {
+  try {
+    // Send to analytics queue for async processing
+    await ctx.env.QUEUE_SERVICE.send('analytics', data)
+  } catch (error) {
+    console.error('[Logging] Failed to log to analytics:', error)
+  }
+}
+```
 
 ### Domain Routing
 
+```ts
+/**
+ * Domain-based routing with Workers Assets and SWR cache
+ *
+ * Domain routes are stored in Workers Assets as a JSON file.
+ * We maintain an in-memory cache with a stale-while-revalidate (SWR) strategy
+ * that updates within 10 seconds of routing changes.
+ */
 
+// In-memory cache (persists across requests in same Worker instance)
+let domainRoutesCache: DomainRoutesCache | null = null
+
+// SWR configuration
+const CACHE_DURATION_MS = 10000 // 10 seconds
+const KV_CACHE_KEY = 'domain-routes:cache'
+
+/**
+ * Load domain routes from cache or Workers Assets
+ */
+export async function loadDomainRoutes(env: Env, forceRefresh = false): Promise<DomainRoute[]> {
+  const now = Date.now()
+
+  // Check if we have a valid cache
+  if (!forceRefresh && domainRoutesCache && domainRoutesCache.expiresAt > now) {
+    return domainRoutesCache.routes
+  }
+
+  // Cache expired or force refresh - load from KV first (faster than Assets)
+  try {
+    const kvCache = await env.KV.get(KV_CACHE_KEY)
+    if (kvCache) {
+      const cached = safeJsonParse<DomainRoutesCache>(kvCache, null)
+      if (cached && cached.expiresAt > now) {
+        domainRoutesCache = cached
+        return cached.routes
+      }
+    }
+  } catch (error) {
+    console.error('[DomainRoutes] KV cache error:', error)
+  }
+
+  // Load from Workers Assets (authoritative source)
+  try {
+    const routes = await loadFromAssets(env)
+
+    // Update caches
+    domainRoutesCache = {
+      routes,
+      lastUpdated: now,
+      expiresAt: now + CACHE_DURATION_MS,
+    }
+
+    // Store in KV for cross-instance caching
+    await env.KV.put(KV_CACHE_KEY, JSON.stringify(domainRoutesCache), {
+      expirationTtl: Math.ceil(CACHE_DURATION_MS / 1000) * 2, // Double TTL for safety
+    })
+
+    return routes
+  } catch (error) {
+    console.error('[DomainRoutes] Assets load error:', error)
+
+    // Fall back to stale cache if available
+    if (domainRoutesCache) {
+      console.warn('[DomainRoutes] Using stale cache')
+      return domainRoutesCache.routes
+    }
+
+    // No cache available, return empty array
+    return []
+  }
+}
+
+/**
+ * Load domain routes from Workers Assets
+ */
+async function loadFromAssets(env: Env): Promise<DomainRoute[]> {
+  try {
+    // Workers Assets API: fetch domain-routes.json
+    const response = await env.ASSETS.fetch('domain-routes.json')
+
+    if (!response.ok) {
+      throw new Error(`Assets fetch failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+    return Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('[DomainRoutes] Assets fetch error:', error)
+    return []
+  }
+}
+
+/**
+ * Get route for a specific domain
+ */
+export async function getDomainRoute(hostname: string, env: Env): Promise<DomainRoute | null> {
+  const routes = await loadDomainRoutes(env)
+
+  // Exact domain match
+  const exactMatch = routes.find(r => r.domain === hostname)
+  if (exactMatch) return exactMatch
+
+  // Wildcard subdomain match (*.example.com)
+  const wildcardMatch = routes.find(r => {
+    if (!r.domain.startsWith('*.')) return false
+    const baseDomain = r.domain.substring(2) // Remove *.
+    return hostname.endsWith(baseDomain)
+  })
+  if (wildcardMatch) return wildcardMatch
+
+  return null
+}
+
+/**
+ * Invalidate cache (called when domain routes are updated)
+ */
+export async function invalidateDomainRoutesCache(env: Env): Promise<void> {
+  domainRoutesCache = null
+  await env.KV.delete(KV_CACHE_KEY)
+}
+```
 
 ### Path-Based Routing
 
+```ts
+/**
+ * Path-based routing rules
+ *
+ * These routes take priority over domain-based routing.
+ */
 
+/**
+ * Path-based route rules (highest priority)
+ */
+const PATH_ROUTES: PathRouteRule[] = [
+  // Core services
+  {
+    pattern: /^\/api\/db\//,
+    service: 'db',
+    binding: 'DB_SERVICE',
+    requiresAuth: true,
+    requiresAdmin: false,
+  },
+  {
+    pattern: /^\/api\/auth\//,
+    service: 'auth',
+    binding: 'AUTH_SERVICE',
+    requiresAuth: false,
+    requiresAdmin: false,
+  },
+  {
+    pattern: /^\/api\/schedule\//,
+    service: 'schedule',
+    binding: 'SCHEDULE_SERVICE',
+    requiresAuth: true,
+    requiresAdmin: true,
+  },
+  {
+    pattern: /^\/api\/webhooks\//,
+    service: 'webhooks',
+    binding: 'WEBHOOKS_SERVICE',
+    requiresAuth: false,
+    requiresAdmin: false,
+  },
+  {
+    pattern: /^\/api\/email\//,
+    service: 'email',
+    binding: 'EMAIL_SERVICE',
+    requiresAuth: true,
+    requiresAdmin: false,
+  },
+  {
+    pattern: /^\/api\/queue\//,
+    service: 'queue',
+    binding: 'QUEUE_SERVICE',
+    requiresAuth: true,
+    requiresAdmin: true,
+  },
+
+  // AI services
+  {
+    pattern: /^\/api\/ai\//,
+    service: 'ai',
+    binding: 'AI_SERVICE',
+    requiresAuth: true,
+    requiresAdmin: false,
+  },
+  {
+    pattern: /^\/api\/embeddings\//,
+    service: 'embeddings',
+    binding: 'EMBEDDINGS_SERVICE',
+    requiresAuth: true,
+    requiresAdmin: false,
+  },
+
+  // Domain services
+  {
+    pattern: /^\/api\/agents\//,
+    service: 'agents',
+    binding: 'AGENTS_SERVICE',
+    requiresAuth: true,
+    requiresAdmin: false,
+  },
+  {
+    pattern: /^\/api\/workflows\//,
+    service: 'workflows',
+    binding: 'WORKFLOWS_SERVICE',
+    requiresAuth: true,
+    requiresAdmin: false,
+  },
+  {
+    pattern: /^\/api\/business\//,
+    service: 'business',
+    binding: 'BUSINESS_SERVICE',
+    requiresAuth: true,
+    requiresAdmin: false,
+  },
+
+  // Integration services
+  {
+    pattern: /^\/api\/stripe\//,
+    service: 'stripe',
+    binding: 'STRIPE_SERVICE',
+    requiresAuth: true,
+    requiresAdmin: false,
+  },
+  {
+    pattern: /^\/api\/github\//,
+    service: 'github',
+    binding: 'GITHUB_SERVICE',
+    requiresAuth: true,
+    requiresAdmin: false,
+  },
+
+  // MCP server (AI agent tools)
+  {
+    pattern: /^\/mcp\//,
+    service: 'mcp',
+    binding: 'MCP_SERVICE',
+    requiresAuth: false,
+    requiresAdmin: false,
+  },
+
+  // Public routes
+  {
+    pattern: /^\/waitlist\//,
+    service: 'waitlist',
+    binding: 'WAITLIST_SERVICE',
+    requiresAuth: false,
+    requiresAdmin: false,
+  },
+]
+
+/**
+ * Match a path against route rules
+ */
+export function matchPathRoute(pathname: string, hostname: string): RouteConfig | null {
+  for (const rule of PATH_ROUTES) {
+    if (rule.pattern.test(pathname)) {
+      return {
+        service: rule.service,
+        binding: rule.binding,
+        path: pathname,
+        requiresAuth: rule.requiresAuth,
+        requiresAdmin: rule.requiresAdmin,
+      }
+    }
+  }
+
+  return null
+}
+```
 
 ### Main Worker Implementation
 

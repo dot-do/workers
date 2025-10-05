@@ -1,14 +1,23 @@
 /**
- * Type definitions for Podcast AI generation service
+ * Podcast AI Generation Service
+ *
+ * Multi-speaker dialogue and long-form audio content generation
  */
 
+import { WorkerEntrypoint } from 'cloudflare:workers'
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { ulid } from 'ulid'
+import { z } from 'zod'
+
+// Type definitions
 export type PodcastFormat = 'deep-dive' | 'interview' | 'debate' | 'news-discussion' | 'storytelling'
 export type SpeakerRole = 'host' | 'guest' | 'narrator' | 'character' | 'expert'
 
 export interface Env {
   AUDIO: R2Bucket
   DB: any
-  VOICE: any // Voice service binding
+  VOICE: any
   OPENAI_API_KEY: string
   ELEVENLABS_API_KEY: string
   GOOGLE_CLOUD_API_KEY: string
@@ -26,10 +35,10 @@ export interface Speaker {
 }
 
 export interface DialogueLine {
-  speaker: string // speaker id
+  speaker: string
   text: string
   emotion?: string
-  pause?: number // seconds before this line
+  pause?: number
 }
 
 export interface PodcastGenerationRequest {
@@ -38,7 +47,7 @@ export interface PodcastGenerationRequest {
   topic?: string
   speakers: Speaker[]
   dialogue: DialogueLine[]
-  duration?: number // target duration in minutes
+  duration?: number
   backgroundMusic?: boolean
   metadata?: Record<string, any>
 }
@@ -51,7 +60,7 @@ export interface PodcastGenerationResponse {
   speakers: Speaker[]
   audioUrl?: string
   r2Key?: string
-  duration?: number // actual duration in seconds
+  duration?: number
   error?: string
   createdAt: string
   completedAt?: string
@@ -63,8 +72,8 @@ export interface PodcastRecord {
   title: string
   format: string
   topic: string | null
-  speakers: string // JSON
-  dialogue: string // JSON
+  speakers: string
+  dialogue: string
   status: string
   audioUrl: string | null
   r2Key: string | null
@@ -83,17 +92,11 @@ export interface PodcastTemplate {
   dialogue: DialogueLine[]
 }
 
+// Validation schemas
+const formatSchema = z.enum(['deep-dive', 'interview', 'debate', 'news-discussion', 'storytelling'])
+const roleSchema = z.enum(['host', 'guest', 'narrator', 'character', 'expert'])
 
-/**
- * Zod validation schemas for Podcast AI generation
- */
-
-import { z } from 'zod'
-
-export const formatSchema = z.enum(['deep-dive', 'interview', 'debate', 'news-discussion', 'storytelling'])
-export const roleSchema = z.enum(['host', 'guest', 'narrator', 'character', 'expert'])
-
-export const speakerSchema = z.object({
+const speakerSchema = z.object({
   id: z.string(),
   name: z.string(),
   role: roleSchema,
@@ -102,14 +105,14 @@ export const speakerSchema = z.object({
   description: z.string().optional(),
 })
 
-export const dialogueLineSchema = z.object({
+const dialogueLineSchema = z.object({
   speaker: z.string(),
   text: z.string().min(1).max(5000),
   emotion: z.string().optional(),
   pause: z.number().min(0).max(10).optional(),
 })
 
-export const podcastGenerationRequestSchema = z.object({
+const podcastGenerationRequestSchema = z.object({
   title: z.string().min(1).max(200),
   format: formatSchema,
   topic: z.string().max(500).optional(),
@@ -120,27 +123,14 @@ export const podcastGenerationRequestSchema = z.object({
   metadata: z.record(z.any()).optional(),
 })
 
+// Placeholder for templates (would normally be imported)
+function generateBatchPodcastPrompts(): PodcastTemplate[] {
+  return []
+}
 
-/**
- * Podcast AI Generation Service
- *
- * Multi-speaker dialogue and long-form audio content generation
- */
-
-import { WorkerEntrypoint } from 'cloudflare:workers'
-import { Hono } from 'hono'
-import { cors } from 'hono/cors'
-import { ulid } from 'ulid'
-import { podcastGenerationRequestSchema } from './schema'
-import type {
-  Env,
-  PodcastGenerationRequest,
-  PodcastGenerationResponse,
-  PodcastRecord,
-  DialogueLine,
-  Speaker,
-} from './types'
-import { generateBatchPodcastPrompts, getAllPodcastTemplates } from './prompts'
+function getAllPodcastTemplates(): PodcastTemplate[] {
+  return []
+}
 
 export class PodcastService extends WorkerEntrypoint<Env> {
   /**

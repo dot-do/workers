@@ -1,31 +1,29 @@
+/**
+ * schedule Worker Configuration
+ * Generated from schedule.mdx
+ */
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "schedule",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-07-15",
-  "workers_dev": false,
-  "account_id": "b6641681fe423910342b9ffa1364c76d",
-  "observability": {
-    "enabled": true
-  },
-
-  // Cron Triggers - defines when scheduled tasks run
-  "triggers": {
-    "crons": [
-      "*/5 * * * *",  // Every 5 minutes (monitoring tasks)
-      "0 * * * *",    // Every hour (cleanup, analytics)
-      "0 0 * * *"     // Every day at midnight (backups, maintenance)
-      // Weekly cron disabled for now - Cloudflare Workers doesn't support day-of-week in cron
-    ]
-  },
-
-  // Service Bindings - connect to other workers (using actual deployed names)
-  "services": [
-    { "binding": "DB", "service": "db" },
-    { "binding": "DB_SERVICE", "service": "db" },
-    { "binding": "LOAD_SERVICE", "service": "load" }
-    // Other services commented out until deployed
-    // { "binding": "AI", "service": "ai" },
-    // { "binding": "QUEUE", "service": "queue" }
-  ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "schedule",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-07-15",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"observability": {
+		"enabled": true
+	},
+	"workers_dev": false,
+	"services": [
+		{
+			"binding": "DB",
+			"service": "db"
+		},
+		{
+			"binding": "EMAIL",
+			"service": "email"
+		},
+		{
+			"binding": "ANALYTICS",
+			"service": "analytics"
+		}
+	]
 }

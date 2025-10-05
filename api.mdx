@@ -413,7 +413,7 @@ The API worker is implemented with:
 
 ### Type Definitions
 
-```typescript
+```ts
 /**
  * Type definitions for API worker
  */
@@ -522,7 +522,7 @@ export interface RateLimitConfig {
 
 ### Utility Functions
 
-```typescript
+```ts
 /**
  * Utility functions for API worker
  */
@@ -580,7 +580,7 @@ export function safeJsonParse<T>(json: string, fallback: T): T {
 
 ### Authentication Middleware
 
-```typescript
+```ts
 /**
  * Authentication middleware
  */
@@ -722,7 +722,7 @@ export function requiresAdmin(pathname: string, method: string): boolean {
 
 ### Rate Limiting Middleware
 
-```typescript
+```ts
 /**
  * Rate limiting middleware
  */
@@ -801,7 +801,7 @@ export async function rateLimitCheck(request: Request, ctx: ApiContext): Promise
 
 ### Logging Middleware
 
-```typescript
+```ts
 /**
  * Request/response logging middleware
  */
@@ -900,7 +900,7 @@ async function logToAnalytics(data: any, ctx: ApiContext): Promise<void> {
 
 ### Domain Routing
 
-```typescript
+```ts
 /**
  * Domain-based routing with Workers Assets and SWR cache
  *
@@ -1024,7 +1024,7 @@ export async function invalidateDomainRoutesCache(env: Env): Promise<void> {
 
 ### Path-Based Routing
 
-```typescript
+```ts
 /**
  * Path-based routing rules
  *

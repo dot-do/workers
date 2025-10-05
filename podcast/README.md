@@ -479,15 +479,136 @@ Track podcast generation metrics via tail consumers:
 
 ## Implementation
 
-### Types
+### Types (Documentation)
 
+```ts
+/**
+ * Type definitions for Podcast AI generation service
+ */
 
+export type PodcastFormat = 'deep-dive' | 'interview' | 'debate' | 'news-discussion' | 'storytelling'
+export type SpeakerRole = 'host' | 'guest' | 'narrator' | 'character' | 'expert'
 
-### Validation Schemas
+export interface Env {
+  AUDIO: R2Bucket
+  DB: any
+  VOICE: any // Voice service binding
+  OPENAI_API_KEY: string
+  ELEVENLABS_API_KEY: string
+  GOOGLE_CLOUD_API_KEY: string
+  pipeline: any
+  do: any
+}
 
+export interface Speaker {
+  id: string
+  name: string
+  role: SpeakerRole
+  provider: 'openai' | 'elevenlabs' | 'google'
+  voice: string
+  description?: string
+}
 
+export interface DialogueLine {
+  speaker: string // speaker id
+  text: string
+  emotion?: string
+  pause?: number // seconds before this line
+}
 
-### Main Service
+export interface PodcastGenerationRequest {
+  title: string
+  format: PodcastFormat
+  topic?: string
+  speakers: Speaker[]
+  dialogue: DialogueLine[]
+  duration?: number // target duration in minutes
+  backgroundMusic?: boolean
+  metadata?: Record<string, any>
+}
+
+export interface PodcastGenerationResponse {
+  id: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  title: string
+  format: PodcastFormat
+  speakers: Speaker[]
+  audioUrl?: string
+  r2Key?: string
+  duration?: number // actual duration in seconds
+  error?: string
+  createdAt: string
+  completedAt?: string
+  metadata?: Record<string, any>
+}
+
+export interface PodcastRecord {
+  id: string
+  title: string
+  format: string
+  topic: string | null
+  speakers: string // JSON
+  dialogue: string // JSON
+  status: string
+  audioUrl: string | null
+  r2Key: string | null
+  duration: number | null
+  error: string | null
+  createdAt: string
+  completedAt: string | null
+  metadata: string | null
+}
+
+export interface PodcastTemplate {
+  name: string
+  format: PodcastFormat
+  topic: string
+  speakers: Speaker[]
+  dialogue: DialogueLine[]
+}
+```
+
+### Validation Schemas (Documentation)
+
+```ts
+/**
+ * Zod validation schemas for Podcast AI generation
+ */
+
+import { z } from 'zod'
+
+export const formatSchema = z.enum(['deep-dive', 'interview', 'debate', 'news-discussion', 'storytelling'])
+export const roleSchema = z.enum(['host', 'guest', 'narrator', 'character', 'expert'])
+
+export const speakerSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  role: roleSchema,
+  provider: z.enum(['openai', 'elevenlabs', 'google']),
+  voice: z.string(),
+  description: z.string().optional(),
+})
+
+export const dialogueLineSchema = z.object({
+  speaker: z.string(),
+  text: z.string().min(1).max(5000),
+  emotion: z.string().optional(),
+  pause: z.number().min(0).max(10).optional(),
+})
+
+export const podcastGenerationRequestSchema = z.object({
+  title: z.string().min(1).max(200),
+  format: formatSchema,
+  topic: z.string().max(500).optional(),
+  speakers: z.array(speakerSchema).min(1).max(10),
+  dialogue: z.array(dialogueLineSchema).min(1).max(500),
+  duration: z.number().min(1).max(180).optional(),
+  backgroundMusic: z.boolean().optional(),
+  metadata: z.record(z.any()).optional(),
+})
+```
+
+### Main Service (Implementation)
 
 
 

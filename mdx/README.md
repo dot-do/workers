@@ -84,7 +84,13 @@ Syntax-highlighted code blocks:
 - **Progressive Rendering** - Content appears incrementally
 - **Better UX** - Users see content sooner
 
-
+```ts
+app.get('/streaming', (c) => {
+  return c.mdx(content, {
+    renderOptions: { streaming: true }
+  })
+})
+```
 
 ### Static Rendering
 
@@ -92,13 +98,27 @@ Syntax-highlighted code blocks:
 - **SEO-Friendly** - Better for some crawlers
 - **Email/PDF** - Required for non-streaming clients
 
-
+```ts
+app.get('/non-streaming', (c) => {
+  return c.mdx(content, {
+    renderOptions: { streaming: false }
+  })
+})
+```
 
 ## Dynamic Content
 
 Access query parameters and headers:
 
+```ts
+app.get('/dynamic', (c) => {
+  const name = c.req.query('name') || 'World'
+  const timestamp = new Date().toISOString()
+  const userAgent = c.req.header('user-agent') || 'Unknown'
 
+  return c.mdx(`# Hello, ${name}! Generated at ${timestamp}`)
+})
+```
 
 ## Dependencies
 

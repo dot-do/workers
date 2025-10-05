@@ -97,7 +97,7 @@ Syntax-highlighted code blocks:
 - **Progressive Rendering** - Content appears incrementally
 - **Better UX** - Users see content sooner
 
-```typescript
+```ts
 app.get('/streaming', (c) => {
   return c.mdx(content, {
     renderOptions: { streaming: true }
@@ -111,7 +111,7 @@ app.get('/streaming', (c) => {
 - **SEO-Friendly** - Better for some crawlers
 - **Email/PDF** - Required for non-streaming clients
 
-```typescript
+```ts
 app.get('/non-streaming', (c) => {
   return c.mdx(content, {
     renderOptions: { streaming: false }
@@ -123,7 +123,7 @@ app.get('/non-streaming', (c) => {
 
 Access query parameters and headers:
 
-```typescript
+```ts
 app.get('/dynamic', (c) => {
   const name = c.req.query('name') || 'World'
   const timestamp = new Date().toISOString()

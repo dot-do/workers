@@ -1,41 +1,44 @@
 /**
- * Webhooks Service Configuration
- * Receives and processes webhooks from external services
+ * webhooks Worker Configuration
+ * Generated from webhooks.mdx
  */
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "webhooks",
-  "main": "worker.ts",
-  "compatibility_date": "2025-07-08",
-  "workers_dev": false,
-  "account_id": "b6641681fe423910342b9ffa1364c76d",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": { "enabled": true },
-  "tail_consumers": [{ "service": "pipeline" }],
-
-  // Routes for webhook endpoints (commented out - conflicts with eval service)
-  // "routes": [
-  //   { "pattern": "webhooks.apis.do/*", "zone_name": "apis.do" },
-  //   { "pattern": "*.apis.do/webhooks/*", "zone_name": "apis.do" },
-  //   { "pattern": "*.webhooks.do/*", "zone_name": "webhooks.do" }
-  // ],
-
-  // Service bindings - using actual deployed names
-  "services": [
-    { "binding": "DB", "service": "db" },
-    { "binding": "QUEUE", "service": "queue" }
-  // ],
-
-  // Queue consumer - processes GitHub sync jobs
-  "queues": {
-    "consumers": [
-      {
-        "queue": "github-sync",
-        "max_batch_size": 10,
-        "max_batch_timeout": 5,
-        "max_retries": 3,
-        "dead_letter_queue": "github-sync-dlq"
-      }
-    ]
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "webhooks",
+	"main": "worker.ts",
+	"compatibility_date": "2025-07-08",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"observability": {
+		"enabled": true
+	},
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"workers_dev": false,
+	"services": [
+		{
+			"binding": "DB",
+			"service": "db"
+		},
+		{
+			"binding": "QUEUE",
+			"service": "queue"
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
+	],
+	"queues": {
+		"consumers": [
+			{
+				"queue": "github-sync",
+				"max_batch_size": 10,
+				"max_batch_timeout": 5,
+				"max_retries": 3,
+				"dead_letter_queue": "github-sync-dlq"
+			}
+		]
+	}
 }

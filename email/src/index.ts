@@ -110,7 +110,6 @@ console.log('Email sent:', data.id)
 
 import { WorkerEntrypoint } from 'cloudflare:workers'
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
 import { ulid } from 'ulid'
 
 // ============================================================================
@@ -913,13 +912,9 @@ export class EmailService extends WorkerEntrypoint<Env> {
 // HTTP API
 // ============================================================================
 
+import { protocolRouter } from '@dot-do/protocol-router'
+
 const app = new Hono<{ Bindings: Env }>()
-
-app.use('*', cors())
-
-app.get('/health', (c) => {
-  return c.json(success({ status: 'healthy', service: 'email' }))
-})
 
 app.post('/send', async (c) => {
   try {
@@ -980,7 +975,7 @@ app.post('/templates/:name', async (c) => {
   }
 })
 
-app.get('/status/:id', async (c) => {
+app.get('/api/status/:id', async (c) => {
   try {
     const id = c.req.param('id')
     const service = new EmailService(c.env.ctx, c.env)
@@ -997,7 +992,7 @@ app.get('/status/:id', async (c) => {
   }
 })
 
-app.get('/history', async (c) => {
+app.get('/api/history', async (c) => {
   try {
     const userId = c.req.query('userId')
     const limit = parseInt(c.req.query('limit') || '50')
@@ -1021,7 +1016,7 @@ app.get('/history', async (c) => {
   }
 })
 
-app.get('/templates', async (c) => {
+app.get('/api/templates', async (c) => {
   try {
     const service = new EmailService(c.env.ctx, c.env)
     const templates = await service.getTemplates()
@@ -1031,7 +1026,7 @@ app.get('/templates', async (c) => {
   }
 })
 
-app.get('/templates/:name', async (c) => {
+app.get('/api/templates/:name', async (c) => {
   try {
     const name = c.req.param('name')
     const service = new EmailService(c.env.ctx, c.env)
@@ -1131,6 +1126,15 @@ app.post('/cold-email/send', async (c) => {
   }
 })
 
+const router = protocolRouter({
+  api: app,
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    headers: ['Content-Type', 'Authorization'],
+  },
+})
+
 export default {
-  fetch: app.fetch,
+  fetch: router.fetch,
 }

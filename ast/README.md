@@ -97,6 +97,7 @@ Code blocks are parsed if they have one of these language tags:
   const blocks: ASTResult['jsCodeBlocks'] = []
 
   let match
+  // Use a while loop with exec to find all matches
   while ((match = codeBlockRegex.exec(content)) !== null) {
     const [, lang, code] = match
 

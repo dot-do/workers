@@ -1,26 +1,3 @@
-app.get('/streaming', (c) => {
-  return c.mdx(content, {
-    renderOptions: { streaming: true }
-  })
-})
-
-
-app.get('/non-streaming', (c) => {
-  return c.mdx(content, {
-    renderOptions: { streaming: false }
-  })
-})
-
-
-app.get('/dynamic', (c) => {
-  const name = c.req.query('name') || 'World'
-  const timestamp = new Date().toISOString()
-  const userAgent = c.req.header('user-agent') || 'Unknown'
-
-  return c.mdx(`# Hello, ${name}! Generated at ${timestamp}`)
-})
-
-
 /**
  * MDX Demo Worker
  *

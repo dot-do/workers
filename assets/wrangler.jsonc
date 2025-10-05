@@ -1,0 +1,56 @@
+{
+  "name": "assets",
+  "main": "src/worker.ts",
+  "compatibility_date": "2025-10-05",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Observability
+  "observability": {
+    "enabled": true
+  },
+
+  // Database
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "assets-db",
+      "database_id": "1174431b-0721-48e3-aa3a-f15ca79c401e"
+    }
+  ],
+
+  // R2 Storage
+  "r2_buckets": [
+    {
+      "binding": "ASSETS",
+      "bucket_name": "assets"
+    }
+  ],
+
+  // KV Cache
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "a2b2a1b7a055430fb3587e2c29324e2b"
+    }
+  ],
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB_SERVICE",
+      "service": "db"
+    },
+    {
+      "binding": "AUTH_SERVICE",
+      "service": "auth"
+    }
+  ],
+
+  // Environment variables
+  "vars": {
+    "ENVIRONMENT": "production",
+    "CACHE_TTL": "3600",
+    "STALE_WHILE_REVALIDATE": "86400"
+  }
+}

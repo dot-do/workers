@@ -1,20 +1,36 @@
 /**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
+ * markdown Worker Configuration
+ * Generated from markdown.mdx
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "yaml",
-	"main": "worker.ts",
+	"name": "markdown",
+	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
-	"observability": { "enabled": true },
-	"tail_consumers": [{ "service": "pipeline" }],
-	"ai": { "binding": "ai" },
+	"observability": {
+		"enabled": true
+	},
+	"ai": {
+		"binding": "ai"
+	},
 	"routes": [
-		// { "pattern": "*/*", "zone_name": "" },
-		{ "pattern": "markdown.fetch.do/*", "zone_name": "fetch.do" },
-		{ "pattern": "md.fetch.do/*", "zone_name": "fetch.do" },
-		{ "pattern": "scrape.md/*", "zone_name": "scrape.md" }
+		{
+			"pattern": "markdown.fetch.do/*",
+			"zone_name": "fetch.do"
+		},
+		{
+			"pattern": "md.fetch.do/*",
+			"zone_name": "fetch.do"
+		},
+		{
+			"pattern": "scrape.md/*",
+			"zone_name": "scrape.md"
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
 	]
 }

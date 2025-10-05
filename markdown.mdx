@@ -1,0 +1,122 @@
+---
+$type: Worker
+$id: markdown
+name: markdown
+main: src/index.ts
+compatibility_date: "2025-07-08"
+account_id: b6641681fe423910342b9ffa1364c76d
+
+observability:
+  enabled: true
+
+tail_consumers:
+  - service: pipeline
+
+ai:
+  binding: ai
+
+routes:
+  - pattern: markdown.fetch.do/*
+    zone_name: fetch.do
+  - pattern: md.fetch.do/*
+    zone_name: fetch.do
+  - pattern: scrape.md/*
+    zone_name: scrape.md
+---
+
+# Markdown Converter Worker
+
+A Cloudflare Worker that fetches content from URLs and converts it to markdown using Workers AI.
+
+## Features
+
+- ✅ **URL Fetching** - Fetches content from any URL via prxy.do
+- ✅ **AI Conversion** - Converts content to markdown using Workers AI
+- ✅ **Content-Type Detection** - Automatically handles different content types
+- ✅ **Metadata Preservation** - Returns original headers along with markdown
+
+## Usage
+
+This worker accepts any URL path and converts the content to markdown:
+
+```bash
+# Fetch and convert a webpage
+curl https://markdown.fetch.do/example.com
+
+# Fetch and convert a PDF
+curl https://markdown.fetch.do/document.pdf
+```
+
+## Response Format
+
+Returns JSON with:
+- `markdown` - The converted markdown content
+- `headers` - Original response headers
+
+```json
+{
+  "markdown": "# Example\n\nConverted content...",
+  "headers": {
+    "content-type": "text/html",
+    "content-length": "12345"
+  }
+}
+```
+
+## How It Works
+
+1. Extracts the path from the request URL
+2. Fetches content from `https://prxy.do{path}`
+3. Converts response to a Blob
+4. Uses Workers AI `toMarkdown()` to convert content
+5. Returns JSON with markdown and original headers
+
+## AI Model
+
+Uses Cloudflare Workers AI with the `toMarkdown` function which automatically:
+- Detects content type (HTML, PDF, etc.)
+- Extracts text content
+- Converts to clean markdown format
+- Preserves document structure
+
+## Implementation
+
+```typescript
+import { env, WorkerEntrypoint } from 'cloudflare:workers'
+
+export default class extends WorkerEntrypoint {
+  async fetch(request: Request) {
+    const { pathname, search } = new URL(request.url)
+
+    // Fetch content via prxy.do
+    const response = await fetch(`https://prxy.do${pathname}${search}`)
+    const headers = Object.fromEntries(response.headers.entries())
+    const type = response.headers.get('content-type') || 'text/html'
+    const body = await response.arrayBuffer()
+
+    // Convert to blob
+    const blob = new Blob([body])
+
+    // Use Workers AI to convert to markdown
+    const markdown = await env.ai.toMarkdown({
+      name: pathname.slice(1),
+      blob
+    })
+
+    console.log(markdown)
+
+    return Response.json({ markdown, headers })
+  }
+}
+```
+
+## Dependencies
+
+- `cloudflare:workers` - Workers runtime and AI binding
+- Workers AI - Cloudflare's AI platform for content conversion
+
+## Routes
+
+- `markdown.fetch.do/*` - Main domain for markdown conversion
+- `md.fetch.do/*` - Short alias
+- `scrape.md/*` - Alternative domain

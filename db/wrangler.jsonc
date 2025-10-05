@@ -1,6 +1,6 @@
 /**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
+ * db Worker Configuration
+ * Generated from db.mdx
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
@@ -8,63 +8,35 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
-	"observability": { "enabled": true },
-	"tail_consumers": [{ "service": "pipeline" }],
+	"observability": {
+		"enabled": true
+	},
 	"compatibility_flags": [
 		"nodejs_compat",
 		"nodejs_compat_populate_process_env"
 	],
+	"workers_dev": false,
 	"vars": {
 		"CLICKHOUSE_URL": "https://bkkj10mmgz.us-east-1.aws.clickhouse.cloud:8443",
 		"CLICKHOUSE_DATABASE": "default",
 		"CLICKHOUSE_USERNAME": "default"
 	},
-	"placement": { "mode": "smart" },
-
-	/**
-	 * Routes - Direct domain access to DB service
-	 * Using existing apis.do zone (confirmed working)
-	 */
 	"routes": [
-		// Database routes on apis.do zone (✅ ACTIVE)
-		{ "pattern": "db.apis.do/*", "zone_name": "apis.do" },
-		{ "pattern": "database.apis.do/*", "zone_name": "apis.do" }
-
-		// TODO: Configure when zones are added to Cloudflare account:
-		// { "pattern": "database.do/*", "zone_name": "do" },
-		// { "pattern": "db.do/*", "zone_name": "do" },
-		// { "pattern": "db.mw/*", "zone_name": "mw" },
-		// { "pattern": "彡.io/*", "zone_name": "彡.io" },  // Data Layer
-		// { "pattern": "口.io/*", "zone_name": "口.io" },  // Nouns
-		// { "pattern": "回.io/*", "zone_name": "回.io" }   // Things
-	]
-
-	/**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
-
-	/**
-	 * Environment Variables
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-	 */
-	// "vars": { "MY_VARIABLE": "production_value" },
-	/**
-	 * Note: Use secrets to store sensitive data.
-	 * https://developers.cloudflare.com/workers/configuration/secrets/
-	 */
-
-	/**
-	 * Static Assets
-	 * https://developers.cloudflare.com/workers/static-assets/binding/
-	 */
-	// "assets": { "directory": "./public/", "binding": "ASSETS" },
-
-	/**
-	 * Service Bindings (communicate between multiple Workers)
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-	 */
-	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
+		{
+			"pattern": "db.apis.do/*",
+			"zone_name": "apis.do"
+		},
+		{
+			"pattern": "database.apis.do/*",
+			"zone_name": "apis.do"
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
+	],
+	"placement": {
+		"mode": "smart"
+	}
 }

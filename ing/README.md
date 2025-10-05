@@ -420,19 +420,40 @@ const neighbors = await getNeighbors('accountant', 'both', env)
 // Returns: ['invoice_123', 'report_456', ...]
 ```
 
-## Database Schema
+## Database Integration
 
-### PostgreSQL Tables
+The `ing` worker leverages the **existing graph database** infrastructure via `DB_SERVICE` RPC interface, eliminating the need for duplicate triple storage tables.
 
-- **`semantic_triples`** - Core triple storage
-- **`triple_index`** - Fast graph traversal index
-- **`verbs`** - Verb registry
-- **`roles`** - Role registry
-- **`triple_audit_log`** - Audit trail
+### Architecture
 
-### ClickHouse Table (Analytics)
+- **Semantic Triple Mapping**:
+  - `subject` → `fromNs:fromId` (thing entity)
+  - `predicate` → relationship `type` (verb)
+  - `object` → `toNs:toId` (thing entity)
+  - `context` → relationship `properties` (5W1H metadata)
 
-- **`semantic_triples_analytics`** - Time-series analytics
+### Database Services Used
+
+- **`things` table** (PostgreSQL) - Entities (subjects and objects)
+- **`relationships` table** (ClickHouse) - Edges with predicates/verbs
+- **DB_SERVICE RPC** - All database operations via service bindings:
+  - `upsertRelationship()` - Create/update triples
+  - `queryRelationships()` - Query by subject
+  - `getIncomingRelationships()` - Query by object
+  - `deleteRelationship()` - Delete triples
+  - `stats()` / `typeDistribution()` - Analytics
+
+### Storage Format
+
+Relationships are stored with ID format:
+```
+fromNs:fromId:rel:predicate:toNs:toId
+```
+
+Example:
+```
+ing:accountant:rel:invoicing:ing:invoice_123
+```
 
 ## Testing
 

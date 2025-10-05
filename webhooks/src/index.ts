@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
+import { protocolRouter } from '@dot-do/protocol-router'
 import { WorkerEntrypoint } from 'cloudflare:workers'
 import type { Env } from './types'
 import { verifyStripeSignature, verifyWorkOSSignature, verifyGitHubSignature, verifyResendSignature } from './verification'
@@ -13,23 +13,12 @@ import { resolveConflict } from './conflicts'
 
 const app = new Hono<{ Bindings: Env }>()
 
-// Enable CORS for all routes
-app.use('/*', cors())
-
-// Health check
+// Server info at root (for backward compatibility)
 app.get('/', (c) => {
   return c.json({
     service: 'webhooks',
     status: 'healthy',
     providers: ['stripe', 'workos', 'github', 'resend'],
-    timestamp: new Date().toISOString(),
-  })
-})
-
-app.get('/health', (c) => {
-  return c.json({
-    status: 'ok',
-    service: 'webhooks',
     timestamp: new Date().toISOString(),
   })
 })
@@ -211,8 +200,10 @@ app.post('/resend', async (c) => {
   }
 })
 
+// Management endpoints under /api/ prefix
+
 // List webhook events (for debugging/monitoring)
-app.get('/events', async (c) => {
+app.get('/api/events', async (c) => {
   const provider = c.req.query('provider')
   const processed = c.req.query('processed')
   const limit = parseInt(c.req.query('limit') || '100')
@@ -242,7 +233,7 @@ app.get('/events', async (c) => {
 })
 
 // Get webhook event by ID
-app.get('/events/:provider/:eventId', async (c) => {
+app.get('/api/events/:provider/:eventId', async (c) => {
   const { provider, eventId } = c.req.param()
 
   const result = await c.env.DB.query({
@@ -258,7 +249,7 @@ app.get('/events/:provider/:eventId', async (c) => {
 })
 
 // Retry failed webhook
-app.post('/events/:provider/:eventId/retry', async (c) => {
+app.post('/api/events/:provider/:eventId/retry', async (c) => {
   const { provider, eventId } = c.req.param()
 
   const result = await c.env.DB.query({
@@ -329,8 +320,18 @@ export class WebhooksService extends WorkerEntrypoint<Env> {
   }
 }
 
-// Export both HTTP handler and queue handler
+// Wrap in protocol-router for standardized endpoints and CORS
+const router = protocolRouter({
+  api: app,
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    headers: ['Content-Type', 'stripe-signature', 'workos-signature', 'x-hub-signature-256', 'x-github-event', 'x-github-delivery', 'svix-signature', 'svix-id', 'svix-timestamp'],
+  },
+})
+
+// Export both HTTP handler (with protocol-router) and queue handler
 export default {
-  fetch: app.fetch,
+  fetch: router.fetch,
   queue: handleQueueMessage,
 }

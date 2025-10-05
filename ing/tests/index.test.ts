@@ -9,11 +9,35 @@ import type { Env } from '../src/types'
 // Mock environment
 const mockEnv: Env = {
   DB_SERVICE: {
-    execute: async () => ({ rowsAffected: 1 }),
-    query: async () => ({ rows: [] }),
-    executeClickHouse: async () => ({}),
+    // Thing operations
+    getThing: async () => null,
+    createThing: async () => ({ id: 'test', ns: 'ing', createdAt: new Date() }),
+    updateThing: async () => ({ id: 'test', ns: 'ing', updatedAt: new Date() }),
+    deleteThing: async () => {},
+    listThings: async () => [],
+
+    // Relationship operations
+    getRelationships: async () => ({}),
+    queryRelationships: async () => [],
+    getIncomingRelationships: async () => [],
+    upsertRelationship: async () => ({
+      id: 'test:rel:type:test',
+      subject: 'ing:test',
+      predicate: 'type',
+      object: 'ing:test',
+      createdAt: new Date(),
+    }),
+    deleteRelationship: async () => {},
+
+    // Stats operations
+    stats: async () => ({ thingsByNamespace: {}, relationshipsByType: {} }),
+    typeDistribution: async () => ({}),
   },
-  AUTH_SERVICE: {},
+  AUTH_SERVICE: {
+    getUser: async () => null,
+    validateSession: async () => null,
+    checkPermission: async () => false,
+  },
   SEMANTIC_TRIPLES_QUEUE: {} as any,
   ENVIRONMENT: 'test',
 }

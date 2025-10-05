@@ -28,7 +28,7 @@
     {
       "binding": "WORKER_REGISTRY_DB",
       "database_name": "worker-registry-db",
-      "database_id": "PLACEHOLDER_TO_BE_CREATED"
+      "database_id": "45de9571-ccbd-4447-838b-8370b039c7a9"
     }
   ],
   "vars": {

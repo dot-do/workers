@@ -552,7 +552,7 @@ curl https://markdown.fetch.do/example.com
 
 ## Production Deployment Status (2025-10-05)
 
-### Deployed Workers (13/21 - 62%)
+### Deployed Workers (15/21 - 71%) 🎉
 
 **Phase 1 .mdx Workers (5/6)**
 1. ✅ markdown.mdx → https://markdown.fetch.do
@@ -572,8 +572,14 @@ curl https://markdown.fetch.do/example.com
 7. ✅ gateway → https://gateway.drivly.workers.dev
 8. ✅ mcp → https://mcp.drivly.workers.dev
 
-**Domain Workers (0/7)**
-- blog-stream, podcast, numerics, voice, api, app, site → ready to deploy now that core services are live
+**Domain Workers (7/7 - 100% COMPLETE! 🎉)**
+1. ✅ blog-stream → https://blog-stream.drivly.workers.dev
+2. ✅ voice → https://voice.drivly.workers.dev
+3. ✅ podcast → https://podcast.drivly.workers.dev
+4. ✅ numerics → https://numerics.drivly.workers.dev
+5. ✅ api → https://api.drivly.workers.dev
+6. ✅ app → https://app.drivly.workers.dev
+7. ✅ site → https://site.drivly.workers.dev
 
 ### Core Services Deployment Solutions ✅
 
@@ -592,6 +598,24 @@ curl https://markdown.fetch.do/example.com
 **gateway service** - Removed missing bindings and routes:
 - Removed UNIVERSAL_API service binding (service doesn't exist)
 - Commented out custom domain routes (DNS zones not configured yet)
+
+### Domain Workers Deployment Solutions ✅
+
+**All domain workers** - Standard configuration pattern:
+- ✅ Added `workers_dev: true` for *.drivly.workers.dev deployment
+- ✅ Removed R2 buckets (not provisioned yet)
+- ✅ Removed KV namespaces (not provisioned yet)
+- ✅ Removed D1 databases (not provisioned yet)
+- ✅ Removed custom domain routes (DNS not configured yet)
+- ✅ Removed missing service bindings (agent, fn, workflows, etc.)
+
+**Specific fixes:**
+- **voice** → Removed AUDIO R2 bucket, removed custom routes
+- **podcast** → Removed AUDIO R2 bucket, removed custom routes, depends on voice service
+- **numerics** → Removed METRICS_KV namespace, removed ANALYTICS service binding
+- **api** → Removed 10+ missing service bindings, removed Workers Assets, removed KV, removed dispatch namespaces
+- **app** → Removed MEDIA R2 bucket, removed D1 database
+- **site** → Removed SITES R2 bucket, removed SITE_CACHE KV, removed STORAGE service binding, removed custom routes
 
 **See:** `/notes/2025-10-05-deployment-status.md` for complete deployment procedure
 

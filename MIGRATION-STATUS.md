@@ -552,7 +552,7 @@ curl https://markdown.fetch.do/example.com
 
 ## Production Deployment Status (2025-10-05)
 
-### Deployed Workers (8/21 - 38%)
+### Deployed Workers (13/21 - 62%)
 
 **Phase 1 .mdx Workers (5/6)**
 1. ✅ markdown.mdx → https://markdown.fetch.do
@@ -562,25 +562,36 @@ curl https://markdown.fetch.do/example.com
 5. ✅ routes.mdx → https://routes.drivly.workers.dev
 6. ⏳ generate.mdx → needs `pnpm install`
 
-**Core Services (3/8)**
+**Core Services (8/8 - 100% COMPLETE! 🎉)**
 1. ✅ db → https://db.drivly.workers.dev
 2. ✅ auth → https://auth.drivly.workers.dev
 3. ✅ schedule → https://schedule.drivly.workers.dev
-4. ⏳ webhooks → needs `pnpm install @dot-do/protocol-router`
-5. ⏳ email → needs source restore + deploy
-6. ⏳ queue → needs source restore + deploy
-7. ⏳ gateway → needs source restore + deploy
-8. ⏳ mcp → needs source restore + deploy
+4. ✅ webhooks → https://webhooks.drivly.workers.dev (includes github-sync queue consumer)
+5. ✅ email → https://email.drivly.workers.dev
+6. ✅ queue → https://queue.drivly.workers.dev (producer + consumer)
+7. ✅ gateway → https://gateway.drivly.workers.dev
+8. ✅ mcp → https://mcp.drivly.workers.dev
 
 **Domain Workers (0/7)**
-- blog-stream, podcast, numerics, voice, api, app, site → blocked until core services deployed
+- blog-stream, podcast, numerics, voice, api, app, site → ready to deploy now that core services are live
 
-### Resolution: db Service Fixed ✅
-The issue was wrangler.jsonc pointing to wrong file:
+### Core Services Deployment Solutions ✅
+
+**db service** - Used worker.ts instead of src/index.ts:
 - ❌ Before: `main: "src/index.ts"` (documentation examples with syntax errors)
 - ✅ After: `main: "worker.ts"` (actual implementation)
 
-Auth + schedule also restored from git (Phase 3 sources were overwritten by .mdx builds)
+**email, auth, schedule, webhooks, mcp** - Restored from commit 0413233:
+- Phase 3 sources were overwritten by .mdx builds
+- Restored clean implementations without duplicate exports or missing dependencies
+
+**queue service** - Used worker.ts with queue handler:
+- ❌ Before: `main: "src/index.ts"` (missing queue consumer export)
+- ✅ After: `main: "worker.ts"` (includes both fetch and queue handlers)
+
+**gateway service** - Removed missing bindings and routes:
+- Removed UNIVERSAL_API service binding (service doesn't exist)
+- Commented out custom domain routes (DNS zones not configured yet)
 
 **See:** `/notes/2025-10-05-deployment-status.md` for complete deployment procedure
 

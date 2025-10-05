@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: #0f0f0f;
+        color: #e0e0e0;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      header {
+        margin-bottom: 40px;
+      }
+
+      h1 {
+        font-size: 32px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .subtitle {
+        color: #888;
+        font-size: 14px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+      }
+
+      select,
+      button {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        color: #e0e0e0;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      select:hover,
+      button:hover {
+        border-color: #667eea;
+        background: #222;
+      }
+
+      button.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        font-weight: 500;
+      }
+
+      button.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .metric-card {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 24px;
+        transition: all 0.2s;
+      }
+
+      .metric-card:hover {
+        border-color: #667eea;
+        transform: translateY(-2px);
+      }
+
+      .metric-label {
+        color: #888;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+
+      .metric-value {
+        font-size: 36px;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .metric-change {
+        font-size: 12px;
+        color: #4ade80;
+      }
+
+      .metric-change.negative {
+        color: #f87171;
+      }
+
+      .charts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 20px;
+      }
+
+      .chart-card {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 12px;
+        padding: 24px;
+      }
+
+      .chart-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 20px;
+      }
+
+      .chart-container {
+        position: relative;
+        height: 300px;
+      }
+
+      .loading {
+        text-align: center;
+        color: #888;
+        padding: 40px;
+      }
+
+      .error {
+        background: #3f1f1f;
+        border: 1px solid #7f2020;
+        color: #f87171;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Analytics Dashboard</h1>
+        <div class="subtitle">Real-time metrics powered by Cloudflare Workers Analytics Engine</div>
+      </header>
+
+      <div class="controls">
+        <select id="timeRange">
+          <option value="1h">Last Hour</option>
+          <option value="24h" selected>Last 24 Hours</option>
+          <option value="7d">Last 7 Days</option>
+          <option value="30d">Last 30 Days</option>
+        </select>
+        <select id="groupBy">
+          <option value="hour" selected>Group by Hour</option>
+          <option value="day">Group by Day</option>
+          <option value="week">Group by Week</option>
+        </select>
+        <button class="primary" onclick="loadDashboard()">Refresh</button>
+      </div>
+
+      <div id="error" class="error" style="display: none"></div>
+
+      <div class="metrics">
+        <div class="metric-card">
+          <div class="metric-label">Total Requests</div>
+          <div class="metric-value" id="totalRequests">-</div>
+          <div class="metric-change" id="requestsChange">-</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Avg Response Time</div>
+          <div class="metric-value" id="avgResponseTime">-</div>
+          <div class="metric-change" id="responseTimeChange">-</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Error Rate</div>
+          <div class="metric-value" id="errorRate">-</div>
+          <div class="metric-change negative" id="errorRateChange">-</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Active Users</div>
+          <div class="metric-value" id="activeUsers">-</div>
+          <div class="metric-change" id="activeUsersChange">-</div>
+        </div>
+      </div>
+
+      <div class="charts">
+        <div class="chart-card">
+          <div class="chart-title">Request Volume</div>
+          <div class="chart-container">
+            <canvas id="requestChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Response Time Percentiles</div>
+          <div class="chart-container">
+            <canvas id="performanceChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Error Rate</div>
+          <div class="chart-container">
+            <canvas id="errorChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Top Endpoints</div>
+          <div class="chart-container">
+            <canvas id="endpointsChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // API configuration
+      const API_BASE = window.location.origin
+
+      // Chart instances
+      let requestChart, performanceChart, errorChart, endpointsChart
+
+      // Initialize charts
+      function initCharts() {
+        const chartConfig = {
+          type: 'line',
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                labels: { color: '#888' },
+              },
+            },
+            scales: {
+              x: {
+                grid: { color: '#2a2a2a' },
+                ticks: { color: '#888' },
+              },
+              y: {
+                grid: { color: '#2a2a2a' },
+                ticks: { color: '#888' },
+              },
+            },
+          },
+        }
+
+        requestChart = new Chart(document.getElementById('requestChart'), {
+          ...chartConfig,
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: 'Requests',
+                data: [],
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true,
+              },
+            ],
+          },
+        })
+
+        performanceChart = new Chart(document.getElementById('performanceChart'), {
+          ...chartConfig,
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: 'P50',
+                data: [],
+                borderColor: '#4ade80',
+                tension: 0.4,
+              },
+              {
+                label: 'P95',
+                data: [],
+                borderColor: '#fbbf24',
+                tension: 0.4,
+              },
+              {
+                label: 'P99',
+                data: [],
+                borderColor: '#f87171',
+                tension: 0.4,
+              },
+            ],
+          },
+        })
+
+        errorChart = new Chart(document.getElementById('errorChart'), {
+          ...chartConfig,
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: 'Error Rate %',
+                data: [],
+                borderColor: '#f87171',
+                backgroundColor: 'rgba(248, 113, 113, 0.1)',
+                tension: 0.4,
+                fill: true,
+              },
+            ],
+          },
+        })
+
+        endpointsChart = new Chart(document.getElementById('endpointsChart'), {
+          type: 'bar',
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: 'Requests',
+                data: [],
+                backgroundColor: '#667eea',
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+              legend: { display: false },
+            },
+            scales: {
+              x: {
+                grid: { color: '#2a2a2a' },
+                ticks: { color: '#888' },
+              },
+              y: {
+                grid: { display: false },
+                ticks: { color: '#888' },
+              },
+            },
+          },
+        })
+      }
+
+      // Load dashboard data
+      async function loadDashboard() {
+        try {
+          document.getElementById('error').style.display = 'none'
+
+          const timeRange = document.getElementById('timeRange').value
+          const groupBy = document.getElementById('groupBy').value
+
+          const { start, end } = getTimeRange(timeRange)
+
+          // Load performance metrics
+          const perfResponse = await fetch(`${API_BASE}/metrics/performance`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ start, end, groupBy }),
+          })
+
+          if (!perfResponse.ok) {
+            throw new Error('Failed to load performance metrics')
+          }
+
+          const perfData = await perfResponse.json()
+
+          // Update metrics
+          updateMetrics(perfData.data)
+
+          // Update charts
+          updateCharts(perfData.data)
+        } catch (error) {
+          console.error('Dashboard error:', error)
+          const errorEl = document.getElementById('error')
+          errorEl.textContent = error.message
+          errorEl.style.display = 'block'
+        }
+      }
+
+      // Get time range
+      function getTimeRange(range) {
+        const end = new Date()
+        let start = new Date()
+
+        switch (range) {
+          case '1h':
+            start = new Date(end.getTime() - 3600000)
+            break
+          case '24h':
+            start = new Date(end.getTime() - 86400000)
+            break
+          case '7d':
+            start = new Date(end.getTime() - 604800000)
+            break
+          case '30d':
+            start = new Date(end.getTime() - 2592000000)
+            break
+        }
+
+        return {
+          start: start.toISOString(),
+          end: end.toISOString(),
+        }
+      }
+
+      // Update metric cards
+      function updateMetrics(data) {
+        if (!data || data.length === 0) return
+
+        const latest = data[data.length - 1]
+        const total = data.reduce((sum, d) => sum + d.count, 0)
+
+        document.getElementById('totalRequests').textContent = formatNumber(total)
+        document.getElementById('avgResponseTime').textContent = `${Math.round(latest.avg_duration)}ms`
+        document.getElementById('errorRate').textContent = `${(latest.error_rate * 100).toFixed(2)}%`
+        document.getElementById('activeUsers').textContent = formatNumber(Math.floor(total / data.length))
+
+        // Mock change percentages (would calculate from previous period in real implementation)
+        document.getElementById('requestsChange').textContent = '+12.5% from previous period'
+        document.getElementById('responseTimeChange').textContent = '-8.2% from previous period'
+        document.getElementById('errorRateChange').textContent = '+2.1% from previous period'
+        document.getElementById('activeUsersChange').textContent = '+15.3% from previous period'
+      }
+
+      // Update charts
+      function updateCharts(data) {
+        const labels = data.map(d => formatTimestamp(d.timestamp))
+        const counts = data.map(d => d.count)
+        const p50 = data.map(d => d.p50_duration)
+        const p95 = data.map(d => d.p95_duration)
+        const p99 = data.map(d => d.p99_duration)
+        const errorRates = data.map(d => d.error_rate * 100)
+
+        // Update request chart
+        requestChart.data.labels = labels
+        requestChart.data.datasets[0].data = counts
+        requestChart.update()
+
+        // Update performance chart
+        performanceChart.data.labels = labels
+        performanceChart.data.datasets[0].data = p50
+        performanceChart.data.datasets[1].data = p95
+        performanceChart.data.datasets[2].data = p99
+        performanceChart.update()
+
+        // Update error chart
+        errorChart.data.labels = labels
+        errorChart.data.datasets[0].data = errorRates
+        errorChart.update()
+
+        // Update endpoints chart (mock data)
+        endpointsChart.data.labels = ['/api/users', '/api/events', '/api/query', '/api/billing', '/api/metrics']
+        endpointsChart.data.datasets[0].data = [1250, 980, 750, 420, 320]
+        endpointsChart.update()
+      }
+
+      // Format number with K/M suffix
+      function formatNumber(num) {
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
+        return num.toString()
+      }
+
+      // Format timestamp
+      function formatTimestamp(ts) {
+        const date = new Date(ts)
+        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+      }
+
+      // Initialize on load
+      window.addEventListener('DOMContentLoaded', () => {
+        initCharts()
+        loadDashboard()
+      })
+    </script>
+  </body>
+</html>

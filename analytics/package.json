@@ -1,14 +1,20 @@
 {
   "name": "@dot-do/analytics",
   "version": "1.0.0",
-  "description": "Real-time analytics service for Services.Delivery using Cloudflare Analytics Engine",
-  "main": "src/index.ts",
+  "description": "Real-time Analytics Platform using Cloudflare Workers Analytics Engine, Pipelines, and R2 SQL",
+  "main": "src/ingestion.ts",
+  "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev": "wrangler dev src/ingestion.ts",
+    "dev:query": "wrangler dev src/query.ts --name analytics-query",
+    "deploy": "wrangler deploy src/ingestion.ts",
+    "deploy:query": "wrangler deploy src/query.ts --name analytics-query",
+    "deploy:all": "pnpm deploy && pnpm deploy:query",
+    "tail": "wrangler tail",
     "test": "vitest",
     "test:integration": "vitest --config vitest.integration.config.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "hono": "^4.8.0"

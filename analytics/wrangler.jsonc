@@ -1,81 +1,71 @@
-/**
- * Wrangler Configuration for Analytics Service
- * Real-time analytics with Cloudflare Analytics Engine
- */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "analytics",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-07-08",
+  "main": "src/ingestion.ts",
+  "compatibility_date": "2025-10-01",
   "account_id": "b6641681fe423910342b9ffa1364c76d",
-  "compatibility_flags": ["nodejs_compat"],
 
-  // Routes
-  // "routes": [
-    // { "pattern": "analytics.api.mw/*", "zone_name": "api.mw" },
-    // { "pattern": "analytics.apis.do/*", "zone_name": "apis.do" }
-  // ],
-
-  // Observability
+  // Enable observability
   "observability": {
     "enabled": true
   },
 
-  // Analytics Engine Datasets
+  // Analytics Engine binding
   "analytics_engine_datasets": [
     {
-      "binding": "ANALYTICS",
-      "dataset": "services_delivery_analytics"
+      "binding": "ANALYTICS_ENGINE",
+      "dataset": "analytics_events"
     }
-  // ],
+  ],
 
-  // R2 Buckets for long-term storage and R2 SQL
+  // R2 bucket for historical storage
   "r2_buckets": [
     {
-      "binding": "ANALYTICS_BUCKET",
-      "bucket_name": "analytics-data",
-      "jurisdiction": "us"
+      "binding": "R2_BUCKET",
+      "bucket_name": "analytics-storage"
     }
+  ],
+
+  // Optional: D1 for metadata and enrichment (commented out - create database first)
+  // "d1_databases": [
+  //   {
+  //     "binding": "DB",
+  //     "database_name": "analytics_metadata",
+  //     "database_id": "YOUR_D1_DATABASE_ID"
+  //   }
   // ],
 
-  // Service Bindings
-  "services": [
-    { "binding": "DB", "service": "db" },
-    { "binding": "DOMAINS", "service": "domains" },
-    { "binding": "DNS_TOOLS", "service": "dns-tools" },
-    { "binding": "DOMAIN_MONITOR", "service": "domain-monitor" }
+  // Service bindings for integration (uncomment after deploying both workers)
+  // "services": [
+  //   {
+  //     "binding": "ANALYTICS_INGESTION",
+  //     "service": "analytics"
+  //   },
+  //   {
+  //     "binding": "ANALYTICS_QUERY",
+  //     "service": "analytics-query"
+  //   }
   // ],
 
-  // KV for real-time aggregation cache
-  "kv_namespaces": [
-    {
-      "binding": "ANALYTICS_KV",
-      "id": "analytics-realtime-cache"
+  // Environment-specific configurations
+  "env": {
+    "production": {
+      "name": "analytics-production",
+      "analytics_engine_datasets": [
+        {
+          "binding": "ANALYTICS_ENGINE",
+          "dataset": "analytics_events_production"
+        }
+      ]
+    },
+    "staging": {
+      "name": "analytics-staging",
+      "analytics_engine_datasets": [
+        {
+          "binding": "ANALYTICS_ENGINE",
+          "dataset": "analytics_events_staging"
+        }
+      ]
     }
-  // ],
-
-  // Queue for async analytics processing
-  "queues": {
-    "producers": [
-      {
-        "queue": "analytics-events",
-        "binding": "ANALYTICS_QUEUE"
-      }
-    ],
-    "consumers": [
-      {
-        "queue": "analytics-events",
-        "max_batch_size": 100,
-        "max_batch_timeout": 30
-      }
-    ]
-  },
-
-  // Environment Variables
-  "vars": {
-    "ENVIRONMENT": "production"
   }
-
-  // Required secrets (set via: wrangler secret put <NAME>):
-  // - API_TOKEN: For SQL API queries
 }

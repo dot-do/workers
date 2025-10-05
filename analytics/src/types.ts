@@ -1,157 +1,141 @@
 /**
- * Analytics Service Types
- * TypeScript definitions for analytics events and queries
+ * Shared TypeScript types for Analytics Platform
  */
 
-export interface Env {
-  ANALYTICS: AnalyticsEngineDataset
-  ANALYTICS_KV: KVNamespace
-  ANALYTICS_BUCKET: R2Bucket
-  ANALYTICS_QUEUE: Queue
-  DB: any
-  DOMAINS?: any // Domain search service
-  DNS_TOOLS?: any // DNS tools service
-  DOMAIN_MONITOR?: any // Domain monitoring service
-  ACCOUNT_ID: string
-  API_TOKEN: string
-  ENVIRONMENT: string
-}
+// ==================== Event Types ====================
 
-/**
- * Analytics Event Schema
- * Maps to Analytics Engine data point structure
- */
-export interface AnalyticsEvent {
-  // Event identification
-  eventType: EventType
+export interface IngestEvent {
+  // Core fields
   timestamp?: number
-
-  // Service execution metrics
-  serviceId?: string
-  executionId?: string
-  latencyMs?: number
-  success?: boolean
-  errorCode?: string
-
-  // Revenue metrics
-  revenueAmount?: number
-  currency?: string
-  orderId?: string
-
-  // Marketplace metrics
-  searchQuery?: string
-  category?: string
-  conversion?: boolean
-
-  // Experiment metrics
-  experimentId?: string
-  variantIndex?: number
-
-  // User metrics
+  event: string
   userId?: string
   sessionId?: string
-  cohort?: string
+  organizationId?: string
 
-  // Additional context
-  metadata?: Record<string, any>
-}
+  // Properties
+  properties?: Record<string, string | number | boolean>
 
-export type EventType =
-  | 'service_execution'
-  | 'marketplace_search'
-  | 'marketplace_view'
-  | 'marketplace_conversion'
-  | 'revenue_transaction'
-  | 'experiment_view'
-  | 'experiment_conversion'
-  | 'user_session'
-  | 'user_action'
-
-/**
- * Metric Aggregations
- */
-export interface ServiceMetrics {
-  serviceId: string
-  serviceName: string
-  executions: number
-  latency: {
-    p50: number
-    p95: number
-    p99: number
-    avg: number
+  // Usage tracking (for billing)
+  usage?: {
+    quantity: number
+    unit: string
+    sku?: string
   }
-  errorRate: number
-  successRate: number
-  period: string
-}
 
-export interface RevenueMetrics {
-  gmv: number // Gross Marketplace Volume
-  mrr: number // Monthly Recurring Revenue
-  takeRate: number
-  creatorEarnings: number
-  transactionCount: number
-  avgOrderValue: number
-  period: string
-}
-
-export interface MarketplaceMetrics {
-  searches: number
-  views: number
-  conversions: number
-  conversionRate: number
-  topServices: Array<{ id: string; name: string; views: number }>
-  topCategories: Array<{ category: string; views: number }>
-  period: string
-}
-
-export interface ExperimentMetrics {
-  experimentId: string
-  experimentName: string
-  variants: Array<{
-    index: number
-    name: string
-    views: number
-    conversions: number
-    conversionRate: number
-  }>
-  winner?: number
-  confidence: number
-  period: string
-}
-
-export interface UserMetrics {
-  dau: number // Daily Active Users
-  mau: number // Monthly Active Users
-  retention: {
-    day1: number
-    day7: number
-    day30: number
+  // Performance metrics
+  performance?: {
+    duration?: number
+    success?: boolean
+    statusCode?: number
   }
-  avgSessionDuration: number
-  churnRate: number
-  period: string
 }
 
-/**
- * Query Parameters
- */
-export interface QueryParams {
-  startDate?: string
-  endDate?: string
-  serviceId?: string
-  category?: string
+export interface BatchIngestRequest {
+  events: IngestEvent[]
+}
+
+export interface IngestResponse {
+  success: boolean
+  accepted: number
+  rejected: number
+  errors?: string[]
+}
+
+// ==================== Query Types ====================
+
+export interface QueryRequest {
+  // Time range
+  start: string // ISO 8601
+  end: string // ISO 8601
+
+  // Filters
+  event?: string
   userId?: string
-  experimentId?: string
-  granularity?: 'hour' | 'day' | 'week' | 'month'
+  organizationId?: string
+  sessionId?: string
+
+  // Aggregation
+  groupBy?: 'hour' | 'day' | 'week' | 'month'
+  metrics?: string[] // ['count', 'avg_duration', 'p95_duration', 'sum_usage']
+
+  // Pagination
   limit?: number
+  offset?: number
 }
 
-/**
- * Real-time Counter
- */
-export interface RealtimeCounter {
-  key: string
+export interface QueryResponse {
+  data: TimeSeriesDataPoint[]
+  meta: {
+    start: string
+    end: string
+    count: number
+    hasMore: boolean
+  }
+}
+
+export interface TimeSeriesDataPoint {
+  timestamp: string
   count: number
-  lastUpdated: number
+  [key: string]: string | number // Additional metrics
+}
+
+// ==================== Billing Types ====================
+
+export interface UsageBillingRequest {
+  organizationId: string
+  start: string
+  end: string
+  sku?: string
+}
+
+export interface UsageBillingResponse {
+  organizationId: string
+  period: {
+    start: string
+    end: string
+  }
+  items: Array<{
+    sku: string
+    quantity: number
+    unit: string
+  }>
+  total: {
+    quantity: number
+    cost?: number
+  }
+}
+
+// ==================== Performance Types ====================
+
+export interface PerformanceMetricsRequest {
+  start: string
+  end: string
+  path?: string
+  groupBy?: 'hour' | 'day'
+}
+
+export interface PerformanceMetricsResponse {
+  data: Array<{
+    timestamp: string
+    count: number
+    avg_duration: number
+    p50_duration: number
+    p95_duration: number
+    p99_duration: number
+    error_rate: number
+  }>
+}
+
+// ==================== Environment Types ====================
+
+export interface AnalyticsEnv {
+  ANALYTICS_ENGINE: AnalyticsEngineDataset
+  PIPELINE?: Fetcher
+  R2_BUCKET?: R2Bucket
+  DB?: D1Database
+  RATE_LIMITER?: RateLimit
+
+  // Service bindings (for integration with other workers)
+  ANALYTICS_INGESTION?: any
+  ANALYTICS_QUERY?: any
 }

@@ -1,0 +1,143 @@
+-- Analytics Engine Dataset Schema
+-- Note: Analytics Engine is schema-less, but this documents the expected structure
+
+-- Event Structure:
+-- - timestamp: auto-added by Analytics Engine (milliseconds since epoch)
+-- - event: implied by the indexes/blobs structure
+-- - indexes: array of strings for filtering and grouping
+-- - blobs: array of numbers for aggregations
+-- - doubles: deprecated (use blobs instead)
+
+-- Index Structure (strings):
+-- indexes[0] = user or org identifier (e.g., "user:123", "org:456")
+-- indexes[1] = session identifier (e.g., "session:abc-def")
+-- indexes[2] = event-specific property (e.g., "path:/api/users", "sku:ai-tokens")
+-- indexes[3] = additional property
+-- indexes[4] = additional property
+
+-- Blob Structure (numbers):
+-- blobs[0] = reserved
+-- blobs[1] = duration (milliseconds)
+-- blobs[2] = status code (HTTP response code)
+-- blobs[3] = usage quantity (for billing)
+-- blobs[4] = additional metric
+-- blobs[5] = additional metric
+
+-- Example Events:
+
+-- 1. API Request Event
+-- {
+--   "timestamp": 1234567890000,
+--   "indexes": [
+--     "user:user_123",
+--     "session:session_abc",
+--     "path:/api/users",
+--     "method:GET",
+--     "status:200"
+--   ],
+--   "blobs": [
+--     0,           // reserved
+--     45.5,        // duration (ms)
+--     200,         // status code
+--     0,           // usage quantity (not applicable)
+--     0,           // reserved
+--     0            // reserved
+--   ]
+-- }
+
+-- 2. Usage Tracking Event
+-- {
+--   "timestamp": 1234567890000,
+--   "indexes": [
+--     "org:org_456",
+--     "user:user_123",
+--     "sku:ai-tokens",
+--     "unit:tokens"
+--   ],
+--   "blobs": [
+--     0,           // reserved
+--     0,           // duration (not applicable)
+--     0,           // status code (not applicable)
+--     1500,        // usage quantity
+--     0,           // reserved
+--     0            // reserved
+--   ]
+-- }
+
+-- 3. Error Event
+-- {
+--   "timestamp": 1234567890000,
+--   "indexes": [
+--     "user:user_123",
+--     "session:session_abc",
+--     "path:/api/data",
+--     "error:validation_failed",
+--     "severity:error"
+--   ],
+--   "blobs": [
+--     0,           // reserved
+--     12.3,        // duration (ms)
+--     400,         // status code
+--     0,           // usage quantity (not applicable)
+--     0,           // reserved
+--     0            // reserved
+--   ]
+-- }
+
+-- Common Query Patterns:
+
+-- Count requests per hour
+-- SELECT
+--   FLOOR(timestamp / 3600000) * 3600000 as hour,
+--   COUNT(*) as request_count
+-- FROM analytics_events
+-- WHERE timestamp >= 1234567890000
+--   AND timestamp <= 1234657890000
+-- GROUP BY hour
+-- ORDER BY hour ASC
+
+-- Average response time by endpoint
+-- SELECT
+--   indexes[2] as endpoint,
+--   AVG(blobs[1]) as avg_duration_ms
+-- FROM analytics_events
+-- WHERE timestamp >= 1234567890000
+--   AND timestamp <= 1234657890000
+-- GROUP BY indexes[2]
+-- ORDER BY avg_duration_ms DESC
+
+-- Error rate by user
+-- SELECT
+--   indexes[0] as user_id,
+--   COUNT(*) as total_requests,
+--   SUM(CASE WHEN blobs[2] >= 400 THEN 1 ELSE 0 END) as errors,
+--   (SUM(CASE WHEN blobs[2] >= 400 THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) as error_rate_pct
+-- FROM analytics_events
+-- WHERE timestamp >= 1234567890000
+--   AND timestamp <= 1234657890000
+-- GROUP BY indexes[0]
+-- ORDER BY error_rate_pct DESC
+
+-- Usage billing aggregation
+-- SELECT
+--   indexes[0] as organization_id,
+--   indexes[2] as sku,
+--   SUM(blobs[3]) as total_quantity
+-- FROM analytics_events
+-- WHERE timestamp >= 1234567890000
+--   AND timestamp <= 1234657890000
+--   AND indexes[2] LIKE 'sku:%'
+-- GROUP BY indexes[0], indexes[2]
+-- ORDER BY total_quantity DESC
+
+-- Performance percentiles
+-- SELECT
+--   indexes[2] as endpoint,
+--   PERCENTILE(blobs[1], 0.5) as p50_ms,
+--   PERCENTILE(blobs[1], 0.95) as p95_ms,
+--   PERCENTILE(blobs[1], 0.99) as p99_ms
+-- FROM analytics_events
+-- WHERE timestamp >= 1234567890000
+--   AND timestamp <= 1234657890000
+-- GROUP BY indexes[2]
+-- ORDER BY p99_ms DESC

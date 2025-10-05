@@ -27,6 +27,7 @@ import * as sessions from './sessions'
 import * as rbac from './rbac'
 import * as middleware from './middleware'
 import * as oauthEndpoints from './oauth-endpoints'
+import * as oauthUniversal from './oauth-universal'
 
 /**
  * Auth Service RPC Interface
@@ -189,6 +190,81 @@ export default class AuthService extends WorkerEntrypoint<AuthServiceEnv> {
    */
   async exchangeWorkOSCode(code: string): Promise<any> {
     return await workos.exchangeCodeForToken(this.env, code)
+  }
+
+  // ============================================================================
+  // UNIVERSAL API - OAuth Flow Methods (Phase 7)
+  // ============================================================================
+
+  /**
+   * Get OAuth authorization URL for Universal API provider
+   *
+   * @param provider - Provider name (stripe, github, openweather)
+   * @param redirectUri - Callback URL after authorization
+   * @param state - Random state parameter for CSRF protection
+   * @returns Authorization URL to redirect user to
+   */
+  async getUniversalOAuthUrl(provider: string, redirectUri: string, state: string): Promise<string | null> {
+    return oauthUniversal.getOAuthUrl(provider, redirectUri, state, this.env)
+  }
+
+  /**
+   * Exchange OAuth authorization code for access token
+   *
+   * @param provider - Provider name
+   * @param code - Authorization code from callback
+   * @param redirectUri - Must match redirect URI from authorization step
+   * @returns Token response from provider
+   */
+  async exchangeUniversalOAuthCode(
+    provider: string,
+    code: string,
+    redirectUri: string
+  ): Promise<{ access_token: string; refresh_token?: string; expires_in?: number; scope?: string } | null> {
+    return await oauthUniversal.exchangeOAuthCode(provider, code, redirectUri, this.env)
+  }
+
+  /**
+   * Store OAuth token in database (encrypted)
+   *
+   * @param token - Token data to store
+   * @returns Success status
+   */
+  async storeUniversalOAuthToken(token: oauthUniversal.OAuthToken): Promise<boolean> {
+    return await oauthUniversal.storeOAuthToken(token, this.env)
+  }
+
+  /**
+   * Get OAuth token for user and provider (decrypted)
+   *
+   * @param userId - User ID
+   * @param provider - Provider name
+   * @returns Decrypted token data or null if not found
+   */
+  async getUniversalOAuthToken(userId: string, provider: string): Promise<oauthUniversal.OAuthToken | null> {
+    return await oauthUniversal.getOAuthToken(userId, provider, this.env)
+  }
+
+  /**
+   * Refresh expired OAuth token
+   *
+   * @param userId - User ID
+   * @param provider - Provider name
+   * @returns Success status
+   */
+  async refreshUniversalOAuthToken(userId: string, provider: string): Promise<boolean> {
+    return await oauthUniversal.refreshOAuthToken(userId, provider, this.env)
+  }
+
+  /**
+   * Check if OAuth token is expired or about to expire
+   *
+   * @param token - OAuth token data
+   * @param bufferSeconds - Consider token expired if it expires within this many seconds
+   * @returns True if token is expired or about to expire
+   */
+  isUniversalOAuthTokenExpired(token: oauthUniversal.OAuthToken, bufferSeconds?: number): boolean {
+    return oauthUniversal.isTokenExpired(token, bufferSeconds)
   }
 
   /**

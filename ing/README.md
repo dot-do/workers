@@ -1,8 +1,10 @@
 # `ing` - Semantic Triple Network Worker
 
 **Version:** 1.0.0
-**Status:** 🚧 Implementation Complete, Testing In Progress
+**Status:** ✅ Refactored to use existing graph database (DB_SERVICE)
 **Domain:** `ing.as`
+
+> **Implementation Note**: This worker does NOT create duplicate triple storage tables. Instead, it maps semantic triples to the existing graph database infrastructure (`things` + `relationships` tables) via `DB_SERVICE` RPC interface.
 
 ## Overview
 
@@ -503,7 +505,8 @@ MIT
 
 ---
 
-**Status:** 🚧 Implementation Complete
-**Next Steps:** Testing, deployment, integration
+**Status:** ✅ Refactored to use existing graph database
+**Implementation:** Uses DB_SERVICE RPC interface (no duplicate tables)
+**Next Steps:** DNS configuration (*.ing.as), integration testing, AI inference
 **Managed By:** Claude Code (AI Project Manager)
 **Contact:** Issues at https://github.com/dot-do/.do/issues

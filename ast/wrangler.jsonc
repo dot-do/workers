@@ -1,16 +1,20 @@
 /**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
+ * ast Worker Configuration
+ * Generated from ast.mdx
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "ast",
-	"main": "worker.ts",
+	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
-	"observability": { "enabled": true },
+	"observability": {
+		"enabled": true
+	},
 	"build": {
 		"command": "",
-		"watch_paths": ["worker.ts"]
+		"watch_paths": [
+			"worker.ts"
+		]
 	}
 }

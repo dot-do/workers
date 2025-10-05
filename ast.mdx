@@ -1,4 +1,19 @@
-# ast
+---
+$type: Worker
+$id: ast
+name: ast
+main: src/index.ts
+compatibility_date: "2025-07-08"
+account_id: b6641681fe423910342b9ffa1364c76d
+
+observability:
+  enabled: true
+
+build:
+  command: ""
+  watch_paths:
+    - worker.ts
+---
 
 # AST Parser Worker
 
@@ -93,7 +108,42 @@ Code blocks are parsed if they have one of these language tags:
 
 ## Implementation
 
-(javascript|js|jsx|typescript|ts|tsx)\n([\s\S]*?)```/g
+```typescript
+import { WorkerEntrypoint } from 'cloudflare:workers'
+import * as yaml from 'yaml'
+import { fromMarkdown } from 'mdast-util-from-markdown'
+import { mdxjs } from 'micromark-extension-mdxjs'
+import { mdxFromMarkdown } from 'mdast-util-mdx'
+import * as acorn from 'acorn'
+import jsx from 'acorn-jsx'
+
+// Extend acorn with JSX support
+const jsxParser = acorn.Parser.extend(jsx())
+
+// Helper function to remove position data from AST nodes
+function removePositions(node: any): any {
+  if (!node || typeof node !== 'object') return node
+
+  // Handle arrays
+  if (Array.isArray(node)) {
+    return node.map(removePositions)
+  }
+
+  // Create a new object without position-related fields
+  const cleaned: any = {}
+  for (const key in node) {
+    if (key === 'position' || key === 'start' || key === 'end' || key === 'loc' || key === 'range') {
+      continue
+    }
+    cleaned[key] = removePositions(node[key])
+  }
+
+  return cleaned
+}
+
+// Helper function to extract and parse code blocks
+function extractAndParseCodeBlocks(content: string): ASTResult['jsCodeBlocks'] {
+  const codeBlockRegex = /```(javascript|js|jsx|typescript|ts|tsx)\n([\s\S]*?)```/g
   const blocks: ASTResult['jsCodeBlocks'] = []
 
   let match
@@ -291,9 +341,3 @@ export default class extends WorkerEntrypoint {
 3. **Frontmatter Processing** - Extract configuration from Markdown files
 4. **Static Site Generation** - Parse content for build pipelines
 5. **Content Validation** - Verify MDX syntax before publishing
-
----
-
-**Generated from:** ast.mdx
-
-**Build command:** `tsx scripts/build-mdx-worker.ts ast.mdx`

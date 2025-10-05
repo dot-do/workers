@@ -108,6 +108,7 @@ function generateWranglerConfig(frontmatter: WorkerFrontmatter): string {
   if (frontmatter.account_id) config.account_id = frontmatter.account_id
   if (frontmatter.observability) config.observability = frontmatter.observability
   if (frontmatter.ai) config.ai = frontmatter.ai
+  if (frontmatter.build) config.build = frontmatter.build
   if (frontmatter.services) config.services = frontmatter.services
   if (frontmatter.vars) config.vars = frontmatter.vars
   if (frontmatter.routes) config.routes = frontmatter.routes

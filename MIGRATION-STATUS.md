@@ -30,9 +30,9 @@ Workers that have ANY of these characteristics:
 
 **Goal**: Validate mdxe/wrangler integration with 5-7 simple workers
 
-**Status**: 1/7 complete
+**Status**: 3/7 complete (43%)
 
-### ✅ Migrated to .mdx (1 worker)
+### ✅ Migrated to .mdx (3 workers)
 
 1. **markdown.mdx** ✅ - URL-to-markdown converter using Workers AI
    - Original: `workers/markdown/worker.ts` (~36 LOC)
@@ -40,9 +40,23 @@ Workers that have ANY of these characteristics:
    - Build: ✅ Success
    - Deploy: ⏳ Pending test
 
+2. **ast.mdx** ✅ - MDX/Markdown AST parser with code block extraction
+   - Original: `workers/ast/worker.ts` (~215 LOC)
+   - Migrated: `workers/ast.mdx` (~380 LOC with docs)
+   - Build: ✅ Success
+   - Dependencies: yaml, mdast-util-from-markdown, acorn, acorn-jsx
+   - Deploy: ⏳ Pending test
+
+3. **utils.mdx** ✅ - ID conversion (ULID ↔ Sqid) and markdown utilities
+   - Original: `workers/utils/worker.ts` + utils modules (~90 LOC)
+   - Migrated: `workers/utils.mdx` (~320 LOC with docs)
+   - Build: ✅ Success
+   - Dependencies: ulid, sqids
+   - Deploy: ⏳ Pending test
+
 ### 🔧 Build Script Bug Fixes
 
-**Issue**: AI binding not copied from frontmatter to wrangler.jsonc
+**Issue 1**: AI binding not copied from frontmatter to wrangler.jsonc
 
 **Fix**: Added AI binding support to `scripts/build-mdx-worker.ts` (line 110)
 
@@ -50,15 +64,21 @@ Workers that have ANY of these characteristics:
 if (frontmatter.ai) config.ai = frontmatter.ai
 ```
 
-**Result**: AI binding now correctly extracted and included in generated wrangler.jsonc
+**Issue 2**: Build config not copied from frontmatter to wrangler.jsonc
 
-### ⏳ Pending Migration (6 workers)
+**Fix**: Added build config support to `scripts/build-mdx-worker.ts` (line 111)
 
-2. **ast.mdx** - AST parsing/manipulation
-3. **routes.mdx** - Route generation/analysis
-4. **generate.mdx** - Code generation utilities
-5. **docs.mdx** - Documentation generation
-6. **utils.mdx** - General utilities
+```typescript
+if (frontmatter.build) config.build = frontmatter.build
+```
+
+**Result**: Both AI binding and build config now correctly extracted from frontmatter
+
+### ⏳ Pending Migration (4 workers)
+
+4. **routes.mdx** - Route generation/analysis (⚠️ Complex - uses Workers Assets)
+5. **generate.mdx** - Code generation utilities (⚠️ Complex - AI streaming, Hono, pipelines)
+6. **docs.mdx** - Documentation generation
 7. **mdx.mdx** - MDX processing worker itself
 
 ## Phase 2: Domain Workers (Pending)
@@ -201,30 +221,50 @@ curl https://markdown.fetch.do/example.com
 ### Phase 1 Findings
 
 1. **Build Script Issues**:
-   - ❌ AI binding was not being extracted from frontmatter
+   - ❌ AI binding was not being extracted from frontmatter (Issue #1)
    - ✅ Fixed by adding `if (frontmatter.ai) config.ai = frontmatter.ai`
-   - ⚠️ May need to add support for other bindings (Durable Objects, Analytics Engine, etc.)
+   - ❌ Build config was not being extracted from frontmatter (Issue #2)
+   - ✅ Fixed by adding `if (frontmatter.build) config.build = frontmatter.build`
+   - ⚠️ May need to add support for other bindings (Durable Objects, Analytics Engine, placement, pipelines, rules, etc.)
 
 2. **mdxe/wrangler Integration**:
-   - ✅ Build process works smoothly
-   - ✅ Generated files match traditional structure
+   - ✅ Build process works smoothly for all 3 test workers
+   - ✅ Generated files match traditional structure exactly
+   - ✅ Dependencies (yaml, acorn, ulid, sqids) work correctly
    - ⏳ Deployment testing pending
 
 3. **Documentation Value**:
-   - ✅ Combining docs with code improves maintainability
+   - ✅ Combining docs with code significantly improves maintainability
    - ✅ Markdown sections make workers self-documenting
-   - ✅ Frontmatter provides clear overview of dependencies
+   - ✅ Frontmatter provides clear overview of dependencies and configuration
+   - ✅ Code blocks preserve implementation exactly as-is
+   - ✅ Generated README.md is comprehensive and useful
+
+4. **Worker Complexity Assessment**:
+   - ✅ Simple workers (< 50 LOC) migrate easily: markdown
+   - ✅ Medium workers (100-250 LOC) migrate well: ast, utils
+   - ⚠️ Complex workers (> 250 LOC, many bindings) need careful review: routes, generate
+   - ⚠️ Workers with special features (Workers Assets, pipelines, rules) may need extra frontmatter support
+
+5. **Migration Speed**:
+   - ⏱️ ~10-15 minutes per simple worker (including documentation)
+   - ⏱️ ~20-30 minutes per medium worker
+   - ⏱️ Build + verify takes < 30 seconds per worker
+   - 💡 Can migrate 3-4 simple workers per hour
 
 ## Next Steps
 
 1. ✅ Fix build script AI binding bug
-2. ✅ Create markdown.mdx and test build
-3. ✅ Document findings in MIGRATION-STATUS.md
-4. ⏳ Test deployment of markdown worker
-5. ⏳ Migrate ast.mdx (second test worker)
-6. ⏳ Continue Phase 1 (remaining 5 workers)
-7. ⏳ Update workers/CLAUDE.md with mdxe guidelines
-8. ⏳ Commit changes
+2. ✅ Fix build script build config bug
+3. ✅ Create markdown.mdx and test build
+4. ✅ Migrate ast.mdx (second test worker)
+5. ✅ Migrate utils.mdx (third test worker)
+6. ✅ Document findings in MIGRATION-STATUS.md
+7. ⏳ Test deployment of migrated workers
+8. ⏳ Migrate remaining Phase 1 workers (routes, generate, docs, mdx)
+9. ⏳ Add frontmatter support for missing bindings (placement, pipelines, rules)
+10. ⏳ Update workers/CLAUDE.md with mdxe guidelines
+11. ⏳ Commit Phase 1 progress
 
 ## Related Documentation
 

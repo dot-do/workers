@@ -11,7 +11,7 @@
 
 import { WorkerEntrypoint } from 'cloudflare:workers'
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
+import { protocolRouter } from '@dot-do/protocol-router'
 import {
   registerTask,
   unregisterTask,
@@ -118,8 +118,6 @@ export class ScheduleService extends WorkerEntrypoint<Env> {
 
 const app = new Hono<{ Bindings: Env }>()
 
-app.use('/*', cors())
-
 /**
  * GET / - Service info
  */
@@ -135,37 +133,26 @@ app.get('/', (c) => {
     },
     endpoints: {
       tasks: {
-        list: 'GET /tasks',
-        get: 'GET /tasks/:name',
-        register: 'POST /tasks',
-        enable: 'POST /tasks/:name/enable',
-        disable: 'POST /tasks/:name/disable',
-        delete: 'DELETE /tasks/:name',
-        run: 'POST /tasks/:name/run',
-        history: 'GET /tasks/:name/history',
+        list: 'GET /api/tasks',
+        get: 'GET /api/tasks/:name',
+        register: 'POST /api/tasks',
+        enable: 'POST /api/tasks/:name/enable',
+        disable: 'POST /api/tasks/:name/disable',
+        delete: 'DELETE /api/tasks/:name',
+        run: 'POST /api/tasks/:name/run',
+        history: 'GET /api/tasks/:name/history',
       },
-      handlers: 'GET /handlers',
-      executions: 'GET /executions',
-      health: 'GET /health',
+      handlers: 'GET /api/handlers',
+      executions: 'GET /api/executions',
+      health: 'GET /api/health',
     },
   })
 })
 
 /**
- * GET /health - Health check
+ * GET /api/tasks - List all tasks
  */
-app.get('/health', (c) => {
-  return c.json({
-    status: 'ok',
-    service: 'schedule',
-    timestamp: new Date().toISOString(),
-  })
-})
-
-/**
- * GET /tasks - List all tasks
- */
-app.get('/tasks', async (c) => {
+app.get('/api/tasks', async (c) => {
   try {
     const tasks = await listTasks(c.env)
 
@@ -186,9 +173,9 @@ app.get('/tasks', async (c) => {
 })
 
 /**
- * GET /tasks/:name - Get task details
+ * GET /api/tasks/:name - Get task details
  */
-app.get('/tasks/:name', async (c) => {
+app.get('/api/tasks/:name', async (c) => {
   try {
     const service = new ScheduleService(undefined as any, c.env)
     const name = c.req.param('name')
@@ -217,7 +204,7 @@ app.get('/tasks/:name', async (c) => {
 /**
  * POST /tasks - Register new task
  */
-app.post('/tasks', async (c) => {
+app.post('/api/tasks', async (c) => {
   try {
     const service = new ScheduleService(undefined as any, c.env)
     const options = await c.req.json<RegisterTaskOptions>()
@@ -243,7 +230,7 @@ app.post('/tasks', async (c) => {
 /**
  * POST /tasks/:name/enable - Enable task
  */
-app.post('/tasks/:name/enable', async (c) => {
+app.post('/api/tasks/:name/enable', async (c) => {
   try {
     const service = new ScheduleService(undefined as any, c.env)
     const name = c.req.param('name')
@@ -272,7 +259,7 @@ app.post('/tasks/:name/enable', async (c) => {
 /**
  * POST /tasks/:name/disable - Disable task
  */
-app.post('/tasks/:name/disable', async (c) => {
+app.post('/api/tasks/:name/disable', async (c) => {
   try {
     const service = new ScheduleService(undefined as any, c.env)
     const name = c.req.param('name')
@@ -301,7 +288,7 @@ app.post('/tasks/:name/disable', async (c) => {
 /**
  * DELETE /tasks/:name - Unregister task
  */
-app.delete('/tasks/:name', async (c) => {
+app.delete('/api/tasks/:name', async (c) => {
   try {
     const service = new ScheduleService(undefined as any, c.env)
     const name = c.req.param('name')
@@ -330,7 +317,7 @@ app.delete('/tasks/:name', async (c) => {
 /**
  * POST /tasks/:name/run - Run task immediately
  */
-app.post('/tasks/:name/run', async (c) => {
+app.post('/api/tasks/:name/run', async (c) => {
   try {
     const service = new ScheduleService(undefined as any, c.env)
     const name = c.req.param('name')
@@ -365,7 +352,7 @@ app.post('/tasks/:name/run', async (c) => {
 /**
  * GET /tasks/:name/history - Get execution history
  */
-app.get('/tasks/:name/history', async (c) => {
+app.get('/api/tasks/:name/history', async (c) => {
   try {
     const service = new ScheduleService(undefined as any, c.env)
     const name = c.req.param('name')
@@ -392,7 +379,7 @@ app.get('/tasks/:name/history', async (c) => {
 /**
  * GET /executions - Get recent executions (all tasks)
  */
-app.get('/executions', async (c) => {
+app.get('/api/executions', async (c) => {
   try {
     const service = new ScheduleService(undefined as any, c.env)
     const limit = parseInt(c.req.query('limit') || '100')
@@ -418,7 +405,7 @@ app.get('/executions', async (c) => {
 /**
  * GET /handlers - List available task handlers
  */
-app.get('/handlers', async (c) => {
+app.get('/api/handlers', async (c) => {
   try {
     const service = new ScheduleService(undefined as any, c.env)
     const handlers = await service.getAvailableHandlers()
@@ -442,7 +429,7 @@ app.get('/handlers', async (c) => {
 /**
  * POST /init - Initialize default tasks (one-time setup)
  */
-app.post('/init', async (c) => {
+app.post('/api/init', async (c) => {
   try {
     const service = new ScheduleService(undefined as any, c.env)
     await service.initializeDefaultTasks()
@@ -466,8 +453,18 @@ app.post('/init', async (c) => {
 // CRON HANDLER - Triggered by Cloudflare Cron Triggers
 // ============================================================================
 
+// Wrap in protocol-router for standardized endpoints and CORS
+const router = protocolRouter({
+  api: app,
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    headers: ['Content-Type', 'Authorization'],
+  },
+})
+
 export default {
-  fetch: app.fetch,
+  fetch: router.fetch,
 
   /**
    * Scheduled handler - runs on cron triggers

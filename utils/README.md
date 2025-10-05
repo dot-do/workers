@@ -43,7 +43,19 @@ curl "https://utils.do/toMarkdown?blob=..."
 
 ### RPC Interface
 
+```ts
+// In your wrangler.jsonc
+{
+  "services": [
+    { "binding": "UTILS_SERVICE", "service": "utils" }
+  ]
+}
 
+// In your worker
+const sqid = await env.UTILS_SERVICE.ulidToSqid('01ARZ3NDEKTSV4RRFFQ69G5FAV')
+const ulid = await env.UTILS_SERVICE.sqidToUlid('abc123')
+const markdown = await env.UTILS_SERVICE.toMarkdown({ blob })
+```
 
 ## ID Formats
 
@@ -78,11 +90,11 @@ The worker converts between formats while preserving:
 
 ### ULID ↔ Sqid Conversion
 
-
+The worker converts between ULID and Sqid formats while preserving timestamp and randomness. See implementation above for the conversion logic.
 
 ### Markdown Conversion
 
-
+The worker provides access to Workers AI's `toMarkdown` function for converting various content formats to markdown.
 
 ## Dependencies
 

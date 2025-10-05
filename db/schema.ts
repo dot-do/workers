@@ -32,6 +32,7 @@ DROP TABLE IF EXISTS queue;
 DROP TABLE IF EXISTS meta;
 DROP TABLE IF EXISTS relationships;
 DROP TABLE IF EXISTS embeddings;
+DROP TABLE IF EXISTS ai_fallback_events;
 
 DROP FUNCTION IF EXISTS isULID;
 DROP FUNCTION IF EXISTS randomizeULID;
@@ -140,6 +141,31 @@ CREATE TABLE relationships (
 )
 ENGINE = CoalescingMergeTree
 ORDER BY (to, ts);
+
+CREATE TABLE ai_fallback_events (
+  ulid String DEFAULT generateULID(),
+  ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
+  service String,
+  method String,
+  args JSON,
+  user_id Nullable(String),
+  session_id Nullable(String),
+  decision Enum8('text' = 1, 'object' = 2),
+  model String,
+  success Bool,
+  latency_ms UInt32,
+  decision_latency_ms Nullable(UInt32),
+  generation_latency_ms Nullable(UInt32),
+  cost_usd Float64,
+  decision_tokens Nullable(UInt32),
+  generation_tokens Nullable(UInt32),
+  result Nullable(JSON),
+  error Nullable(String),
+  metadata Nullable(JSON)
+)
+ENGINE = MergeTree
+ORDER BY (service, ts)
+SETTINGS index_granularity = 8192;
 
 CREATE MATERIALIZED VIEW versionEvents TO versions
 AS SELECT

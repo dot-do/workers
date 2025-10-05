@@ -248,6 +248,105 @@ export default class DatabaseService extends WorkerEntrypoint<Env> {
     }
   }
 
+  /**
+   * Log AI fallback event to ClickHouse for cost tracking and analytics
+   */
+  async logAIFallback(event: {
+    service: string
+    method: string
+    args: any[]
+    userId?: string
+    sessionId?: string
+    decision: 'text' | 'object'
+    model: string
+    success: boolean
+    latency: number
+    decisionLatency?: number
+    generationLatency?: number
+    cost?: number
+    decisionTokens?: number
+    generationTokens?: number
+    result?: any
+    error?: string
+    metadata?: Record<string, any>
+  }) {
+    try {
+      // Insert into ClickHouse ai_fallback_events table
+      const query = `
+        INSERT INTO ai_fallback_events (
+          service,
+          method,
+          args,
+          user_id,
+          session_id,
+          decision,
+          model,
+          success,
+          latency_ms,
+          decision_latency_ms,
+          generation_latency_ms,
+          cost_usd,
+          decision_tokens,
+          generation_tokens,
+          result,
+          error,
+          metadata
+        ) VALUES (
+          {service: String},
+          {method: String},
+          {args: String},
+          {userId: Nullable(String)},
+          {sessionId: Nullable(String)},
+          {decision: Enum8('text' = 1, 'object' = 2)},
+          {model: String},
+          {success: Bool},
+          {latency: UInt32},
+          {decisionLatency: Nullable(UInt32)},
+          {generationLatency: Nullable(UInt32)},
+          {cost: Float64},
+          {decisionTokens: Nullable(UInt32)},
+          {generationTokens: Nullable(UInt32)},
+          {result: Nullable(String)},
+          {error: Nullable(String)},
+          {metadata: Nullable(String)}
+        )
+      `
+
+      await clickhouse.insert({
+        table: 'ai_fallback_events',
+        values: [{
+          service: event.service,
+          method: event.method,
+          args: JSON.stringify(event.args),
+          userId: event.userId || null,
+          sessionId: event.sessionId || null,
+          decision: event.decision,
+          model: event.model,
+          success: event.success,
+          latency: event.latency,
+          decisionLatency: event.decisionLatency || null,
+          generationLatency: event.generationLatency || null,
+          cost: event.cost || 0,
+          decisionTokens: event.decisionTokens || null,
+          generationTokens: event.generationTokens || null,
+          result: event.result ? JSON.stringify(event.result) : null,
+          error: event.error || null,
+          metadata: event.metadata ? JSON.stringify(event.metadata) : null,
+        }],
+        format: 'JSONEachRow',
+        clickhouse_settings: {
+          enable_json_type: 1,
+        },
+      })
+
+      return { success: true, stored: true }
+    } catch (error) {
+      console.error('Failed to log AI fallback event:', error)
+      // Don't throw - we don't want to break user flow if logging fails
+      return { success: false, stored: false, error: String(error) }
+    }
+  }
+
   // ============================================================================
   // VECTOR SEARCH & EMBEDDINGS - RPC Methods
   // ============================================================================

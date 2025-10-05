@@ -1,24 +1,41 @@
 /**
- * Email Service Configuration
- *
- * Transactional email delivery via Resend, WorkOS, and other providers
+ * email Worker Configuration
+ * Generated from email.mdx
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "email",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
-  "workers_dev": false,
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
-	"observability": { "enabled": true },
-	"tail_consumers": [{ "service": "pipeline" }],
-	// Routes temporarily disabled - will configure after deployment
-	// "routes": [
-	// 	{ "pattern": "email.services.do/*", "custom_domain": true }
-	// ],
-  "services": [
-		{ "binding": "DB", "service": "db" }
+	"observability": {
+		"enabled": true
+	},
+	"workers_dev": false,
+	"services": [
+		{
+			"binding": "DB",
+			"service": "db"
+		}
 	],
-	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
-	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }]
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
+	],
+	"dispatch_namespaces": [
+		{
+			"binding": "do",
+			"namespace": "do"
+		}
+	],
+	"placement": {
+		"mode": "smart"
+	},
+	"pipelines": [
+		{
+			"pipeline": "events-realtime",
+			"binding": "pipeline"
+		}
+	]
 }

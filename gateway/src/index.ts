@@ -103,6 +103,7 @@ export interface GatewayEnv {
   AGENT: any
   FN: any
   APP: any
+  UNIVERSAL_API: any
 
   // D1 Database (optional, for caching/config)
   GATEWAY_DB?: D1Database
@@ -196,6 +197,9 @@ export const routes: RouteConfig[] = [
 
   // Schedule service routes
   { pattern: /^\/schedule\//, service: 'schedule', binding: 'SCHEDULE' },
+
+  // Universal API service routes (AI-powered universal API calls)
+  { pattern: /^\/universal\//, service: 'universal-api', binding: 'UNIVERSAL_API' },
 
   // Code execution service routes
   { pattern: /^\/code\//, service: 'code-exec', binding: 'CODE_EXEC' },

@@ -281,6 +281,8 @@ export default class AuthService extends WorkerEntrypoint<AuthServiceEnv> {
   }
 }
 
+import { protocolRouter } from '@dot-do/protocol-router'
+
 /**
  * HTTP API Interface
  */
@@ -301,23 +303,11 @@ app.onError((err, c) => {
   return error('UNKNOWN_ERROR', 'An unknown error occurred', 500)
 })
 
-// CORS for all routes
-app.use('*', async (c, next) => {
-  middleware.cors(c)
-  if (c.req.method === 'OPTIONS') {
-    return c.body(null, 204)
-  }
-  await next()
-})
-
-// Health check
-app.get('/health', c => c.json({ status: 'ok', service: 'auth', timestamp: new Date().toISOString() }))
-
-// OAuth Authentication Endpoints
+// OAuth Authentication Endpoints (root level for backward compatibility)
 app.get('/login', oauthEndpoints.handleLogin)
 app.get('/callback', oauthEndpoints.handleCallback)
-app.post('/logout', oauthEndpoints.handleLogout)
-app.post('/refresh', oauthEndpoints.handleRefresh)
+app.post('/oauth/logout', oauthEndpoints.handleLogout)
+app.post('/oauth/refresh', oauthEndpoints.handleRefresh)
 
 // Legacy WorkOS OAuth route (keep for backward compatibility)
 app.get('/authorize', async c => {
@@ -380,8 +370,10 @@ app.get('/callback', async c => {
 })
 */
 
+// API Management Endpoints (under /api/ prefix)
+
 // API key management
-app.post('/apikeys', async c => {
+app.post('/api/apikeys', async c => {
   await middleware.requireAuth(c)
   const user = c.get('user')!
 
@@ -402,7 +394,7 @@ app.post('/apikeys', async c => {
   return success({ ...apiKey, key }, 'API key created successfully')
 })
 
-app.get('/apikeys', async c => {
+app.get('/api/apikeys', async c => {
   await middleware.requireAuth(c)
   const user = c.get('user')!
 
@@ -411,7 +403,7 @@ app.get('/apikeys', async c => {
   return success({ keys, total: keys.length })
 })
 
-app.delete('/apikeys/:id', async c => {
+app.delete('/api/apikeys/:id', async c => {
   await middleware.requireAuth(c)
   const user = c.get('user')!
   const keyId = c.req.param('id')
@@ -426,7 +418,7 @@ app.delete('/apikeys/:id', async c => {
 })
 
 // Session management
-app.get('/session', async c => {
+app.get('/api/session', async c => {
   await middleware.requireAuth(c)
   const user = c.get('user')!
   const session = c.get('session')
@@ -434,7 +426,7 @@ app.get('/session', async c => {
   return success({ user, session })
 })
 
-app.post('/logout', async c => {
+app.post('/api/logout', async c => {
   await middleware.requireAuth(c)
   const session = c.get('session')
 
@@ -445,7 +437,7 @@ app.post('/logout', async c => {
   return success(null, 'Logged out successfully')
 })
 
-app.post('/refresh', async c => {
+app.post('/api/refresh', async c => {
   const body = await c.req.json()
   const { refreshToken } = body
 
@@ -465,7 +457,7 @@ app.post('/refresh', async c => {
 })
 
 // Permission checks
-app.post('/check-permission', async c => {
+app.post('/api/check-permission', async c => {
   await middleware.requireAuth(c)
   const user = c.get('user')!
 
@@ -486,8 +478,18 @@ app.post('/check-permission', async c => {
   return success({ hasPermission, resource, action })
 })
 
+// Wrap in protocol-router for standardized endpoints and CORS
+const router = protocolRouter({
+  api: app,
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    headers: ['Content-Type', 'Authorization'],
+  },
+})
+
 // Export HTTP handler for direct requests
 export { app }
 
-// Export fetch handler
-export const fetch = app.fetch
+// Export fetch handler with protocol-router
+export const fetch = router.fetch

@@ -27,12 +27,12 @@ export class AssetQuery {
       `SELECT a.*, f.* FROM mdx_assets a
        JOIN mdx_files f ON a.file_id = f.id
        WHERE f.repo = ? AND f.path = ?
-       ORDER BY a.created_at DESC`,
-      repo,
-      path
+       ORDER BY a.created_at DESC`
     )
+      .bind(repo, path)
+      .all()
 
-    return result.rows.map((row: unknown) => this.parseAssetWithFile(row))
+    return (result.results ?? []).map((row: unknown) => this.parseAssetWithFile(row))
   }
 
   /**
@@ -43,11 +43,12 @@ export class AssetQuery {
       `SELECT a.*, f.* FROM mdx_assets a
        JOIN mdx_files f ON a.file_id = f.id
        WHERE a.hash = ?
-       ORDER BY a.created_at DESC`,
-      hash
+       ORDER BY a.created_at DESC`
     )
+      .bind(hash)
+      .all()
 
-    return result.rows.map((row: unknown) => this.parseAssetWithFile(row))
+    return (result.results ?? []).map((row: unknown) => this.parseAssetWithFile(row))
   }
 
   /**
@@ -59,11 +60,12 @@ export class AssetQuery {
        JOIN mdx_files f ON a.file_id = f.id
        JOIN mdx_versions v ON v.file_id = f.id
        WHERE v.tag = ?
-       ORDER BY v.created_at DESC`,
-      tag
+       ORDER BY v.created_at DESC`
     )
+      .bind(tag)
+      .all()
 
-    return result.rows.map((row: unknown) => this.parseAssetWithFileAndVersion(row))
+    return (result.results ?? []).map((row: unknown) => this.parseAssetWithFileAndVersion(row))
   }
 
   /**
@@ -73,10 +75,11 @@ export class AssetQuery {
     if (!recursive) {
       const result = await this.env.MDX_METADATA.prepare(
         `SELECT d.* FROM mdx_dependencies d
-         WHERE d.source_file_id = ?`,
-        fileId
+         WHERE d.source_file_id = ?`
       )
-      return result.rows.map((row: unknown) => this.parseDependency(row))
+        .bind(fileId)
+        .all()
+      return (result.results ?? []).map((row: unknown) => this.parseDependency(row))
     }
 
     // Recursive CTE query for full dependency tree
@@ -87,11 +90,12 @@ export class AssetQuery {
          SELECT d.* FROM mdx_dependencies d
          JOIN dep_tree dt ON d.source_file_id = dt.target_file_id
        )
-       SELECT DISTINCT * FROM dep_tree`,
-      fileId
+       SELECT DISTINCT * FROM dep_tree`
     )
+      .bind(fileId)
+      .all()
 
-    return result.rows.map((row: unknown) => this.parseDependency(row))
+    return (result.results ?? []).map((row: unknown) => this.parseDependency(row))
   }
 
   /**
@@ -101,10 +105,11 @@ export class AssetQuery {
     if (!recursive) {
       const result = await this.env.MDX_METADATA.prepare(
         `SELECT d.* FROM mdx_dependencies d
-         WHERE d.target_file_id = ?`,
-        fileId
+         WHERE d.target_file_id = ?`
       )
-      return result.rows.map((row: unknown) => this.parseDependency(row))
+        .bind(fileId)
+        .all()
+      return (result.results ?? []).map((row: unknown) => this.parseDependency(row))
     }
 
     // Recursive CTE query for full dependent tree
@@ -115,11 +120,12 @@ export class AssetQuery {
          SELECT d.* FROM mdx_dependencies d
          JOIN dep_tree dt ON d.target_file_id = dt.source_file_id
        )
-       SELECT DISTINCT * FROM dep_tree`,
-      fileId
+       SELECT DISTINCT * FROM dep_tree`
     )
+      .bind(fileId)
+      .all()
 
-    return result.rows.map((row: unknown) => this.parseDependency(row))
+    return (result.results ?? []).map((row: unknown) => this.parseDependency(row))
   }
 
   /**
@@ -130,12 +136,12 @@ export class AssetQuery {
       `SELECT * FROM mdx_versions
        WHERE file_id = ?
        ORDER BY version DESC
-       LIMIT ?`,
-      fileId,
-      limit
+       LIMIT ?`
     )
+      .bind(fileId, limit)
+      .all()
 
-    return result.rows.map((row: unknown) => this.parseVersion(row))
+    return (result.results ?? []).map((row: unknown) => this.parseVersion(row))
   }
 
   /**
@@ -147,9 +153,9 @@ export class AssetQuery {
       : `SELECT * FROM mdx_files ORDER BY updated_at DESC LIMIT ?`
 
     const params = repo ? [repo, limit] : [limit]
-    const result = await this.env.MDX_METADATA.prepare(query, ...params)
+    const result = await this.env.MDX_METADATA.prepare(query).bind(...params).all()
 
-    return result.rows.map((row: unknown) => this.parseFile(row))
+    return (result.results ?? []).map((row: unknown) => this.parseFile(row))
   }
 
   /**
@@ -161,21 +167,26 @@ export class AssetQuery {
     assetCount: number
     assetsByType: Record<string, number>
   }> {
-    const fileStats = await this.env.MDX_METADATA.prepare(`SELECT COUNT(*) as count, SUM(size) as total_size FROM mdx_files WHERE repo = ?`, repo)
+    const fileStats = await this.env.MDX_METADATA.prepare(
+      `SELECT COUNT(*) as count, SUM(size) as total_size FROM mdx_files WHERE repo = ?`
+    )
+      .bind(repo)
+      .all()
 
     const assetStats = await this.env.MDX_METADATA.prepare(
       `SELECT a.type, COUNT(*) as count
        FROM mdx_assets a
        JOIN mdx_files f ON a.file_id = f.id
        WHERE f.repo = ?
-       GROUP BY a.type`,
-      repo
+       GROUP BY a.type`
     )
+      .bind(repo)
+      .all()
 
-    const fileStatsRow = fileStats.rows[0] as { count: number; total_size: number }
+    const fileStatsRow = (fileStats.results ?? [])[0] as { count: number; total_size: number }
     const assetsByType: Record<string, number> = {}
 
-    for (const row of assetStats.rows) {
+    for (const row of assetStats.results ?? []) {
       const r = row as { type: string; count: number }
       assetsByType[r.type] = r.count
     }
@@ -183,7 +194,7 @@ export class AssetQuery {
     return {
       fileCount: fileStatsRow.count,
       totalSize: fileStatsRow.total_size,
-      assetCount: assetStats.rows.length,
+      assetCount: (assetStats.results ?? []).length,
       assetsByType,
     }
   }
@@ -200,9 +211,9 @@ export class AssetQuery {
     const searchPattern = `%${query}%`
     const params = repo ? [repo, searchPattern, searchPattern, limit] : [searchPattern, searchPattern, limit]
 
-    const result = await this.env.MDX_METADATA.prepare(searchQuery, ...params)
+    const result = await this.env.MDX_METADATA.prepare(searchQuery).bind(...params).all()
 
-    return result.rows.map((row: unknown) => this.parseFile(row))
+    return (result.results ?? []).map((row: unknown) => this.parseFile(row))
   }
 
   /**
@@ -221,9 +232,9 @@ export class AssetQuery {
          HAVING COUNT(DISTINCT a.type) < 4`
 
     const params = repo ? [repo] : []
-    const result = await this.env.MDX_METADATA.prepare(query, ...params)
+    const result = await this.env.MDX_METADATA.prepare(query).bind(...params).all()
 
-    return result.rows.map((row: unknown) => this.parseFile(row))
+    return (result.results ?? []).map((row: unknown) => this.parseFile(row))
   }
 
   /**
@@ -244,11 +255,12 @@ export class AssetQuery {
        JOIN mdx_files f ON a.file_id = f.id
        GROUP BY a.hash, a.type
        HAVING count >= ?
-       ORDER BY count DESC`,
-      minDuplicates
+       ORDER BY count DESC`
     )
+      .bind(minDuplicates)
+      .all()
 
-    return result.rows.map((row: unknown) => {
+    return (result.results ?? []).map((row: unknown) => {
       const r = row as { hash: string; type: string; count: number; files: string }
       return {
         hash: r.hash,

@@ -114,9 +114,9 @@ export class AssetStorage {
       type
     ).all()
 
-    if (result.rows.length === 0) return null
+    if ((result.results ?? []).length === 0) return null
 
-    const row = result.rows[0] as Record<string, unknown>
+    const row = (result.results ?? [])[0] as Record<string, unknown>
     return {
       id: row.id as string,
       file_id: row.file_id as string,
@@ -138,9 +138,9 @@ export class AssetStorage {
       hash
     ).all()
 
-    if (result.rows.length === 0) return null
+    if ((result.results ?? []).length === 0) return null
 
-    const row = result.rows[0] as Record<string, unknown>
+    const row = (result.results ?? [])[0] as Record<string, unknown>
     return {
       id: row.id as string,
       file_id: row.file_id as string,
@@ -159,7 +159,7 @@ export class AssetStorage {
   async listAssets(fileId: string): Promise<MdxAsset[]> {
     const result = await this.env.MDX_METADATA.prepare(`SELECT * FROM mdx_assets WHERE file_id = ? ORDER BY created_at DESC`).bind(fileId).all()
 
-    return result.rows.map((row: unknown) => {
+    return (result.results ?? []).map((row: unknown) => {
       const r = row as Record<string, unknown>
       return {
         id: r.id as string,
@@ -223,9 +223,9 @@ export class AssetStorage {
   async getFileByPath(repo: string, path: string): Promise<MdxFile | null> {
     const result = await this.env.MDX_METADATA.prepare(`SELECT * FROM mdx_files WHERE repo = ? AND path = ? LIMIT 1`).bind(repo, path).all()
 
-    if (result.rows.length === 0) return null
+    if ((result.results ?? []).length === 0) return null
 
-    const row = result.rows[0] as Record<string, unknown>
+    const row = (result.results ?? [])[0] as Record<string, unknown>
     return {
       id: row.id as string,
       repo: row.repo as string,
@@ -244,9 +244,9 @@ export class AssetStorage {
   async getFile(fileId: string): Promise<MdxFile | null> {
     const result = await this.env.MDX_METADATA.prepare(`SELECT * FROM mdx_files WHERE id = ? LIMIT 1`).bind(fileId).all()
 
-    if (result.rows.length === 0) return null
+    if ((result.results ?? []).length === 0) return null
 
-    const row = result.rows[0] as Record<string, unknown>
+    const row = (result.results ?? [])[0] as Record<string, unknown>
     return {
       id: row.id as string,
       repo: row.repo as string,
@@ -268,7 +268,7 @@ export class AssetStorage {
       offset
     ).all()
 
-    return result.rows.map((row: unknown) => {
+    return (result.results ?? []).map((row: unknown) => {
       const r = row as Record<string, unknown>
       return {
         id: r.id as string,

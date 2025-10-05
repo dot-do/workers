@@ -1,725 +1,51 @@
-export class EmailService extends WorkerEntrypoint<Env> {
-  // Send raw email
-  async send(message: EmailMessage, options?: {
-    provider?: string
-    userId?: string
-  }): Promise<EmailResult>
-
-  // Send templated email
-  async sendTemplate(options: SendTemplateOptions): Promise<EmailResult>
-
-  // Send cold email with tracking
-  async sendColdEmail(
-    message: EmailMessage,
-    options: ColdEmailOptions
-  ): Promise<ColdEmailResult>
-
-  // Get email delivery status
-  async getEmailStatus(id: string): Promise<EmailStatus | null>
-
-  // List emails for user
-  async listEmails(options?: ListEmailsOptions): Promise<{
-    emails: EmailLog[]
-    total: number
-  }>
-
-  // Get available templates
-  async getTemplates(): Promise<Template[]>
-
-  // Get specific template
-  async getTemplate(name: string): Promise<Template | null>
-
-  // Cold email template management
-  async getColdEmailTemplate(id: string): Promise<ColdEmailTemplate | null>
-  async listColdEmailTemplates(category?: string): Promise<ColdEmailTemplate[]>
-  async extractTemplateVariables(template: string): Promise<string[]>
-  async validateTemplateVariables(
-    template: string,
-    variables: Record<string, string>
-  ): Promise<{ valid: boolean; missing: string[] }>
-  async getSampleVariables(): Promise<Record<string, string>>
-}
-
-
-// Send welcome email
-const result = await env.EMAIL.sendTemplate({
-  template: 'welcome',
-  to: 'user@example.com',
-  data: {
-    name: 'John Doe',
-    loginUrl: 'https://app.example.com/login',
-    companyName: 'Acme Corp'
-  },
-  userId: 'user_123'
-})
-
-// Send cold email with tracking
-const coldResult = await env.EMAIL.sendColdEmail(
-  {
-    to: 'prospect@company.com',
-    from: 'sales@company.com',
-    subject: 'Partnership opportunity for {{company}}',
-    html: '<p>Hi {{firstName}},...</p>',
-    text: 'Hi {{firstName}},...'
-  },
-  {
-    contactId: 'contact_123',
-    campaignId: 'campaign_456',
-    domainId: 'domain_789',
-    variables: {
-      firstName: 'Jane',
-      company: 'TechCorp'
-    },
-    trackOpens: true,
-    trackClicks: true,
-    unsubscribeUrl: 'https://company.com/unsubscribe?id=xxx'
-  }
-)
-
-// Check delivery status
-const status = await env.EMAIL.getEmailStatus(result.id)
-console.log('Email status:', status.status)
-
-
-// Send templated email
-const response = await fetch('https://email.services.do/templates/password-reset', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer sk_live_...'
-  },
-  body: JSON.stringify({
-    to: 'user@example.com',
-    data: {
-      name: 'John Doe',
-      resetUrl: 'https://app.example.com/reset?token=abc123',
-      expiresIn: '1 hour'
-    }
-  })
-})
-
-const { data } = await response.json()
-console.log('Email sent:', data.id)
-
+import { WorkerEntrypoint } from 'cloudflare:workers'
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { ResendProvider } from './providers/resend'
+import { WorkOSProvider } from './providers/workos'
+import { SESProvider } from './providers/ses'
+import type { EmailMessage, EmailResult, EmailStatus, EmailProvider, SendTemplateOptions, ListEmailsOptions, EmailLog } from './types'
+import { renderTemplate, listTemplates, getTemplate } from './templates'
+import { generateEmailId, formatEmailLog, isValidEmail, success, error } from './utils'
+import {
+  processColdEmail,
+  extractVariables,
+  validateVariables,
+  generateSampleVariables,
+  getColdEmailTemplate,
+  listColdEmailTemplates,
+  type ColdEmailOptions,
+  type ColdEmailResult,
+} from './cold-email'
 
 /**
  * Email Service - Transactional email delivery
  *
- * Multi-provider email service with templates, tracking, and cold email support
+ * Handles sending emails via multiple providers (Resend, SendGrid, WorkOS)
+ * Supports templating, tracking, and delivery status
+ *
+ * Interfaces:
+ * - RPC: WorkerEntrypoint methods for service-to-service calls
+ * - HTTP: Hono routes for direct API access
+ * - Webhooks: Resend delivery status updates
  */
-
-import { WorkerEntrypoint } from 'cloudflare:workers'
-import { Hono } from 'hono'
-import { ulid } from 'ulid'
-
-// ============================================================================
-// Types
-// ============================================================================
-
-export interface Attachment {
-  filename: string
-  content: string | ArrayBuffer
-  contentType?: string
-  encoding?: 'base64' | 'binary'
-}
-
-export interface EmailAddress {
-  email: string
-  name?: string
-}
-
-export interface EmailMessage {
-  to: string | string[] | EmailAddress | EmailAddress[]
-  from: string | EmailAddress
-  subject: string
-  html?: string
-  text?: string
-  cc?: string | string[] | EmailAddress | EmailAddress[]
-  bcc?: string | string[] | EmailAddress | EmailAddress[]
-  replyTo?: string | EmailAddress
-  attachments?: Attachment[]
-  headers?: Record<string, string>
-  tags?: Record<string, string>
-}
-
-export interface EmailResult {
-  id: string
-  provider: string
-  status: 'sent' | 'queued' | 'failed'
-  providerId?: string
-  error?: string
-  timestamp: string
-}
-
-export interface EmailStatus {
-  id: string
-  providerId: string
-  status: 'sent' | 'delivered' | 'opened' | 'clicked' | 'bounced' | 'failed' | 'complained'
-  sentAt?: string
-  deliveredAt?: string
-  openedAt?: string
-  clickedAt?: string
-  bouncedAt?: string
-  error?: string
-  recipient: string
-}
-
-export interface EmailLog {
-  id: string
-  userId?: string
-  recipient: string
-  subject: string
-  template?: string
-  provider: string
-  providerId?: string
-  status: string
-  error?: string
-  sentAt: string
-  deliveredAt?: string
-  openedAt?: string
-  clickedAt?: string
-  bouncedAt?: string
-}
-
-export interface TemplateData {
-  [key: string]: any
-}
-
-export interface RenderedEmail {
-  subject: string
-  html: string
-  text: string
-}
-
-export interface Template {
-  name: string
-  description: string
-  requiredFields: string[]
-  render: (data: TemplateData) => RenderedEmail
-}
-
-export interface SendTemplateOptions {
-  template: string
-  to: string | string[]
-  data: TemplateData
-  from?: string
-  userId?: string
-  provider?: string
-}
-
-export interface ListEmailsOptions {
-  userId?: string
-  limit?: number
-  offset?: number
-  status?: string
-  template?: string
-}
-
-export interface ColdEmailOptions {
-  contactId: string
-  campaignId: string
-  domainId: string
-  variables?: Record<string, string>
-  trackOpens?: boolean
-  trackClicks?: boolean
-  respectWarmup?: boolean
-  respectRateLimits?: boolean
-  unsubscribeUrl: string
-  listUnsubscribeHeader?: boolean
-}
-
-export interface ColdEmailResult extends EmailResult {
-  contactId: string
-  campaignId: string
-  trackedLinks: string[]
-  hasTrackingPixel: boolean
-  hasUnsubscribeLink: boolean
-}
-
-// ============================================================================
-// Email Providers
-// ============================================================================
-
-export interface EmailProvider {
-  name: string
-  send(message: EmailMessage): Promise<EmailResult>
-  getStatus?(id: string): Promise<EmailStatus | null>
-}
-
-abstract class BaseEmailProvider implements EmailProvider {
-  abstract name: string
-
-  constructor(protected apiKey: string) {}
-
-  abstract send(message: EmailMessage): Promise<EmailResult>
-
-  async getStatus(id: string): Promise<EmailStatus | null> {
-    return null
-  }
-
-  protected normalizeAddress(address: string | { email: string; name?: string }): string {
-    if (typeof address === 'string') return address
-    return address.name ? `${address.name} <${address.email}>` : address.email
-  }
-
-  protected normalizeAddresses(addresses: string | string[] | { email: string; name?: string } | { email: string; name?: string }[]): string[] {
-    if (!addresses) return []
-    if (typeof addresses === 'string') return [addresses]
-    if (Array.isArray(addresses)) {
-      return addresses.map((addr) => this.normalizeAddress(addr))
-    }
-    return [this.normalizeAddress(addresses)]
-  }
-
-  protected validateMessage(message: EmailMessage): void {
-    if (!message.to || (Array.isArray(message.to) && message.to.length === 0)) {
-      throw new Error('Email message must have at least one recipient')
-    }
-    if (!message.from) {
-      throw new Error('Email message must have a from address')
-    }
-    if (!message.subject) {
-      throw new Error('Email message must have a subject')
-    }
-    if (!message.html && !message.text) {
-      throw new Error('Email message must have either HTML or text content')
-    }
-  }
-}
-
-// Resend Provider
-class ResendProvider extends BaseEmailProvider {
-  name = 'resend'
-  private apiUrl = 'https://api.resend.com'
-
-  async send(message: EmailMessage): Promise<EmailResult> {
-    this.validateMessage(message)
-
-    const payload: any = {
-      from: this.normalizeAddress(message.from),
-      to: this.normalizeAddresses(message.to),
-      subject: message.subject,
-      html: message.html,
-      text: message.text,
-    }
-
-    if (message.cc) payload.cc = this.normalizeAddresses(message.cc)
-    if (message.bcc) payload.bcc = this.normalizeAddresses(message.bcc)
-    if (message.replyTo) payload.reply_to = this.normalizeAddress(message.replyTo)
-    if (message.headers) payload.headers = message.headers
-    if (message.tags) {
-      payload.tags = Object.entries(message.tags).map(([name, value]) => ({ name, value }))
-    }
-
-    try {
-      const response = await fetch(`${this.apiUrl}/emails`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify(payload),
-      })
-
-      if (!response.ok) {
-        const error: any = await response.json()
-        return {
-          id: `failed-${Date.now()}`,
-          provider: this.name,
-          status: 'failed',
-          error: error.message || `HTTP ${response.status}`,
-          timestamp: new Date().toISOString(),
-        }
-      }
-
-      const result: any = await response.json()
-
-      return {
-        id: result.id,
-        provider: this.name,
-        status: 'sent',
-        providerId: result.id,
-        timestamp: new Date().toISOString(),
-      }
-    } catch (error) {
-      return {
-        id: `failed-${Date.now()}`,
-        provider: this.name,
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString(),
-      }
-    }
-  }
-}
-
-// WorkOS Provider
-class WorkOSProvider extends BaseEmailProvider {
-  name = 'workos'
-  private apiUrl = 'https://api.workos.com'
-
-  async send(message: EmailMessage): Promise<EmailResult> {
-    this.validateMessage(message)
-
-    const recipients = this.normalizeAddresses(message.to)
-    if (recipients.length > 1) {
-      throw new Error('WorkOS provider only supports sending to a single recipient')
-    }
-
-    try {
-      const response = await fetch(`${this.apiUrl}/passwordless/sessions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify({
-          email: recipients[0],
-          type: 'MagicLink',
-        }),
-      })
-
-      if (!response.ok) {
-        const error: any = await response.json()
-        return {
-          id: `failed-${Date.now()}`,
-          provider: this.name,
-          status: 'failed',
-          error: error.message || `HTTP ${response.status}`,
-          timestamp: new Date().toISOString(),
-        }
-      }
-
-      const result: any = await response.json()
-
-      return {
-        id: result.id,
-        provider: this.name,
-        status: 'sent',
-        providerId: result.id,
-        timestamp: new Date().toISOString(),
-      }
-    } catch (error) {
-      return {
-        id: `failed-${Date.now()}`,
-        provider: this.name,
-        status: 'failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString(),
-      }
-    }
-  }
-}
-
-// SES Provider
-class SESProvider extends BaseEmailProvider {
-  name = 'ses'
-
-  constructor(private config: { accessKeyId: string; secretAccessKey: string; region: string }) {
-    super(config.accessKeyId)
-  }
-
-  async send(message: EmailMessage): Promise<EmailResult> {
-    this.validateMessage(message)
-
-    // SES implementation would go here
-    // For now, return not implemented
-    return {
-      id: `ses-${Date.now()}`,
-      provider: this.name,
-      status: 'failed',
-      error: 'SES provider not yet implemented',
-      timestamp: new Date().toISOString(),
-    }
-  }
-}
-
-// ============================================================================
-// Templates
-// ============================================================================
-
-const templates: Record<string, Template> = {
-  welcome: {
-    name: 'welcome',
-    description: 'Welcome email sent when a new user signs up',
-    requiredFields: ['name', 'loginUrl'],
-    render: (data) => ({
-      subject: `Welcome to ${data.companyName || '.do'}!`,
-      html: `<p>Hi ${data.name},</p><p>Welcome to ${data.companyName || '.do'}! <a href="${data.loginUrl}">Log in here</a></p>`,
-      text: `Hi ${data.name},\n\nWelcome to ${data.companyName || '.do'}! Log in here: ${data.loginUrl}`,
-    }),
-  },
-  'password-reset': {
-    name: 'password-reset',
-    description: 'Password reset email with secure link',
-    requiredFields: ['name', 'resetUrl'],
-    render: (data) => ({
-      subject: 'Password Reset Request',
-      html: `<p>Hi ${data.name},</p><p><a href="${data.resetUrl}">Reset your password</a></p><p>This link expires in ${data.expiresIn || '1 hour'}.</p>`,
-      text: `Hi ${data.name},\n\nReset your password: ${data.resetUrl}\n\nThis link expires in ${data.expiresIn || '1 hour'}.`,
-    }),
-  },
-  'magic-link': {
-    name: 'magic-link',
-    description: 'Passwordless login magic link',
-    requiredFields: ['loginUrl'],
-    render: (data) => ({
-      subject: 'Your login link',
-      html: `<p>Hi${data.name ? ' ' + data.name : ''},</p><p><a href="${data.loginUrl}">Click here to log in</a></p><p>This link expires in ${data.expiresIn || '15 minutes'}.</p>`,
-      text: `Hi${data.name ? ' ' + data.name : ''},\n\nClick here to log in: ${data.loginUrl}\n\nThis link expires in ${data.expiresIn || '15 minutes'}.`,
-    }),
-  },
-  apikey: {
-    name: 'apikey',
-    description: 'API key generation notification',
-    requiredFields: ['name', 'apiKey', 'createdAt'],
-    render: (data) => ({
-      subject: 'New API Key Created',
-      html: `<p>Hi ${data.name},</p><p>A new API key was created: <code>${data.apiKey}</code></p><p>Created: ${data.createdAt}</p>${data.expiresAt ? `<p>Expires: ${data.expiresAt}</p>` : ''}`,
-      text: `Hi ${data.name},\n\nA new API key was created: ${data.apiKey}\n\nCreated: ${data.createdAt}${data.expiresAt ? `\nExpires: ${data.expiresAt}` : ''}`,
-    }),
-  },
-  invite: {
-    name: 'invite',
-    description: 'Team/organization invitation',
-    requiredFields: ['inviterName', 'organizationName', 'inviteUrl'],
-    render: (data) => ({
-      subject: `You've been invited to join ${data.organizationName}`,
-      html: `<p>${data.inviterName} invited you to join ${data.organizationName}${data.role ? ` as ${data.role}` : ''}.</p><p><a href="${data.inviteUrl}">Accept invitation</a></p><p>This invitation expires in ${data.expiresIn || '7 days'}.</p>`,
-      text: `${data.inviterName} invited you to join ${data.organizationName}${data.role ? ` as ${data.role}` : ''}.\n\nAccept invitation: ${data.inviteUrl}\n\nThis invitation expires in ${data.expiresIn || '7 days'}.`,
-    }),
-  },
-  notification: {
-    name: 'notification',
-    description: 'General purpose notification',
-    requiredFields: ['title', 'message'],
-    render: (data) => ({
-      subject: data.title,
-      html: `<h2>${data.title}</h2>${data.message}${data.actionUrl ? `<p><a href="${data.actionUrl}">${data.actionText || 'View Details'}</a></p>` : ''}`,
-      text: `${data.title}\n\n${data.message.replace(/<[^>]+>/g, '')}${data.actionUrl ? `\n\n${data.actionText || 'View Details'}: ${data.actionUrl}` : ''}`,
-    }),
-  },
-  verification: {
-    name: 'verification',
-    description: 'Email address verification',
-    requiredFields: ['name', 'verificationUrl'],
-    render: (data) => ({
-      subject: 'Verify your email address',
-      html: `<p>Hi ${data.name},</p><p><a href="${data.verificationUrl}">Verify your email</a></p>${data.code ? `<p>Verification code: <strong>${data.code}</strong></p>` : ''}<p>This link expires in ${data.expiresIn || '24 hours'}.</p>`,
-      text: `Hi ${data.name},\n\nVerify your email: ${data.verificationUrl}${data.code ? `\n\nVerification code: ${data.code}` : ''}\n\nThis link expires in ${data.expiresIn || '24 hours'}.`,
-    }),
-  },
-}
-
-function getTemplate(name: string): Template | null {
-  return templates[name] || null
-}
-
-function listTemplates(): Template[] {
-  return Object.values(templates)
-}
-
-function renderTemplate(name: string, data: TemplateData): RenderedEmail {
-  const template = getTemplate(name)
-  if (!template) {
-    throw new Error(`Template not found: ${name}`)
-  }
-
-  const missingFields = template.requiredFields.filter((field) => !(field in data))
-  if (missingFields.length > 0) {
-    throw new Error(`Missing required fields for template ${name}: ${missingFields.join(', ')}`)
-  }
-
-  return template.render(data)
-}
-
-// ============================================================================
-// Cold Email Processing
-// ============================================================================
-
-const VARIABLE_PATTERN = /\{\{([a-zA-Z0-9_\.]+)\}\}/g
-
-function replaceVariables(text: string, variables: Record<string, string>): string {
-  return text.replace(VARIABLE_PATTERN, (match, key) => {
-    const keys = key.split('.')
-    let value: any = variables
-
-    for (const k of keys) {
-      value = value?.[k]
-      if (value === undefined) break
-    }
-
-    return value !== undefined ? String(value) : match
-  })
-}
-
-function injectTrackingPixel(html: string, trackingUrl: string): string {
-  if (html.includes('</body>')) {
-    return html.replace('</body>', `<img src="${trackingUrl}" width="1" height="1" alt="" style="display:none" /></body>`)
-  }
-  return `${html}<img src="${trackingUrl}" width="1" height="1" alt="" style="display:none" />`
-}
-
-function trackLinks(html: string, trackingBaseUrl: string, contactId: string, campaignId: string): { html: string; trackedLinks: string[] } {
-  const trackedLinks: string[] = []
-  let linkIndex = 0
-
-  const trackedHtml = html.replace(/<a\s+href="([^"]+)"/gi, (match, originalUrl) => {
-    if (originalUrl.startsWith('mailto:') || originalUrl.startsWith('tel:') || originalUrl.includes('/track/') || originalUrl.includes('unsubscribe')) {
-      return match
-    }
-
-    const trackingUrl = `${trackingBaseUrl}/track/click?contact=${contactId}&campaign=${campaignId}&link=${linkIndex}&url=${encodeURIComponent(originalUrl)}`
-    trackedLinks.push(originalUrl)
-    linkIndex++
-
-    return `<a href="${trackingUrl}"`
-  })
-
-  return { html: trackedHtml, trackedLinks }
-}
-
-function injectUnsubscribeLink(html: string, text: string, unsubscribeUrl: string): { html: string; text: string } {
-  const unsubscribeText = `\n\nIf you no longer wish to receive these emails, you can <a href="${unsubscribeUrl}">unsubscribe here</a>.`
-  const unsubscribeTextPlain = `\n\nIf you no longer wish to receive these emails, you can unsubscribe here: ${unsubscribeUrl}`
-
-  let updatedHtml = html
-  if (html.includes('</body>')) {
-    updatedHtml = html.replace('</body>', `<p style="font-size:12px;color:#666;margin-top:40px;">${unsubscribeText}</p></body>`)
-  } else {
-    updatedHtml = `${html}<p style="font-size:12px;color:#666;margin-top:40px;">${unsubscribeText}</p>`
-  }
-
-  const updatedText = text + unsubscribeTextPlain
-
-  return { html: updatedHtml, text: updatedText }
-}
-
-function processColdEmail(
-  message: EmailMessage,
-  options: ColdEmailOptions,
-  trackingBaseUrl: string
-): {
-  message: EmailMessage
-  trackedLinks: string[]
-  hasTrackingPixel: boolean
-  hasUnsubscribeLink: boolean
-} {
-  let html = message.html || ''
-  let text = message.text || ''
-
-  // Replace variables
-  if (options.variables) {
-    html = replaceVariables(html, options.variables)
-    text = replaceVariables(text, options.variables)
-  }
-
-  const trackedLinks: string[] = []
-  let hasTrackingPixel = false
-
-  // Track links
-  if (options.trackClicks) {
-    const tracked = trackLinks(html, trackingBaseUrl, options.contactId, options.campaignId)
-    html = tracked.html
-    trackedLinks.push(...tracked.trackedLinks)
-  }
-
-  // Add tracking pixel
-  if (options.trackOpens) {
-    const trackingUrl = `${trackingBaseUrl}/track/open?contact=${options.contactId}&campaign=${options.campaignId}`
-    html = injectTrackingPixel(html, trackingUrl)
-    hasTrackingPixel = true
-  }
-
-  // Add unsubscribe link
-  const unsubscribeResult = injectUnsubscribeLink(html, text, options.unsubscribeUrl)
-  html = unsubscribeResult.html
-  text = unsubscribeResult.text
-
-  // Add List-Unsubscribe headers
-  const updatedMessage: EmailMessage = {
-    ...message,
-    html,
-    text,
-    headers: {
-      ...message.headers,
-      'List-Unsubscribe': `<${options.unsubscribeUrl}>`,
-      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-    },
-  }
-
-  return {
-    message: updatedMessage,
-    trackedLinks,
-    hasTrackingPixel,
-    hasUnsubscribeLink: true,
-  }
-}
-
-// ============================================================================
-// Utilities
-// ============================================================================
-
-function generateEmailId(): string {
-  return ulid()
-}
-
-function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return emailRegex.test(email)
-}
-
-function formatEmailLog(log: Partial<EmailLog>): EmailLog {
-  return {
-    id: log.id || generateEmailId(),
-    userId: log.userId,
-    recipient: log.recipient!,
-    subject: log.subject!,
-    template: log.template,
-    provider: log.provider!,
-    providerId: log.providerId,
-    status: log.status || 'sent',
-    error: log.error,
-    sentAt: log.sentAt || new Date().toISOString(),
-    deliveredAt: log.deliveredAt,
-    openedAt: log.openedAt,
-    clickedAt: log.clickedAt,
-    bouncedAt: log.bouncedAt,
-  }
-}
-
-function success<T>(data: T, message?: string) {
-  return {
-    success: true,
-    data,
-    message,
-  }
-}
-
-function error(code: string, message: string, details?: any, statusCode: number = 400) {
-  return {
-    success: false,
-    error: {
-      code,
-      message,
-      details,
-    },
-    statusCode,
-  }
-}
-
-// ============================================================================
-// RPC Service
-// ============================================================================
-
 export class EmailService extends WorkerEntrypoint<Env> {
+  // ============================================================================
+  // RPC INTERFACE - For service-to-service communication
+  // ============================================================================
+
+  /**
+   * Send a raw email
+   */
   async send(message: EmailMessage, options: { provider?: string; userId?: string } = {}): Promise<EmailResult> {
     const provider = this.getProvider(options.provider)
     const emailId = generateEmailId()
 
     try {
+      // Send via provider
       const result = await provider.send(message)
 
+      // Log to database
       await this.logEmail({
         id: emailId,
         userId: options.userId,
@@ -757,11 +83,16 @@ export class EmailService extends WorkerEntrypoint<Env> {
     }
   }
 
+  /**
+   * Send a templated email
+   */
   async sendTemplate(options: SendTemplateOptions): Promise<EmailResult> {
     const { template, to, data, from, userId, provider } = options
 
+    // Render template
     const rendered = renderTemplate(template, data)
 
+    // Create email message
     const message: EmailMessage = {
       to,
       from: from || 'noreply@services.do',
@@ -770,8 +101,10 @@ export class EmailService extends WorkerEntrypoint<Env> {
       text: rendered.text,
     }
 
+    // Send email
     const result = await this.send(message, { provider, userId })
 
+    // Update log with template name
     if (result.id) {
       await this.updateEmailLog(result.id, { template })
     }
@@ -779,27 +112,32 @@ export class EmailService extends WorkerEntrypoint<Env> {
     return result
   }
 
-  async sendColdEmail(message: EmailMessage, options: ColdEmailOptions): Promise<ColdEmailResult> {
-    const trackingBaseUrl = this.env.TRACKING_BASE_URL || 'https://track.services.do'
-
-    const processed = processColdEmail(message, options, trackingBaseUrl)
-
-    const result = await this.send(processed.message, { userId: options.campaignId })
-
-    return {
-      ...result,
-      contactId: options.contactId,
-      campaignId: options.campaignId,
-      trackedLinks: processed.trackedLinks,
-      hasTrackingPixel: processed.hasTrackingPixel,
-      hasUnsubscribeLink: processed.hasUnsubscribeLink,
-    }
-  }
-
+  /**
+   * Get email delivery status
+   */
   async getEmailStatus(id: string): Promise<EmailStatus | null> {
+    // Get from database first
     const log = await this.getEmailLog(id)
     if (!log) return null
 
+    // Try to get live status from provider
+    const provider = this.getProvider(log.provider)
+    if (provider.getStatus && log.providerId) {
+      const liveStatus = await provider.getStatus(log.providerId)
+      if (liveStatus) {
+        // Update database with latest status
+        await this.updateEmailLog(id, {
+          status: liveStatus.status,
+          deliveredAt: liveStatus.deliveredAt,
+          openedAt: liveStatus.openedAt,
+          clickedAt: liveStatus.clickedAt,
+          bouncedAt: liveStatus.bouncedAt,
+        })
+        return liveStatus
+      }
+    }
+
+    // Return database record
     return {
       id: log.id,
       providerId: log.providerId || '',
@@ -814,51 +152,150 @@ export class EmailService extends WorkerEntrypoint<Env> {
     }
   }
 
+  /**
+   * List emails for a user
+   */
   async listEmails(options: ListEmailsOptions = {}): Promise<{ emails: EmailLog[]; total: number }> {
-    // In production, query from database via DB service
+    const { userId, limit = 50, offset = 0, status, template } = options
+
+    // Build query
+    let query = 'SELECT * FROM email_logs WHERE 1=1'
+    const params: any[] = []
+
+    if (userId) {
+      query += ' AND user_id = ?'
+      params.push(userId)
+    }
+
+    if (status) {
+      query += ' AND status = ?'
+      params.push(status)
+    }
+
+    if (template) {
+      query += ' AND template = ?'
+      params.push(template)
+    }
+
+    query += ' ORDER BY sent_at DESC LIMIT ? OFFSET ?'
+    params.push(limit, offset)
+
+    // Execute query (placeholder - actual implementation would use DB service)
+    // const results = await this.env.DB.query(query, params)
+
+    // For now, return mock data
     return {
       emails: [],
       total: 0,
     }
   }
 
+  /**
+   * List available templates
+   */
   async getTemplates() {
     return listTemplates()
   }
 
+  /**
+   * Get a specific template
+   */
   async getTemplate(name: string) {
     return getTemplate(name)
   }
 
-  async getColdEmailTemplate(id: string) {
-    return null
-  }
+  // ============================================================================
+  // COLD EMAIL METHODS
+  // ============================================================================
 
-  async listColdEmailTemplates(category?: string) {
-    return []
-  }
+  /**
+   * Send a cold email with tracking and personalization
+   */
+  async sendColdEmail(message: EmailMessage, options: ColdEmailOptions): Promise<ColdEmailResult> {
+    const trackingBaseUrl = this.env.TRACKING_BASE_URL || 'https://track.services.do'
 
-  async extractTemplateVariables(template: string) {
-    const matches = template.matchAll(VARIABLE_PATTERN)
-    return Array.from(matches, (m) => m[1])
-  }
+    // Process cold email (add tracking, personalization, unsubscribe)
+    const processed = processColdEmail(message, options, trackingBaseUrl)
 
-  async validateTemplateVariables(template: string, variables: Record<string, string>) {
-    const required = await this.extractTemplateVariables(template)
-    const missing = required.filter((v) => !(v in variables))
-    return { valid: missing.length === 0, missing }
-  }
+    // Send via email-sender service (respects warmup, rate limits)
+    let result: EmailResult
 
-  async getSampleVariables() {
+    if (this.env.EMAIL_SENDER) {
+      result = await this.env.EMAIL_SENDER.send({
+        to: processed.message.to,
+        from: processed.message.from,
+        subject: processed.message.subject,
+        html: processed.message.html,
+        text: processed.message.text,
+        attachments: processed.message.attachments,
+        tags: processed.message.tags,
+        metadata: {
+          contactId: options.contactId,
+          campaignId: options.campaignId,
+          domainId: options.domainId,
+        },
+        options: {
+          domainId: options.domainId,
+          respectWarmup: options.respectWarmup,
+          respectRateLimits: options.respectRateLimits,
+          trackOpens: options.trackOpens,
+          trackClicks: options.trackClicks,
+        },
+      })
+    } else {
+      // Fallback to direct sending if email-sender not available
+      result = await this.send(processed.message, { userId: options.campaignId })
+    }
+
+    // Return extended result with cold email metadata
     return {
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john@example.com',
-      company: 'Acme Corp',
-      'company.name': 'Acme Corp',
-      'company.industry': 'Technology',
+      ...result,
+      contactId: options.contactId,
+      campaignId: options.campaignId,
+      trackedLinks: processed.trackedLinks,
+      hasTrackingPixel: processed.hasTrackingPixel,
+      hasUnsubscribeLink: processed.hasUnsubscribeLink,
     }
   }
+
+  /**
+   * Get cold email template
+   */
+  async getColdEmailTemplate(id: string) {
+    return getColdEmailTemplate(id)
+  }
+
+  /**
+   * List cold email templates
+   */
+  async listColdEmailTemplates(category?: string) {
+    return listColdEmailTemplates(category as any)
+  }
+
+  /**
+   * Extract variables from template
+   */
+  async extractTemplateVariables(template: string) {
+    return extractVariables(template)
+  }
+
+  /**
+   * Validate template variables
+   */
+  async validateTemplateVariables(template: string, variables: Record<string, string>) {
+    return validateVariables(template, variables)
+  }
+
+  /**
+   * Generate sample variables
+   */
+  async getSampleVariables() {
+    return generateSampleVariables()
+  }
+
+  // ============================================================================
+  // INTERNAL METHODS
+  // ============================================================================
 
   private getProvider(name?: string): EmailProvider {
     const providerName = name || 'resend'
@@ -893,33 +330,48 @@ export class EmailService extends WorkerEntrypoint<Env> {
 
   private async logEmail(log: Partial<EmailLog>): Promise<void> {
     const formattedLog = formatEmailLog(log)
-    // In production: await this.env.DB.insert('email_logs', formattedLog)
+    // Store in database
+    // await this.env.DB.insert('email_logs', formattedLog)
     console.log('Email logged:', formattedLog)
   }
 
   private async getEmailLog(id: string): Promise<EmailLog | null> {
-    // In production: return await this.env.DB.query('SELECT * FROM email_logs WHERE id = ?', [id])
+    // Fetch from database
+    // const result = await this.env.DB.query('SELECT * FROM email_logs WHERE id = ?', [id])
+    // return result[0] || null
     return null
   }
 
   private async updateEmailLog(id: string, updates: Partial<EmailLog>): Promise<void> {
-    // In production: await this.env.DB.update('email_logs', { id }, updates)
+    // Update database
+    // await this.env.DB.update('email_logs', { id }, updates)
     console.log('Email log updated:', id, updates)
   }
 }
 
 // ============================================================================
-// HTTP API
+// HTTP INTERFACE - Hono routes
 // ============================================================================
-
-import { protocolRouter } from '@dot-do/protocol-router'
 
 const app = new Hono<{ Bindings: Env }>()
 
+app.use('*', cors())
+
+/**
+ * Health check
+ */
+app.get('/health', (c) => {
+  return c.json(success({ status: 'healthy', service: 'email' }))
+})
+
+/**
+ * Send a raw email
+ */
 app.post('/send', async (c) => {
   try {
     const body = await c.req.json<EmailMessage & { userId?: string; provider?: string }>()
 
+    // Validate
     if (!body.to || !body.from || !body.subject) {
       return c.json(error('INVALID_REQUEST', 'Missing required fields: to, from, subject'), 400)
     }
@@ -928,8 +380,10 @@ app.post('/send', async (c) => {
       return c.json(error('INVALID_REQUEST', 'Email must have either HTML or text content'), 400)
     }
 
+    // Create service instance
     const service = new EmailService(c.env.ctx, c.env)
 
+    // Send email
     const result = await service.send(body, {
       userId: body.userId,
       provider: body.provider,
@@ -945,17 +399,23 @@ app.post('/send', async (c) => {
   }
 })
 
+/**
+ * Send a templated email
+ */
 app.post('/templates/:name', async (c) => {
   try {
     const templateName = c.req.param('name')
     const body = await c.req.json<{ to: string | string[]; data: any; from?: string; userId?: string; provider?: string }>()
 
+    // Validate
     if (!body.to || !body.data) {
       return c.json(error('INVALID_REQUEST', 'Missing required fields: to, data'), 400)
     }
 
+    // Create service instance
     const service = new EmailService(c.env.ctx, c.env)
 
+    // Send templated email
     const result = await service.sendTemplate({
       template: templateName,
       to: body.to,
@@ -975,7 +435,10 @@ app.post('/templates/:name', async (c) => {
   }
 })
 
-app.get('/api/status/:id', async (c) => {
+/**
+ * Get email status
+ */
+app.get('/status/:id', async (c) => {
   try {
     const id = c.req.param('id')
     const service = new EmailService(c.env.ctx, c.env)
@@ -992,7 +455,10 @@ app.get('/api/status/:id', async (c) => {
   }
 })
 
-app.get('/api/history', async (c) => {
+/**
+ * List emails
+ */
+app.get('/history', async (c) => {
   try {
     const userId = c.req.query('userId')
     const limit = parseInt(c.req.query('limit') || '50')
@@ -1016,7 +482,10 @@ app.get('/api/history', async (c) => {
   }
 })
 
-app.get('/api/templates', async (c) => {
+/**
+ * List available templates
+ */
+app.get('/templates', async (c) => {
   try {
     const service = new EmailService(c.env.ctx, c.env)
     const templates = await service.getTemplates()
@@ -1026,7 +495,10 @@ app.get('/api/templates', async (c) => {
   }
 })
 
-app.get('/api/templates/:name', async (c) => {
+/**
+ * Get template details
+ */
+app.get('/templates/:name', async (c) => {
   try {
     const name = c.req.param('name')
     const service = new EmailService(c.env.ctx, c.env)
@@ -1042,8 +514,16 @@ app.get('/api/templates/:name', async (c) => {
   }
 })
 
+/**
+ * Webhook handler for Resend delivery status
+ */
 app.post('/webhooks/resend', async (c) => {
   try {
+    // In production, verify webhook signature
+    // const signature = c.req.header('svix-signature')
+    // const timestamp = c.req.header('svix-timestamp')
+    // const payload = await c.req.text()
+
     const event = await c.req.json<{
       type: string
       data: {
@@ -1057,6 +537,7 @@ app.post('/webhooks/resend', async (c) => {
 
     console.log('Resend webhook received:', event)
 
+    // Update email status based on event type
     const statusMap: Record<string, string> = {
       'email.sent': 'sent',
       'email.delivered': 'delivered',
@@ -1069,7 +550,8 @@ app.post('/webhooks/resend', async (c) => {
 
     const status = statusMap[event.type]
     if (status) {
-      // In production: await service.updateEmailLog(event.data.email_id, { status })
+      // Update in database
+      // await service.updateEmailLog(event.data.email_id, { status })
     }
 
     return c.json(success({ received: true }))
@@ -1079,10 +561,18 @@ app.post('/webhooks/resend', async (c) => {
   }
 })
 
+// ============================================================================
+// COLD EMAIL ENDPOINTS
+// ============================================================================
+
+/**
+ * Send a cold email
+ */
 app.post('/cold-email/send', async (c) => {
   try {
     const body = await c.req.json<EmailMessage & ColdEmailOptions>()
 
+    // Validate
     if (!body.to || !body.from || !body.subject || !body.contactId || !body.campaignId || !body.domainId) {
       return c.json(error('INVALID_REQUEST', 'Missing required fields'), 400)
     }
@@ -1091,8 +581,10 @@ app.post('/cold-email/send', async (c) => {
       return c.json(error('INVALID_REQUEST', 'Email must have either HTML or text content'), 400)
     }
 
+    // Create service instance
     const service = new EmailService(c.env.ctx, c.env)
 
+    // Send cold email
     const result = await service.sendColdEmail(
       {
         to: body.to,
@@ -1126,15 +618,96 @@ app.post('/cold-email/send', async (c) => {
   }
 })
 
-const router = protocolRouter({
-  api: app,
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST', 'OPTIONS'],
-    headers: ['Content-Type', 'Authorization'],
-  },
+/**
+ * Get cold email templates
+ */
+app.get('/cold-email/templates', async (c) => {
+  try {
+    const category = c.req.query('category')
+    const service = new EmailService(c.env.ctx, c.env)
+    const templates = await service.listColdEmailTemplates(category)
+    return c.json(success(templates))
+  } catch (err) {
+    return c.json(error('INTERNAL_ERROR', err instanceof Error ? err.message : 'Unknown error'), 500)
+  }
 })
 
+/**
+ * Get specific cold email template
+ */
+app.get('/cold-email/templates/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const service = new EmailService(c.env.ctx, c.env)
+    const template = await service.getColdEmailTemplate(id)
+
+    if (!template) {
+      return c.json(error('NOT_FOUND', 'Template not found'), 404)
+    }
+
+    return c.json(success(template))
+  } catch (err) {
+    return c.json(error('INTERNAL_ERROR', err instanceof Error ? err.message : 'Unknown error'), 500)
+  }
+})
+
+/**
+ * Extract variables from template
+ */
+app.post('/cold-email/variables/extract', async (c) => {
+  try {
+    const { template } = await c.req.json<{ template: string }>()
+
+    if (!template) {
+      return c.json(error('INVALID_REQUEST', 'Template is required'), 400)
+    }
+
+    const service = new EmailService(c.env.ctx, c.env)
+    const variables = await service.extractTemplateVariables(template)
+
+    return c.json(success({ variables }))
+  } catch (err) {
+    return c.json(error('INTERNAL_ERROR', err instanceof Error ? err.message : 'Unknown error'), 500)
+  }
+})
+
+/**
+ * Validate template variables
+ */
+app.post('/cold-email/variables/validate', async (c) => {
+  try {
+    const { template, variables } = await c.req.json<{ template: string; variables: Record<string, string> }>()
+
+    if (!template) {
+      return c.json(error('INVALID_REQUEST', 'Template is required'), 400)
+    }
+
+    const service = new EmailService(c.env.ctx, c.env)
+    const validation = await service.validateTemplateVariables(template, variables || {})
+
+    return c.json(success(validation))
+  } catch (err) {
+    return c.json(error('INTERNAL_ERROR', err instanceof Error ? err.message : 'Unknown error'), 500)
+  }
+})
+
+/**
+ * Get sample variables
+ */
+app.get('/cold-email/variables/sample', async (c) => {
+  try {
+    const service = new EmailService(c.env.ctx, c.env)
+    const variables = await service.getSampleVariables()
+    return c.json(success(variables))
+  } catch (err) {
+    return c.json(error('INTERNAL_ERROR', err instanceof Error ? err.message : 'Unknown error'), 500)
+  }
+})
+
+// Export HTTP app for testing
+export { app as http }
+
+// Default export for Worker (HTTP interface)
 export default {
-  fetch: router.fetch,
+  fetch: app.fetch,
 }

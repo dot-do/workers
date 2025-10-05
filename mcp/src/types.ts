@@ -5,7 +5,6 @@
 export interface Env {
   // Service bindings
   DB: any // DB service RPC binding
-  DO: any // DO service RPC binding (code execution)
   AI: any // AI service RPC binding
   AUTH: any // Auth service RPC binding
   QUEUE: any // Queue service RPC binding

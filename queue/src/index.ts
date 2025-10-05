@@ -1,119 +1,3 @@
-await env.QUEUE.enqueue({
-  type: 'send-email',
-  payload: {...},
-  priority: 10 // High priority
-})
-
-
-await env.QUEUE.enqueue({
-  type: 'generate-report',
-  payload: {...},
-  scheduledFor: new Date('2025-12-25T00:00:00Z')
-})
-
-
-const stats = await env.QUEUE.getStats()
-// {
-//   total: 1000,
-//   pending: 50,
-//   processing: 10,
-//   completed: 920,
-//   failed: 20,
-//   completionRate: "92.00%",
-//   failureRate: "2.00%"
-// }
-
-
-export class QueueService extends WorkerEntrypoint<Env> {
-  // Enqueue a new job
-  async enqueue(job: QueueJob): Promise<string>
-
-  // Get job details
-  async getJob(jobId: string): Promise<QueueJobRecord | null>
-
-  // Update job status
-  async updateJobStatus(
-    jobId: string,
-    status: JobStatus,
-    updates?: { result?: any; error?: string; attempts?: number }
-  ): Promise<void>
-
-  // Retry a failed job
-  async retryJob(jobId: string): Promise<boolean>
-
-  // List jobs with filtering
-  async listJobs(options?: {
-    status?: JobStatus
-    type?: string
-    limit?: number
-    offset?: number
-  }): Promise<QueueJobRecord[]>
-
-  // Get queue statistics
-  async getStats(): Promise<{
-    total: number
-    pending: number
-    processing: number
-    completed: number
-    failed: number
-    completionRate: string
-    failureRate: string
-  }>
-
-  // Cancel a job
-  async cancelJob(jobId: string): Promise<boolean>
-}
-
-
-// From another worker service
-const jobId = await env.QUEUE.enqueue({
-  type: 'send-email',
-  payload: {
-    to: 'user@example.com',
-    subject: 'Welcome!',
-    body: 'Thanks for signing up!'
-  }
-})
-
-// Check job status
-const job = await env.QUEUE.getJob(jobId)
-console.log('Job status:', job.status)
-
-// Get queue stats
-const stats = await env.QUEUE.getStats()
-console.log('Completion rate:', stats.completionRate)
-
-
-// Enqueue from external client
-const response = await fetch('https://queue.services.do/jobs', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer sk_live_...'
-  },
-  body: JSON.stringify({
-    type: 'generate-embedding',
-    payload: {
-      text: 'This is sample text for embedding',
-      model: '@cf/baai/bge-base-en-v1.5'
-    }
-  })
-})
-
-const { jobId } = await response.json()
-
-
-async function processCustomJob(payload: any, env: Env): Promise<any> {
-  // Your custom logic here
-  const result = await doSomething(payload)
-  return result
-}
-
-// Add to processJob switch statement
-case 'custom-job':
-  return await processCustomJob(payload, env)
-
-
 /**
  * Queue Service - Background Job Processing
  *
@@ -123,6 +7,7 @@ case 'custom-job':
 
 import { WorkerEntrypoint } from 'cloudflare:workers'
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 
 // ============================================================================
 // Types
@@ -389,315 +274,12 @@ export class QueueService extends WorkerEntrypoint<Env> {
 }
 
 // ============================================================================
-// Job Processor
-// ============================================================================
-
-/**
- * Process send-email job
- */
-async function processSendEmailJob(payload: any, env: Env): Promise<any> {
-  const { to, subject, body, from } = payload
-
-  if (!to || !subject || !body) {
-    throw new Error('Missing required email fields: to, subject, body')
-  }
-
-  console.log(`[Queue] Sending email to ${to}: ${subject}`)
-
-  return {
-    sent: true,
-    to,
-    subject,
-    timestamp: new Date().toISOString(),
-  }
-}
-
-/**
- * Process generate-embedding job
- */
-async function processGenerateEmbeddingJob(payload: any, env: Env): Promise<any> {
-  const { text, model } = payload
-
-  if (!text) {
-    throw new Error('Missing required field: text')
-  }
-
-  // Generate embedding using AI service
-  const result = await env.AI.generateEmbedding(text, {
-    model: model || '@cf/baai/bge-base-en-v1.5',
-  })
-
-  return {
-    embedding: result.embedding,
-    dimensions: result.embedding.length,
-    model: model || '@cf/baai/bge-base-en-v1.5',
-  }
-}
-
-/**
- * Process crawl-website job
- */
-async function processCrawlWebsiteJob(payload: any, env: Env): Promise<any> {
-  const { url, maxPages, selectors } = payload
-
-  if (!url) {
-    throw new Error('Missing required field: url')
-  }
-
-  console.log(`[Queue] Crawling website: ${url}`)
-
-  return {
-    url,
-    crawled: true,
-    pages: maxPages || 10,
-    timestamp: new Date().toISOString(),
-  }
-}
-
-/**
- * Process generate-content job (AI text generation)
- */
-async function processGenerateContentJob(payload: any, env: Env): Promise<any> {
-  const { prompt, type, model } = payload
-
-  if (!prompt) {
-    throw new Error('Missing required field: prompt')
-  }
-
-  // Generate content using AI service
-  const result = await env.AI.generateText({
-    prompt,
-    model: model || '@cf/meta/llama-3.1-8b-instruct',
-  })
-
-  return {
-    content: result.text,
-    type: type || 'text',
-    model: model || '@cf/meta/llama-3.1-8b-instruct',
-    tokens: result.tokens,
-  }
-}
-
-/**
- * Process batch-import job
- */
-async function processBatchImportJob(payload: any, env: Env): Promise<any> {
-  const { items, namespace } = payload
-
-  if (!items || !Array.isArray(items)) {
-    throw new Error('Missing or invalid field: items (must be array)')
-  }
-
-  console.log(`[Queue] Batch importing ${items.length} items to namespace: ${namespace || 'default'}`)
-
-  // Batch import items to database
-  const results = []
-  for (const item of items) {
-    try {
-      await env.DB.upsert(
-        [
-          {
-            $id: item.id || crypto.randomUUID(),
-            data: item.data || item,
-          },
-        ],
-        {
-          ns: namespace || 'default',
-          $context: 'https://queue.do/batch-import',
-          type: item.type || 'ImportedItem',
-          $type: item.type || 'ImportedItem',
-        }
-      )
-      results.push({ id: item.id, success: true })
-    } catch (error) {
-      results.push({
-        id: item.id,
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      })
-    }
-  }
-
-  const successCount = results.filter((r) => r.success).length
-  const failureCount = results.filter((r) => !r.success).length
-
-  return {
-    total: items.length,
-    success: successCount,
-    failed: failureCount,
-    results,
-  }
-}
-
-/**
- * Process webhook-delivery job
- */
-async function processWebhookDeliveryJob(payload: any, env: Env): Promise<any> {
-  const { url, method, body, headers } = payload
-
-  if (!url) {
-    throw new Error('Missing required field: url')
-  }
-
-  console.log(`[Queue] Delivering webhook to: ${url}`)
-
-  // Make HTTP request to webhook URL
-  const response = await fetch(url, {
-    method: method || 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
-    body: JSON.stringify(body),
-  })
-
-  return {
-    url,
-    status: response.status,
-    statusText: response.statusText,
-    success: response.ok,
-    timestamp: new Date().toISOString(),
-  }
-}
-
-/**
- * Process a job based on its type
- */
-export async function processJob(type: string, payload: any, env: Env): Promise<any> {
-  console.log(`[Queue] Processing job type: ${type}`)
-
-  switch (type) {
-    case 'send-email':
-      return await processSendEmailJob(payload, env)
-
-    case 'generate-embedding':
-      return await processGenerateEmbeddingJob(payload, env)
-
-    case 'crawl-website':
-      return await processCrawlWebsiteJob(payload, env)
-
-    case 'generate-content':
-      return await processGenerateContentJob(payload, env)
-
-    case 'batch-import':
-      return await processBatchImportJob(payload, env)
-
-    case 'webhook-delivery':
-      return await processWebhookDeliveryJob(payload, env)
-
-    default:
-      throw new Error(`Unknown job type: ${type}`)
-  }
-}
-
-/**
- * Validate job before processing
- */
-export function validateJob(job: QueueJobRecord): { valid: boolean; error?: string } {
-  if (!job.type) {
-    return { valid: false, error: 'Job type is required' }
-  }
-
-  if (!job.payload) {
-    return { valid: false, error: 'Job payload is required' }
-  }
-
-  if (job.attempts >= job.maxAttempts) {
-    return { valid: false, error: 'Job has exceeded maximum retry attempts' }
-  }
-
-  return { valid: true }
-}
-
-// ============================================================================
-// Queue Consumer
-// ============================================================================
-
-/**
- * Queue consumer - processes jobs from Cloudflare Queue
- */
-export async function queue(batch: MessageBatch<any>, env: Env): Promise<void> {
-  const service = new QueueService({} as any, env)
-
-  for (const message of batch.messages) {
-    const { jobId, type, payload } = message.body
-
-    try {
-      console.log(`[Queue] Processing job ${jobId} of type ${type}`)
-
-      // Get job from database
-      const job = await service.getJob(jobId)
-      if (!job) {
-        console.error(`[Queue] Job ${jobId} not found`)
-        message.ack()
-        continue
-      }
-
-      // Validate job
-      const validation = validateJob(job)
-      if (!validation.valid) {
-        console.error(`[Queue] Job ${jobId} validation failed: ${validation.error}`)
-        await service.updateJobStatus(jobId, 'failed', {
-          error: validation.error,
-        })
-        message.ack()
-        continue
-      }
-
-      // Update status to processing
-      await service.updateJobStatus(jobId, 'processing', {
-        attempts: job.attempts + 1,
-      })
-
-      // Process the job
-      const result = await processJob(type, payload, env)
-
-      // Mark as completed
-      await service.updateJobStatus(jobId, 'completed', {
-        result,
-      })
-
-      console.log(`[Queue] Job ${jobId} completed successfully`)
-      message.ack()
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      console.error(`[Queue] Job ${jobId} failed:`, errorMessage)
-
-      try {
-        const job = await service.getJob(jobId)
-        if (job) {
-          const newAttempts = job.attempts + 1
-          if (newAttempts >= job.maxAttempts) {
-            // Max retries exceeded - mark as failed
-            await service.updateJobStatus(jobId, 'failed', {
-              error: errorMessage,
-              attempts: newAttempts,
-            })
-            message.ack() // Don't retry
-          } else {
-            // Retry the job
-            await service.updateJobStatus(jobId, 'pending', {
-              error: errorMessage,
-              attempts: newAttempts,
-            })
-            message.retry() // Cloudflare will retry
-          }
-        }
-      } catch (updateError) {
-        console.error(`[Queue] Failed to update job ${jobId} status:`, updateError)
-        message.retry()
-      }
-    }
-  }
-}
-
-// ============================================================================
 // HTTP API (Optional)
 // ============================================================================
 
-import { protocolRouter } from '@dot-do/protocol-router'
-
 const app = new Hono<{ Bindings: Env }>()
+
+app.use('/*', cors())
 
 /**
  * POST /jobs - Enqueue a new job
@@ -726,9 +308,9 @@ app.post('/jobs', async (c) => {
 })
 
 /**
- * GET /api/jobs/:id - Get job status
+ * GET /jobs/:id - Get job status
  */
-app.get('/api/jobs/:id', async (c) => {
+app.get('/jobs/:id', async (c) => {
   try {
     const service = new QueueService(c.env.ctx, c.env)
     const jobId = c.req.param('id')
@@ -752,9 +334,9 @@ app.get('/api/jobs/:id', async (c) => {
 })
 
 /**
- * GET /api/jobs - List jobs
+ * GET /jobs - List jobs
  */
-app.get('/api/jobs', async (c) => {
+app.get('/jobs', async (c) => {
   try {
     const service = new QueueService(c.env.ctx, c.env)
 
@@ -787,9 +369,9 @@ app.get('/api/jobs', async (c) => {
 })
 
 /**
- * POST /api/jobs/:id/retry - Retry a failed job
+ * POST /jobs/:id/retry - Retry a failed job
  */
-app.post('/api/jobs/:id/retry', async (c) => {
+app.post('/jobs/:id/retry', async (c) => {
   try {
     const service = new QueueService(c.env.ctx, c.env)
     const jobId = c.req.param('id')
@@ -822,9 +404,9 @@ app.post('/api/jobs/:id/retry', async (c) => {
 })
 
 /**
- * DELETE /api/jobs/:id - Cancel a job
+ * DELETE /jobs/:id - Cancel a job
  */
-app.delete('/api/jobs/:id', async (c) => {
+app.delete('/jobs/:id', async (c) => {
   try {
     const service = new QueueService(c.env.ctx, c.env)
     const jobId = c.req.param('id')
@@ -857,9 +439,9 @@ app.delete('/api/jobs/:id', async (c) => {
 })
 
 /**
- * GET /api/stats - Get queue statistics
+ * GET /stats - Get queue statistics
  */
-app.get('/api/stats', async (c) => {
+app.get('/stats', async (c) => {
   try {
     const service = new QueueService(c.env.ctx, c.env)
     const stats = await service.getStats()
@@ -879,16 +461,17 @@ app.get('/api/stats', async (c) => {
   }
 })
 
-const router = protocolRouter({
-  api: app,
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-    headers: ['Content-Type', 'Authorization'],
-  },
+/**
+ * GET /health - Health check
+ */
+app.get('/health', (c) => {
+  return c.json({
+    status: 'ok',
+    service: 'queue',
+    timestamp: new Date().toISOString(),
+  })
 })
 
 export default {
-  fetch: router.fetch,
-  queue,
+  fetch: app.fetch,
 }

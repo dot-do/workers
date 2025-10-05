@@ -6,8 +6,6 @@ import * as auth from './auth'
 import * as search from './search'
 import * as queue from './queue'
 import * as workflows from './workflows'
-import * as cli from './cli'
-import * as code from './code'
 
 /**
  * Tool Registry
@@ -19,9 +17,7 @@ const toolCategories = {
   auth,
   search,
   queue,
-  workflows,
-  cli,
-  code
+  workflows
 }
 
 /**
@@ -37,11 +33,7 @@ export function listTools(authenticated: boolean): MCPTool[] {
 
   // Filter tools based on authentication
   if (!authenticated) {
-    const publicTools = [
-      'db_search',
-      'cli_status',
-      'cli_login_url'
-    ]
+    const publicTools = ['db_search']
     return allTools.filter(tool => publicTools.includes(tool.name))
   }
 
@@ -58,12 +50,9 @@ export async function callTool(
   user: User | null,
   authenticated: boolean
 ): Promise<any> {
-  // Special mapping for 'do' tool (since 'do' is a reserved keyword)
-  const toolName = name === 'do' ? 'do_tool' : name
-
   // Find tool handler
   for (const [category, tools] of Object.entries(toolCategories)) {
-    const handler = (tools as any)[toolName]
+    const handler = (tools as any)[name]
     if (handler && typeof handler === 'function') {
       return await handler(args, c, user)
     }

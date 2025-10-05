@@ -11,7 +11,7 @@
 	"observability": {
 		"enabled": true
 	},
-	"workers_dev": false,
+	"workers_dev": true,
 	"services": [
 		{
 			"binding": "DB",
@@ -36,29 +36,11 @@
 		{
 			"binding": "WORKFLOWS",
 			"service": "workflows"
-		},
-		{
-			"binding": "UNIVERSAL_API",
-			"service": "universal-api"
 		}
 	],
 	"vars": {
 		"ENVIRONMENT": "production"
 	},
-	"routes": [
-		{
-			"pattern": "api.services.do/*",
-			"zone_name": "services.do"
-		},
-		{
-			"pattern": "apis.do/*",
-			"zone_name": "apis.do"
-		},
-		{
-			"pattern": "*.api.mw/*",
-			"zone_name": "api.mw"
-		}
-	],
 	"kv_namespaces": [
 		{
 			"binding": "GATEWAY_KV",

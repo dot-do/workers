@@ -1,6 +1,5 @@
 import type { Context } from 'hono'
 import type { Env, MCPResource, MCPResourceContent } from './types'
-import { generateDocs, generateDocsIndex, listDocs } from './docs/generator'
 
 /**
  * MCP Resources
@@ -8,66 +7,7 @@ import { generateDocs, generateDocsIndex, listDocs } from './docs/generator'
  */
 
 export function listResources(): MCPResource[] {
-  // Business-as-Code documentation resources
-  const businessCodeDocs: MCPResource[] = [
-    {
-      uri: 'doc://$',
-      name: 'Business-as-Code Runtime',
-      description: 'Complete $ runtime documentation with all 8 primitives',
-      mimeType: 'text/markdown'
-    },
-    {
-      uri: 'doc://ai',
-      name: 'AI Operations',
-      description: 'AI generation, embeddings, classification, and extraction',
-      mimeType: 'text/markdown'
-    },
-    {
-      uri: 'doc://db',
-      name: 'Database Operations',
-      description: 'CRUD operations, queries, bulk processing, and semantic paths',
-      mimeType: 'text/markdown'
-    },
-    {
-      uri: 'doc://api',
-      name: 'API Operations',
-      description: 'HTTP client for external API calls (GET, POST, PUT, DELETE)',
-      mimeType: 'text/markdown'
-    },
-    {
-      uri: 'doc://on',
-      name: 'Event Operations',
-      description: 'Event handlers for lifecycle events and custom events',
-      mimeType: 'text/markdown'
-    },
-    {
-      uri: 'doc://send',
-      name: 'Send Operations',
-      description: 'Communication via email, SMS, push notifications, and webhooks',
-      mimeType: 'text/markdown'
-    },
-    {
-      uri: 'doc://every',
-      name: 'Every Operations',
-      description: 'Scheduled tasks and collection iteration',
-      mimeType: 'text/markdown'
-    },
-    {
-      uri: 'doc://decide',
-      name: 'Decide Operations',
-      description: 'Decision logic with if/then/else, switch/case, and rules',
-      mimeType: 'text/markdown'
-    },
-    {
-      uri: 'doc://user',
-      name: 'User Context',
-      description: 'User authentication state, roles, and permissions',
-      mimeType: 'text/markdown'
-    }
-  ]
-
-  // Platform documentation resources
-  const platformDocs: MCPResource[] = [
+  return [
     {
       uri: 'docs://api-reference',
       name: 'API Reference',
@@ -93,30 +33,12 @@ export function listResources(): MCPResource[] {
       mimeType: 'text/markdown'
     }
   ]
-
-  return [...businessCodeDocs, ...platformDocs]
 }
 
 export async function readResource(
   uri: string,
   c: Context<{ Bindings: Env }>
 ): Promise<MCPResourceContent> {
-  // Handle doc:// scheme (Business-as-Code documentation)
-  if (uri.startsWith('doc://')) {
-    const primitive = uri.replace('doc://', '')
-    try {
-      const docs = generateDocs(primitive)
-      return {
-        uri,
-        mimeType: 'text/markdown',
-        text: docs
-      }
-    } catch (error) {
-      throw new Error(`Documentation not found for primitive: ${primitive}`)
-    }
-  }
-
-  // Handle docs:// scheme (Platform documentation)
   switch (uri) {
     case 'docs://api-reference':
       return {
@@ -298,12 +220,6 @@ function getToolCatalog(): any {
   return {
     categories: [
       {
-        name: 'Code Execution',
-        tools: ['do', 'code_execute', 'code_generate', 'code_test'],
-        count: 4,
-        featured: true
-      },
-      {
         name: 'Database Tools',
         tools: ['db_query', 'db_get', 'db_list', 'db_upsert', 'db_delete'],
         count: 5
@@ -334,15 +250,10 @@ function getToolCatalog(): any {
         count: 3
       }
     ],
-    total: 24,
+    total: 20,
     authentication: {
       public: ['db_search'],
       authenticated: 'all other tools'
-    },
-    recommended: {
-      tool: 'do',
-      description: 'Universal Business-as-Code tool - execute TypeScript with $ runtime',
-      documentation: 'doc://$'
     }
   }
 }

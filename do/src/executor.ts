@@ -238,6 +238,120 @@ export async function executeCode(
 }
 
 /**
+ * Execute TypeScript code in a completely sandboxed V8 isolate
+ * No context, no env, no outbound fetch - pure evaluation only
+ */
+export async function executeSandboxedCode(
+  request: ExecuteCodeRequest,
+  env: Env,
+  ctx?: ExecutionContext
+): Promise<ExecuteCodeResponse> {
+  const startTime = Date.now()
+  const logs: string[] = []
+
+  try {
+    if (!env.LOADER) {
+      return {
+        success: false,
+        error: {
+          message: 'Worker Loader not available. This feature requires Cloudflare Workers with dynamic code execution enabled.'
+        },
+        logs,
+        executionTime: Date.now() - startTime
+      }
+    }
+
+    // Generate unique ID for this execution
+    const executionId = `eval-${Date.now()}-${Math.random().toString(36).substring(7)}`
+
+    // Load the worker with sandboxed code (NO bindings)
+    const worker = env.LOADER.get(executionId, async () => {
+      const workerCode: WorkerCode = {
+        compatibilityDate: env.DEFAULT_COMPATIBILITY_DATE || '2025-07-08',
+        mainModule: 'main.js',
+        modules: {
+          'main.js': wrapSandboxedCode(request.code, request.captureConsole ?? true)
+        },
+        // EMPTY env - no bindings whatsoever
+        env: {},
+        // NO globalOutbound - fetch is completely disabled
+      }
+      return workerCode
+    })
+
+    if (!worker || (typeof (worker as any).fetch !== 'function' && typeof (worker as any).getEntrypoint !== 'function')) {
+      return {
+        success: false,
+        error: {
+          message: 'Worker Loader is not fully functional in this environment. This may be expected in local development. Worker Loader works fully in production with beta access.'
+        },
+        logs,
+        executionTime: Date.now() - startTime
+      }
+    }
+
+    // Execute with timeout
+    const timeout = request.timeout || parseInt(env.MAX_EXECUTION_TIME || '30000')
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+    try {
+      const fetchRequest = new Request('http://eval', { signal: controller.signal })
+      let response: Response
+
+      if (typeof (worker as any).fetch === 'function') {
+        response = await worker.fetch(fetchRequest)
+      } else if (typeof (worker as any).getEntrypoint === 'function') {
+        const entrypoint = (worker as any).getEntrypoint()
+        if (entrypoint && typeof entrypoint.fetch === 'function') {
+          response = await entrypoint.fetch(fetchRequest)
+        } else {
+          throw new Error('Worker entrypoint does not have a fetch method')
+        }
+      } else {
+        throw new Error('Worker stub has neither fetch() nor getEntrypoint()')
+      }
+
+      clearTimeout(timeoutId)
+
+      const result = await response.json() as { output?: any; logs?: string[]; error?: string; stack?: string }
+
+      if (result.error) {
+        return {
+          success: false,
+          error: {
+            message: result.error,
+            stack: result.stack
+          },
+          logs: result.logs || logs,
+          executionTime: Date.now() - startTime
+        }
+      }
+
+      return {
+        success: true,
+        result: result.output,
+        logs: result.logs || logs,
+        executionTime: Date.now() - startTime
+      }
+    } catch (error) {
+      clearTimeout(timeoutId)
+      throw error
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      },
+      logs,
+      executionTime: Date.now() - startTime
+    }
+  }
+}
+
+/**
  * Wrap user code to capture console.log and result
  */
 function wrapCode(code: string, captureConsole: boolean): string {
@@ -304,6 +418,75 @@ export default {
 `
 
   return captureConsole ? captureCode : simpleCode
+}
+
+/**
+ * Wrap user code for sandboxed evaluation (no env, no fetch)
+ */
+function wrapSandboxedCode(code: string, captureConsole: boolean): string {
+  if (captureConsole) {
+    return `
+const __logs = [];
+const __originalConsoleLog = console.log;
+console.log = (...args) => {
+  __logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
+};
+
+export default {
+  async fetch(request) {
+    let __output;
+    try {
+      __output = await (async () => {
+        ${code}
+      })();
+    } catch (error) {
+      return new Response(JSON.stringify({
+        error: error.message,
+        stack: error.stack,
+        logs: __logs
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response(JSON.stringify({
+      output: __output,
+      logs: __logs
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};
+`
+  }
+
+  return `
+export default {
+  async fetch(request) {
+    let __output;
+    try {
+      __output = await (async () => {
+        ${code}
+      })();
+    } catch (error) {
+      return new Response(JSON.stringify({
+        error: error.message,
+        stack: error.stack
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response(JSON.stringify({
+      output: __output
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};
+`
 }
 
 /**

@@ -111,6 +111,40 @@ export class DO extends WorkerEntrypoint<Env> {
     })
 
     /**
+     * Eval endpoint - completely sandboxed execution
+     * No context, no env, no outbound fetch
+     * Pure code evaluation only
+     */
+    app.post('/eval', async (c) => {
+      try {
+        const body = await c.req.json<ExecuteCodeRequest>()
+
+        if (!body.code || typeof body.code !== 'string') {
+          return c.json({
+            success: false,
+            error: {
+              message: 'Invalid request: code field is required'
+            }
+          }, 400)
+        }
+
+        // Import sandboxed executor
+        const { executeSandboxedCode } = await import('./executor')
+
+        // Execute without any context or bindings
+        const result = await executeSandboxedCode(body, c.env, this.ctx)
+        return c.json(result, result.success ? 200 : 500)
+      } catch (error) {
+        return c.json({
+          success: false,
+          error: {
+            message: error instanceof Error ? error.message : 'Unknown error'
+          }
+        }, 500)
+      }
+    })
+
+    /**
      * Authorization info endpoint
      * Returns user's tier, namespace, and permissions
      */

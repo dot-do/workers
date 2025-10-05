@@ -112,15 +112,35 @@ curl -X POST https://do.do/rpc/db/query \
 
 ### Code Execution
 
+**Full Execution** (with context and services):
 ```bash
-curl -X POST https://do.do/execute \
+curl -X POST https://apis.do/do/execute \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "code": "const users = await env.DO.db_list(\"users\"); return users;",
+    "code": "const users = await $.db.list(\"users\"); return users;",
     "timeout": 5000
   }'
 ```
+
+**Sandboxed Eval** (no context, no services, no fetch):
+```bash
+curl -X POST https://apis.do/do/eval \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "return 1 + 1",
+    "timeout": 5000
+  }'
+```
+
+The `/eval` endpoint provides completely sandboxed code evaluation:
+- ❌ No `$` runtime (no service access)
+- ❌ No `env` bindings
+- ❌ No `ctx` context
+- ❌ No outbound `fetch()`
+- ✅ Pure JavaScript/TypeScript evaluation only
+- ✅ Faster execution (no context overhead)
+- ✅ Safe for untrusted code evaluation
 
 ## Available Methods
 

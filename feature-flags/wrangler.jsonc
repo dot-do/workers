@@ -1,0 +1,44 @@
+{
+  "name": "feature-flags",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2025-01-03",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+
+  // Bindings for D1, KV, and Analytics Engine
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "feature-flags-db",
+      "database_id": "e7629d01-8a48-470d-8145-4b90899a82a7"
+    }
+  ],
+
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "6c3cae62075a41639fb6fc43ef04c45f"
+    }
+  ],
+
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS"
+    }
+  ],
+
+  // Environment variables
+  "vars": {
+    "ENVIRONMENT": "development",
+    "CACHE_TTL_SECONDS": "300",
+    "ENABLE_ANALYTICS": "true"
+  },
+
+  // Routes (optional - for REST API)
+  "routes": [
+    {
+      "pattern": "flags.api.services/*",
+      "zone_name": "api.services"
+    }
+  ]
+}

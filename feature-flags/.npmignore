@@ -1,0 +1,29 @@
+# Source files
+src/
+tests/
+examples/
+docs/
+
+# Config files
+tsconfig.json
+wrangler.jsonc
+vitest.config.ts
+schema.sql
+
+# Development
+.github/
+.vscode/
+.idea/
+
+# Documentation (keep README)
+*.md
+!README.md
+
+# Test and build
+coverage/
+.vitest/
+
+# Environment
+.env
+.dev.vars
+.wrangler/

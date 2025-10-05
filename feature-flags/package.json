@@ -1,0 +1,68 @@
+{
+  "name": "@dot-do/openfeature-cloudflare-provider",
+  "version": "1.0.0",
+  "description": "OpenFeature-compliant provider for Cloudflare Workers with D1, KV, and Analytics Engine",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./provider": {
+      "import": "./dist/provider/index.js",
+      "types": "./dist/provider/index.d.ts"
+    },
+    "./flags-sdk": {
+      "import": "./dist/flags-sdk/index.js",
+      "types": "./dist/flags-sdk/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/**/*.ts",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "keywords": [
+    "openfeature",
+    "feature-flags",
+    "cloudflare",
+    "cloudflare-workers",
+    "d1",
+    "kv",
+    "analytics-engine",
+    "experimentation",
+    "a/b-testing"
+  ],
+  "dependencies": {
+    "@openfeature/core": "^1.9.1",
+    "@openfeature/server-sdk": "^1.19.0",
+    "hono": "^4.9.9",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250103.0",
+    "@types/node": "^22.10.5",
+    "@typescript-eslint/eslint-plugin": "^8.20.0",
+    "@typescript-eslint/parser": "^8.20.0",
+    "eslint": "^9.18.0",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.102.0"
+  },
+  "peerDependencies": {
+    "@openfeature/server-sdk": "^1.13.0"
+  },
+  "author": "dot-do",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/openfeature-cloudflare-provider.git"
+  }
+}

@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+*.js
+*.d.ts
+*.map
+!wrangler.jsonc
+
+# Testing
+coverage/
+.vitest/
+
+# Environment
+.env
+.dev.vars
+.wrangler/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Temporary
+tmp/
+temp/

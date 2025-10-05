@@ -1,0 +1,22 @@
+{
+  "name": "cloudflare-ai-memory-poc",
+  "version": "1.0.0",
+  "description": "Persistent AI Memory System using Durable Objects, Vectorize, R2, and Workers AI",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.100.0"
+  }
+}

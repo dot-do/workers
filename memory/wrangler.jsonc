@@ -1,0 +1,63 @@
+{
+  "name": "memory",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-11-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MEMORY",
+        "class_name": "MemoryObject"
+      }
+    ]
+  },
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["MemoryObject"]
+    }
+  ],
+
+  "vectorize": [
+    {
+      "binding": "VECTORIZE",
+      "index_name": "memory-semantic"
+    }
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "ARCHIVE",
+      "bucket_name": "memory-archive"
+    }
+  ],
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "memory-db",
+      "database_id": "3c587b5a-390a-48a8-843f-f8e245ce7b81"
+    }
+  ],
+
+  "ai": {
+    "binding": "AI"
+  },
+
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "e2a45ed25d5c4e7e98ed99f290a82111"
+    }
+  ],
+
+  "vars": {
+    "MEMORY_WORKING_SIZE": "50",
+    "MEMORY_CONSOLIDATION_THRESHOLD": "100",
+    "EMBEDDING_MODEL": "@cf/baai/bge-base-en-v1.5",
+    "SUMMARIZATION_MODEL": "@cf/meta/llama-3.1-8b-instruct"
+  }
+}

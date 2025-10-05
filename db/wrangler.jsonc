@@ -5,7 +5,7 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "db",
-	"main": "src/index.ts",
+	"main": "worker.ts",
 	"compatibility_date": "2025-07-08",
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
 	"observability": {
@@ -15,22 +15,22 @@
 		"nodejs_compat",
 		"nodejs_compat_populate_process_env"
 	],
-	"workers_dev": false,
+	"workers_dev": true,
 	"vars": {
 		"CLICKHOUSE_URL": "https://bkkj10mmgz.us-east-1.aws.clickhouse.cloud:8443",
 		"CLICKHOUSE_DATABASE": "default",
 		"CLICKHOUSE_USERNAME": "default"
 	},
-	"routes": [
-		{
-			"pattern": "db.apis.do/*",
-			"zone_name": "apis.do"
-		},
-		{
-			"pattern": "database.apis.do/*",
-			"zone_name": "apis.do"
-		}
-	],
+	// "routes": [
+	// 	{
+	// 		"pattern": "db.apis.do/*",
+	// 		"zone_name": "apis.do"
+	// 	},
+	// 	{
+	// 		"pattern": "database.apis.do/*",
+	// 		"zone_name": "apis.do"
+	// 	}
+	// ],
 	"tail_consumers": [
 		{
 			"service": "pipeline"

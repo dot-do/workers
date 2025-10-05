@@ -14,7 +14,7 @@
 	"compatibility_flags": [
 		"nodejs_compat"
 	],
-	"workers_dev": false,
+	"workers_dev": true,
 	"services": [
 		{
 			"binding": "DB",

@@ -1,0 +1,394 @@
+---
+$type: Worker
+$id: claude-mdx
+name: claude-mdx
+main: src/index.ts
+compatibility_date: "2025-01-01"
+account_id: b6641681fe423910342b9ffa1364c76d
+
+observability:
+  enabled: true
+
+routes:
+  - pattern: claude.mdx.do/*
+    custom_domain: true
+
+kv_namespaces:
+  - binding: CACHE
+    id: claude-mdx-cache
+
+tail_consumers:
+  - service: logger
+---
+
+# Claude.mdx Worker
+
+Dynamic rendering of CLAUDE.mdx with live project status.
+
+## Features
+
+- **Live Rendering** - Fetches latest CLAUDE.mdx from GitHub
+- **Caching** - KV cache with 1-hour TTL
+- **MDX Processing** - Converts MDX to HTML
+- **Responsive Design** - Mobile-friendly layout
+- **Dark Mode** - Automatic dark mode support
+
+## Routes
+
+- `/` - Renders CLAUDE.mdx
+- `/raw` - Returns raw CLAUDE.mdx content
+- `/refresh` - Clears cache and re-fetches
+
+```typescript
+import { WorkerEntrypoint } from 'cloudflare:workers'
+import { Hono } from 'hono'
+import { html } from 'hono/html'
+
+interface Env {
+  CACHE: KVNamespace
+  GITHUB_TOKEN?: string
+}
+
+const GITHUB_RAW_URL = 'https://raw.githubusercontent.com/dot-do/.do/main/CLAUDE.mdx'
+const CACHE_KEY = 'claude-mdx-content'
+const CACHE_TTL = 3600 // 1 hour
+
+export class ClaudeMdxService extends WorkerEntrypoint<Env> {
+  async fetchClaudeMdx(): Promise<string> {
+    // Try cache first
+    const cached = await this.env.CACHE.get(CACHE_KEY)
+    if (cached) {
+      return cached
+    }
+
+    // Fetch from GitHub
+    const headers: HeadersInit = {}
+    if (this.env.GITHUB_TOKEN) {
+      headers['Authorization'] = `token ${this.env.GITHUB_TOKEN}`
+    }
+
+    const response = await fetch(GITHUB_RAW_URL, { headers })
+    if (!response.ok) {
+      throw new Error(`Failed to fetch CLAUDE.mdx: ${response.statusText}`)
+    }
+
+    const content = await response.text()
+
+    // Cache for 1 hour
+    await this.env.CACHE.put(CACHE_KEY, content, {
+      expirationTtl: CACHE_TTL,
+    })
+
+    return content
+  }
+
+  async clearCache(): Promise<void> {
+    await this.env.CACHE.delete(CACHE_KEY)
+  }
+
+  async renderMdxToHtml(mdxContent: string): Promise<string> {
+    // Simple MDX to HTML conversion
+    // In production, use proper MDX processor like @mdx-js/mdx
+
+    // Extract frontmatter
+    const frontmatterMatch = mdxContent.match(/^---\n([\s\S]*?)\n---/)
+    const content = frontmatterMatch
+      ? mdxContent.slice(frontmatterMatch[0].length)
+      : mdxContent
+
+    // Remove export statements (React components)
+    let html = content.replace(/export const \w+ = \([^)]*\) => \{[\s\S]*?\n\}/g, '')
+
+    // Remove component usage (e.g., <ProjectStatus />)
+    html = html.replace(/<(\w+)\s*\/>/g, '')
+    html = html.replace(/<(\w+)>[\s\S]*?<\/\1>/g, '')
+
+    // Convert markdown headings
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>')
+
+    // Convert markdown lists
+    html = html.replace(/^- (.+)$/gm, '<li>$1</li>')
+    html = html.replace(/(<li>.*<\/li>\n)+/g, '<ul>$&</ul>')
+
+    // Convert code blocks
+    html = html.replace(/```(\w+)\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>')
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
+
+    // Convert links
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+
+    // Convert bold and italic
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>')
+
+    // Convert paragraphs
+    html = html.replace(/\n\n/g, '</p><p>')
+    html = '<p>' + html + '</p>'
+
+    return html
+  }
+}
+
+const app = new Hono<{ Bindings: Env }>()
+
+app.get('/', async (c) => {
+  try {
+    const service = new ClaudeMdxService(c.env as any, c.env)
+    const mdxContent = await service.fetchClaudeMdx()
+    const htmlContent = await service.renderMdxToHtml(mdxContent)
+
+    return c.html(html`
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>CLAUDE.mdx - dot-do Project Management</title>
+          <meta name="description" content="Dynamic project status, goals, and guidelines for Claude Code" />
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+              background: #f5f5f5;
+              padding: 20px;
+            }
+
+            .container {
+              max-width: 900px;
+              margin: 0 auto;
+              background: white;
+              padding: 40px;
+              border-radius: 8px;
+              box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+
+            h1 {
+              font-size: 2.5em;
+              margin-bottom: 0.5em;
+              color: #111;
+              border-bottom: 2px solid #0066cc;
+              padding-bottom: 10px;
+            }
+
+            h2 {
+              font-size: 2em;
+              margin-top: 1.5em;
+              margin-bottom: 0.5em;
+              color: #222;
+            }
+
+            h3 {
+              font-size: 1.5em;
+              margin-top: 1em;
+              margin-bottom: 0.5em;
+              color: #333;
+            }
+
+            p {
+              margin-bottom: 1em;
+            }
+
+            ul {
+              margin-left: 20px;
+              margin-bottom: 1em;
+            }
+
+            li {
+              margin-bottom: 0.5em;
+            }
+
+            code {
+              background: #f4f4f4;
+              padding: 2px 6px;
+              border-radius: 3px;
+              font-family: 'Courier New', monospace;
+              font-size: 0.9em;
+            }
+
+            pre {
+              background: #2d2d2d;
+              color: #f8f8f2;
+              padding: 15px;
+              border-radius: 5px;
+              overflow-x: auto;
+              margin: 1em 0;
+            }
+
+            pre code {
+              background: none;
+              padding: 0;
+              color: inherit;
+            }
+
+            a {
+              color: #0066cc;
+              text-decoration: none;
+            }
+
+            a:hover {
+              text-decoration: underline;
+            }
+
+            strong {
+              font-weight: 600;
+            }
+
+            .header-meta {
+              text-align: center;
+              margin-bottom: 2em;
+              padding: 20px;
+              background: #f0f8ff;
+              border-radius: 8px;
+            }
+
+            .footer {
+              margin-top: 3em;
+              padding-top: 2em;
+              border-top: 1px solid #ddd;
+              text-align: center;
+              color: #666;
+              font-size: 0.9em;
+            }
+
+            .refresh-note {
+              background: #fff3cd;
+              border: 1px solid #ffc107;
+              padding: 15px;
+              border-radius: 5px;
+              margin-bottom: 20px;
+            }
+
+            @media (prefers-color-scheme: dark) {
+              body {
+                background: #1a1a1a;
+                color: #e0e0e0;
+              }
+
+              .container {
+                background: #2d2d2d;
+              }
+
+              h1, h2, h3 {
+                color: #f0f0f0;
+              }
+
+              h1 {
+                border-bottom-color: #4a9eff;
+              }
+
+              a {
+                color: #4a9eff;
+              }
+
+              code {
+                background: #3a3a3a;
+              }
+
+              .header-meta {
+                background: #2a3a4a;
+              }
+
+              .refresh-note {
+                background: #3a3520;
+                border-color: #ffc107;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header-meta">
+              <h1>🤖 CLAUDE.mdx</h1>
+              <p><strong>Live Project Dashboard</strong></p>
+              <p>Dynamic project status, goals, and guidelines for Claude Code</p>
+            </div>
+
+            <div class="refresh-note">
+              <p>
+                📊 <strong>Auto-updated:</strong> This page shows live project metrics.
+                Content is cached for 1 hour.
+                <a href="/refresh">Force refresh</a>
+              </p>
+            </div>
+
+            ${htmlContent}
+
+            <div class="footer">
+              <p>
+                <strong>Source:</strong>
+                <a href="https://github.com/dot-do/.do/blob/main/CLAUDE.mdx" target="_blank">
+                  github.com/dot-do/.do/CLAUDE.mdx
+                </a>
+              </p>
+              <p>
+                <a href="/raw">View Raw</a> |
+                <a href="/refresh">Refresh</a> |
+                <a href="https://github.com/dot-do/.do" target="_blank">GitHub</a>
+              </p>
+              <p>🤖 Powered by Cloudflare Workers</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `)
+  } catch (error) {
+    return c.html(
+      html`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Error - CLAUDE.mdx</title>
+          </head>
+          <body>
+            <h1>Error Loading CLAUDE.mdx</h1>
+            <p>${error instanceof Error ? error.message : 'Unknown error'}</p>
+            <p><a href="/">Try again</a></p>
+          </body>
+        </html>
+      `,
+      500
+    )
+  }
+})
+
+app.get('/raw', async (c) => {
+  try {
+    const service = new ClaudeMdxService(c.env as any, c.env)
+    const content = await service.fetchClaudeMdx()
+    return c.text(content, 200, {
+      'Content-Type': 'text/markdown; charset=utf-8',
+    })
+  } catch (error) {
+    return c.text(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, 500)
+  }
+})
+
+app.get('/refresh', async (c) => {
+  try {
+    const service = new ClaudeMdxService(c.env as any, c.env)
+    await service.clearCache()
+    return c.redirect('/')
+  } catch (error) {
+    return c.text(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, 500)
+  }
+})
+
+app.get('/health', (c) => {
+  return c.json({
+    status: 'healthy',
+    service: 'claude-mdx',
+    timestamp: new Date().toISOString(),
+  })
+})
+
+export default { fetch: app.fetch }
+```

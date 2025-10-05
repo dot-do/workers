@@ -1,32 +1,42 @@
+/**
+ * seo-tools Worker Configuration
+ * Generated from seo-tools.mdx
+ */
 {
-  "name": "seo-tools",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-01-01",
-  "node_compat": true,
-
-  // KV Namespaces for caching
-  "kv_namespaces": [
-    {
-      "binding": "TOOLS_CACHE",
-      "id": "tools-cache-kv",
-      "preview_id": "tools-cache-kv-preview"
-    }
-  ],
-
-  // R2 for sitemap/llms.txt storage
-  "r2_buckets": [
-    {
-      "binding": "SEO_BUCKET",
-      "bucket_name": "seo-files"
-    }
-  ],
-
-  // Service bindings
-  "services": [
-    {
-      "binding": "DB",
-      "service": "db",
-      "environment": "production"
-    }
-  ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "seo-tools",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-01-01",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"observability": {
+		"enabled": true
+	},
+	"services": [
+		{
+			"binding": "DB",
+			"service": "db"
+		},
+		{
+			"binding": "AUTH",
+			"service": "auth"
+		},
+		{
+			"binding": "AI",
+			"service": "ai"
+		}
+	],
+	"vars": {
+		"ENVIRONMENT": "production"
+	},
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "SEO_CACHE",
+			"id": "f68d93d1003c4ff1b0ea7ff3f5141a88"
+		}
+	]
 }

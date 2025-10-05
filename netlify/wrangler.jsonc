@@ -1,0 +1,41 @@
+/**
+ * Netlify OAuth Integration Worker Configuration
+ *
+ * Handles OAuth 2.0 integration with Netlify for deployment and site management.
+ * See: /notes/2025-10-04-netlify-oauth-setup.md
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "netlify",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-01-01",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"observability": {
+		"enabled": true
+	},
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"workers_dev": false,
+	"services": [
+		{
+			"binding": "DB",
+			"service": "db"
+		},
+		{
+			"binding": "AUTH",
+			"service": "auth"
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "logger"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "NETLIFY_CACHE",
+			"id": "netlify-cache-kv"
+		}
+	]
+}

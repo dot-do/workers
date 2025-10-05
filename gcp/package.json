@@ -1,0 +1,23 @@
+{
+	"name": "@do/worker-gcp",
+	"version": "1.0.0",
+	"description": "Google Cloud Platform OAuth 2.0 integration worker",
+	"type": "module",
+	"scripts": {
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"hono": "^4.7.10",
+		"zod": "^3.24.1"
+	},
+	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20250110.0",
+		"typescript": "^5.7.3",
+		"vitest": "^2.1.8",
+		"wrangler": "^3.101.0"
+	}
+}

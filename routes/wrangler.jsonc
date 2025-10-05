@@ -24,11 +24,11 @@
 				"ENVIRONMENT": "production"
 			}
 		}
-	},
-	"routes": [
-		{
-			"pattern": "routes.do/*",
-			"zone_name": "do"
-		}
-	]
+	}
+	// "routes": [
+	// 	{
+	// 		"pattern": "routes.do/*",
+	// 		"zone_name": "do"
+	// 	}
+	// ]
 }

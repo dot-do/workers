@@ -1,0 +1,48 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/wrangler/main/schemas/wrangler.jsonc",
+  "name": "experiment",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-08",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Observability
+  "observability": {
+    "enabled": true
+  },
+
+  // Tail consumers (logging/debugging)
+  "tail_consumers": [
+    { "service": "pipeline" }
+  ],
+
+  // Service bindings
+  "services": [
+    { "binding": "DB", "service": "db" },
+    { "binding": "ANALYTICS", "service": "analytics" }
+  ],
+
+  // KV namespace for fast experiment lookups
+  "kv_namespaces": [
+    { "binding": "EXPERIMENT_KV", "id": "experiment-cache" }
+  ],
+
+  // D1 database for persistent storage
+  "d1_databases": [
+    { "binding": "EXPERIMENT_DB", "database_name": "production", "database_id": "81e7b9cb-3705-47be-8ad5-942877a55d64" }
+  ],
+
+  // Queue for async processing
+  "queues": {
+    "producers": [
+      { "binding": "EXPERIMENT_QUEUE", "queue": "experiment-queue" }
+    ],
+    "consumers": [
+      { "queue": "experiment-queue", "max_batch_size": 10, "max_batch_timeout": 5 }
+    ]
+  },
+
+  // Analytics Engine for metrics
+  "analytics_engine_datasets": [
+    { "binding": "EXPERIMENT_ANALYTICS" }
+  ]
+}

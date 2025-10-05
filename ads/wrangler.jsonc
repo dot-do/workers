@@ -1,0 +1,53 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/wrangler/main/schemas/wrangler.jsonc",
+  "name": "ads",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-07-08",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Observability
+  "observability": {
+    "enabled": true
+  },
+
+  // Tail consumers
+  "tail_consumers": [
+    { "service": "pipeline" }
+  ],
+
+  // Service bindings
+  "services": [
+    { "binding": "EXPERIMENT", "service": "experiment" },
+    { "binding": "ANALYTICS", "service": "analytics" },
+    { "binding": "CAMPAIGNS", "service": "ads-campaigns" },
+    { "binding": "CREATIVES", "service": "ads-creatives" },
+    { "binding": "DB", "service": "db" },
+    { "binding": "GOOGLE_ADS", "service": "google-ads" },
+    { "binding": "BING_ADS", "service": "bing-ads" }
+  ],
+
+  // KV namespace for caching
+  "kv_namespaces": [
+    { "binding": "ADS_KV", "id": "ads-cache" }
+  ],
+
+  // D1 database
+  "d1_databases": [
+    { "binding": "ADS_DB", "database_name": "production", "database_id": "81e7b9cb-3705-47be-8ad5-942877a55d64" }
+  ],
+
+  // Queue for async operations
+  "queues": {
+    "producers": [
+      { "binding": "ADS_QUEUE", "queue": "ads-queue" }
+    ],
+    "consumers": [
+      { "queue": "ads-queue", "max_batch_size": 10, "max_batch_timeout": 5 }
+    ]
+  },
+
+  // Analytics Engine
+  "analytics_engine_datasets": [
+    { "binding": "ADS_ANALYTICS" }
+  ]
+}

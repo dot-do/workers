@@ -11,6 +11,7 @@
 	"observability": {
 		"enabled": true
 	},
+	"workers_dev": true,
 	"services": [
 		{
 			"binding": "DB",
@@ -24,19 +25,6 @@
 	"vars": {
 		"PAYLOAD_URL": "https://admin-payload.pages.dev"
 	},
-	"r2_buckets": [
-		{
-			"binding": "MEDIA",
-			"bucket_name": "admin-media"
-		}
-	],
-	"d1_databases": [
-		{
-			"binding": "D1",
-			"database_name": "admin",
-			"database_id": "81e7b9cb-3705-47be-8ad5-942877a55d64"
-		}
-	],
 	"placement": {
 		"mode": "smart"
 	}

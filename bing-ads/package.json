@@ -1,0 +1,34 @@
+{
+  "name": "bing-ads",
+  "version": "1.0.0",
+  "description": "Microsoft Bing Ads integration for search advertising",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "bing-ads",
+    "microsoft-advertising",
+    "search-ads",
+    "cloudflare-workers"
+  ],
+  "author": "dot-do",
+  "license": "MIT",
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20250110.0",
+    "hono": "^4.7.9",
+    "@dot-do/ads-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.6",
+    "wrangler": "^4.0.0"
+  }
+}

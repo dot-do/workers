@@ -1,0 +1,45 @@
+/**
+ * AWS Worker Configuration
+ * AWS Cognito OAuth integration with service wrappers for S3, Lambda, and more
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "aws",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-01-01",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"observability": {
+		"enabled": true
+	},
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"workers_dev": false,
+	"routes": [
+		{
+			"pattern": "aws.services.do/*",
+			"custom_domain": true
+		}
+	],
+	"services": [
+		{
+			"binding": "DB",
+			"service": "db"
+		},
+		{
+			"binding": "AUTH",
+			"service": "auth"
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "AWS_CACHE",
+			"id": "aws_cache_placeholder"
+		}
+	]
+}

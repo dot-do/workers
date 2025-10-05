@@ -1,0 +1,85 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/schemas/wrangler.jsonc",
+  "name": "google-ads",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-04",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Observability
+  "observability": {
+    "enabled": true
+  },
+
+  // Tail consumers (for logging/debugging)
+  "tail_consumers": [
+    {
+      "service": "pipeline"
+    }
+  ],
+
+  // Service bindings - RPC integration
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db"
+    },
+    {
+      "binding": "AUTH",
+      "service": "auth"
+    },
+    {
+      "binding": "ANALYTICS",
+      "service": "analytics"
+    }
+  ],
+
+  // KV namespaces - OAuth token caching
+  "kv_namespaces": [
+    {
+      "binding": "GOOGLE_ADS_KV",
+      "id": "google-ads-cache"
+    }
+  ],
+
+  // D1 databases - Persistent storage
+  "d1_databases": [
+    {
+      "binding": "GOOGLE_ADS_DB",
+      "database_name": "google-ads-production",
+      "database_id": "google-ads-db-prod"
+    }
+  ],
+
+  // Queues - Async operations
+  "queues": {
+    "consumers": [
+      {
+        "queue": "google-ads-sync",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "google-ads-sync-dlq"
+      }
+    ],
+    "producers": [
+      {
+        "queue": "google-ads-sync",
+        "binding": "GOOGLE_ADS_QUEUE"
+      }
+    ]
+  },
+
+  // Pipelines - Event streaming
+  "pipelines": [
+    {
+      "pipeline": "events-realtime",
+      "binding": "pipeline"
+    }
+  ],
+
+  // Environment variables (secrets set via wrangler secret put)
+  "vars": {
+    "ENVIRONMENT": "production",
+    "LOG_LEVEL": "info"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "experiment",
+  "version": "1.0.0",
+  "description": "Advanced experimentation engine with multi-armed bandits and Bayesian A/B testing",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage"
+  },
+  "dependencies": {
+    "hono": "^4.7.8"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250110.0",
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5",
+    "wrangler": "^3.103.0"
+  }
+}

@@ -1,0 +1,25 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "azure",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-07-08",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"observability": { "enabled": true },
+	"tail_consumers": [{ "service": "pipeline" }],
+	"pipelines": [{ "pipeline": "events-realtime", "binding": "PIPELINE" }],
+	"kv_namespaces": [
+		{
+			"binding": "AZURE_TOKENS",
+			"id": "azure_tokens_production",
+			"preview_id": "azure_tokens_preview"
+		}
+	],
+	"services": [
+		{ "binding": "DB", "service": "db" },
+		{ "binding": "AUTH", "service": "auth" }
+	]
+}

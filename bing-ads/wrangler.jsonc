@@ -1,0 +1,77 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/schemas/wrangler.jsonc",
+  "name": "bing-ads",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-04",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "observability": {
+    "enabled": true
+  },
+
+  "tail_consumers": [
+    {
+      "service": "pipeline"
+    }
+  ],
+
+  "services": [
+    {
+      "binding": "DB",
+      "service": "db"
+    },
+    {
+      "binding": "AUTH",
+      "service": "auth"
+    },
+    {
+      "binding": "ANALYTICS",
+      "service": "analytics"
+    }
+  ],
+
+  "kv_namespaces": [
+    {
+      "binding": "BING_ADS_KV",
+      "id": "bing-ads-cache"
+    }
+  ],
+
+  "d1_databases": [
+    {
+      "binding": "BING_ADS_DB",
+      "database_name": "bing-ads-production",
+      "database_id": "bing-ads-db-prod"
+    }
+  ],
+
+  "queues": {
+    "consumers": [
+      {
+        "queue": "bing-ads-sync",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "bing-ads-sync-dlq"
+      }
+    ],
+    "producers": [
+      {
+        "queue": "bing-ads-sync",
+        "binding": "BING_ADS_QUEUE"
+      }
+    ]
+  },
+
+  "pipelines": [
+    {
+      "pipeline": "events-realtime",
+      "binding": "pipeline"
+    }
+  ],
+
+  "vars": {
+    "ENVIRONMENT": "production",
+    "LOG_LEVEL": "info"
+  }
+}

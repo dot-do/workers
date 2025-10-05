@@ -1,0 +1,16 @@
+{
+	"extends": "../tsconfig.base.json",
+	"compilerOptions": {
+		"types": [
+			"@cloudflare/workers-types/2023-07-01",
+			"vitest/globals"
+		],
+		"jsx": "react-jsx",
+		"jsxImportSource": "hono/jsx",
+		"lib": ["ESNext"],
+		"module": "ESNext",
+		"target": "ESNext",
+		"moduleResolution": "bundler"
+	},
+	"include": ["src/**/*", "tests/**/*"]
+}

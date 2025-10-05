@@ -1,32 +1,56 @@
 /**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
+ * generate Worker Configuration
+ * Generated from generate.mdx
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "generate",
-	"main": "worker.ts",
+	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
-	"observability": { "enabled": true },
-	"tail_consumers": [{ "service": "pipeline" }],
-  "placement": { "mode": "smart" },
-  "ai": { "binding": "ai" },
-  // "r2_buckets": [{ "binding": "r2", "bucket_name": "mdx" }],
-	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
-	"routes": [
-		// { "pattern": "*/*", "zone_name": "" },
-		{ "pattern": "ai.apis.do/*", "zone_name": "apis.do" },
-		{ "pattern": "generate.apis.do/*", "zone_name": "apis.do" },
+	"observability": {
+		"enabled": true
+	},
+	"ai": {
+		"binding": "ai"
+	},
+	"services": [
+		{
+			"binding": "db",
+			"service": "db"
+		}
 	],
-  "rules": [
-    {
-      "type": "Text",
-      "globs": ["**/*.md"],
-      "fallthrough": true,
-    },
-  // ],
-  "services": [
-    { "binding": "db", "service": "db" },
-  // ],
+	"routes": [
+		{
+			"pattern": "ai.apis.do/*",
+			"zone_name": "apis.do"
+		},
+		{
+			"pattern": "generate.apis.do/*",
+			"zone_name": "apis.do"
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
+	],
+	"placement": {
+		"mode": "smart"
+	},
+	"pipelines": [
+		{
+			"pipeline": "events-realtime",
+			"binding": "pipeline"
+		}
+	],
+	"rules": [
+		{
+			"type": "Text",
+			"globs": [
+				"**/*.md"
+			],
+			"fallthrough": true
+		}
+	]
 }

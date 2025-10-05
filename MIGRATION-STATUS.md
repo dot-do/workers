@@ -26,13 +26,13 @@ Workers that have ANY of these characteristics:
 - Already have extensive test suites
 - Need to be migrated LAST (after full validation)
 
-## Phase 1: Testing with Less Critical Workers (In Progress)
+## Phase 1: Testing with Less Critical Workers (Complete)
 
 **Goal**: Validate mdxe/wrangler integration with 5-7 simple workers
 
-**Status**: 5/6 complete (83%)
+**Status**: 6/6 complete (100%)
 
-### ✅ Migrated to .mdx (5 workers)
+### ✅ Migrated to .mdx (6 workers)
 
 1. **markdown.mdx** ✅ - URL-to-markdown converter using Workers AI
    - Original: `workers/markdown/worker.ts` (~36 LOC)
@@ -68,6 +68,14 @@ Workers that have ANY of these characteristics:
    - Build: ✅ Success
    - Dependencies: None (only Workers Assets binding)
    - Features: Workers Assets, CORS, API refresh endpoint, statistics
+   - Deploy: ⏳ Pending test
+
+6. **generate.mdx** ✅ - AI text generation with streaming responses
+   - Original: `workers/generate/worker.ts` (~251 LOC)
+   - Migrated: `workers/generate.mdx` (~850 LOC with extensive docs)
+   - Build: ✅ Success
+   - Dependencies: hono, ai (Vercel), @openrouter/ai-sdk-provider, yaml, zod, ulid, ai-generation
+   - Features: Multi-model support (15+ models), streaming, YAML frontmatter, cost tracking, pipelines
    - Deploy: ⏳ Pending test
 
 ### 🔧 Build Script Bug Fixes
@@ -118,12 +126,6 @@ if (frontmatter.env) config.env = frontmatter.env
 ```
 
 **Result**: Build script now supports all major wrangler config fields including Workers Assets
-
-### ⏳ Pending Migration (1 worker)
-
-6. **generate.mdx** - Code generation utilities (⚠️ Complex - AI streaming, Hono, pipelines, rules)
-
-Note: "docs" is not a worker directory - it contains documentation files only
 
 ## Phase 2: Domain Workers (Pending)
 
@@ -292,11 +294,12 @@ curl https://markdown.fetch.do/example.com
 
 4. **Worker Complexity Assessment**:
    - ✅ Simple workers (< 50 LOC) migrate easily: markdown
-   - ✅ Medium workers (100-250 LOC) migrate well: ast, utils
+   - ✅ Medium workers (100-250 LOC) migrate well: ast, utils, generate
    - ✅ Complex workers (600+ LOC, Hono + React) migrate successfully: mdx
    - ✅ Workers with Workers Assets migrate successfully: routes
+   - ✅ Workers with advanced bindings (pipelines, tail_consumers, placement, rules) migrate successfully: generate
    - ✅ Workers Assets, compatibility_flags, env now fully supported
-   - ⚠️ Workers with pipelines/rules already supported in build script
+   - ✅ Build script supports all major wrangler config fields
 
 5. **Migration Speed**:
    - ⏱️ ~10-15 minutes per simple worker (including documentation)
@@ -318,12 +321,15 @@ curl https://markdown.fetch.do/example.com
 3. ✅ Create markdown.mdx and test build
 4. ✅ Migrate ast.mdx (second test worker)
 5. ✅ Migrate utils.mdx (third test worker)
-6. ✅ Document findings in MIGRATION-STATUS.md
-7. ⏳ Test deployment of migrated workers
-8. ⏳ Migrate remaining Phase 1 workers (routes, generate, docs, mdx)
-9. ⏳ Add frontmatter support for missing bindings (placement, pipelines, rules)
-10. ⏳ Update workers/CLAUDE.md with mdxe guidelines
-11. ⏳ Commit Phase 1 progress
+6. ✅ Migrate mdx.mdx (fourth test worker)
+7. ✅ Migrate routes.mdx (fifth test worker)
+8. ✅ Migrate generate.mdx (sixth test worker)
+9. ✅ Add frontmatter support for advanced bindings (placement, pipelines, rules, assets, compatibility_flags, env)
+10. ✅ Document findings in MIGRATION-STATUS.md
+11. ✅ Phase 1 complete! (6/6 workers migrated)
+12. ⏳ Test deployment of all 6 migrated workers
+13. ⏳ Update workers/CLAUDE.md with mdxe guidelines and examples
+14. ⏳ Decide: Proceed with Phase 2 (domain workers) or validate Phase 1 deployments first
 
 ## Related Documentation
 

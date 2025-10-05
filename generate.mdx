@@ -1,0 +1,707 @@
+---
+$type: Worker
+$id: generate
+name: generate
+main: src/index.ts
+compatibility_date: "2025-07-08"
+account_id: b6641681fe423910342b9ffa1364c76d
+
+observability:
+  enabled: true
+
+ai:
+  binding: ai
+
+placement:
+  mode: smart
+
+pipelines:
+  - pipeline: events-realtime
+    binding: pipeline
+
+tail_consumers:
+  - service: pipeline
+
+services:
+  - binding: db
+    service: db
+
+routes:
+  - pattern: ai.apis.do/*
+    zone_name: apis.do
+  - pattern: generate.apis.do/*
+    zone_name: apis.do
+
+rules:
+  - type: Text
+    globs:
+      - "**/*.md"
+    fallthrough: true
+---
+
+# Generate Worker
+
+A Cloudflare Worker for AI text generation with streaming responses, multi-model support, and real-time analytics.
+
+## Overview
+
+This worker provides a simple HTTP API for generating text using various AI models via OpenRouter. It streams responses in real-time with YAML frontmatter and markdown content, tracks usage and costs, and pipes events to analytics pipelines.
+
+## Features
+
+- ✅ **Multi-Model Support** - Access 15+ AI models (Claude, GPT-4, Gemini, etc.)
+- ✅ **Streaming Responses** - Real-time text generation with progressive rendering
+- ✅ **YAML Frontmatter** - Structured metadata with every response
+- ✅ **Usage Tracking** - Token counts, latency, thinking time, cost calculation
+- ✅ **Event Pipelines** - Real-time analytics via Cloudflare Pipelines
+- ✅ **OpenRouter Integration** - Single API for multiple AI providers
+- ✅ **AI Gateway** - Cloudflare AI Gateway for request routing and caching
+- ✅ **Smart Placement** - Automatic routing to optimal data centers
+- ✅ **Cost Calculation** - Per-request cost tracking using ai-generation package
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Generate Worker                       │
+└─────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+              ┌───────────────────────────┐
+              │  Query Parameters         │
+              │  - q / prompt             │
+              │  - model                  │
+              │  - temperature, etc.      │
+              └───────────┬───────────────┘
+                          │
+                          ▼
+              ┌───────────────────────────┐
+              │  Cloudflare AI Gateway    │
+              │  (Cache + Route)          │
+              └───────────┬───────────────┘
+                          │
+                          ▼
+              ┌───────────────────────────┐
+              │  OpenRouter API           │
+              │  (Multi-provider)         │
+              └───────────┬───────────────┘
+                          │
+                          ▼
+              ┌───────────────────────────┐
+              │  Stream Response          │
+              │  - YAML frontmatter       │
+              │  - Thinking (optional)    │
+              │  - Generated text         │
+              │  - Usage metadata         │
+              └───────────┬───────────────┘
+                          │
+                          ▼
+              ┌───────────────────────────┐
+              │  Cloudflare Pipeline      │
+              │  (Analytics)              │
+              └───────────────────────────┘
+```
+
+## API
+
+### Generate Text
+
+**Endpoint**: `GET https://generate.apis.do/*`
+
+**Query Parameters**:
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `q` | string | - | Short query/prompt |
+| `prompt` | string | - | Full prompt (alias for `q`) |
+| `model` | string | `google/gemini-2.5-flash` | AI model to use |
+| `seed` | string | - | Random seed for reproducibility |
+| `system` | string | - | System message/instructions |
+| `temperature` | number | - | Randomness (0.0-2.0) |
+| `maxTokens` | number | - | Maximum tokens to generate |
+| `topP` | number | - | Nucleus sampling parameter |
+| `topK` | number | - | Top-K sampling parameter |
+| `output` | `markdown` \| `json` | `markdown` | Output format |
+
+**Example Request**:
+
+```bash
+curl "https://generate.apis.do/?q=Explain+Markdown&model=anthropic/claude-sonnet-4"
+```
+
+**Example Response**:
+
+```markdown
+---
+$id: https://generate.apis.do/01JHRXK...
+$type: markdown
+$context: https://generate.apis.do
+system: null
+prompt: Explain Markdown
+model: anthropic/claude-sonnet-4
+seed: null
+temperature: null
+maxTokens: null
+topP: null
+topK: null
+actions:
+  model:
+    anthropic/claude-opus-4: https://generate.apis.do/01JHRXK...?model=anthropic%2Fclaude-opus-4
+    anthropic/claude-sonnet-4: https://generate.apis.do/01JHRXK...?model=anthropic%2Fclaude-sonnet-4
+    google/gemini-2.5-pro: https://generate.apis.do/01JHRXK...?model=google%2Fgemini-2.5-pro
+    ...
+---
+
+
+# Markdown Explained
+
+Markdown is a lightweight markup language...
+
+<usage>
+latency: 1234
+thinkingTime: null
+totalTime: 5678
+tokensPerSecond: 450
+cost: $0.000123
+promptTokens: 50
+completionTokens: 200
+totalTokens: 250
+</usage>
+```
+
+## Supported Models
+
+### Anthropic Claude
+
+- `anthropic/claude-opus-4` - Most capable, for complex tasks
+- `anthropic/claude-sonnet-4` - Balanced performance and cost
+
+### Google Gemini
+
+- `google/gemini-2.5-pro` - Advanced reasoning
+- `google/gemini-2.5-flash` - Fast, cost-effective (default)
+- `google/gemini-2.5-flash-lite-preview-06-17` - Ultra-fast preview
+
+### OpenAI GPT
+
+- `openai/gpt-4.1` - Latest GPT-4
+- `openai/gpt-4.1-mini` - Faster, cheaper
+- `openai/gpt-4.1-nano` - Ultra-fast
+
+### OpenAI O-series (Reasoning Models)
+
+- `openai/o3` - Advanced reasoning
+- `openai/o3-pro` - Maximum reasoning capability
+- `openai/o4-mini` - Fast reasoning
+- `openai/o4-mini-high` - Enhanced reasoning
+
+## Response Format
+
+### YAML Frontmatter
+
+Every response begins with YAML frontmatter containing:
+
+```yaml
+$id: https://generate.apis.do/01JHRXK...  # Unique generation ID (ULID)
+$type: markdown                            # Output type
+$context: https://generate.apis.do         # Origin context
+prompt: Explain Markdown                   # Actual prompt used
+model: google/gemini-2.5-flash            # Model used
+seed: null                                 # Random seed (if provided)
+temperature: null                          # Temperature (if provided)
+maxTokens: null                            # Max tokens (if provided)
+topP: null                                 # Top-P (if provided)
+topK: null                                 # Top-K (if provided)
+actions:
+  model:                                   # Quick model switching links
+    anthropic/claude-opus-4: https://...
+    google/gemini-2.5-pro: https://...
+    ...
+```
+
+### Thinking Tags (Reasoning Models)
+
+For reasoning models (o3, o3-pro, o4-mini, o4-mini-high):
+
+```markdown
+<thinking>
+
+Step-by-step reasoning process...
+
+</thinking>
+
+
+Generated response...
+```
+
+### Usage Metadata
+
+Every response ends with usage metadata:
+
+```xml
+<usage>
+latency: 1234              # Time to first token (ms)
+thinkingTime: 5000         # Reasoning time (ms, if applicable)
+totalTime: 8500            # Total generation time (ms)
+tokensPerSecond: 450       # Throughput
+cost: $0.000123            # Calculated cost
+promptTokens: 50           # Input tokens
+completionTokens: 200      # Output tokens
+totalTokens: 250           # Total tokens
+</usage>
+```
+
+## Implementation
+
+```typescript
+import { Hono } from 'hono'
+import { streamText, streamObject } from 'ai'
+import { createOpenRouter } from '@openrouter/ai-sdk-provider'
+import { createOpenAI } from '@ai-sdk/openai'
+import { stringify, parse } from 'yaml'
+import { z } from 'zod'
+import { ulid } from 'ulid'
+import { env } from 'cloudflare:workers'
+import type { TokenUsage } from 'ai-generation'
+import { calculateCost, MODEL_PRICING } from 'ai-generation'
+// import { url } from './lib/url'
+// import { markdownStreamResponse, fencedMarkdownStream } from './lib/streams'
+
+
+const app = new Hono()
+
+const schema = z
+  .object({
+    q: z.string().optional(),
+    seed: z.string().optional(),
+    model: z.string().default('google/gemini-2.5-flash'),
+    output: z.enum(['markdown', 'json']).default('markdown'),
+    system: z.string().optional(),
+    prompt: z.string().optional(),
+    temperature: z.number().optional(),
+    maxTokens: z.number().optional(),
+    topP: z.number().optional(),
+    topK: z.number().optional(),
+  })
+  .refine((data) => data.q || data.seed || data.prompt, {
+    message: "At least one of 'q', 'seed', or 'prompt' must be provided",
+  })
+
+/**
+ *  /stream-text
+ *  Responds with YAML + streamed Markdown
+ */
+app.get('*', async (c, next) => {
+  await next()
+  if (c.error) return new Response(c.error.message, { status: 400 })
+})
+
+app.get('*', async (c) => {
+  const { hostname, origin } = new URL(c.req.url)
+
+  const { q, model, output, prompt, seed, system, temperature, maxTokens, topP, topK } = schema.parse(c.req.query())
+
+  const generationId = ulid()
+  const generationUrl = new URL(c.req.url)
+  generationUrl.pathname = `/${generationId}`
+
+  const finalPrompt = prompt || q || 'Give an overview of Markdown, its use cases, and history'
+
+  const openrouter = createOpenRouter({
+    apiKey: env.AI_GATEWAY_TOKEN,
+    baseURL: 'https://gateway.ai.cloudflare.com/v1/b6641681fe423910342b9ffa1364c76d/functions-do/openrouter',
+    headers: {
+      'HTTP-Referer': 'https://do.industries',
+      'X-Title': '.do Business-as-Code',
+    },
+  })
+
+  const result = await streamText({
+    model: openrouter(model) as any,
+    system,
+    prompt: finalPrompt,
+    seed: seed ? parseInt(seed) : undefined,
+    temperature,
+    maxTokens,
+    topP,
+    topK,
+    onFinish: async (result) => {
+      console.log(result)
+      // c.executionCtx.waitUntil(
+      await env.pipeline.send([result])
+      // )
+    }
+  })
+
+  const url = (options: Record<string, string | number>) => {
+    const actionUrl = new URL(generationUrl)
+    Object.entries(options).forEach(([key, value]) => {
+      actionUrl.searchParams.set(key, value.toString())
+    })
+    return actionUrl.toString()
+  }
+
+  const markdown = `---\n${stringify({
+    $id: generationUrl.toString(),
+    $type: output,
+    $context: origin,
+    system,
+    prompt: finalPrompt,
+    model,
+    seed,
+    temperature,
+    maxTokens,
+    topP,
+    topK,
+    actions: {
+      model: {
+        'anthropic/claude-opus-4': url({ model: 'anthropic/claude-opus-4' }),
+        'anthropic/claude-sonnet-4': url({ model: 'anthropic/claude-sonnet-4' }),
+        'google/gemini-2.5-pro': url({ model: 'google/gemini-2.5-pro' }),
+        'google/gemini-2.5-flash': url({ model: 'google/gemini-2.5-flash' }),
+        'google/gemini-2.5-flash-lite-preview-06-17': url({ model: 'google/gemini-2.5-flash-lite-preview-06-17' }),
+        'openai/gpt-4.1': url({ model: 'openai/gpt-4.1' }),
+        'openai/gpt-4.1-mini': url({ model: 'openai/gpt-4.1-mini' }),
+        'openai/gpt-4.1-nano': url({ model: 'openai/gpt-4.1-nano' }),
+        'openai/o3': url({ model: 'openai/o3' }),
+        'openai/o3-pro': url({ model: 'openai/o3-pro' }),
+        'openai/o4-mini': url({ model: 'openai/o4-mini' }),
+        'openai/o4-mini-high': url({ model: 'openai/o4-mini-high' }),
+        // 'perplexity/sonar-pro': url({ model: 'perplexity/sonar-pro' }),
+        // 'perplexity/sonar-reasoning-pro': url({ model: 'perplexity/sonar-reasoning-pro' }),
+        // 'perplexity/sonar': url({ model: 'perplexity/sonar' }),
+        // 'perplexity/sonar-reasoning': url({ model: 'perplexity/sonar-reasoning' }),
+      },
+    },
+  })}---\n\n\n`
+
+  // Stream the YAML front-matter + generated markdown back to the client
+  const encoder = new TextEncoder()
+  let fullContent = markdown // Start with YAML frontmatter
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      // Send the YAML front-matter first
+      controller.enqueue(encoder.encode(markdown))
+
+      try {
+        let reasoning = false
+        let startedReasoning = false
+        let latency
+        let thinkingTime
+        let start = Date.now()
+        for await (const chunk of result.fullStream) {
+          console.log(chunk)
+          let chunkText = ''
+          switch (chunk.type) {
+            case 'reasoning':
+              if (!startedReasoning) {
+                if (!latency) {
+                  latency = Date.now() - start
+                }
+                chunkText = `<thinking>\n\n`
+                reasoning = true
+                startedReasoning = true
+              }
+              chunkText += chunk.textDelta
+              break
+            case 'text-delta':
+              if (reasoning) {
+                reasoning = false
+                thinkingTime = Date.now() - start
+                chunkText = `\n\n</thinking>\n\n\n`
+              }
+              if (!latency) {
+                latency = Date.now() - start
+              }
+              chunkText += chunk.textDelta
+              break
+            case 'finish':
+              const totalTime = Date.now() - start
+              const tokensPerSecond = Math.round(chunk.usage.totalTokens / (totalTime / 1000))
+              // Calculate cost using ai-generation package
+              const usage: TokenUsage = {
+                promptTokens: chunk.usage.promptTokens,
+                completionTokens: chunk.usage.completionTokens,
+                totalTokens: chunk.usage.totalTokens,
+              }
+              const cost = calculateCost(usage, model)
+              const costFormatted = cost > 0 ? `$${cost.toFixed(6)}` : 'N/A'
+              chunkText = `\n\n<usage>\n${stringify({ latency, thinkingTime, totalTime, tokensPerSecond, cost: costFormatted, ...chunk.usage })}</usage>`
+              break
+          }
+
+          if (chunkText) {
+            fullContent += chunkText
+            controller.enqueue(encoder.encode(chunkText))
+          }
+        }
+
+
+        // await env.pipeline.send([
+        //   {
+        //     ulid: generationId,
+        //     url: c.req.url,
+        //     generationUrl,
+        //     finalPrompt,
+        //     model,
+        //     seed,
+        //     system,
+        //     temperature,
+        //     maxTokens,
+        //     topP,
+        //     topK,
+        //     fullContent,
+        //   },
+        // ])
+
+        // await env.r2.put(generationId, fullContent, {
+        //   customMetadata: {
+        //     model,
+        //     prompt: finalPrompt.substring(0, 100), // Truncate for metadata
+        //     timestamp: new Date().toISOString(),
+        //   },
+        // })
+
+        // try {
+        //   const dbxResponse = await env.DBX_MD.fetch(`https://ai.apis.do/${generationId}`, {
+        //     method: 'PUT',
+        //     headers: {
+        //       'Content-Type': 'application/json',
+        //     },
+        //     body: JSON.stringify({
+        //       content: fullContent,
+        //       type: 'GeneratedContent',
+        //       visibility: 'public',
+        //       data: {
+        //         model,
+        //         prompt: finalPrompt.substring(0, 100),
+        //         timestamp: new Date().toISOString(),
+        //       },
+        //     }),
+        //   })
+
+        //   if (!dbxResponse.ok) {
+        //     console.error('Failed to save to dbx-md:', await dbxResponse.text())
+        //   }
+        // } catch (error) {
+        //   console.error('Error saving to dbx-md:', error)
+        // }
+      } catch (err) {
+        console.error('Error while streaming markdown', err)
+        controller.error(err as unknown as Error)
+      } finally {
+        controller.close()
+      }
+    },
+  })
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/markdown; charset=utf-8',
+    },
+  })
+})
+
+export default app
+```
+
+## Use Cases
+
+### 1. Interactive Documentation
+
+```bash
+curl "https://generate.apis.do/?q=Explain+TypeScript+generics&model=anthropic/claude-sonnet-4"
+```
+
+### 2. Code Examples
+
+```bash
+curl "https://generate.apis.do/?prompt=Write+a+React+hook+for+fetching+data&model=openai/gpt-4.1"
+```
+
+### 3. Content Generation
+
+```bash
+curl "https://generate.apis.do/?q=Write+a+blog+post+about+Web3&model=google/gemini-2.5-pro&temperature=0.7"
+```
+
+### 4. Quick Answers
+
+```bash
+curl "https://generate.apis.do/?q=What+is+REST+API&model=google/gemini-2.5-flash"
+```
+
+### 5. Complex Reasoning
+
+```bash
+curl "https://generate.apis.do/?prompt=Solve+this+math+problem...&model=openai/o3-pro"
+```
+
+## Advanced Features
+
+### Model Switching
+
+Each response includes quick links to regenerate with different models:
+
+```yaml
+actions:
+  model:
+    anthropic/claude-opus-4: https://generate.apis.do/01JHRXK...?model=anthropic%2Fclaude-opus-4
+    google/gemini-2.5-pro: https://generate.apis.do/01JHRXK...?model=google%2Fgemini-2.5-pro
+```
+
+Click any link to see how a different model would respond.
+
+### Reproducible Results
+
+Use `seed` parameter for deterministic generation:
+
+```bash
+curl "https://generate.apis.do/?q=Random+story&seed=42"
+```
+
+The same seed + prompt + model will produce identical results.
+
+### System Messages
+
+Guide the model's behavior with system messages:
+
+```bash
+curl "https://generate.apis.do/?q=Tell+me+about+cats&system=You+are+a+veterinarian"
+```
+
+### Cost Tracking
+
+Every response includes calculated costs:
+
+```yaml
+cost: $0.000123  # Calculated using ai-generation package
+```
+
+Costs are based on current model pricing and actual token usage.
+
+## Cloudflare Features
+
+### AI Gateway
+
+All requests route through Cloudflare AI Gateway for:
+- **Caching** - Identical requests served from cache
+- **Analytics** - Request volume, latency, errors
+- **Rate Limiting** - Prevent abuse
+- **Logging** - Full request/response logs
+
+### Pipelines
+
+All completions are sent to Cloudflare Pipelines for real-time analytics:
+- Generation volume by model
+- Average cost per generation
+- Token usage trends
+- Latency percentiles
+- Popular prompts
+
+### Smart Placement
+
+Worker automatically deploys to optimal locations based on:
+- OpenRouter API latency
+- User geographic distribution
+- Cloudflare network topology
+
+### Tail Consumers
+
+Generation events are tailed to `pipeline` service for processing:
+- Real-time dashboards
+- Cost aggregation
+- Usage alerts
+- Model performance tracking
+
+## Dependencies
+
+### Runtime Dependencies
+
+- `hono` - Web framework
+- `ai` - Vercel AI SDK (streamText, streamObject)
+- `@openrouter/ai-sdk-provider` - OpenRouter adapter
+- `@ai-sdk/openai` - OpenAI adapter
+- `yaml` - YAML parsing/stringification
+- `zod` - Input validation
+- `ulid` - ID generation
+- `ai-generation` - Cost calculation (from sdk/)
+
+### Bindings
+
+- `ai` - Cloudflare Workers AI
+- `pipeline` - Cloudflare Pipeline (events-realtime)
+- `db` - Database service binding
+
+## Monitoring
+
+### Cloudflare Dashboard
+
+View in Workers Analytics:
+- Request volume by model
+- Average response time
+- Error rates
+- Cost trends
+
+### Pipeline Analytics
+
+View in Pipeline dashboard:
+- Real-time generation feed
+- Model usage distribution
+- Cost per model
+- Token throughput
+
+### Tail Logs
+
+Stream logs in real-time:
+
+```bash
+wrangler tail
+```
+
+## Future Enhancements
+
+### Planned Features
+
+- [ ] JSON output mode (structured responses)
+- [ ] Multi-turn conversations (chat history)
+- [ ] Image generation (DALL-E, Stable Diffusion)
+- [ ] Function calling (tool use)
+- [ ] Embeddings endpoint
+- [ ] Rate limiting by user
+- [ ] Prompt templates library
+- [ ] Response caching in R2
+
+### Integration Ideas
+
+- Slack bot for quick answers
+- Documentation generator
+- Code reviewer
+- Content summarizer
+- Translation service
+
+## Related Documentation
+
+- [Vercel AI SDK](https://sdk.vercel.ai/docs)
+- [OpenRouter Docs](https://openrouter.ai/docs)
+- [Cloudflare AI Gateway](https://developers.cloudflare.com/ai-gateway/)
+- [Cloudflare Pipelines](https://developers.cloudflare.com/pipelines/)
+- [ai-generation package](../sdk/packages/ai-generation/)
+
+## Tech Stack
+
+- **Hono** - Fast web framework
+- **Vercel AI SDK** - Unified AI interface
+- **OpenRouter** - Multi-provider AI API
+- **Cloudflare AI Gateway** - Request routing and caching
+- **Cloudflare Pipelines** - Real-time analytics
+- **YAML** - Structured metadata
+- **ULID** - Unique IDs
+- **Zod** - Input validation
+
+---
+
+**Generated from:** generate.mdx
+
+**Build command:** `tsx scripts/build-mdx-worker.ts generate.mdx`

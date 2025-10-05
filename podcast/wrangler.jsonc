@@ -1,7 +1,6 @@
 /**
- * Podcast AI Generation Service
- *
- * Multi-speaker dialogue and long-form content generation
+ * podcast Worker Configuration
+ * Generated from podcast.mdx
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
@@ -9,18 +8,46 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
-	"observability": { "enabled": true },
-	"tail_consumers": [{ "service": "pipeline" }],
-	"routes": [
-		{ "pattern": "podcast.services.do/*", "custom_domain": true }
+	"observability": {
+		"enabled": true
+	},
+	"services": [
+		{
+			"binding": "DB",
+			"service": "db"
+		},
+		{
+			"binding": "VOICE",
+			"service": "voice"
+		}
 	],
-  "services": [
-		{ "binding": "DB", "service": "db" },
-		{ "binding": "VOICE", "service": "voice" }
+	"routes": [
+		{
+			"pattern": "podcast.services.do/*",
+			"custom_domain": true
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
 	],
 	"r2_buckets": [
-		{ "binding": "AUDIO", "bucket_name": "podcast-audio" }
+		{
+			"binding": "AUDIO",
+			"bucket_name": "podcast-audio"
+		}
 	],
-	"pipelines": [{ "pipeline": "events-realtime", "binding": "pipeline" }],
-	"dispatch_namespaces": [{ "binding": "do", "namespace": "do" }]
+	"dispatch_namespaces": [
+		{
+			"binding": "do",
+			"namespace": "do"
+		}
+	],
+	"pipelines": [
+		{
+			"pipeline": "events-realtime",
+			"binding": "pipeline"
+		}
+	]
 }

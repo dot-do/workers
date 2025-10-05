@@ -131,11 +131,11 @@ Response:
 
 ### Health & Info Endpoints (No Auth)
 
-#### GET /health
-Service health check.
+#### GET /api/health
+Service health check (provided by protocol-router).
 
 ```bash
-curl https://mcp.do/health
+curl https://mcp.do/api/health
 ```
 
 Response:
@@ -144,8 +144,7 @@ Response:
   "status": "ok",
   "service": "mcp-server",
   "version": "1.0.0",
-  "protocol": "mcp/2024-11-05",
-  "oauth": "enabled"
+  "timestamp": 1234567890
 }
 ```
 
@@ -201,11 +200,11 @@ Response:
 
 ### Documentation Endpoints (No Auth)
 
-#### GET /docs
+#### GET /api/docs
 Documentation index with links to all primitives.
 
 ```bash
-curl https://mcp.do/docs
+curl https://mcp.do/api/docs
 ```
 
 Returns markdown with:
@@ -215,22 +214,22 @@ Returns markdown with:
 - Security information
 - Code Mode philosophy
 
-#### GET /$.md
+#### GET /api/$.md
 Complete $ runtime documentation.
 
 ```bash
-curl https://mcp.do/$.md
+curl https://mcp.do/api/$.md
 ```
 
 Returns comprehensive markdown documentation for the BusinessRuntime interface with TypeScript definitions and usage examples.
 
-#### GET /:primitive.md
+#### GET /api/:primitive.md
 Documentation for a specific primitive (ai, db, api, on, send, every, decide, user).
 
 ```bash
-curl https://mcp.do/ai.md
-curl https://mcp.do/db.md
-curl https://mcp.do/api.md
+curl https://mcp.do/api/ai.md
+curl https://mcp.do/api/db.md
+curl https://mcp.do/api/api.md
 ```
 
 Returns detailed markdown documentation with:
@@ -241,7 +240,7 @@ Returns detailed markdown documentation with:
 
 ### MCP JSON-RPC Endpoint (Requires Auth)
 
-#### POST /
+#### POST /api/mcp
 MCP protocol endpoint. All requests require OAuth 2.1 access token.
 
 **Authentication:**
@@ -258,7 +257,7 @@ Authorization: Bearer <access_token>
 
 **Example: List Tools**
 ```bash
-curl -X POST https://mcp.do/ \
+curl -X POST https://mcp.do/api/mcp \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -304,7 +303,7 @@ Response:
 
 **Example: Execute Code**
 ```bash
-curl -X POST https://mcp.do/ \
+curl -X POST https://mcp.do/api/mcp \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -338,7 +337,7 @@ Response:
 
 **Example: List Resources**
 ```bash
-curl -X POST https://mcp.do/ \
+curl -X POST https://mcp.do/api/mcp \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -361,7 +360,7 @@ Response includes 9 documentation resources:
 
 **Example: Read Resource**
 ```bash
-curl -X POST https://mcp.do/ \
+curl -X POST https://mcp.do/api/mcp \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -442,9 +441,9 @@ user.hasPermission(perm) // Check permission
 ### Available Documentation
 
 - **HTTP Endpoints**: Public documentation endpoints (no auth required)
-  - `GET /docs` - Documentation index
-  - `GET /$.md` - $ runtime documentation
-  - `GET /:primitive.md` - Primitive-specific documentation
+  - `GET /api/docs` - Documentation index
+  - `GET /api/$.md` - $ runtime documentation
+  - `GET /api/:primitive.md` - Primitive-specific documentation
 
 - **MCP Resources**: Documentation via MCP protocol (auth required)
   - `doc://$` - $ runtime

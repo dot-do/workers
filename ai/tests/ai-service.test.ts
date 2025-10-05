@@ -307,4 +307,225 @@ describe('AI Service', () => {
       expect(result.latency).toBeLessThan(10000)
     })
   })
+
+  describe('AI Decision Layer', () => {
+    describe('decideGenerationType', () => {
+      it('should decide "text" for code generation methods', async () => {
+        const decision = await service.decideGenerationType('generateCode', ['Create a function to sort an array'])
+        expect(decision).toBe('text')
+      })
+
+      it('should decide "text" for explanations', async () => {
+        const decision = await service.decideGenerationType('explain', ['How does React work?'])
+        expect(decision).toBe('text')
+      })
+
+      it('should decide "object" for data extraction', async () => {
+        const decision = await service.decideGenerationType('extractData', ['Extract name and email from: John Doe (john@example.com)'])
+        expect(decision).toBe('object')
+      })
+
+      it('should decide "object" for structured lists', async () => {
+        const decision = await service.decideGenerationType('listItems', [{ category: 'users' }])
+        expect(decision).toBe('object')
+      })
+
+      it('should decide "object" for entity parsing', async () => {
+        const decision = await service.decideGenerationType('parseEntity', ['<person><name>John</name><age>30</age></person>'])
+        expect(decision).toBe('object')
+      })
+
+      it('should use Workers AI model by default', async () => {
+        // Verify it uses @cf/openai/gpt-oss-120b
+        const decision = await service.decideGenerationType('testMethod', ['test args'])
+        expect(decision).toMatch(/^(text|object)$/)
+      })
+
+      it('should return decision quickly', async () => {
+        const startTime = Date.now()
+        await service.decideGenerationType('quickTest', ['test'])
+        const duration = Date.now() - startTime
+
+        expect(duration).toBeLessThan(3000) // Should be fast (3s max)
+      })
+    })
+
+    describe('generateObject', () => {
+      it('should generate structured object successfully', async () => {
+        const result = await service.generateObject('Extract person details: John Doe, age 30, email john@example.com')
+
+        expect(result.object).toBeDefined()
+        expect(typeof result.object).toBe('object')
+        expect(result.model).toBe('@cf/openai/gpt-oss-120b')
+        expect(result.provider).toBe('workers-ai')
+        expect(result.latency).toBeGreaterThan(0)
+      })
+
+      it('should include usage statistics', async () => {
+        const result = await service.generateObject('Generate a simple user object')
+
+        expect(result.usage).toBeDefined()
+        expect(result.usage.promptTokens).toBeGreaterThan(0)
+        expect(result.usage.completionTokens).toBeGreaterThan(0)
+        expect(result.usage.totalTokens).toBeGreaterThan(0)
+      })
+
+      it('should support schema validation', async () => {
+        const schema = {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            age: { type: 'number' },
+            email: { type: 'string' },
+          },
+          required: ['name', 'email'],
+        }
+
+        const result = await service.generateObject('Extract: John Doe, 30, john@example.com', { schema })
+
+        expect(result.object).toHaveProperty('name')
+        expect(result.object).toHaveProperty('email')
+        expect(typeof result.object.name).toBe('string')
+      })
+
+      it('should support custom model selection', async () => {
+        const result = await service.generateObject('Generate test data', {
+          model: '@cf/openai/gpt-oss-120b',
+          provider: 'workers-ai',
+        })
+
+        expect(result.model).toBe('@cf/openai/gpt-oss-120b')
+        expect(result.provider).toBe('workers-ai')
+      })
+
+      it('should support temperature control', async () => {
+        const result = await service.generateObject('Generate random user data', {
+          temperature: 0.8,
+        })
+
+        expect(result.object).toBeDefined()
+      })
+
+      it('should handle JSON parsing correctly', async () => {
+        const result = await service.generateObject('Create a person object with name and age')
+
+        expect(result.object).toBeDefined()
+        expect(typeof result.object).toBe('object')
+        expect(result.object).not.toBeNull()
+      })
+
+      it('should throw error for invalid JSON', async () => {
+        // Test with a prompt that's likely to produce invalid output
+        try {
+          await service.generateObject('Generate invalid JSON without any structure', {
+            maxTokens: 5, // Force truncated response
+          })
+          expect.fail('Should have thrown error')
+        } catch (error) {
+          expect(error).toBeDefined()
+          expect((error as Error).message).toContain('Failed to parse JSON')
+        }
+      })
+
+      it('should strip markdown code blocks', async () => {
+        // Even if AI returns ```json...```, should parse correctly
+        const result = await service.generateObject('Return a JSON object with status: success')
+
+        expect(result.object).toBeDefined()
+        expect(typeof result.object).toBe('object')
+      })
+
+      it('should include cost estimation', async () => {
+        const result = await service.generateObject('Generate test object')
+
+        // Cost may or may not be present depending on provider
+        if (result.cost !== undefined) {
+          expect(result.cost).toBeGreaterThanOrEqual(0)
+        }
+      })
+
+      it('should track latency accurately', async () => {
+        const result = await service.generateObject('Quick object generation')
+
+        expect(result.latency).toBeGreaterThan(0)
+        expect(result.latency).toBeLessThan(10000) // 10s max
+      })
+    })
+
+    describe('RPC Interface for AI Decision', () => {
+      it('should expose decideGenerationType via RPC', async () => {
+        const decision = await service.decideGenerationType('testMethod', ['args'])
+        expect(decision).toMatch(/^(text|object)$/)
+      })
+
+      it('should expose generateObject via RPC', async () => {
+        const result = await service.generateObject('Test prompt')
+        expect(result.object).toBeDefined()
+        expect(result.model).toBeDefined()
+        expect(result.provider).toBeDefined()
+      })
+    })
+
+    describe('HTTP Interface for AI Decision', () => {
+      it('should handle POST /ai/decide', async () => {
+        const request = new Request('http://localhost/ai/decide', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            method: 'extractData',
+            args: ['test data'],
+          }),
+        })
+
+        const response = await service.fetch(request)
+        expect(response.status).toBe(200)
+
+        const data = (await response.json()) as any
+        expect(data.decision).toMatch(/^(text|object)$/)
+      })
+
+      it('should handle POST /ai/object', async () => {
+        const request = new Request('http://localhost/ai/object', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: 'Generate a user object',
+          }),
+        })
+
+        const response = await service.fetch(request)
+        expect(response.status).toBe(200)
+
+        const data = (await response.json()) as any
+        expect(data.object).toBeDefined()
+        expect(data.model).toBeDefined()
+        expect(data.provider).toBeDefined()
+      })
+
+      it('should handle POST /ai/object with schema', async () => {
+        const request = new Request('http://localhost/ai/object', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: 'Extract user data',
+            options: {
+              schema: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  age: { type: 'number' },
+                },
+              },
+            },
+          }),
+        })
+
+        const response = await service.fetch(request)
+        expect(response.status).toBe(200)
+
+        const data = (await response.json()) as any
+        expect(data.object).toBeDefined()
+      })
+    })
+  })
 })

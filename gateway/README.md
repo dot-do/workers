@@ -1,24 +1,26 @@
+# gateway
+
 # API Gateway Service
 
-Pure router following the Unix philosophy - does one thing (route requests) very well.
+Pure router following Unix philosophy - does one thing (route requests) very well.
 
 ## Overview
 
-The API Gateway is a lightweight, high-performance routing service that:
+The API Gateway is the **single HTTP entry point** for all microservices. It's a lightweight, high-performance routing service that:
 
-1. **Routes traffic** based on domain/path to appropriate worker services via RPC
-2. **Handles authentication** (Bearer tokens, API keys, WorkOS sessions)
-3. **Implements rate limiting** (per-user, per-IP, configurable per-route)
-4. **Transforms responses** (JSON formatting, error handling)
-5. **Logs all requests** (structured JSON logging with request IDs)
+1. **Routes traffic** - Based on domain/path to appropriate worker services via RPC
+2. **Handles authentication** - Bearer tokens, API keys, WorkOS sessions
+3. **Implements rate limiting** - Per-user, per-IP, configurable per-route
+4. **Logs all requests** - Structured JSON logging with request IDs
+5. **Zero business logic** - Just validates, routes, and observes
 
-**Design Philosophy**: The gateway is **just a router**. It doesn't implement business logic - it validates, routes, and observes. All business logic lives in downstream services.
+**Design Philosophy**: The gateway is **just a router** (300-500 LOC). All business logic lives in downstream services.
 
 ## Architecture
 
 ```
 ┌─────────────────┐
-│   API Gateway   │  ◄── Pure Router (300-500 LOC)
+│   API Gateway   │  ◄── Pure Router
 │                 │      - Domain/path routing
 │  Middleware:    │      - Authentication
 │  - Auth         │      - Rate limiting
@@ -39,7 +41,7 @@ The API Gateway is a lightweight, high-performance routing service that:
 
 ## Features
 
-### 1. Routing
+### 1. Multi-Layer Routing
 
 **Path-Based Routing**:
 - `/db/*` → DB service
@@ -47,20 +49,28 @@ The API Gateway is a lightweight, high-performance routing service that:
 - `/auth/*` → Auth service
 - `/queue/*` → Queue service
 - `/workflows/*` → Workflows service
-- `/batch/*` → Batch service
-- ... (see `src/router.ts` for full list)
+- `/agent/*` → Agent service (Durable Objects)
+- `/fn/*` → Function classification service
 
 **Domain-Based Routing**:
 - `db.services.do` → DB service
 - `ai.services.do` → AI service
 - `auth.services.do` → Auth service
 - `api.services.do` → DB service (default)
+- `admin.do` → App/CMS service
 
-**Service Bindings**:
-All routing uses Cloudflare Workers RPC (Service Bindings) for:
-- **Type safety** - Compile-time type checking
-- **Low latency** - <5ms RPC calls (p95)
-- **No HTTP overhead** - Direct memory access
+**International Character Domains**:
+- `彡.io` → DB (彡 = shape/pattern/database)
+- `口.io` → DB (口 = mouth/noun - data model)
+- `回.io` → DB (回 = rotation/thing - data model)
+- `入.io` → FN (入 = enter/function)
+- `巛.io` → Workflows (巛 = flow/river)
+- `人.io` → Agent (人 = person/agent)
+
+**Service Bindings** (RPC):
+- Type-safe compile-time checking
+- <5ms RPC calls (p95)
+- No HTTP overhead - direct memory access
 
 ### 2. Authentication
 
@@ -93,10 +103,11 @@ All routing uses Cloudflare Workers RPC (Service Bindings) for:
 ### 3. Rate Limiting
 
 **Default Limits**:
-- **60 requests/minute** for most endpoints
-- **20 requests/minute** for AI operations
-- **10 requests/minute** for auth operations
-- **5 requests/minute** for batch operations
+- **60 requests/minute** - Most endpoints
+- **20 requests/minute** - AI operations
+- **10 requests/minute** - Auth operations
+- **5 requests/minute** - Batch operations
+- **30 requests/minute** - Workflow operations
 
 **Identifier Strategy**:
 - **Authenticated**: Per `userId`
@@ -106,7 +117,7 @@ All routing uses Cloudflare Workers RPC (Service Bindings) for:
 - **Development**: In-memory (single worker)
 - **Production**: KV namespace (distributed)
 
-**Headers**:
+**Response Headers**:
 ```
 X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 45
@@ -114,10 +125,9 @@ X-RateLimit-Reset: 1620000000
 Retry-After: 30
 ```
 
-### 4. Logging
+### 4. Structured Logging
 
-**Structured JSON Logging**:
-
+**Request Logging**:
 ```json
 {
   "level": "info",
@@ -127,24 +137,18 @@ Retry-After: 30
   "method": "GET",
   "path": "/db/things",
   "ip": "1.2.3.4",
-  "userId": "user123",
-  "organizationId": "org123"
+  "userId": "user123"
 }
 ```
 
 **Response Logging**:
-
 ```json
 {
   "level": "info",
   "type": "response",
   "requestId": "req_1620000000_abc123",
-  "timestamp": "2025-10-02T12:00:00Z",
-  "method": "GET",
-  "path": "/db/things",
   "status": 200,
-  "duration": "45ms",
-  "userId": "user123"
+  "duration": "45ms"
 }
 ```
 
@@ -152,74 +156,15 @@ Retry-After: 30
 - `X-Request-ID` - Unique request identifier
 - `X-Response-Time` - Request duration in milliseconds
 
-## Usage
+## API
 
-### Development
+### RPC Interface
 
-```bash
-# Install dependencies
-pnpm install
 
-# Start dev server
-pnpm dev
 
-# Test the gateway
-curl http://localhost:8787/health
-```
+### HTTP Endpoints
 
-### Deployment
-
-```bash
-# Deploy to production
-pnpm deploy
-
-# Create KV namespace for rate limiting
-wrangler kv:namespace create "GATEWAY_KV"
-
-# Update wrangler.jsonc with KV namespace ID
-
-# Set secrets
-wrangler secret put WORKOS_API_KEY
-wrangler secret put WORKOS_CLIENT_ID
-```
-
-### Testing
-
-```bash
-# Run tests
-pnpm test
-
-# Watch mode
-pnpm test -- --watch
-
-# Coverage report
-pnpm test -- --coverage
-```
-
-## RPC Interface
-
-The gateway exposes an RPC interface for service-to-service calls:
-
-```typescript
-import type { GatewayService } from '@dot-do/gateway'
-
-// Call gateway via RPC
-const result = await env.GATEWAY.route('http://api.services.do/db/things', {
-  method: 'GET',
-  headers: {
-    'Authorization': 'Bearer sk_live_...',
-  },
-})
-
-// Health check
-const health = await env.GATEWAY.health()
-// => { status: 'healthy', timestamp: '...', services: [...] }
-```
-
-## HTTP API
-
-### Health Check
-
+**Health Check**:
 ```bash
 GET /health
 
@@ -231,8 +176,7 @@ GET /health
 }
 ```
 
-### Route to Service
-
+**Route to Service**:
 ```bash
 # Route to DB service
 GET /db/things
@@ -248,7 +192,7 @@ Content-Type: application/json
 }
 ```
 
-### Error Responses
+## Error Responses
 
 **401 Unauthorized**:
 ```json
@@ -294,157 +238,45 @@ Content-Type: application/json
 }
 ```
 
-## Configuration
-
-### Service Bindings
-
-All microservices must be bound in `wrangler.jsonc`:
-
-```jsonc
-{
-  "services": [
-    { "binding": "DB", "service": "db" },
-    { "binding": "AI", "service": "do-ai" },
-    { "binding": "AUTH", "service": "auth" },
-    // ... more services
-  ]
-}
-```
-
-### Rate Limit Configuration
-
-Edit `src/middleware/ratelimit.ts`:
-
-```typescript
-const ROUTE_LIMITS: Record<string, RateLimitConfig> = {
-  '/ai/': { windowMs: 60 * 1000, maxRequests: 20 },
-  '/batch/': { windowMs: 60 * 1000, maxRequests: 5 },
-  // Add custom limits per route
-}
-```
-
-### Route Configuration
-
-Edit `src/router.ts`:
-
-```typescript
-export const routes: RouteConfig[] = [
-  { pattern: /^\/db\//, service: 'db', binding: 'DB' },
-  { pattern: /^\/ai\//, service: 'ai', binding: 'AI' },
-  // Add new routes
-]
-```
-
 ## Performance
 
 **Benchmarks** (measured in production):
-
 - **RPC Latency**: <5ms (p95)
 - **HTTP Latency**: <50ms (p95)
 - **Throughput**: 10,000+ req/s per worker
 - **Memory**: ~10MB per worker instance
 
 **Optimization Tips**:
+1. Use Service Bindings (not HTTP) for service-to-service calls
+2. Enable Smart Placement for optimal edge routing
+3. Use KV for rate limiting (not in-memory) in production
+4. Cache authentication results (if high volume)
 
-1. **Use Service Bindings** (not HTTP) for service-to-service calls
-2. **Enable Smart Placement** for optimal edge routing
-3. **Use KV for rate limiting** (not in-memory) in production
-4. **Cache authentication results** (if high volume)
-
-## Development
-
-### Project Structure
-
-```
-gateway/
-├── src/
-│   ├── index.ts              # Main entrypoint (RPC + HTTP)
-│   ├── router.ts             # Route configuration
-│   ├── types.ts              # TypeScript types
-│   ├── middleware/
-│   │   ├── auth.ts           # Authentication
-│   │   ├── ratelimit.ts      # Rate limiting
-│   │   └── logging.ts        # Request logging
-├── tests/
-│   └── gateway.test.ts       # Comprehensive tests
-├── wrangler.jsonc            # Cloudflare config
-├── package.json
-└── README.md
-```
+## Configuration
 
 ### Adding a New Service
 
-1. **Add service binding** in `wrangler.jsonc`:
-   ```jsonc
-   {
-     "services": [
-       { "binding": "NEW_SERVICE", "service": "do-new-service" }
-     ]
-   }
+1. **Add service binding** in frontmatter:
+   ```yaml
+   services:
+     - binding: NEW_SERVICE
+       service: new-service
    ```
 
-2. **Add route** in `src/router.ts`:
-   ```typescript
-   { pattern: /^\/new\//, service: 'new-service', binding: 'NEW_SERVICE' }
-   ```
+2. **Add route** in router configuration:
+   
 
-3. **Add type** in `src/types.ts`:
-   ```typescript
-   export interface GatewayEnv {
-     NEW_SERVICE: any
-     // ...
-   }
-   ```
+3. **Add type** in GatewayEnv interface:
+   
 
-4. **Test the route**:
-   ```bash
-   curl http://localhost:8787/new/test
-   ```
+### Rate Limit Configuration
 
-### Code Style
+Edit `ROUTE_LIMITS` in rate limiting code:
 
-- **Horizontal code** - `printWidth: 160`
-- **No semicolons** - `semi: false`
-- **Single quotes** - `singleQuote: true`
-- **TypeScript strict mode** - No `any` types (except for service bindings)
-
-### Testing Guidelines
-
-- **80%+ coverage target**
-- **Test all middleware** (auth, rate limit, logging)
-- **Test error cases** (404, 401, 403, 429, 502)
-- **Test RPC interface** (health, route methods)
-
-## Troubleshooting
-
-### Service Not Found
-
-**Error**: `{ "error": "Not found", "message": "No service found for path: /xyz" }`
-
-**Fix**: Add route in `src/router.ts` and binding in `wrangler.jsonc`
-
-### Rate Limit Exceeded
-
-**Error**: `{ "error": "Too many requests", "retryAfter": 30 }`
-
-**Fix**: Wait for rate limit to reset, or adjust limits in `src/middleware/ratelimit.ts`
-
-### Authentication Failed
-
-**Error**: `{ "error": "Authentication required" }`
-
-**Fix**: Provide valid API key (`Authorization: Bearer sk_live_...`) or session cookie
-
-### Service Error
-
-**Error**: `{ "error": "Service error", "service": "db" }`
-
-**Fix**: Check downstream service logs, ensure service is deployed and healthy
 
 ## Security
 
 ### Best Practices
-
 1. **Use HTTPS only** - Never expose gateway over HTTP
 2. **Validate all inputs** - Gateway validates auth, downstream services validate data
 3. **Rate limit aggressively** - Prevent abuse and DDoS
@@ -452,40 +284,31 @@ gateway/
 5. **Rotate API keys** - Invalidate compromised keys immediately
 
 ### Secrets Management
-
 ```bash
 # Set secrets via Wrangler (never commit to Git)
 wrangler secret put WORKOS_API_KEY
 wrangler secret put WORKOS_CLIENT_ID
-
-# List secrets
-wrangler secret list
-
-# Delete secrets
-wrangler secret delete WORKOS_API_KEY
 ```
 
-## Contributing
+## Testing
 
-1. **Fork the repo**
-2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
-3. **Make changes** and **test thoroughly** (`pnpm test`)
-4. **Commit** (`git commit -m "Add amazing feature"`)
-5. **Push** (`git push origin feature/amazing-feature`)
-6. **Open a Pull Request**
+**Test Coverage**: 30+ tests, 80%+ coverage
 
-## License
+```bash
+# Run tests
+pnpm test
 
-MIT License - see LICENSE file for details
+# Watch mode
+pnpm test -- --watch
 
-## Support
+# Coverage report
+pnpm test -- --coverage
+```
 
-- **Documentation**: `/notes/` folder in root repo
-- **Issues**: GitHub Issues
-- **Architecture**: See `ARCHITECTURE.md` in root repo
+## Implementation
 
 ---
 
-**Last Updated**: 2025-10-02
-**Version**: 1.0.0
-**Maintained By**: DevOps Engineer A (WS-004)
+**Generated from:** gateway.mdx
+
+**Build command:** `tsx scripts/build-mdx-worker.ts gateway.mdx`

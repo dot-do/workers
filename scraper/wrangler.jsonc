@@ -1,0 +1,41 @@
+{
+  "name": "scraper",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "observability": {
+    "enabled": true
+  },
+
+  // R2 bucket for screenshot storage
+  "r2_buckets": [
+    {
+      "binding": "SCREENSHOT_CACHE",
+      "bucket_name": "screenshots-production",
+      "preview_bucket_name": "screenshots-preview"
+    }
+  ],
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "BROWSE_SERVICE",
+      "service": "browse"
+    },
+    {
+      "binding": "DB_SERVICE",
+      "service": "db"
+    },
+    {
+      "binding": "AUTH_SERVICE",
+      "service": "auth"
+    }
+  ],
+
+  // Environment variables
+  "vars": {
+    "ENVIRONMENT": "production",
+    "LOG_LEVEL": "info",
+    "DEFAULT_CACHE_TTL": "86400",
+    "MAX_SCREENSHOT_SIZE": "10485760"
+  }
+}

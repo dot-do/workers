@@ -1,8 +1,8 @@
 import { WorkerEntrypoint } from 'cloudflare:workers'
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
+import { protocolRouter } from '@dot-do/protocol-router'
 import { handleMCPRequest } from './server'
-import { authMiddleware, optionalAuthMiddleware, OAUTH_METADATA } from './auth'
+import { authMiddleware, OAUTH_METADATA } from './auth'
 import { generateDocs, generateDocsIndex, listDocs } from './docs/generator'
 import type { Env } from './types'
 
@@ -14,32 +14,19 @@ import type { Env } from './types'
  */
 export class MCPServer extends WorkerEntrypoint<Env> {
   async fetch(request: Request): Promise<Response> {
-    const app = new Hono<{ Bindings: Env }>()
-
-    // CORS for browser clients
-    app.use('*', cors())
+    // REST API for MCP-specific endpoints
+    const api = new Hono<{ Bindings: Env }>()
 
     /**
      * Well-known OAuth protected resource metadata endpoint
      * MCP clients use this to discover OAuth authorization server
      */
-    app.get('/.well-known/oauth-protected-resource', (c) => {
+    api.get('/.well-known/oauth-protected-resource', (c) => {
       return c.json(OAUTH_METADATA)
     })
 
-    // Health check (no auth required)
-    app.get('/health', (c) => {
-      return c.json({
-        status: 'ok',
-        service: 'mcp-server',
-        version: '1.0.0',
-        protocol: 'mcp/2024-11-05',
-        oauth: 'enabled'
-      })
-    })
-
-    // Server info (no auth required)
-    app.get('/', (c) => {
+    // Server info at root (no auth required)
+    api.get('/', (c) => {
       return c.json({
         name: 'mcp-server',
         version: '1.0.0',
@@ -72,8 +59,8 @@ export class MCPServer extends WorkerEntrypoint<Env> {
         ],
         transport: ['http', 'sse', 'stdio'],
         documentation: {
-          index: 'https://mcp.do/docs',
-          primitives: listDocs().map(name => `https://mcp.do/${name}.md`)
+          index: 'https://mcp.do/api/docs',
+          primitives: listDocs().map(name => `https://mcp.do/api/${name}.md`)
         }
       })
     })
@@ -83,13 +70,13 @@ export class MCPServer extends WorkerEntrypoint<Env> {
      */
 
     // Documentation index
-    app.get('/docs', (c) => {
+    api.get('/docs', (c) => {
       const docs = generateDocsIndex()
       return c.text(docs, 200, { 'Content-Type': 'text/markdown' })
     })
 
     // Root runtime documentation
-    app.get('/$.md', (c) => {
+    api.get('/$.md', (c) => {
       try {
         const docs = generateDocs('$')
         return c.text(docs, 200, { 'Content-Type': 'text/markdown' })
@@ -99,7 +86,7 @@ export class MCPServer extends WorkerEntrypoint<Env> {
     })
 
     // Primitive-specific documentation
-    app.get('/:primitive.md', (c) => {
+    api.get('/:primitive.md', (c) => {
       const primitive = c.req.param('primitive')
       try {
         const docs = generateDocs(primitive)
@@ -110,13 +97,23 @@ export class MCPServer extends WorkerEntrypoint<Env> {
     })
 
     /**
-     * MCP JSON-RPC endpoint - REQUIRES AUTHENTICATION
+     * MCP JSON-RPC endpoint at /mcp - REQUIRES AUTHENTICATION
      *
      * All MCP requests must include a valid OAuth 2.1 access token
      * in the Authorization header: Bearer <token>
      */
-    app.post('/', authMiddleware, async (c) => {
+    api.post('/mcp', authMiddleware, async (c) => {
       return await handleMCPRequest(c)
+    })
+
+    // Use protocol router with custom REST API
+    const app = protocolRouter({
+      api,
+      cors: {
+        origin: '*',
+        methods: ['GET', 'POST', 'OPTIONS'],
+        headers: ['Content-Type', 'Authorization'],
+      },
     })
 
     return app.fetch(request, this.env)

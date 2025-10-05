@@ -1,45 +1,39 @@
 /**
- * Blog Stream Worker Configuration
+ * blog-stream Worker Configuration
+ * Generated from blog-stream.mdx
  */
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "blog-stream",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-01-08",
-  "account_id": "b6641681fe423910342b9ffa1364c76d",
-
-  "observability": {
-    "enabled": true
-  },
-
-  // Service bindings
-  "services": [
-    {
-      "binding": "DB_SERVICE",
-      "service": "db"
-    },
-    {
-      "binding": "AI_SERVICE",
-      "service": "ai"
-    },
-    {
-      "binding": "DEPLOY_SERVICE",
-      "service": "deploy"
-    }
-  // ],
-
-  // Routes
-  // "routes": [
-    {
-      "pattern": "blog.apis.do/*",
-      "zone_name": "apis.do"
-    }
-  // ],
-
-  // Tail consumers (observability pipeline)
-  "tail_consumers": [
-    {
-      "service": "pipeline"
-    }
-  // ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "blog-stream",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-01-08",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"observability": {
+		"enabled": true
+	},
+	"services": [
+		{
+			"binding": "DB_SERVICE",
+			"service": "db"
+		},
+		{
+			"binding": "AI_SERVICE",
+			"service": "ai"
+		},
+		{
+			"binding": "DEPLOY_SERVICE",
+			"service": "deploy"
+		}
+	],
+	"routes": [
+		{
+			"pattern": "blog.apis.do/*",
+			"zone_name": "apis.do"
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "pipeline"
+		}
+	]
 }

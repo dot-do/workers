@@ -1,93 +1,67 @@
 /**
- * Gateway Service Configuration
- *
- * For more details on Wrangler configuration:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
+ * gateway Worker Configuration
+ * Generated from gateway.mdx
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "gateway",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-07-08",
-  "workers_dev": false,
 	"account_id": "b6641681fe423910342b9ffa1364c76d",
-	"observability": { "enabled": true },
-
-	/**
-	 * Routes - Gateway handles all traffic
-	 */
-	"routes": [
-		// Primary API domains
-		{ "pattern": "api.services.do/*", "zone_name": "services.do" },
-		{ "pattern": "apis.do/*", "zone_name": "apis.do" },
-		{ "pattern": "*.api.mw/*", "zone_name": "api.mw" }
-	],
-
-	/**
-	 * Smart Placement - Let Cloudflare optimize worker placement
-	 */
-	"placement": { "mode": "smart" },
-
-	/**
-	 * Service Bindings - RPC connections to all microservices
-	 * Each binding provides a typed RPC interface to call methods directly
-	 */
+	"observability": {
+		"enabled": true
+	},
+	"workers_dev": false,
 	"services": [
-		// Core services - using actual deployed names
-		{ "binding": "DB", "service": "db" },
-		{ "binding": "AUTH", "service": "auth" },
-		{ "binding": "AGENT", "service": "agent" },
-		{ "binding": "FN", "service": "fn" },
-		{ "binding": "APP", "service": "app" },
-		{ "binding": "WORKFLOWS", "service": "workflows" }
-		// Other services will be added as they're deployed
-		// { "binding": "AI", "service": "ai" },
-		// { "binding": "RELATIONSHIPS", "service": "relationships" },
-		// { "binding": "EMBEDDINGS", "service": "embeddings" },
-		// { "binding": "QUEUE", "service": "queue" },
-		// { "binding": "BATCH", "service": "batch" },
-		// { "binding": "SCHEDULE", "service": "schedule" },
-		// { "binding": "CODE_EXEC", "service": "code-exec" },
-		// { "binding": "CLAUDE_CODE", "service": "claude-code" },
-		// { "binding": "EVENTS", "service": "events" }
+		{
+			"binding": "DB",
+			"service": "db"
+		},
+		{
+			"binding": "AUTH",
+			"service": "auth"
+		},
+		{
+			"binding": "AGENT",
+			"service": "agent"
+		},
+		{
+			"binding": "FN",
+			"service": "fn"
+		},
+		{
+			"binding": "APP",
+			"service": "app"
+		},
+		{
+			"binding": "WORKFLOWS",
+			"service": "workflows"
+		}
 	],
-
-	/**
-	 * KV Namespace - For distributed rate limiting and caching
-	 */
+	"vars": {
+		"ENVIRONMENT": "production"
+	},
+	"routes": [
+		{
+			"pattern": "api.services.do/*",
+			"zone_name": "services.do"
+		},
+		{
+			"pattern": "apis.do/*",
+			"zone_name": "apis.do"
+		},
+		{
+			"pattern": "*.api.mw/*",
+			"zone_name": "api.mw"
+		}
+	],
 	"kv_namespaces": [
 		{
 			"binding": "GATEWAY_KV",
 			"id": "48289a56146d470f97ca98401f30c7d7"
 		}
 	],
-
-	/**
-	 * D1 Database - Optional, for gateway configuration and analytics
-	 */
-	// "d1_databases": [
-	// 	{
-	// 		"binding": "GATEWAY_DB",
-	// 		"database_name": "gateway",
-	// 		"database_id": "placeholder-d1-database-id"
-	// 	}
-	// ],
-
-	/**
-	 * Environment Variables
-	 * Note: Secrets should be set via `wrangler secret put`
-	 */
-	"vars": {
-		"ENVIRONMENT": "production"
+	"placement": {
+		"mode": "smart"
 	}
-
-	/**
-	 * Secrets (set via CLI, not committed to version control)
-	 *
-	 * Set these with:
-	 * wrangler secret put WORKOS_API_KEY
-	 * wrangler secret put WORKOS_CLIENT_ID
-	 */
-	// WORKOS_API_KEY
-	// WORKOS_CLIENT_ID
 }

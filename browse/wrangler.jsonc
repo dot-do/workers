@@ -1,0 +1,43 @@
+{
+  "name": "browse",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "observability": {
+    "enabled": true
+  },
+
+  // Browser Rendering binding
+  "browser": {
+    "binding": "BROWSER"
+  },
+
+  // KV for session caching
+  "kv_namespaces": [
+    {
+      "binding": "BROWSE_CACHE",
+      "id": "browse_cache_production",
+      "preview_id": "browse_cache_preview"
+    }
+  ],
+
+  // Service bindings
+  "services": [
+    {
+      "binding": "DB_SERVICE",
+      "service": "db"
+    },
+    {
+      "binding": "AUTH_SERVICE",
+      "service": "auth"
+    }
+  ],
+
+  // Environment variables (secrets set via wrangler secret put)
+  "vars": {
+    "ENVIRONMENT": "production",
+    "LOG_LEVEL": "info"
+  }
+
+  // Add these via: wrangler secret put BROWSERBASE_API_KEY
+  // Add these via: wrangler secret put BROWSERBASE_PROJECT_ID
+}

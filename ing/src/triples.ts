@@ -1,5 +1,11 @@
 /**
- * Triple Storage Operations
+ * Triple Storage Operations - Integrated with existing graph database
+ *
+ * Maps semantic triples to the existing things/relationships graph:
+ * - subject → fromNs:fromId (entity in things table)
+ * - predicate → relationship type (verb from registry)
+ * - object → toNs:toId (entity in things table)
+ * - context → relationship properties (5W1H metadata)
  */
 
 import type {
@@ -11,279 +17,199 @@ import type {
 } from './types'
 
 /**
- * Generate unique ID for triple
+ * Generate unique ID for triple (relationship format)
  */
-export function generateTripleId(): string {
-  return `triple_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+export function generateTripleId(subject: string, predicate: string, object: string): string {
+  const { ns: fromNs, id: fromId } = parseEntityRef(subject)
+  const { ns: toNs, id: toId } = parseEntityRef(object)
+  return `${fromNs}:${fromId}:rel:${predicate}:${toNs}:${toId}`
 }
 
 /**
- * Create a new semantic triple
+ * Parse entity reference into namespace and ID
+ * Supports formats:
+ * - "ns:id" (explicit namespace)
+ * - "entity" (default to 'ing' namespace)
+ */
+function parseEntityRef(ref: string): { ns: string; id: string } {
+  if (ref.includes(':')) {
+    const [ns, ...idParts] = ref.split(':')
+    return { ns, id: idParts.join(':') }
+  }
+  return { ns: 'ing', id: ref }
+}
+
+/**
+ * Create a new semantic triple using existing graph database
  */
 export async function createTriple(
   params: CreateTripleRequest,
   userId: string,
   env: Env
 ): Promise<Triple> {
+  const { ns: fromNs, id: fromId } = parseEntityRef(params.subject)
+  const { ns: toNs, id: toId } = parseEntityRef(params.object)
+
+  // Build relationship properties from 5W1H context
+  const properties: Record<string, any> = {
+    created_by: userId,
+    confidence: params.context?.confidence ?? 1.0,
+    ...(params.context && { context: params.context }),
+  }
+
+  // Create relationship via DB service
+  const relationship = await env.DB_SERVICE.upsertRelationship({
+    fromNs,
+    fromId,
+    toNs,
+    toId,
+    type: params.predicate,
+    properties,
+  })
+
+  // Convert relationship back to triple format
   const triple: Triple = {
-    id: generateTripleId(),
+    id: generateTripleId(params.subject, params.predicate, params.object),
     subject: params.subject,
     predicate: params.predicate,
     object: params.object,
     context: params.context,
-    created_at: new Date().toISOString(),
+    created_at: relationship.createdAt.toISOString(),
     created_by: userId,
     version: 1,
-    confidence: params.context?.confidence ?? 1.0,
+    confidence: properties.confidence,
   }
-
-  // Store in PostgreSQL
-  await env.DB_SERVICE.execute({
-    query: `
-      INSERT INTO semantic_triples (
-        id, subject, predicate, object, context,
-        created_at, created_by, version, confidence
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-    params: [
-      triple.id,
-      triple.subject,
-      triple.predicate,
-      triple.object,
-      JSON.stringify(triple.context || {}),
-      triple.created_at,
-      triple.created_by,
-      triple.version,
-      triple.confidence,
-    ],
-  })
-
-  // Create index entries for fast graph queries
-  await createTripleIndex(triple, env)
-
-  // Optionally sync to ClickHouse for analytics
-  await syncToClickHouse(triple, env)
 
   return triple
 }
 
 /**
- * Get a triple by ID
+ * Get a triple by ID (relationship lookup)
+ * ID format: fromNs:fromId:rel:predicate:toNs:toId
  */
 export async function getTriple(id: string, env: Env): Promise<Triple | null> {
-  const result = await env.DB_SERVICE.query({
-    query: `
-      SELECT id, subject, predicate, object, context,
-             created_at, created_by, updated_at, version, confidence
-      FROM semantic_triples
-      WHERE id = ? AND deleted_at IS NULL
-    `,
-    params: [id],
-  })
+  try {
+    // Parse relationship ID
+    const parts = id.split(':')
+    if (parts.length < 6 || parts[2] !== 'rel') {
+      return null
+    }
 
-  if (!result.rows || result.rows.length === 0) {
+    const [fromNs, fromId, , predicate, toNs, ...toIdParts] = parts
+    const toId = toIdParts.join(':')
+
+    // Query relationship via DB service
+    const relationships = await env.DB_SERVICE.queryRelationships(fromNs, fromId, {
+      type: predicate,
+      limit: 1,
+    })
+
+    if (!relationships || relationships.length === 0) {
+      return null
+    }
+
+    const rel = relationships[0]
+
+    // Convert to triple format
+    return {
+      id,
+      subject: `${fromNs}:${fromId}`,
+      predicate,
+      object: `${toNs}:${toId}`,
+      context: rel.data?.properties?.context,
+      created_at: rel.createdAt.toISOString(),
+      created_by: rel.data?.properties?.created_by || 'system',
+      updated_at: rel.updatedAt?.toISOString(),
+      version: 1,
+      confidence: rel.data?.properties?.confidence ?? 1.0,
+    }
+  } catch (error) {
+    console.error('Error getting triple:', error)
     return null
-  }
-
-  const row = result.rows[0]
-  return {
-    id: row.id,
-    subject: row.subject,
-    predicate: row.predicate,
-    object: row.object,
-    context: row.context ? JSON.parse(row.context) : undefined,
-    created_at: row.created_at,
-    created_by: row.created_by,
-    updated_at: row.updated_at,
-    version: row.version,
-    confidence: row.confidence,
   }
 }
 
 /**
- * Query triples by pattern
+ * Query triples by pattern using existing relationship queries
  */
 export async function queryTriples(
   pattern: QueryTriplesRequest,
   env: Env
 ): Promise<{ triples: Triple[]; total: number }> {
-  const conditions: string[] = ['deleted_at IS NULL']
-  const params: any[] = []
-
-  // Build WHERE clause
-  if (pattern.subject) {
-    conditions.push('subject = ?')
-    params.push(pattern.subject)
-  }
-
-  if (pattern.predicate) {
-    conditions.push('predicate = ?')
-    params.push(pattern.predicate)
-  }
-
-  if (pattern.object) {
-    conditions.push('object = ?')
-    params.push(pattern.object)
-  }
-
-  // Context filters
-  if (pattern.context?.inferred !== undefined) {
-    conditions.push("context->>'inferred' = ?")
-    params.push(pattern.context.inferred.toString())
-  }
-
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
-
-  // Count total
-  const countResult = await env.DB_SERVICE.query({
-    query: `SELECT COUNT(*) as total FROM semantic_triples ${whereClause}`,
-    params,
-  })
-  const total = countResult.rows[0].total
-
-  // Get paginated results
   const limit = pattern.limit ?? 20
   const offset = pattern.offset ?? 0
 
-  const result = await env.DB_SERVICE.query({
-    query: `
-      SELECT id, subject, predicate, object, context,
-             created_at, created_by, updated_at, version, confidence
-      FROM semantic_triples
-      ${whereClause}
-      ORDER BY created_at DESC
-      LIMIT ? OFFSET ?
-    `,
-    params: [...params, limit, offset],
-  })
+  let relationships: any[] = []
 
-  const triples = result.rows.map((row: any) => ({
-    id: row.id,
-    subject: row.subject,
-    predicate: row.predicate,
-    object: row.object,
-    context: row.context ? JSON.parse(row.context) : undefined,
-    created_at: row.created_at,
-    created_by: row.created_by,
-    updated_at: row.updated_at,
-    version: row.version,
-    confidence: row.confidence,
+  if (pattern.subject) {
+    // Query outgoing relationships from subject
+    const { ns, id } = parseEntityRef(pattern.subject)
+    relationships = await env.DB_SERVICE.queryRelationships(ns, id, {
+      type: pattern.predicate,
+      limit: limit + 1,
+      offset,
+    })
+  } else if (pattern.object) {
+    // Query incoming relationships to object
+    const { ns, id } = parseEntityRef(pattern.object)
+    relationships = await env.DB_SERVICE.getIncomingRelationships(ns, id, {
+      type: pattern.predicate,
+      limit: limit + 1,
+      offset,
+    })
+  } else if (pattern.predicate) {
+    // Query all relationships of this type
+    // This requires a more complex query across all namespaces
+    // For now, return empty (can be optimized later)
+    return { triples: [], total: 0 }
+  } else {
+    // No specific pattern - return empty (too broad)
+    return { triples: [], total: 0 }
+  }
+
+  // Convert relationships to triples
+  const hasMore = relationships.length > limit
+  const items = hasMore ? relationships.slice(0, limit) : relationships
+
+  const triples: Triple[] = items.map((rel: any) => ({
+    id: rel.id,
+    subject: rel.subject,
+    predicate: rel.predicate,
+    object: rel.object,
+    context: rel.data?.properties?.context,
+    created_at: rel.createdAt.toISOString(),
+    created_by: rel.data?.properties?.created_by || 'system',
+    updated_at: rel.updatedAt?.toISOString(),
+    version: 1,
+    confidence: rel.data?.properties?.confidence ?? 1.0,
   }))
 
-  return { triples, total }
-}
-
-/**
- * Delete a triple (soft delete)
- */
-export async function deleteTriple(id: string, userId: string, env: Env): Promise<boolean> {
-  const result = await env.DB_SERVICE.execute({
-    query: `
-      UPDATE semantic_triples
-      SET deleted_at = ?, updated_at = ?
-      WHERE id = ? AND deleted_at IS NULL
-    `,
-    params: [new Date().toISOString(), new Date().toISOString(), id],
-  })
-
-  // Remove from index
-  await deleteTripleIndex(id, env)
-
-  return result.rowsAffected > 0
-}
-
-/**
- * Create index entries for fast graph traversal
- */
-async function createTripleIndex(triple: Triple, env: Env): Promise<void> {
-  // Index by subject
-  await env.DB_SERVICE.execute({
-    query: `
-      INSERT INTO triple_index (node, direction, triple_id)
-      VALUES (?, 'subject', ?)
-    `,
-    params: [triple.subject, triple.id],
-  })
-
-  // Index by object
-  await env.DB_SERVICE.execute({
-    query: `
-      INSERT INTO triple_index (node, direction, triple_id)
-      VALUES (?, 'object', ?)
-    `,
-    params: [triple.object, triple.id],
-  })
-
-  // Index by predicate
-  await env.DB_SERVICE.execute({
-    query: `
-      INSERT INTO triple_index (node, direction, triple_id)
-      VALUES (?, 'predicate', ?)
-    `,
-    params: [triple.predicate, triple.id],
-  })
-}
-
-/**
- * Delete triple from index
- */
-async function deleteTripleIndex(tripleId: string, env: Env): Promise<void> {
-  await env.DB_SERVICE.execute({
-    query: 'DELETE FROM triple_index WHERE triple_id = ?',
-    params: [tripleId],
-  })
-}
-
-/**
- * Sync triple to ClickHouse for analytics (optional)
- */
-async function syncToClickHouse(triple: Triple, env: Env): Promise<void> {
-  try {
-    // Extract context fields for ClickHouse columns
-    const location = triple.context?.spatial?.location || ''
-    const reason = triple.context?.causal?.reason || ''
-    const timestamp = triple.context?.temporal?.timestamp || triple.created_at || ''
-
-    await env.DB_SERVICE.executeClickHouse({
-      query: `
-        INSERT INTO semantic_triples_analytics (
-          id, subject, predicate, object, timestamp,
-          location, reason, created_by, confidence,
-          subject_type, predicate_type, object_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-      params: [
-        triple.id,
-        triple.subject,
-        triple.predicate,
-        triple.object,
-        timestamp,
-        location,
-        reason,
-        triple.created_by || '',
-        triple.confidence || 1.0,
-        inferType(triple.subject),
-        inferType(triple.predicate),
-        inferType(triple.object),
-      ],
-    })
-  } catch (error) {
-    console.error('Failed to sync to ClickHouse:', error)
-    // Don't fail the main operation if analytics sync fails
+  return {
+    triples,
+    total: triples.length, // Approximate - can be enhanced with count query
   }
 }
 
 /**
- * Infer entity type from name
+ * Delete a triple (deletes relationship from graph)
  */
-function inferType(name: string): string {
-  // Simple heuristic - can be enhanced with AI
-  if (name.endsWith('ing')) return 'activity'
-  if (name.endsWith('ed')) return 'event'
-  if (name.startsWith('will')) return 'action'
+export async function deleteTriple(id: string, userId: string, env: Env): Promise<boolean> {
+  try {
+    // Parse relationship ID
+    const parts = id.split(':')
+    if (parts.length < 6 || parts[2] !== 'rel') {
+      return false
+    }
 
-  // Check if plural (collection) or singular (item)
-  if (name.endsWith('s') && !name.endsWith('ss')) return 'collection'
+    const [fromNs, fromId, , predicate, toNs, ...toIdParts] = parts
+    const toId = toIdParts.join(':')
 
-  return 'item'
+    // Delete relationship via DB service
+    await env.DB_SERVICE.deleteRelationship(fromNs, fromId, toNs, toId, predicate)
+
+    return true
+  } catch (error) {
+    console.error('Error deleting triple:', error)
+    return false
+  }
 }

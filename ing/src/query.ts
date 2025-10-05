@@ -114,7 +114,7 @@ export async function findPaths(from: string, to: string, maxDepth: number, env:
 }
 
 /**
- * Get neighbors of a node
+ * Get neighbors of a node using existing relationship queries
  */
 export async function getNeighbors(
   node: string,
@@ -123,49 +123,53 @@ export async function getNeighbors(
 ): Promise<Array<{ nodeId: string; predicate: string; type: 'subject' | 'object' }>> {
   const neighbors: Array<{ nodeId: string; predicate: string; type: 'subject' | 'object' }> = []
 
-  // Forward: node is subject, get objects
-  if (direction === 'forward' || direction === 'both') {
-    const forwardResult = await env.DB_SERVICE.query({
-      query: `
-        SELECT DISTINCT st.object, st.predicate
-        FROM triple_index ti
-        JOIN semantic_triples st ON ti.triple_id = st.id
-        WHERE ti.node = ? AND ti.direction = 'subject' AND st.deleted_at IS NULL
-      `,
-      params: [node],
-    })
+  // Parse entity reference
+  const parseRef = (ref: string) => {
+    if (ref.includes(':')) {
+      const [ns, ...idParts] = ref.split(':')
+      return { ns, id: idParts.join(':') }
+    }
+    return { ns: 'ing', id: ref }
+  }
 
-    if (forwardResult.rows) {
-      for (const row of forwardResult.rows) {
-        neighbors.push({
-          nodeId: row.object,
-          predicate: row.predicate,
-          type: 'object',
-        })
+  const { ns, id } = parseRef(node)
+
+  // Forward: node is subject, get objects (outgoing relationships)
+  if (direction === 'forward' || direction === 'both') {
+    try {
+      const relationships = await env.DB_SERVICE.getRelationships(ns, id, { limit: 1000 })
+
+      // relationships is a map: { predicate: "ns:id" | ["ns:id", ...] }
+      for (const [predicate, targets] of Object.entries(relationships)) {
+        const targetArray = Array.isArray(targets) ? targets : [targets]
+        for (const target of targetArray) {
+          neighbors.push({
+            nodeId: target,
+            predicate,
+            type: 'object',
+          })
+        }
       }
+    } catch (error) {
+      console.error('Error getting forward neighbors:', error)
     }
   }
 
-  // Backward: node is object, get subjects
+  // Backward: node is object, get subjects (incoming relationships)
   if (direction === 'backward' || direction === 'both') {
-    const backwardResult = await env.DB_SERVICE.query({
-      query: `
-        SELECT DISTINCT st.subject, st.predicate
-        FROM triple_index ti
-        JOIN semantic_triples st ON ti.triple_id = st.id
-        WHERE ti.node = ? AND ti.direction = 'object' AND st.deleted_at IS NULL
-      `,
-      params: [node],
-    })
+    try {
+      const incomingRels = await env.DB_SERVICE.getIncomingRelationships(ns, id, { limit: 1000 })
 
-    if (backwardResult.rows) {
-      for (const row of backwardResult.rows) {
+      // Convert incoming relationships to neighbors
+      for (const rel of incomingRels) {
         neighbors.push({
-          nodeId: row.subject,
-          predicate: row.predicate,
+          nodeId: rel.subject,
+          predicate: rel.predicate,
           type: 'subject',
         })
       }
+    } catch (error) {
+      console.error('Error getting backward neighbors:', error)
     }
   }
 
@@ -173,12 +177,10 @@ export async function getNeighbors(
 }
 
 /**
- * Execute SPARQL-like query (simplified)
+ * Execute SPARQL-like query (simplified) using queryTriples
  */
 export async function executeQuery(pattern: string, env: Env): Promise<Triple[]> {
   // Simplified query parser
-  // TODO: Implement full SPARQL parser
-
   // Basic pattern matching: ?subject='accountant' ?predicate='invoicing' ?object=*
   const regex = /\?(\w+)=(['*\w]+)/g
   const matches = [...pattern.matchAll(regex)]
@@ -194,94 +196,46 @@ export async function executeQuery(pattern: string, env: Env): Promise<Triple[]>
     }
   }
 
-  // Query triples
-  const conditions: string[] = ['deleted_at IS NULL']
-  const params: any[] = []
+  // Use queryTriples with parsed pattern
+  const { queryTriples } = await import('./triples')
+  const result = await queryTriples(
+    {
+      subject: query.subject,
+      predicate: query.predicate,
+      object: query.object,
+      limit: 100,
+    },
+    env
+  )
 
-  if (query.subject) {
-    conditions.push('subject = ?')
-    params.push(query.subject)
-  }
-
-  if (query.predicate) {
-    conditions.push('predicate = ?')
-    params.push(query.predicate)
-  }
-
-  if (query.object) {
-    conditions.push('object = ?')
-    params.push(query.object)
-  }
-
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
-
-  const result = await env.DB_SERVICE.query({
-    query: `
-      SELECT id, subject, predicate, object, context,
-             created_at, created_by, confidence
-      FROM semantic_triples
-      ${whereClause}
-      ORDER BY created_at DESC
-      LIMIT 100
-    `,
-    params,
-  })
-
-  return result.rows.map((row: any) => ({
-    id: row.id,
-    subject: row.subject,
-    predicate: row.predicate,
-    object: row.object,
-    context: row.context ? JSON.parse(row.context) : undefined,
-    created_at: row.created_at,
-    created_by: row.created_by,
-    confidence: row.confidence,
-  }))
+  return result.triples
 }
 
 /**
- * Get triple count grouped by predicate
+ * Get triple count grouped by predicate (relationship type stats)
  */
 export async function getPredicateStats(env: Env): Promise<Record<string, number>> {
-  const result = await env.DB_SERVICE.query({
-    query: `
-      SELECT predicate, COUNT(*) as count
-      FROM semantic_triples
-      WHERE deleted_at IS NULL
-      GROUP BY predicate
-      ORDER BY count DESC
-    `,
-  })
-
-  const stats: Record<string, number> = {}
-
-  for (const row of result.rows) {
-    stats[row.predicate] = row.count
+  // Use DB service stats if available
+  try {
+    const stats = await env.DB_SERVICE.typeDistribution('ing')
+    return stats || {}
+  } catch (error) {
+    console.error('Error getting predicate stats:', error)
+    return {}
   }
-
-  return stats
 }
 
 /**
  * Get triple count grouped by subject
  */
 export async function getSubjectStats(env: Env): Promise<Record<string, number>> {
-  const result = await env.DB_SERVICE.query({
-    query: `
-      SELECT subject, COUNT(*) as count
-      FROM semantic_triples
-      WHERE deleted_at IS NULL
-      GROUP BY subject
-      ORDER BY count DESC
-      LIMIT 100
-    `,
-  })
-
-  const stats: Record<string, number> = {}
-
-  for (const row of result.rows) {
-    stats[row.subject] = row.count
+  // Returns approximate stats
+  // In future, could aggregate from relationship queries
+  try {
+    const stats = await env.DB_SERVICE.stats()
+    return stats?.thingsByNamespace || {}
+  } catch (error) {
+    console.error('Error getting subject stats:', error)
+    return {}
   }
-
-  return stats
 }

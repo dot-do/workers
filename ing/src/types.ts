@@ -284,9 +284,46 @@ export interface FindPathsResponse {
 // ===== Environment Types =====
 
 export interface Env {
-  // Service bindings
-  DB_SERVICE: any
-  AUTH_SERVICE: any
+  // Service bindings (RPC interfaces)
+  DB_SERVICE: {
+    // Thing operations
+    getThing(ns: string, id: string): Promise<any>
+    createThing(ns: string, id: string, data: any): Promise<any>
+    updateThing(ns: string, id: string, data: any): Promise<any>
+    deleteThing(ns: string, id: string): Promise<void>
+    listThings(ns: string, options?: any): Promise<any[]>
+
+    // Relationship operations
+    getRelationships(ns: string, id: string, options?: any): Promise<Record<string, any>>
+    queryRelationships(ns: string, id: string, options?: any): Promise<any[]>
+    getIncomingRelationships(ns: string, id: string, options?: any): Promise<any[]>
+    upsertRelationship(relationship: {
+      fromNs: string
+      fromId: string
+      toNs: string
+      toId: string
+      type: string
+      properties?: Record<string, any>
+    }): Promise<any>
+    deleteRelationship(
+      fromNs: string,
+      fromId: string,
+      toNs: string,
+      toId: string,
+      type?: string
+    ): Promise<void>
+
+    // Stats operations
+    stats(): Promise<any>
+    typeDistribution(ns: string): Promise<Record<string, number>>
+  }
+
+  AUTH_SERVICE: {
+    // Auth operations
+    getUser(userId: string): Promise<any>
+    validateSession(sessionToken: string): Promise<any>
+    checkPermission(userId: string, permission: string): Promise<boolean>
+  }
 
   // Queue bindings
   SEMANTIC_TRIPLES_QUEUE: Queue

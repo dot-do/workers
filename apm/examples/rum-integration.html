@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>APM RUM Integration Example</title>
+
+    <!-- APM RUM SDK -->
+    <script src="https://apm.example.com/apm-rum.min.js"></script>
+    <script>
+      window.APM.init({
+        endpoint: 'https://apm.example.com/v1/rum',
+        applicationId: 'demo-app',
+        sessionSampleRate: 1.0, // 100% sampling for demo
+
+        // Enable all tracking
+        trackInteractions: true,
+        trackResources: true,
+        trackLongTasks: true,
+
+        // Filter sensitive data
+        beforeSend: (event) => {
+          // Don't track admin pages
+          if (event.url.includes('/admin')) {
+            return null
+          }
+
+          // Redact sensitive form data
+          if (event.type === 'interaction' && event.data.elementText) {
+            if (event.data.elementText.includes('password')) {
+              event.data.elementText = '[REDACTED]'
+            }
+          }
+
+          return event
+        },
+
+        // Allowed origins for cross-origin requests
+        allowedOrigins: ['https://api.example.com', 'https://cdn.example.com'],
+      })
+
+      // Set user context after login
+      function setUserContext(userId, attributes) {
+        window.APM.setUser(userId, attributes)
+      }
+
+      // Track custom business events
+      function trackCustomEvent(name, data) {
+        window.APM.trackEvent(name, data)
+      }
+
+      // Add custom tags
+      function addTag(key, value) {
+        window.APM.addTag(key, value)
+      }
+    </script>
+
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+        line-height: 1.6;
+      }
+
+      button {
+        background: #0066cc;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 0.5rem 0.5rem 0.5rem 0;
+      }
+
+      button:hover {
+        background: #0052a3;
+      }
+
+      .card {
+        border: 1px solid #ddd;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 8px;
+      }
+
+      .error {
+        color: #cc0000;
+      }
+
+      #results {
+        background: #f5f5f5;
+        padding: 1rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>APM RUM Integration Demo</h1>
+
+    <div class="card">
+      <h2>User Context</h2>
+      <p>Set user context after login:</p>
+      <button onclick="loginUser()">Simulate Login</button>
+      <button onclick="logoutUser()">Simulate Logout</button>
+    </div>
+
+    <div class="card">
+      <h2>Custom Events</h2>
+      <p>Track business events:</p>
+      <button onclick="trackCheckout()">Track Checkout</button>
+      <button onclick="trackSearch()">Track Search</button>
+      <button onclick="trackAddToCart()">Track Add to Cart</button>
+    </div>
+
+    <div class="card">
+      <h2>Interactions</h2>
+      <p>Clicks are automatically tracked:</p>
+      <button id="primary-cta">Primary CTA</button>
+      <button id="secondary-cta">Secondary CTA</button>
+      <form id="demo-form" onsubmit="return handleSubmit(event)">
+        <input type="text" id="search-input" placeholder="Search..." />
+        <button type="submit">Search</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Error Tracking</h2>
+      <p>Errors are automatically captured:</p>
+      <button onclick="throwError()">Throw Error</button>
+      <button onclick="throwAsyncError()">Throw Async Error</button>
+      <button onclick="networkError()">Network Error</button>
+    </div>
+
+    <div class="card">
+      <h2>Performance</h2>
+      <p>Long tasks and resource timing automatically tracked:</p>
+      <button onclick="triggerLongTask()">Trigger Long Task</button>
+      <button onclick="loadLargeImage()">Load Large Image</button>
+    </div>
+
+    <div class="card">
+      <h2>Tags</h2>
+      <p>Add custom tags to all events:</p>
+      <button onclick="setExperimentTag()">Set A/B Test Tag</button>
+      <button onclick="setFeatureFlag()">Set Feature Flag</button>
+    </div>
+
+    <h2>Results</h2>
+    <div id="results">
+      <p>Open DevTools Console to see RUM events</p>
+    </div>
+
+    <script>
+      // ============================================================================
+      // User Context
+      // ============================================================================
+
+      function loginUser() {
+        setUserContext('user-12345', {
+          email: 'demo@example.com',
+          name: 'Demo User',
+          plan: 'premium',
+          signupDate: '2024-01-15',
+        })
+        log('✅ User context set: user-12345')
+      }
+
+      function logoutUser() {
+        setUserContext(null)
+        log('✅ User context cleared')
+      }
+
+      // ============================================================================
+      // Custom Events
+      // ============================================================================
+
+      function trackCheckout() {
+        trackCustomEvent('checkout_started', {
+          cartValue: 299.99,
+          itemCount: 3,
+          currency: 'USD',
+          items: [
+            { sku: 'PROD-001', price: 99.99 },
+            { sku: 'PROD-002', price: 149.99 },
+            { sku: 'PROD-003', price: 50.01 },
+          ],
+        })
+        log('🛒 Checkout event tracked')
+      }
+
+      function trackSearch() {
+        trackCustomEvent('search_performed', {
+          query: 'wireless headphones',
+          resultsCount: 42,
+          filters: ['price:0-100', 'brand:sony'],
+        })
+        log('🔍 Search event tracked')
+      }
+
+      function trackAddToCart() {
+        trackCustomEvent('add_to_cart', {
+          sku: 'PROD-001',
+          price: 99.99,
+          quantity: 1,
+          category: 'Electronics',
+        })
+        log('➕ Add to cart event tracked')
+      }
+
+      // ============================================================================
+      // Form Handling
+      // ============================================================================
+
+      function handleSubmit(event) {
+        event.preventDefault()
+        const query = document.getElementById('search-input').value
+        trackSearch()
+        log(`📝 Form submitted: "${query}"`)
+        return false
+      }
+
+      // ============================================================================
+      // Error Tracking
+      // ============================================================================
+
+      function throwError() {
+        throw new Error('This is a test error - automatically tracked by APM!')
+      }
+
+      function throwAsyncError() {
+        setTimeout(() => {
+          throw new Error('This is a test async error!')
+        }, 100)
+      }
+
+      async function networkError() {
+        try {
+          await fetch('https://api.example.com/invalid-endpoint')
+        } catch (error) {
+          log('❌ Network error captured: ' + error.message)
+        }
+      }
+
+      // ============================================================================
+      // Performance Testing
+      // ============================================================================
+
+      function triggerLongTask() {
+        log('⏳ Starting long task (will block for ~100ms)...')
+
+        // Block the main thread for 100ms
+        const start = Date.now()
+        while (Date.now() - start < 100) {
+          // Busy wait
+        }
+
+        log('✅ Long task completed (should be tracked as longtask event)')
+      }
+
+      function loadLargeImage() {
+        const img = new Image()
+        img.src = 'https://picsum.photos/2000/2000?random=' + Date.now()
+        img.onload = () => {
+          log('🖼️ Large image loaded (should be tracked as resource event)')
+        }
+        document.body.appendChild(img)
+        setTimeout(() => img.remove(), 100)
+      }
+
+      // ============================================================================
+      // Tags and Context
+      // ============================================================================
+
+      function setExperimentTag() {
+        addTag('experiment', 'checkout_flow_v2')
+        addTag('variant', 'b')
+        log('🧪 A/B test tags added')
+      }
+
+      function setFeatureFlag() {
+        addTag('feature_new_search', 'enabled')
+        log('🚩 Feature flag tag added')
+      }
+
+      // ============================================================================
+      // Utilities
+      // ============================================================================
+
+      function log(message) {
+        const resultsDiv = document.getElementById('results')
+        const timestamp = new Date().toLocaleTimeString()
+        const entry = document.createElement('div')
+        entry.innerHTML = `<strong>${timestamp}:</strong> ${message}`
+        resultsDiv.insertBefore(entry, resultsDiv.firstChild)
+        console.log(message)
+      }
+
+      // Log page load
+      window.addEventListener('load', () => {
+        log('✅ Page loaded - Core Web Vitals are being tracked')
+        log('👁️ RUM SDK initialized and tracking all events')
+      })
+    </script>
+  </body>
+</html>

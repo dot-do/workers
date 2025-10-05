@@ -1,0 +1,82 @@
+{
+  "name": "apm",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-11-27",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+
+  // Analytics Engine for metrics, traces, logs, RUM events
+  "analytics_engine_datasets": [
+    { "binding": "METRICS", "dataset": "apm_metrics" },
+    { "binding": "TRACES", "dataset": "apm_traces" },
+    { "binding": "LOGS", "dataset": "apm_logs" },
+    { "binding": "RUM", "dataset": "apm_rum" }
+  ],
+
+  // D1 for metadata, alerts, dashboards, service registry
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "apm-db",
+      "database_id": "a8bbffdb-c120-49bd-b903-1a45dd6abdf9"
+    }
+  ],
+
+  // R2 for log archival, trace storage, RUM session replays
+  "r2_buckets": [
+    {
+      "binding": "LOGS_ARCHIVE",
+      "bucket_name": "apm-logs-archive"
+    },
+    {
+      "binding": "TRACES_ARCHIVE",
+      "bucket_name": "apm-traces-archive"
+    },
+    {
+      "binding": "RUM_SESSIONS",
+      "bucket_name": "apm-rum-sessions"
+    }
+  ],
+
+  // KV for alert state, sampling state, rate limiting
+  "kv_namespaces": [
+    {
+      "binding": "ALERT_STATE",
+      "id": "4e36c4d6bfc04dd7912ca4ea1b1da9f4"
+    },
+    {
+      "binding": "SAMPLING_STATE",
+      "id": "9b48f1b9c5f24b8eb156bcfb1e23efc9"
+    }
+  ],
+
+  // Durable Objects for real-time aggregation (disabled for initial deployment)
+  // "durable_objects": {
+  //   "bindings": [
+  //     {
+  //       "name": "METRICS_AGGREGATOR",
+  //       "class_name": "MetricsAggregator",
+  //       "script_name": "apm"
+  //     },
+  //     {
+  //       "name": "LOG_AGGREGATOR",
+  //       "class_name": "LogAggregator",
+  //       "script_name": "apm"
+  //     }
+  //   ]
+  // },
+
+  // Workers AI for anomaly detection, root cause analysis
+  "ai": {
+    "binding": "AI"
+  },
+
+  // Cron triggers for synthetic monitoring
+  "triggers": {
+    "crons": [
+      "*/1 * * * *",  // Every 1 minute - health checks
+      "*/5 * * * *",  // Every 5 minutes - API checks
+      "*/15 * * * *"  // Every 15 minutes - full journey tests
+    ]
+  }
+}

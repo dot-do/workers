@@ -1,0 +1,27 @@
+{
+  "name": "@dot-do/workers-apm",
+  "version": "1.0.0",
+  "description": "Application Performance Monitoring service - Complete APM suite with RUM, synthetics, logs, traces, and AI anomaly detection",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 execute apm-db --remote --file=./migrations/schema.sql",
+    "db:local": "wrangler d1 execute apm-db --local --file=./migrations/schema.sql",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "build:rum-sdk": "esbuild src/rum/sdk.ts --bundle --minify --format=esm --outfile=public/apm-rum.min.js"
+  },
+  "dependencies": {
+    "hono": "^4.6.14",
+    "zod": "^3.23.8",
+    "@cloudflare/workers-types": "^4.20241127.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.93.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "esbuild": "^0.24.0",
+    "@types/node": "^22.10.2"
+  }
+}

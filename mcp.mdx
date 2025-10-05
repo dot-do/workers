@@ -1,0 +1,914 @@
+---
+$type: Worker
+$id: mcp
+name: mcp
+main: src/index.ts
+compatibility_date: "2025-07-08"
+workers_dev: false
+account_id: b6641681fe423910342b9ffa1364c76d
+
+observability:
+  enabled: true
+
+services:
+  - binding: DB
+    service: db
+  - binding: DO
+    service: do
+  - binding: AUTH
+    service: auth
+
+kv_namespaces:
+  - binding: KV
+    id: f84c06e2a01942a5b287dd2cdd78b7ab
+
+vars:
+  ENVIRONMENT: production
+---
+
+# MCP Service
+
+Model Context Protocol (MCP) server implementation for the dot-do platform, providing AI-accessible tools, OAuth 2.1 authentication, and comprehensive platform integration.
+
+## Overview
+
+The **MCP Service** is a core AI integration service that exposes ALL platform capabilities as AI-accessible tools via the Model Context Protocol (MCP). It implements JSON-RPC 2.0 with OAuth 2.1 authentication and provides 20+ tools across 8 categories.
+
+**Design Philosophy**: Universal interface for AI agents. Protocol-agnostic, secure, and extensible. The "front door" for AI interactions with the platform.
+
+## Features
+
+### 1. Model Context Protocol (MCP)
+
+**JSON-RPC 2.0 Server**:
+- Standard JSON-RPC 2.0 protocol
+- Request/response pattern with IDs
+- Error handling with standard error codes
+- Batch request support
+
+**MCP Specification** (`mcp/2024-11-05`):
+- Tools (functions AI agents can call)
+- Resources (data AI agents can read)
+- Prompts (pre-defined conversation starters)
+- Tool discovery (`tools/list`)
+- Resource discovery (`resources/list`)
+- Capability negotiation (`initialize`)
+
+**Transport Support**:
+- HTTP POST (primary)
+- Server-Sent Events (SSE) for streaming
+- STDIO (for local development)
+
+### 2. OAuth 2.1 Authentication
+
+**OAuth Discovery**:
+- Well-known endpoint: `/.well-known/oauth-protected-resource`
+- Authorization server metadata
+- Token endpoint URLs
+- Supported grant types
+
+**OAuth Metadata**:
+```json
+{
+  "resource": "https://mcp.do",
+  "authorization_servers": ["https://auth.do"],
+  "authorization_endpoint": "https://auth.do/authorize",
+  "token_endpoint": "https://auth.do/token"
+}
+```
+
+**Access Token Validation**:
+- Bearer token in Authorization header
+- JWT verification via AUTH service
+- User information extraction
+- Role-based access control (RBAC)
+- Token expiration checking
+
+**Public Endpoints** (No Auth Required):
+- `GET /` - Server info and capabilities
+- `GET /docs` - Documentation index
+- `GET /$.md` - Runtime documentation
+- `GET /:primitive.md` - Primitive documentation
+- `GET /.well-known/oauth-protected-resource` - OAuth metadata
+
+**Protected Endpoints** (Auth Required):
+- `POST /mcp` - ALL MCP JSON-RPC requests
+
+### 3. Tool Categories (8 Categories, 20+ Tools)
+
+**Database Tools** (`database.ts`):
+- `db_query` - Execute SQL queries
+- `db_search` - Search entities with filters
+- `db_get` - Get entity by ID
+- `db_create` - Create new entity
+- `db_update` - Update entity
+- `db_delete` - Delete entity
+
+**AI Tools** (`ai.ts`):
+- `ai_generate` - Generate text with AI models
+- `ai_embed` - Generate embeddings
+- `ai_chat` - Chat completions
+- `ai_models` - List available AI models
+
+**Auth Tools** (`auth.ts`):
+- `auth_create_api_key` - Create API key
+- `auth_list_api_keys` - List user's API keys
+- `auth_revoke_api_key` - Revoke API key
+- `auth_check_permission` - Check user permissions
+
+**Search Tools** (`search.ts`):
+- `search_semantic` - Semantic search with embeddings
+- `search_full_text` - Full-text search
+- `search_hybrid` - Hybrid search (semantic + full-text)
+
+**Queue Tools** (`queue.ts`):
+- `queue_enqueue` - Add message to queue
+- `queue_status` - Get queue status
+
+**Workflow Tools** (`workflows.ts`):
+- `workflow_execute` - Execute workflow
+- `workflow_status` - Get workflow status
+- `workflow_list` - List workflows
+
+**CLI Tools** (`cli.ts`):
+- `cli_status` - Get CLI status
+- `cli_login_url` - Get OAuth login URL
+- `cli_docs` - Get CLI documentation
+
+**Code Execution** (`code.ts`):
+- `do` - Universal Business-as-Code runtime
+- Execute TypeScript + MDX code
+- Business primitive semantics
+- Durable Objects integration
+
+**Total**: 8 categories, 20+ tools
+
+### 4. Universal "do" Tool (Business-as-Code Runtime)
+
+**Most Important Tool**: The `do` tool is the universal interface for executing Business-as-Code on the platform.
+
+**Capabilities**:
+- Execute TypeScript + MDX code
+- Access all platform primitives (things, relationships, etc.)
+- Database operations (create, read, update, delete)
+- AI operations (generate, embed, chat)
+- Workflow orchestration
+- Durable Objects integration
+
+**Input Schema**:
+```ts
+{
+  code: string           // TypeScript + MDX code to execute
+  context?: any          // Optional context object
+  timeout?: number       // Execution timeout in milliseconds
+}
+```
+
+**Example**:
+```ts
+const result = await mcpClient.callTool('do', {
+  code: `
+    // Business-as-Code
+    const note = await things.create({
+      type: 'Note',
+      title: 'Meeting Notes',
+      content: 'Discussed project timeline'
+    })
+
+    return note
+  `
+})
+```
+
+### 5. Admin-Only Tools (9 Tools)
+
+**Authentication Required**: These tools require authentication + admin role.
+
+**Admin Tools**:
+- `admin_cloudflare` - Cloudflare API operations
+- `admin_workos` - WorkOS API operations
+- `admin_clickhouse` - ClickHouse database operations
+- `admin_domains` - Domain management
+- `admin_stripe` - Stripe API operations
+- `admin_db` - Direct database access
+- `admin_github` - GitHub API operations
+- `admin_resend` - Resend API operations
+- `admin_deployment` - Deployment management
+
+**Access Control**:
+```ts
+// Check authentication
+if (!user) {
+  throw new Error('Authentication required')
+}
+
+// Check admin role
+if (user.role !== 'admin') {
+  throw new Error('Admin role required')
+}
+```
+
+### 6. Resources (Business Objects)
+
+**Resource Types**:
+- Business entities (things, relationships)
+- Schemas (entity type definitions)
+- Documentation (API docs, guides)
+- Workflows (workflow definitions)
+- Functions (function definitions)
+
+**Resource URIs**:
+```
+thing://note/2025-10-03-implementation
+relationship://note/2025-10-03-implementation/author/user/nathan
+schema://Note
+doc://mcp/getting-started
+workflow://daily-report
+function://send-email
+```
+
+**Resource Discovery**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "resources/list",
+  "id": 1
+}
+```
+
+**Resource Reading**:
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "resources/read",
+  "params": {
+    "uri": "thing://note/2025-10-03-implementation"
+  },
+  "id": 2
+}
+```
+
+### 7. Documentation Generation
+
+**Auto-Generated Docs**:
+- Server info and capabilities
+- Tool documentation with examples
+- Primitive documentation
+- Getting started guides
+
+**Documentation Endpoints**:
+- `GET /docs` - Documentation index (Markdown)
+- `GET /$.md` - Root runtime documentation
+- `GET /:primitive.md` - Primitive-specific docs (e.g., `/things.md`, `/relationships.md`)
+
+**Dynamic Generation**:
+- Generated from tool schemas
+- Includes input schemas, examples
+- Links to related primitives
+- Always up-to-date
+
+## Architecture
+
+```
+AI Agent / MCP Client
+         ↓ HTTP
+    ┌─────────────┐
+    │ MCP Service │
+    │             │
+    │ ┌─────────┐ │
+    │ │  OAuth  │ │ ◄── Token validation
+    │ │  Auth   │ │
+    │ └─────────┘ │
+    │             │
+    │ ┌─────────┐ │
+    │ │JSON-RPC │ │ ◄── Request routing
+    │ │  2.0    │ │
+    │ └─────────┘ │
+    │             │
+    │ ┌─────────┐ │
+    │ │  Tool   │ │ ◄── 20+ tools in 8 categories
+    │ │Registry │ │
+    │ └─────────┘ │
+    │             │
+    │ ┌─────────┐ │
+    │ │Resource │ │ ◄── Business objects
+    │ │ Manager │ │
+    │ └─────────┘ │
+    └──────┬──────┘
+           │
+    ┌──────┴────────┐
+    │               │
+    ▼               ▼
+┌────────┐    ┌─────────┐
+│   DB   │    │   DO    │
+│(Data)  │    │ (Code)  │
+└────────┘    └─────────┘
+```
+
+## API
+
+### MCP JSON-RPC Endpoints
+
+All MCP requests are sent to `POST /mcp` with OAuth 2.1 authentication.
+
+#### Initialize
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "tools": {},
+      "resources": {}
+    },
+    "clientInfo": {
+      "name": "claude-desktop",
+      "version": "1.0.0"
+    }
+  },
+  "id": 1
+}
+```
+
+Response:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {
+      "tools": {
+        "listChanged": true
+      },
+      "resources": {
+        "subscribe": true,
+        "listChanged": true
+      }
+    },
+    "serverInfo": {
+      "name": "mcp-server",
+      "version": "1.0.0"
+    }
+  },
+  "id": 1
+}
+```
+
+#### List Tools
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/list",
+  "id": 2
+}
+```
+
+Response:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "tools": [
+      {
+        "name": "db_query",
+        "description": "Execute SQL query on database",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "sql": {
+              "type": "string",
+              "description": "SQL query to execute"
+            },
+            "params": {
+              "type": "array",
+              "description": "Query parameters"
+            }
+          },
+          "required": ["sql"]
+        }
+      }
+    ]
+  },
+  "id": 2
+}
+```
+
+#### Call Tool
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "db_query",
+    "arguments": {
+      "sql": "SELECT * FROM things WHERE type = ? LIMIT 10",
+      "params": ["Note"]
+    }
+  },
+  "id": 3
+}
+```
+
+Response:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "[{\"id\":\"note/123\",\"type\":\"Note\",\"title\":\"Meeting Notes\"}]"
+      }
+    ]
+  },
+  "id": 3
+}
+```
+
+#### List Resources
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "resources/list",
+  "id": 4
+}
+```
+
+Response:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "resources": [
+      {
+        "uri": "thing://note/2025-10-03",
+        "name": "Implementation Notes",
+        "description": "Meeting notes from October 3",
+        "mimeType": "application/json"
+      }
+    ]
+  },
+  "id": 4
+}
+```
+
+#### Read Resource
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "resources/read",
+  "params": {
+    "uri": "thing://note/2025-10-03"
+  },
+  "id": 5
+}
+```
+
+Response:
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "contents": [
+      {
+        "uri": "thing://note/2025-10-03",
+        "mimeType": "application/json",
+        "text": "{\"id\":\"note/2025-10-03\",\"type\":\"Note\",\"title\":\"Implementation Notes\",\"content\":\"...\"}"
+      }
+    ]
+  },
+  "id": 5
+}
+```
+
+### HTTP API Endpoints
+
+#### Server Info
+
+**GET /**
+
+Get server information and capabilities.
+
+Response:
+```json
+{
+  "name": "mcp-server",
+  "version": "1.0.0",
+  "protocol": "mcp/2024-11-05",
+  "description": "MCP server exposing platform capabilities as AI-accessible tools",
+  "authentication": {
+    "type": "oauth2.1",
+    "discovery": "https://mcp.do/.well-known/oauth-protected-resource",
+    "authorization_endpoint": "https://auth.do/authorize",
+    "token_endpoint": "https://auth.do/token"
+  },
+  "capabilities": {
+    "tools": {
+      "listChanged": true
+    },
+    "resources": {
+      "subscribe": true,
+      "listChanged": true
+    }
+  },
+  "categories": [
+    "Database Tools",
+    "AI Tools",
+    "Auth Tools",
+    "Search Tools",
+    "Queue Tools",
+    "Workflow Tools",
+    "CLI Tools",
+    "Code Execution"
+  ],
+  "transport": ["http", "sse", "stdio"],
+  "documentation": {
+    "index": "https://mcp.do/api/docs",
+    "primitives": [
+      "https://mcp.do/api/things.md",
+      "https://mcp.do/api/relationships.md"
+    ]
+  }
+}
+```
+
+#### OAuth Discovery
+
+**GET /.well-known/oauth-protected-resource**
+
+Get OAuth 2.1 metadata for token validation.
+
+Response:
+```json
+{
+  "resource": "https://mcp.do",
+  "authorization_servers": ["https://auth.do"],
+  "authorization_endpoint": "https://auth.do/authorize",
+  "token_endpoint": "https://auth.do/token"
+}
+```
+
+#### Documentation
+
+**GET /docs**
+
+Get documentation index (Markdown).
+
+Response:
+```markdown
+# MCP Server Documentation
+
+## Getting Started
+
+1. Authenticate with OAuth 2.1
+2. Initialize MCP connection
+3. List available tools
+4. Call tools to interact with platform
+
+## Available Tools
+
+- Database Tools
+- AI Tools
+- Auth Tools
+- ...
+
+## Resources
+
+- Business entities (things, relationships)
+- Schemas
+- Documentation
+- ...
+```
+
+**GET /$.md**
+
+Get root runtime documentation.
+
+**GET /:primitive.md**
+
+Get primitive-specific documentation (e.g., `/things.md`, `/relationships.md`).
+
+## Configuration
+
+### Secrets
+
+No secrets required (authentication delegated to AUTH service).
+
+### Environment Variables
+
+Set in `wrangler.jsonc`:
+
+```jsonc
+{
+  "vars": {
+    "ENVIRONMENT": "production"
+  }
+}
+```
+
+## Tool Development
+
+### Creating a New Tool
+
+Add tool to appropriate category module (e.g., `src/tools/database.ts`):
+
+```ts
+export function getTools(): MCPTool[] {
+  return [
+    {
+      name: 'db_my_custom_query',
+      description: 'Execute custom query on database',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          queryName: {
+            type: 'string',
+            description: 'Name of the query to execute'
+          },
+          params: {
+            type: 'object',
+            description: 'Query parameters'
+          }
+        },
+        required: ['queryName']
+      }
+    }
+  ]
+}
+
+export async function db_my_custom_query(
+  args: { queryName: string; params?: any },
+  c: Context<{ Bindings: Env }>,
+  user: User | null
+): Promise<any> {
+  // Implement tool logic
+  const result = await executeCustomQuery(
+    args.queryName,
+    args.params,
+    c.env
+  )
+  return result
+}
+```
+
+### Tool Naming Convention
+
+- Category prefix: `db_`, `ai_`, `auth_`, `search_`, `queue_`, `workflow_`, `cli_`
+- Lowercase with underscores
+- Descriptive action name
+- Examples: `db_query`, `ai_generate`, `auth_create_api_key`
+
+### Tool Input Schema
+
+Use JSON Schema format:
+
+```ts
+{
+  type: 'object',
+  properties: {
+    param1: {
+      type: 'string',
+      description: 'Description of param1'
+    },
+    param2: {
+      type: 'number',
+      description: 'Description of param2',
+      minimum: 0,
+      maximum: 100
+    },
+    param3: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'List of strings'
+    }
+  },
+  required: ['param1']
+}
+```
+
+### Tool Response Format
+
+Return JSON-serializable data:
+
+```ts
+// Simple value
+return { result: 'success' }
+
+// Array of items
+return [{ id: '1' }, { id: '2' }]
+
+// Complex object
+return {
+  items: [...],
+  total: 100,
+  hasMore: true
+}
+```
+
+## Security
+
+### OAuth 2.1 Authentication
+
+**Token Validation**:
+```ts
+// Extract token from header
+const authHeader = c.req.header('Authorization')
+if (!authHeader?.startsWith('Bearer ')) {
+  throw new Error('Missing or invalid authorization header')
+}
+
+const token = authHeader.substring(7)
+
+// Validate token via AUTH service
+const validation = await c.env.AUTH.validateToken(token)
+if (!validation.valid) {
+  throw new Error('Invalid or expired token')
+}
+
+const user = validation.user
+```
+
+**Role-Based Access Control**:
+```ts
+// Check admin role for admin-only tools
+if (toolName.startsWith('admin_')) {
+  if (!user || user.role !== 'admin') {
+    throw new Error('Admin role required')
+  }
+}
+```
+
+### Rate Limiting
+
+**Per-User Limits**:
+- 60 requests per minute per user
+- 1000 requests per hour per user
+- 10,000 requests per day per user
+
+**Implemented via**:
+- AUTH service token validation
+- DB service usage tracking
+- KV namespace for rate limit counters
+
+### Input Validation
+
+**All tool inputs validated**:
+- JSON Schema validation
+- Type checking
+- Required field checking
+- Range validation
+- Format validation
+
+**Example**:
+```ts
+// Validate input against schema
+const validated = validateInput(args, tool.inputSchema)
+if (!validated.valid) {
+  throw new Error(`Invalid input: ${validated.errors.join(', ')}`)
+}
+```
+
+## Implementation
+
+Due to the complexity of this service (~1,950 LOC across 18 files), the implementation is organized into focused modules:
+
+- `src/index.ts` - Main entrypoint and HTTP API (primary)
+- `src/server.ts` - MCP JSON-RPC server implementation
+- `src/auth.ts` - OAuth 2.1 authentication middleware
+- `src/types.ts` - TypeScript type definitions
+- `src/utils.ts` - Shared utility functions
+- `src/resources.ts` - Resource management
+- `src/mock-server.ts` - Mock server for testing
+- `src/tools/index.ts` - Tool registry and router
+- `src/tools/database.ts` - Database tools (6 tools)
+- `src/tools/ai.ts` - AI tools (4 tools)
+- `src/tools/auth.ts` - Auth tools (4 tools)
+- `src/tools/search.ts` - Search tools (3 tools)
+- `src/tools/queue.ts` - Queue tools (2 tools)
+- `src/tools/workflows.ts` - Workflow tools (3 tools)
+- `src/tools/cli.ts` - CLI tools (3 tools)
+- `src/tools/code.ts` - Code execution (1 tool: `do`)
+- `src/docs/generator.ts` - Documentation generator
+- `src/docs/types.ts` - Documentation types
+
+**Note**: This is a core AI integration service that must remain stable and secure. Changes require thorough testing and review.
+
+## Testing
+
+```bash
+# Run test suite
+pnpm test
+
+# Watch mode
+pnpm test -- --watch
+
+# Coverage report
+pnpm test -- --coverage
+```
+
+**Test Coverage**: Basic tests implemented, 80%+ coverage target
+
+**Test Categories**:
+- OAuth authentication flow
+- JSON-RPC request/response
+- Tool registration and discovery
+- Tool execution
+- Resource management
+- Error handling
+- Rate limiting
+
+## Performance
+
+**Target Metrics**:
+- MCP request latency: <20ms (p95)
+- Tool execution: <100ms (p95) for simple tools
+- Resource reading: <50ms (p95)
+- Authentication: <10ms (p95) (cached)
+
+**Optimizations**:
+- Tool registry cached in memory
+- OAuth token validation cached
+- Resource listing paginated
+- Database queries optimized
+- Parallel tool execution when possible
+
+## Monitoring
+
+**Health Check**:
+```bash
+curl https://mcp.do/
+```
+
+**Metrics**:
+- MCP request rate per tool
+- Tool execution success/failure rate
+- Tool execution latency (p50, p95, p99)
+- Authentication success/failure rate
+- Resource access patterns
+- Error rate by error code
+
+**Logging**:
+- All MCP requests logged
+- Tool executions logged
+- Authentication attempts
+- Resource access
+- Errors with stack traces
+
+## Troubleshooting
+
+### Authentication failing
+
+1. Check Authorization header is present and correct format
+2. Verify token hasn't expired
+3. Check AUTH service is available
+4. Review token validation logs
+
+### Tool not found
+
+1. Check tool name is correct (case-sensitive)
+2. Verify tool is registered in category module
+3. Check authentication (some tools require auth)
+4. Review tool registry logs
+
+### Tool execution failing
+
+1. Check input arguments match schema
+2. Verify required services are available (DB, DO, etc.)
+3. Review tool implementation for errors
+4. Check service bindings in wrangler.jsonc
+5. Review execution logs for error details
+
+### Resource not found
+
+1. Check resource URI format is correct
+2. Verify resource exists in database
+3. Check authentication (some resources require auth)
+4. Review resource manager logs
+
+## Related Services
+
+- **AUTH Service** - OAuth 2.1 token validation
+- **DB Service** - Database operations
+- **DO Service** - Durable Objects (code execution)
+- **AI Service** - AI model inference
+
+## References
+
+- [Model Context Protocol Specification](https://spec.modelcontextprotocol.io/)
+- [JSON-RPC 2.0 Specification](https://www.jsonrpc.org/specification)
+- [OAuth 2.1 Draft](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-07)
+- [OAuth Resource Metadata](https://datatracker.ietf.org/doc/html/rfc8705)
+
+---
+
+**Service Type**: Core AI Integration
+**LOC**: ~1,950 across 18 files
+**Test Coverage**: Basic (target 80%+)
+**Status**: Production Ready
+**Last Updated**: 2025-10-04

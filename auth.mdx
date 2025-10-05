@@ -1,4 +1,31 @@
-# auth
+---
+$type: Worker
+$id: auth
+name: auth
+main: src/index.ts
+compatibility_date: "2025-01-01"
+workers_dev: false
+account_id: b6641681fe423910342b9ffa1364c76d
+
+compatibility_flags:
+  - nodejs_compat
+
+observability:
+  enabled: true
+
+tail_consumers:
+  - service: logger
+
+services:
+  - binding: DB
+    service: db
+
+kv_namespaces:
+  - binding: RATE_LIMIT_KV
+    id: 15adb090b53f43ae862a07a260bd4534
+  - binding: SESSIONS_KV
+    id: 482dfcdea486493fbe1d548fa29a21e7
+---
 
 # Authentication Service
 
@@ -182,7 +209,9 @@ External Request / Service Call
 
 #### Token Validation
 
-
+```typescript
+validateToken(token: string): Promise<ValidateTokenResponse>
+```
 
 Validate JWT or API key token and return user information.
 
@@ -194,11 +223,15 @@ const result = await env.AUTH.validateToken('sk_live_abc123')
 
 #### API Key Management
 
-
+```typescript
+validateApiKey(apiKey: string): Promise<User | null>
+```
 
 Validate API key and return associated user.
 
-
+```typescript
+createApiKey(input: ApiKeyCreateInput): Promise<CreateApiKeyResponse>
+```
 
 Generate new API key for user.
 
@@ -227,13 +260,22 @@ Generate new API key for user.
 }
 ```
 
-
+```typescript
+revokeApiKey(userId: string, keyId: string): Promise<boolean>
+```
 
 Revoke API key (soft delete).
 
 #### Session Management
 
-
+```typescript
+createSession(
+  userId: string,
+  device?: string,
+  ipAddress?: string,
+  userAgent?: string
+): Promise<SessionResponse>
+```
 
 Create new session with access and refresh tokens.
 
@@ -250,21 +292,32 @@ Create new session with access and refresh tokens.
 }
 ```
 
-
+```typescript
+getSession(sessionId: string): Promise<Session | null>
+```
 
 Get session details by ID.
 
-
+```typescript
+revokeSession(sessionId: string): Promise<boolean>
+```
 
 Revoke session (logout).
 
-
+```typescript
+refreshSession(refreshToken: string): Promise<{
+  token: string
+  refreshToken: string
+}>
+```
 
 Refresh access token using refresh token.
 
 #### Permission Checks
 
-
+```typescript
+checkPermission(check: PermissionCheck): Promise<boolean>
+```
 
 Check if user has permission to perform action on resource.
 
@@ -288,21 +341,39 @@ const hasAccess = await env.AUTH.checkPermission({
 })
 ```
 
-
+```typescript
+grantPermission(
+  userId: string,
+  resource: string,
+  action: string,
+  organizationId?: string
+): Promise<boolean>
+```
 
 Grant custom permission to user.
 
-
+```typescript
+revokePermission(
+  userId: string,
+  resource: string,
+  action: string,
+  organizationId?: string
+): Promise<boolean>
+```
 
 Revoke custom permission from user.
 
 #### WorkOS Integration
 
-
+```typescript
+getWorkOSAuthURL(redirectUri: string, state?: string): Promise<string>
+```
 
 Get WorkOS OAuth authorization URL for authentication flow.
 
-
+```typescript
+exchangeWorkOSCode(code: string): Promise<WorkOSAuthResponse>
+```
 
 Exchange OAuth code for tokens and user info.
 
@@ -827,9 +898,3 @@ curl https://auth.do/health
 **Test Coverage**: Basic (target 80%+)
 **Status**: Production Ready
 **Last Updated**: 2025-10-04
-
----
-
-**Generated from:** auth.mdx
-
-**Build command:** `tsx scripts/build-mdx-worker.ts auth.mdx`

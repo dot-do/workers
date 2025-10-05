@@ -1,53 +1,39 @@
+/**
+ * auth Worker Configuration
+ * Generated from auth.mdx
+ */
 {
-  "name": "auth",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-01-01",
-  "workers_dev": false,
-  "account_id": "b6641681fe423910342b9ffa1364c76d",
-  "compatibility_flags": ["nodejs_compat"],
-
-  // Service bindings
-  "services": [
-    {
-      "binding": "DB",
-      "service": "db"
-    }
-  ],
-
-  // KV namespaces for rate limiting and sessions
-  "kv_namespaces": [
-    {
-      "binding": "RATE_LIMIT_KV",
-      "id": "15adb090b53f43ae862a07a260bd4534"
-    },
-    {
-      "binding": "SESSIONS_KV",
-      "id": "482dfcdea486493fbe1d548fa29a21e7"
-    }
-  ],
-
-  // Environment variables (secrets should be set via wrangler secret put)
-  "vars": {
-    // WorkOS configuration
-    // WORKOS_API_KEY - set via wrangler secret put WORKOS_API_KEY
-    // WORKOS_CLIENT_ID - set via wrangler secret put WORKOS_CLIENT_ID
-    // WORKOS_CLIENT_SECRET - set via wrangler secret put WORKOS_CLIENT_SECRET
-    // WORKOS_WEBHOOK_SECRET - set via wrangler secret put WORKOS_WEBHOOK_SECRET (optional)
-
-    // JWT secrets
-    // JWT_SECRET - set via wrangler secret put JWT_SECRET
-    // JWT_REFRESH_SECRET - set via wrangler secret put JWT_REFRESH_SECRET
-  },
-
-  // Observability
-  "observability": {
-    "enabled": true
-  },
-
-  // Tail consumers
-  "tail_consumers": [
-    {
-      "service": "logger"
-    }
-  ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "auth",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-01-01",
+	"account_id": "b6641681fe423910342b9ffa1364c76d",
+	"observability": {
+		"enabled": true
+	},
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"workers_dev": false,
+	"services": [
+		{
+			"binding": "DB",
+			"service": "db"
+		}
+	],
+	"tail_consumers": [
+		{
+			"service": "logger"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "RATE_LIMIT_KV",
+			"id": "15adb090b53f43ae862a07a260bd4534"
+		},
+		{
+			"binding": "SESSIONS_KV",
+			"id": "482dfcdea486493fbe1d548fa29a21e7"
+		}
+	]
 }

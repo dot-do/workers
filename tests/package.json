@@ -1,0 +1,29 @@
+{
+  "name": "@workers/tests",
+  "version": "1.0.0",
+  "description": "Comprehensive test suite for all workers",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:http": "vitest run integration/http.test.ts",
+    "test:apis": "vitest run integration/apis.test.ts",
+    "test:mcp": "vitest run integration/mcp.test.ts",
+    "test:all": "vitest run integration/all-adapters.test.ts",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "apis.do": "workspace:*",
+    "cli.do": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.2",
+    "vitest": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "@vitest/coverage-v8": "^3.2.4"
+  }
+}

@@ -3,10 +3,10 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { RpcRequest, RpcResponse, RpcContext, RpcMethod, RpcService } from './rpc-types'
 import { createRpcMethod } from './rpc-types'
-import * as things from './queries/things'
-import * as relationships from './queries/relationships'
-import * as search from './queries/search'
-import * as analytics from './queries/analytics'
+import * as things from './queries/things-clickhouse'
+import * as relationships from './queries/relationships-clickhouse'
+import * as search from './queries/search-clickhouse'
+import * as analytics from './queries/analytics-clickhouse'
 import { clickhouse, sql } from './sql'
 import { getPostgresClient, checkPostgresHealth } from './postgres'
 
@@ -45,84 +45,15 @@ function getModelColumns(model: EmbeddingModel): { embeddingColumn: string; time
 }
 
 /**
- * HATEOAS link generation helper
- * Generates navigable links for RESTful responses
+ * Import enhanced HATEOAS implementation
  */
-interface HateoasLinks {
-  self: { href: string }
-  home: { href: string }
-  first?: { href: string }
-  prev?: { href: string }
-  next?: { href: string }
-  last?: { href: string }
-  [key: string]: { href: string } | undefined
-}
-
-function generateHateoasLinks(
-  baseUrl: string,
-  path: string,
-  params: Record<string, any> = {},
-  pagination?: { page: number; limit: number; total: number; hasMore: boolean }
-): HateoasLinks {
-  const buildUrl = (p: string, overrides: Record<string, any> = {}) => {
-    const queryParams = { ...params, ...overrides }
-    const query = Object.entries(queryParams)
-      .filter(([_, v]) => v !== undefined && v !== null)
-      .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-      .join('&')
-    return query ? `${baseUrl}${p}?${query}` : `${baseUrl}${p}`
-  }
-
-  const links: HateoasLinks = {
-    self: { href: buildUrl(path, params) },
-    home: { href: baseUrl },
-  }
-
-  if (pagination) {
-    const { page, limit, total, hasMore } = pagination
-    const totalPages = Math.ceil(total / limit)
-
-    // First page link
-    if (page > 1) {
-      links.first = { href: buildUrl(path, { ...params, page: 1 }) }
-    }
-
-    // Previous page link
-    if (page > 1) {
-      links.prev = { href: buildUrl(path, { ...params, page: page - 1 }) }
-    }
-
-    // Next page link
-    if (hasMore || page < totalPages) {
-      links.next = { href: buildUrl(path, { ...params, page: page + 1 }) }
-    }
-
-    // Last page link
-    if (totalPages > 1 && page < totalPages) {
-      links.last = { href: buildUrl(path, { ...params, page: totalPages }) }
-    }
-  }
-
-  return links
-}
-
-/**
- * Add HATEOAS links to response
- */
-function withHateoas<T>(
-  data: T,
-  links: HateoasLinks,
-  meta?: Record<string, any>
-): { _links: HateoasLinks; data: T; _meta?: Record<string, any> } {
-  const response: any = {
-    _links: links,
-    data,
-  }
-  if (meta) {
-    response._meta = meta
-  }
-  return response
-}
+import {
+  wrapEntity,
+  wrapCollection,
+  wrapSearchResults,
+  wrapError,
+  type HateoasOptions,
+} from './hateoas'
 
 /**
  * Database Service - Comprehensive database abstraction layer
@@ -203,10 +134,17 @@ export default class DatabaseService extends WorkerEntrypoint<Env> {
   }
 
   /**
-   * Get relationships for a thing
+   * Get relationships for a thing (returns simple map)
    */
   async getRelationships(ns: string, id: string, options: relationships.RelationshipListOptions = {}) {
     return relationships.getRelationships(ns, id, options)
+  }
+
+  /**
+   * Query relationships as a collection (for endpoints)
+   */
+  async queryRelationships(ns: string, id: string, options: relationships.RelationshipListOptions = {}) {
+    return relationships.queryRelationships(ns, id, options)
   }
 
   /**
@@ -1139,22 +1077,32 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
 
         const result = await this.list(ns, options)
 
-        // Add HATEOAS links
+        // Wrap with HATEOAS
         const baseUrl = getBaseUrl(c)
-        const path = c.req.path // Use actual request path
+        const items = result?.data || result || []
         const total = result?.total || 0
         const hasMore = result?.hasMore || false
-        const links = generateHateoasLinks(baseUrl, path, { ns, type, visibility }, {
-          page,
-          limit,
-          total,
-          hasMore,
+
+        const wrapped = wrapCollection(items, {
+          baseUrl,
+          path: c.req.path,
+          params: { ns, type, visibility },
+          pagination: { page, limit, total, hasMore },
         })
 
-        return c.json(withHateoas(result?.data || result, links, { page, limit, total, hasMore }))
+        return c.json(wrapped)
       } catch (error: any) {
         console.error('handleListThings error:', error)
-        return c.json({ error: error.message, stack: error.stack }, 500)
+        const baseUrl = getBaseUrl(c)
+        const wrapped = wrapError(
+          {
+            code: 'INTERNAL_ERROR',
+            message: error.message,
+            details: error.stack,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 500)
       }
     }
 
@@ -1166,21 +1114,39 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         const result = await this.get(ns, id)
 
         if (!result) {
-          return c.json({ error: 'Thing not found' }, 404)
+          const baseUrl = getBaseUrl(c)
+          const wrapped = wrapError(
+            {
+              code: 'NOT_FOUND',
+              message: `Thing not found: ${ns}:${id}`,
+            },
+            { baseUrl, path: c.req.path }
+          )
+          return c.json(wrapped, 404)
         }
 
-        // Add HATEOAS links
+        // Fetch relationships
+        const rels = await relationships.getRelationships(ns, id)
+
+        // Wrap with HATEOAS including relationships
         const baseUrl = getBaseUrl(c)
-        const links: HateoasLinks = {
-          self: { href: `${baseUrl}/${ns}/${id}` },
-          home: { href: baseUrl },
-          relationships: { href: `${baseUrl}/${ns}/${id}.relationships` },
-          namespace: { href: `${baseUrl}/things?ns=${ns}` },
-        }
+        const wrapped = wrapEntity(result, {
+          baseUrl,
+          includeRelationships: true,
+          relationships: rels,
+        })
 
-        return c.json(withHateoas(result, links))
+        return c.json(wrapped)
       } catch (error: any) {
-        return c.json({ error: error.message }, 500)
+        const baseUrl = getBaseUrl(c)
+        const wrapped = wrapError(
+          {
+            code: 'INTERNAL_ERROR',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 500)
       }
     }
 
@@ -1192,16 +1158,24 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         const body = await c.req.json()
         const result = await this.upsert(body)
 
-        // Add HATEOAS links
+        // Wrap with HATEOAS
         const baseUrl = getBaseUrl(c)
-        const links: HateoasLinks = {
-          self: { href: `${baseUrl}/${result.ns}/${result.id}` },
-          home: { href: baseUrl },
-        }
+        const wrapped = wrapEntity(result, {
+          baseUrl,
+          includeRelationships: true,
+        })
 
-        return c.json(withHateoas(result, links), 201)
+        return c.json(wrapped, 201)
       } catch (error: any) {
-        return c.json({ error: error.message }, 400)
+        const baseUrl = getBaseUrl(c)
+        const wrapped = wrapError(
+          {
+            code: 'BAD_REQUEST',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 400)
       }
     }
 
@@ -1213,16 +1187,24 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         const body = await c.req.json()
         const result = await this.upsert({ ...body, ns, id })
 
-        // Add HATEOAS links
+        // Wrap with HATEOAS
         const baseUrl = getBaseUrl(c)
-        const links: HateoasLinks = {
-          self: { href: `${baseUrl}/${ns}/${id}` },
-          home: { href: baseUrl },
-        }
+        const wrapped = wrapEntity(result, {
+          baseUrl,
+          includeRelationships: true,
+        })
 
-        return c.json(withHateoas(result, links))
+        return c.json(wrapped)
       } catch (error: any) {
-        return c.json({ error: error.message }, 400)
+        const baseUrl = getBaseUrl(c)
+        const wrapped = wrapError(
+          {
+            code: 'BAD_REQUEST',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 400)
       }
     }
 
@@ -1231,18 +1213,31 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
      */
     const handleDeleteThing = async (c: any, ns: string, id: string) => {
       try {
-        const result = await this.delete(ns, id)
+        await this.delete(ns, id)
 
-        // Add HATEOAS links
+        // Return success with links (no entity body for DELETE)
         const baseUrl = getBaseUrl(c)
-        const links: HateoasLinks = {
-          self: { href: `${baseUrl}/${ns}/${id}` },
-          home: { href: baseUrl },
-        }
-
-        return c.json(withHateoas(result, links))
+        return c.json({
+          '@context': 'https://schema.org',
+          '@type': 'DeleteAction',
+          success: true,
+          message: `Deleted ${ns}:${id}`,
+          _links: {
+            self: { href: `${baseUrl}/${ns}/${id}` },
+            home: { href: baseUrl },
+            collection: { href: `${baseUrl}/things?ns=${ns}` },
+          },
+        })
       } catch (error: any) {
-        return c.json({ error: error.message }, 500)
+        const baseUrl = getBaseUrl(c)
+        const wrapped = wrapError(
+          {
+            code: 'INTERNAL_ERROR',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 500)
       }
     }
 
@@ -1257,26 +1252,39 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         const options: relationships.RelationshipListOptions = {
           page,
           limit,
-          ...(predicate && { predicate }),
+          ...(predicate && { type: predicate }),
         }
 
-        const result = await this.getRelationships(ns, id, options)
+        const result = await this.queryRelationships(ns, id, options)
 
-        // Add HATEOAS links
+        // Wrap with HATEOAS
         const baseUrl = getBaseUrl(c)
         const path = predicate ? `/${ns}/${id}.${predicate}` : `/${ns}/${id}.relationships`
-        const links = generateHateoasLinks(baseUrl, path, {}, {
-          page,
-          limit,
-          total: result.total || 0,
-          hasMore: result.hasMore || false,
+        const items = result.data || []
+        const total = result.total || 0
+        const hasMore = result.hasMore || false
+
+        const wrapped = wrapCollection(items, {
+          baseUrl,
+          path,
+          params: { predicate },
+          pagination: { page, limit, total, hasMore },
         })
 
-        links.thing = { href: `${baseUrl}/${ns}/${id}` }
+        // Add thing link to collection
+        wrapped._links.thing = { href: `${baseUrl}/${ns}/${id}` }
 
-        return c.json(withHateoas(result.data, links, { page, limit, total: result.total, hasMore: result.hasMore }))
+        return c.json(wrapped)
       } catch (error: any) {
-        return c.json({ error: error.message }, 500)
+        const baseUrl = getBaseUrl(c)
+        const wrapped = wrapError(
+          {
+            code: 'INTERNAL_ERROR',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 500)
       }
     }
 
@@ -1298,16 +1306,26 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
 
         const result = await this.search(query, undefined, options)
 
-        // Add HATEOAS links
+        // Wrap with HATEOAS
         const baseUrl = getBaseUrl(c)
-        const links: HateoasLinks = {
-          self: { href: `${baseUrl}/search?q=${encodeURIComponent(query)}${ns ? `&ns=${ns}` : ''}` },
-          home: { href: baseUrl },
-        }
+        const results = result?.data || result || []
 
-        return c.json(withHateoas(result, links))
+        const wrapped = wrapSearchResults(results, query, {
+          baseUrl,
+          params: { ns, limit: limit.toString(), minScore: minScore.toString() },
+        })
+
+        return c.json(wrapped)
       } catch (error: any) {
-        return c.json({ error: error.message }, 500)
+        const baseUrl = getBaseUrl(c)
+        const wrapped = wrapError(
+          {
+            code: 'INTERNAL_ERROR',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 500)
       }
     }
 
@@ -1403,12 +1421,26 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         const result = await this.count(ns, filters)
 
         const baseUrl = new URL(c.req.url).origin
-        const path = c.req.path
-        const links = generateHateoasLinks(baseUrl, path, { ns, type, visibility })
-
-        return c.json(withHateoas({ count: result }, links))
+        return c.json({
+          '@context': 'https://schema.org',
+          '@type': 'AggregateRating',
+          count: result,
+          _links: {
+            self: { href: `${baseUrl}${c.req.path}${type || visibility ? '?' : ''}${type ? `type=${type}` : ''}${type && visibility ? '&' : ''}${visibility ? `visibility=${visibility}` : ''}` },
+            home: { href: baseUrl },
+            collection: { href: `${baseUrl}/things?ns=${ns}${type ? `&type=${type}` : ''}${visibility ? `&visibility=${visibility}` : ''}` },
+          },
+        })
       } catch (error: any) {
-        return c.json({ error: error.message }, 500)
+        const baseUrl = new URL(c.req.url).origin
+        const wrapped = wrapError(
+          {
+            code: 'INTERNAL_ERROR',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 500)
       }
     })
 
@@ -1433,14 +1465,28 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         const result = await this.listRelationships(ns, options)
 
         const baseUrl = new URL(c.req.url).origin
-        const path = c.req.path
+        const items = result.data || []
         const total = result.total || 0
         const hasMore = result.hasMore || false
-        const links = generateHateoasLinks(baseUrl, path, { ns, predicate }, { page, limit, total, hasMore })
 
-        return c.json(withHateoas(result.data, links, { page, limit, total, hasMore }))
+        const wrapped = wrapCollection(items, {
+          baseUrl,
+          path: c.req.path,
+          params: { ns, predicate },
+          pagination: { page, limit, total, hasMore },
+        })
+
+        return c.json(wrapped)
       } catch (error: any) {
-        return c.json({ error: error.message }, 500)
+        const baseUrl = new URL(c.req.url).origin
+        const wrapped = wrapError(
+          {
+            code: 'INTERNAL_ERROR',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 500)
       }
     })
 
@@ -1470,18 +1516,32 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         const result = await this.getIncomingRelationships(ns, id, options)
 
         const baseUrl = new URL(c.req.url).origin
-        const path = c.req.path
+        const items = result.data || []
         const total = result.total || 0
         const hasMore = result.hasMore || false
-        const links = generateHateoasLinks(baseUrl, path, { predicate }, { page, limit, total, hasMore })
+
+        const wrapped = wrapCollection(items, {
+          baseUrl,
+          path: c.req.path,
+          params: { predicate },
+          pagination: { page, limit, total, hasMore },
+        })
 
         // Add resource links
-        links.thing = { href: `${baseUrl}/api/things/${ns}/${id}` }
-        links.outgoing = { href: `${baseUrl}/api/relationships/${ns}/${id}` }
+        wrapped._links.thing = { href: `${baseUrl}/api/things/${ns}/${id}` }
+        wrapped._links.outgoing = { href: `${baseUrl}/api/relationships/${ns}/${id}` }
 
-        return c.json(withHateoas(result.data, links, { page, limit, total, hasMore }))
+        return c.json(wrapped)
       } catch (error: any) {
-        return c.json({ error: error.message }, 500)
+        const baseUrl = new URL(c.req.url).origin
+        const wrapped = wrapError(
+          {
+            code: 'INTERNAL_ERROR',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 500)
       }
     })
 
@@ -1492,20 +1552,39 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         const result = await this.upsertRelationship(body)
 
         const baseUrl = new URL(c.req.url).origin
-        const path = c.req.path
-        const links = generateHateoasLinks(baseUrl, path)
 
-        // Add resource links
+        // Create HATEOAS response for relationship
+        const relationshipData = {
+          ...result,
+          ns: result.fromNs || 'default',
+          id: `${result.fromNs}:${result.fromId}-${result.type}-${result.toNs}:${result.toId}`,
+          type: 'Relationship',
+        }
+
+        const wrapped = wrapEntity(relationshipData, {
+          baseUrl,
+          includeRelationships: false,
+        })
+
+        // Add specific relationship links
         if (result.fromNs && result.fromId) {
-          links.from = { href: `${baseUrl}/api/things/${result.fromNs}/${result.fromId}` }
+          wrapped._links.from = { href: `${baseUrl}/api/things/${result.fromNs}/${result.fromId}` }
         }
         if (result.toNs && result.toId) {
-          links.to = { href: `${baseUrl}/api/things/${result.toNs}/${result.toId}` }
+          wrapped._links.to = { href: `${baseUrl}/api/things/${result.toNs}/${result.toId}` }
         }
 
-        return c.json(withHateoas(result, links), 201)
+        return c.json(wrapped, 201)
       } catch (error: any) {
-        return c.json({ error: error.message }, 400)
+        const baseUrl = new URL(c.req.url).origin
+        const wrapped = wrapError(
+          {
+            code: 'BAD_REQUEST',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 400)
       }
     })
 
@@ -1514,16 +1593,30 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
       try {
         const ns = c.req.param('ns')
         const id = c.req.param('id')
-        const result = await this.deleteRelationship(ns, id)
+        await this.deleteRelationship(ns, id)
 
         const baseUrl = new URL(c.req.url).origin
-        const path = c.req.path
-        const links = generateHateoasLinks(baseUrl, path)
-        links.relationships = { href: `${baseUrl}/api/relationships?ns=${ns}` }
-
-        return c.json(withHateoas(result, links))
+        return c.json({
+          '@context': 'https://schema.org',
+          '@type': 'DeleteAction',
+          success: true,
+          message: `Deleted relationship ${ns}:${id}`,
+          _links: {
+            self: { href: `${baseUrl}/api/relationships/${ns}/${id}` },
+            home: { href: baseUrl },
+            collection: { href: `${baseUrl}/api/relationships?ns=${ns}` },
+          },
+        })
       } catch (error: any) {
-        return c.json({ error: error.message }, 500)
+        const baseUrl = new URL(c.req.url).origin
+        const wrapped = wrapError(
+          {
+            code: 'INTERNAL_ERROR',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 500)
       }
     })
 
@@ -1541,7 +1634,15 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         const { embedding, ns, limit = 10, minScore = 0, model = 'workers-ai' } = body
 
         if (!embedding || !Array.isArray(embedding)) {
-          return c.json({ error: 'embedding array is required' }, 400)
+          const baseUrl = new URL(c.req.url).origin
+          const wrapped = wrapError(
+            {
+              code: 'BAD_REQUEST',
+              message: 'embedding array is required',
+            },
+            { baseUrl, path: c.req.path }
+          )
+          return c.json(wrapped, 400)
         }
 
         const options: search.VectorSearchOptions = {
@@ -1553,23 +1654,26 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
 
         const result = await this.vectorSearch(embedding, options)
 
+        // Wrap with HATEOAS (use search wrapper since this is a search operation)
         const baseUrl = new URL(c.req.url).origin
-        const path = c.req.path
-        const links = generateHateoasLinks(baseUrl, path, { ns, limit, minScore, model })
+        const results = result?.data || result || []
 
-        // Add resource links for each result
-        const dataWithLinks = Array.isArray(result.data)
-          ? result.data.map((item: any) => ({
-              ...item,
-              _links: {
-                self: { href: `${baseUrl}/api/things/${item.ns}/${item.id}` },
-              },
-            }))
-          : result.data
+        const wrapped = wrapSearchResults(results, 'vector', {
+          baseUrl,
+          params: { ns, limit: limit.toString(), minScore: minScore.toString(), model },
+        })
 
-        return c.json(withHateoas(dataWithLinks, links, { total: result.total || result.data?.length || 0 }))
+        return c.json(wrapped)
       } catch (error: any) {
-        return c.json({ error: error.message }, 500)
+        const baseUrl = new URL(c.req.url).origin
+        const wrapped = wrapError(
+          {
+            code: 'INTERNAL_ERROR',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 500)
       }
     })
 
@@ -1580,7 +1684,15 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         const { query, embedding, ns, limit = 10, minScore = 0, model = 'workers-ai' } = body
 
         if (!query || !embedding || !Array.isArray(embedding)) {
-          return c.json({ error: 'query and embedding array are required' }, 400)
+          const baseUrl = new URL(c.req.url).origin
+          const wrapped = wrapError(
+            {
+              code: 'BAD_REQUEST',
+              message: 'query and embedding array are required',
+            },
+            { baseUrl, path: c.req.path }
+          )
+          return c.json(wrapped, 400)
         }
 
         const options: search.VectorSearchOptions = {
@@ -1592,23 +1704,26 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
 
         const result = await this.search(query, embedding, options)
 
+        // Wrap with HATEOAS
         const baseUrl = new URL(c.req.url).origin
-        const path = c.req.path
-        const links = generateHateoasLinks(baseUrl, path, { q: query, ns, limit, minScore, model })
+        const results = result?.data || result || []
 
-        // Add resource links for each result
-        const dataWithLinks = Array.isArray(result.data)
-          ? result.data.map((item: any) => ({
-              ...item,
-              _links: {
-                self: { href: `${baseUrl}/api/things/${item.ns}/${item.id}` },
-              },
-            }))
-          : result.data
+        const wrapped = wrapSearchResults(results, query, {
+          baseUrl,
+          params: { ns, limit: limit.toString(), minScore: minScore.toString(), model },
+        })
 
-        return c.json(withHateoas(dataWithLinks, links, { total: result.total || result.data?.length || 0 }))
+        return c.json(wrapped)
       } catch (error: any) {
-        return c.json({ error: error.message }, 500)
+        const baseUrl = new URL(c.req.url).origin
+        const wrapped = wrapError(
+          {
+            code: 'INTERNAL_ERROR',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 500)
       }
     })
 
@@ -1619,7 +1734,15 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
         const { embedding, ns, limit = 10, minScore = 0, model = 'workers-ai' } = body
 
         if (!embedding || !Array.isArray(embedding)) {
-          return c.json({ error: 'embedding array is required' }, 400)
+          const baseUrl = new URL(c.req.url).origin
+          const wrapped = wrapError(
+            {
+              code: 'BAD_REQUEST',
+              message: 'embedding array is required',
+            },
+            { baseUrl, path: c.req.path }
+          )
+          return c.json(wrapped, 400)
         }
 
         const result = await this.searchChunks({
@@ -1630,24 +1753,32 @@ FROM graph_embeddings WHERE length(embeddingGemini3072) > 0;
           model,
         })
 
+        // Wrap with HATEOAS
         const baseUrl = new URL(c.req.url).origin
-        const path = c.req.path
-        const links = generateHateoasLinks(baseUrl, path, { ns, limit, minScore, model })
+        const results = (Array.isArray(result) ? result : result?.data || result || []) as any[]
 
-        // Add resource links for each result
-        const dataWithLinks = Array.isArray(result.data)
-          ? result.data.map((item: any) => ({
-              ...item,
-              _links: {
-                self: { href: `${baseUrl}/api/things/${item.ns}/${item.id}` },
-                chunk: { href: `${baseUrl}/api/things/${item.ns}/${item.id}?chunk=${item.chunkIndex}` },
-              },
-            }))
-          : result.data
+        // Add chunk links to each result
+        const resultsWithChunkLinks = results.map((item: any) => ({
+          ...item,
+          _chunkLink: { href: `${baseUrl}/api/things/${item.ns}/${item.id}?chunk=${item.chunkIndex}` },
+        }))
 
-        return c.json(withHateoas(dataWithLinks, links, { total: result.data?.length || 0 }))
+        const wrapped = wrapSearchResults(resultsWithChunkLinks, 'chunks', {
+          baseUrl,
+          params: { ns, limit: limit.toString(), minScore: minScore.toString(), model },
+        })
+
+        return c.json(wrapped)
       } catch (error: any) {
-        return c.json({ error: error.message }, 500)
+        const baseUrl = new URL(c.req.url).origin
+        const wrapped = wrapError(
+          {
+            code: 'INTERNAL_ERROR',
+            message: error.message,
+          },
+          { baseUrl, path: c.req.path }
+        )
+        return c.json(wrapped, 500)
       }
     })
 

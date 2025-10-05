@@ -2,16 +2,32 @@ import { ClickHouseClient, createClient } from '@clickhouse/client-web'
 
 // Lazy-init a singleton ClickHouse client so we only create it once per worker instance
 let _client: ClickHouseClient | undefined
+let _config: { url?: string; database?: string; username?: string; password?: string } | undefined
 
-function getClient() {
-  if (_client) return _client
+function getClient(env?: any) {
+  // Extract config from env or process.env
+  const url = env?.CLICKHOUSE_URL || process.env.CLICKHOUSE_URL
+  const database = env?.CLICKHOUSE_DATABASE || process.env.CLICKHOUSE_DATABASE
+  const username = env?.CLICKHOUSE_USERNAME || process.env.CLICKHOUSE_USERNAME
+  const password = env?.CLICKHOUSE_PASSWORD || process.env.CLICKHOUSE_PASSWORD
+
+  // Check if config changed (need to recreate client)
+  const newConfig = { url, database, username, password }
+  if (_client && JSON.stringify(_config) === JSON.stringify(newConfig)) {
+    return _client
+  }
+
+  if (!url || !database || !username) {
+    throw new Error('ClickHouse configuration missing: CLICKHOUSE_URL, CLICKHOUSE_DATABASE, CLICKHOUSE_USERNAME required')
+  }
 
   _client = createClient({
-    url: process.env.CLICKHOUSE_URL,
-    database: process.env.CLICKHOUSE_DATABASE,
-    username: process.env.CLICKHOUSE_USERNAME,
-    password: process.env.CLICKHOUSE_PASSWORD,
+    url,
+    database,
+    username,
+    password,
   })
+  _config = newConfig
   return _client
 }
 

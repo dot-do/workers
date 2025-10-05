@@ -520,6 +520,104 @@ export default class AIService extends WorkerEntrypoint<AIServiceEnv> {
   }
 
   /**
+   * RPC Method: Decide whether to generate code/text or structured object
+   * Uses AI to analyze the method name and arguments to make intelligent routing decisions
+   */
+  async decideGenerationType(methodName: string, args: any[]): Promise<'text' | 'object'> {
+    const prompt = `You are an API routing assistant. Analyze this method call and decide if it should generate unstructured text/code or a structured object.
+
+Method: ${methodName}
+Arguments: ${JSON.stringify(args, null, 2)}
+
+Reply with ONLY one word: "text" or "object"
+
+Guidelines:
+- "text" for: code generation, explanations, creative writing, natural language responses
+- "object" for: data extraction, structured data, lists of items, entity parsing, JSON/structured output
+
+Answer:`
+
+    const result = await this.generateText(prompt, {
+      provider: 'workers-ai',
+      model: '@cf/openai/gpt-oss-120b',
+      temperature: 0,
+      maxTokens: 10,
+    })
+
+    const decision = result.trim().toLowerCase()
+    return decision.includes('object') ? 'object' : 'text'
+  }
+
+  /**
+   * RPC Method: Generate structured object with JSON schema
+   * Returns parsed JSON object based on prompt
+   */
+  async generateObject(
+    prompt: string,
+    options?: GenerateOptions & { schema?: Record<string, any> }
+  ): Promise<any> {
+    const startTime = Date.now()
+    const provider = options?.provider || 'workers-ai'
+    const model = options?.model || '@cf/openai/gpt-oss-120b'
+
+    // Build JSON generation prompt
+    let jsonPrompt = `${prompt}\n\nIMPORTANT: Respond ONLY with valid JSON. No other text, no markdown, no code blocks. Just pure JSON.`
+
+    if (options?.schema) {
+      jsonPrompt += `\n\nExpected JSON structure:\n${JSON.stringify(options.schema, null, 2)}`
+    }
+
+    const text = await this.generateText(jsonPrompt, {
+      ...options,
+      provider,
+      model,
+      temperature: options?.temperature ?? 0.3,
+    })
+
+    const latency = Date.now() - startTime
+
+    // Extract JSON from response (handle markdown code blocks)
+    let jsonText = text.trim()
+
+    // Remove markdown code blocks if present
+    const jsonMatch = jsonText.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
+    if (jsonMatch) {
+      jsonText = jsonMatch[1].trim()
+    }
+
+    // Parse JSON
+    try {
+      const parsed = JSON.parse(jsonText)
+
+      // Validate against schema if provided
+      if (options?.schema) {
+        // Basic schema validation (could be enhanced with Zod)
+        const schemaKeys = Object.keys(options.schema)
+        const parsedKeys = Object.keys(parsed)
+
+        const missingKeys = schemaKeys.filter(k => !parsedKeys.includes(k))
+        if (missingKeys.length > 0) {
+          console.warn(`Generated object missing keys: ${missingKeys.join(', ')}`)
+        }
+      }
+
+      return {
+        object: parsed,
+        model,
+        provider,
+        latency,
+        usage: {
+          promptTokens: Math.ceil(jsonPrompt.length / 4),
+          completionTokens: Math.ceil(text.length / 4),
+          totalTokens: Math.ceil((jsonPrompt.length + text.length) / 4),
+        },
+      }
+    } catch (error) {
+      throw new Error(`Failed to parse JSON response: ${error instanceof Error ? error.message : 'Unknown error'}\n\nResponse: ${jsonText}`)
+    }
+  }
+
+  /**
    * HTTP fetch handler
    */
   async fetch(request: Request): Promise<Response> {

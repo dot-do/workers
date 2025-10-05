@@ -26,16 +26,17 @@
 	 * Using existing apis.do zone (confirmed working)
 	 */
 	"routes": [
-		// Database routes on apis.do zone
+		// Database routes on apis.do zone (✅ ACTIVE)
 		{ "pattern": "db.apis.do/*", "zone_name": "apis.do" },
 		{ "pattern": "database.apis.do/*", "zone_name": "apis.do" }
 
-		// Note: Additional domains to be configured once zones are added:
-		// - database.do, db.do (requires 'do' zone)
-		// - db.mw (requires 'db.mw' or 'mw' zone)
-		// - 彡.io (Data Layer) - requires zone addition
-		// - 口.io (Nouns) - requires zone addition
-		// - 回.io (Things) - requires zone addition
+		// TODO: Configure when zones are added to Cloudflare account:
+		// { "pattern": "database.do/*", "zone_name": "do" },
+		// { "pattern": "db.do/*", "zone_name": "do" },
+		// { "pattern": "db.mw/*", "zone_name": "mw" },
+		// { "pattern": "彡.io/*", "zone_name": "彡.io" },  // Data Layer
+		// { "pattern": "口.io/*", "zone_name": "口.io" },  // Nouns
+		// { "pattern": "回.io/*", "zone_name": "回.io" }   // Things
 	]
 
 	/**

@@ -4,9 +4,9 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-07-08",
   // Compatibility flags:
-  // - nodejs_compat: Node.js compatibility for imports
   // - enable_ctx_exports: Enables ctx.exports API for automatic loopback bindings to WorkerEntrypoints
-  "compatibility_flags": ["nodejs_compat", "enable_ctx_exports"],
+  // Note: nodejs_compat removed - causes issues with openai SDK trying to use fs
+  "compatibility_flags": ["enable_ctx_exports"],
   "account_id": "b6641681fe423910342b9ffa1364c76d",
   "observability": {
     "enabled": true

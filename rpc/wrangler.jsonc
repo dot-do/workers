@@ -1,0 +1,57 @@
+/**
+ * CapnWeb RPC Worker Configuration
+ * Deployed to: rpc.do
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "rpc",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+  "observability": { "enabled": true },
+  "tail_consumers": [{ "service": "pipeline" }],
+  "compatibility_flags": [
+    "nodejs_compat",
+    "nodejs_compat_populate_process_env"
+  ],
+  "placement": { "mode": "smart" },
+
+  /**
+   * Routes - RPC service on rpc.do domain
+   */
+  "routes": [
+    // TODO: Configure when 'do' zone is added to Cloudflare account
+    // { "pattern": "rpc.do/*", "zone_name": "do" }
+
+    // Temporary: Use apis.do zone for testing
+    { "pattern": "rpc.apis.do/*", "zone_name": "apis.do" }
+  ],
+
+  /**
+   * Service Bindings - RPC to other workers
+   */
+  "services": [
+    {
+      "binding": "OAUTH_SERVICE",
+      "service": "oauth"
+    },
+    {
+      "binding": "AUTH_SERVICE",
+      "service": "auth"
+    },
+    {
+      "binding": "DB_SERVICE",
+      "service": "db"
+    }
+  ],
+
+  /**
+   * KV Namespace for session storage
+   */
+  "kv_namespaces": [
+    {
+      "binding": "SESSIONS",
+      "id": "placeholder_kv_namespace_id"
+    }
+  ]
+}

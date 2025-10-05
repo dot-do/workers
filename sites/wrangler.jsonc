@@ -1,0 +1,37 @@
+{
+  "name": "sites",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-04",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Service bindings for data access
+  "services": [
+    {
+      "binding": "DB_SERVICE",
+      "service": "db",
+      "environment": "production"
+    }
+  ],
+
+  // KV for compiled MDX assets
+  "kv_namespaces": [
+    {
+      "binding": "ASSETS",
+      "id": "7c266e6952224dd0b029d0e89ba93791",
+      "preview_id": "60fffdb7d03d488aa6df77c47bfc92ca"
+    }
+  ],
+
+  // Environment variables
+  "vars": {
+    "ENVIRONMENT": "production"
+  },
+
+  // Routes for *.do domains
+  "routes": [
+    { "pattern": "*.do/*", "zone_name": "do" },
+    { "pattern": "*.ai/*", "zone_name": "ai" },
+    { "pattern": "*.studio/*", "zone_name": "studio" },
+    { "pattern": "*.mt/*", "zone_name": "mt" }
+  ]
+}

@@ -1,14 +1,9 @@
 import { WorkerEntrypoint } from 'cloudflare:workers'
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
+import { protocolRouter } from '@dot-do/protocol-router'
 import type { Env, RpcRequest, RpcContext } from './types'
 import { authenticate } from './auth'
-import {
-  CapnWebRegistry,
-  parseRpcRequest,
-  validateRpcRequest,
-  createRpcError,
-} from './capnweb'
+import { CapnWebRegistry } from './capnweb'
 import { registerMethods } from './methods'
 
 /**
@@ -73,29 +68,12 @@ export class RpcService extends WorkerEntrypoint<Env> {
 }
 
 /**
- * HTTP Interface (Hono)
+ * REST API Interface (Hono)
  */
-const app = new Hono<{ Bindings: Env }>()
-
-// CORS middleware
-app.use('/*', cors({
-  origin: '*',
-  allowMethods: ['GET', 'POST', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-}))
-
-// Health check
-app.get('/health', (c) => {
-  return c.json({
-    status: 'ok',
-    service: 'rpc',
-    version: '0.1.0',
-    timestamp: new Date().toISOString(),
-  })
-})
+const api = new Hono<{ Bindings: Env }>()
 
 // Capabilities endpoint
-app.get('/capabilities', async (c) => {
+api.get('/capabilities', async (c) => {
   const service = new RpcService(c.executionCtx, c.env)
   const methods = await service.listMethods()
 
@@ -107,84 +85,54 @@ app.get('/capabilities', async (c) => {
   })
 })
 
-// RPC endpoint (JSON-RPC 2.0)
-app.post('/rpc', async (c) => {
-  try {
-    const service = new RpcService(c.executionCtx, c.env)
+/**
+ * Custom RPC Handler
+ * Maps JSON-RPC requests to CapnWeb registry
+ */
+async function handleRpc(method: string, params: any, context: any) {
+  const service = new RpcService(context.executionCtx, context.env)
 
-    // Parse request
-    const requestData = await parseRpcRequest(c.req.raw)
-
-    // Authenticate
-    const auth = await authenticate(c.req.raw, c.env)
-
-    // Create context
-    const context: RpcContext = {
-      env: c.env,
-      auth: auth || undefined,
-      request: c.req.raw,
-    }
-
-    // Handle batch requests
-    if (Array.isArray(requestData)) {
-      const responses = await service.registry.executeBatch(requestData, context)
-      return c.json(responses)
-    }
-
-    // Validate single request
-    if (!validateRpcRequest(requestData)) {
-      return c.json(
-        createRpcError(-32600, 'Invalid Request', undefined, (requestData as any).id),
-        400
-      )
-    }
-
-    // Execute single request (type narrowed by validateRpcRequest)
-    const response = await service.registry.execute(requestData as RpcRequest, context)
-
-    // Return error status codes
-    if (response.error) {
-      const statusCode = response.error.code === -32000 ? 401 : 400
-      return c.json(response, statusCode)
-    }
-
-    return c.json(response)
-  } catch (error: any) {
-    console.error('RPC endpoint error:', error)
-    return c.json(
-      createRpcError(-32700, 'Parse error', error.message),
-      400
-    )
+  // Create RPC context
+  const rpcContext: RpcContext = {
+    env: context.env,
+    request: context.req,
   }
-})
 
-// JSON-RPC endpoint (alternative path)
-app.post('/rpc/json', async (c) => {
-  return app.fetch(new Request(c.req.url.replace('/rpc/json', '/rpc'), c.req.raw))
-})
+  // Authenticate if Authorization header present
+  if (context.req.headers.get('Authorization')) {
+    const auth = await authenticate(context.req, context.env)
+    if (auth) {
+      rpcContext.auth = auth
+    }
+  }
 
-// 404 handler
-app.notFound((c) => {
-  return c.json(
-    {
-      error: 'Not Found',
-      message: 'The requested endpoint does not exist',
-      availableEndpoints: ['/health', '/capabilities', '/rpc', '/rpc/json'],
-    },
-    404
-  )
-})
+  // Execute RPC method via CapnWeb registry
+  const request: RpcRequest = { method, params }
+  const response = await service.registry.execute(request, rpcContext)
 
-// Error handler
-app.onError((error, c) => {
-  console.error('Server error:', error)
-  return c.json(
-    {
-      error: 'Internal Server Error',
-      message: error.message,
-    },
-    500
-  )
+  if (response.error) {
+    throw new Error(response.error.message)
+  }
+
+  return response.result
+}
+
+/**
+ * Multi-Protocol Router
+ */
+const app = protocolRouter({
+  // RPC protocol (JSON-RPC 2.0 via CapnWeb)
+  rpc: handleRpc,
+
+  // REST API routes
+  api,
+
+  // CORS configuration
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    headers: ['Content-Type', 'Authorization'],
+  },
 })
 
 export default {

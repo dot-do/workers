@@ -44,6 +44,7 @@ export interface DeploymentRequest {
   service: ServiceName
   environment: Environment // For legacy environment-based
   tier?: Tier // For new tier-based (optional, experimental)
+  version?: string // For versioned deployments (e.g., "v1", "v2", "v1-alpha")
   script: string // base64-encoded bundle
   bindings?: Record<string, any>
   metadata: DeploymentMetadata
@@ -54,12 +55,13 @@ export interface Deployment {
   service: ServiceName
   environment: Environment // Legacy environment-based
   tier?: Tier // New tier-based (experimental)
+  version?: string // Versioned deployment identifier (e.g., "v1", "v2")
   namespace: string
   namespaceMode: 'tier' | 'environment'
   status: 'deployed' | 'failed' | 'rolled_back'
   timestamp: string
   url: string
-  version: string
+  versionTag: string // Git version or commit SHA
   metadata: DeploymentMetadata
 }
 

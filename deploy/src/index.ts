@@ -137,10 +137,13 @@ export class DeployService extends WorkerEntrypoint<Env> {
    * Deploy worker to Cloudflare dispatch namespace
    */
   private async deployToCloudflare(request: DeploymentRequest): Promise<Deployment> {
-    const { service, environment, tier, script, bindings, metadata } = request
+    const { service, environment, tier, version, script, bindings, metadata } = request
 
     // Determine namespace (supports both tier and environment modes)
     const { namespace, mode } = this.getNamespace(request)
+
+    // Determine worker name in namespace (append version if specified)
+    const workerName = version ? `${service}-${version}` : service
 
     // Decode base64 script
     const scriptContent = atob(script)
@@ -150,20 +153,26 @@ export class DeployService extends WorkerEntrypoint<Env> {
 
     // Add main module
     const scriptBlob = new Blob([scriptContent], { type: 'application/javascript+module' })
-    formData.append(`${service}.mjs`, scriptBlob, `${service}.mjs`)
+    formData.append(`${workerName}.mjs`, scriptBlob, `${workerName}.mjs`)
 
     // Add metadata
     const metadataJson = {
-      main_module: `${service}.mjs`,
+      main_module: `${workerName}.mjs`,
       compatibility_date: '2025-01-01',
       bindings: bindings || {},
-      tags: [`service:${service}`, `env:${environment}`, `commit:${metadata.commit}`, `branch:${metadata.branch}`],
+      tags: [
+        `service:${service}`,
+        `env:${environment}`,
+        `commit:${metadata.commit}`,
+        `branch:${metadata.branch}`,
+        ...(version ? [`version:${version}`] : []),
+      ],
     }
 
     formData.append('metadata', JSON.stringify(metadataJson))
 
-    // Upload to Cloudflare API
-    const url = `https://api.cloudflare.com/client/v4/accounts/${this.env.CLOUDFLARE_ACCOUNT_ID}/workers/dispatch/namespaces/${namespace}/scripts/${service}`
+    // Upload to Cloudflare API (use versioned worker name)
+    const url = `https://api.cloudflare.com/client/v4/accounts/${this.env.CLOUDFLARE_ACCOUNT_ID}/workers/dispatch/namespaces/${namespace}/scripts/${workerName}`
 
     const response = await fetch(url, {
       method: 'PUT',
@@ -190,12 +199,13 @@ export class DeployService extends WorkerEntrypoint<Env> {
       service,
       environment,
       tier,
+      version,
       namespace,
       namespaceMode: mode,
       status: 'deployed',
       timestamp: new Date().toISOString(),
-      url: this.getServiceUrl(service, mode === 'tier' ? tier! : environment),
-      version: metadata.version || metadata.commit.substring(0, 7),
+      url: this.getServiceUrl(service, mode === 'tier' ? tier! : environment, version),
+      versionTag: metadata.version || metadata.commit.substring(0, 7),
       metadata,
     }
 
@@ -275,25 +285,30 @@ export class DeployService extends WorkerEntrypoint<Env> {
    * Generates URL based on namespace mode:
    * - tier: internal.do, *.do, tenant.do
    * - environment: *.do, staging.do, dev.do
+   * - version: v1.gateway.do, v2.db.staging.do
    */
-  private getServiceUrl(service: ServiceName, target: Tier | Environment): string {
+  private getServiceUrl(service: ServiceName, target: Tier | Environment, version?: string): string {
     // Tier-based URLs
     if (target === 'internal' || target === 'public' || target === 'tenant') {
       const tier = target as Tier
       if (tier === 'internal') {
-        return `https://${service}.internal.do`
+        const base = `https://${service}.internal.do`
+        return version ? `https://${version}.${service}.internal.do` : base
       } else if (tier === 'public') {
-        return `https://${service}.do`
+        const base = `https://${service}.do`
+        return version ? `https://${version}.${service}.do` : base
       } else {
         // tenant services have dynamic subdomains
-        return `https://<tenant-id>.${service}.tenant.do`
+        const base = `https://<tenant-id>.${service}.tenant.do`
+        return version ? `https://${version}.<tenant-id>.${service}.tenant.do` : base
       }
     }
 
     // Environment-based URLs (legacy)
     const environment = target as Environment
     const domain = environment === 'production' ? 'do' : `${environment}.do`
-    return `https://${service}.${domain}`
+    const base = `https://${service}.${domain}`
+    return version ? `https://${version}.${service}.${domain}` : base
   }
 
   /**
@@ -308,11 +323,13 @@ export class DeployService extends WorkerEntrypoint<Env> {
         data: {
           service: deployment.service,
           environment: deployment.environment,
+          tier: deployment.tier,
+          version: deployment.version,
           namespace: deployment.namespace,
           status: deployment.status,
           timestamp: deployment.timestamp,
           url: deployment.url,
-          version: deployment.version,
+          version_tag: deployment.versionTag,
           commit: deployment.metadata.commit,
           branch: deployment.metadata.branch,
           author: deployment.metadata.author,
@@ -354,11 +371,14 @@ export class DeployService extends WorkerEntrypoint<Env> {
         id: prev.id,
         service: prev.data.service,
         environment: prev.data.environment,
+        tier: prev.data.tier,
+        version: prev.data.version,
         namespace: prev.data.namespace,
+        namespaceMode: 'environment', // Assume environment mode for legacy
         status: prev.data.status,
         timestamp: prev.data.timestamp,
         url: prev.data.url,
-        version: prev.data.version,
+        versionTag: prev.data.version_tag,
         metadata: {
           commit: prev.data.commit,
           branch: prev.data.branch,
@@ -425,11 +445,14 @@ export class DeployService extends WorkerEntrypoint<Env> {
         id: item.id,
         service: item.data.service,
         environment: item.data.environment,
+        tier: item.data.tier,
+        version: item.data.version,
         namespace: item.data.namespace,
+        namespaceMode: item.data.namespace_mode || 'environment',
         status: item.data.status,
         timestamp: item.data.timestamp,
         url: item.data.url,
-        version: item.data.version,
+        versionTag: item.data.version_tag,
         metadata: {
           commit: item.data.commit,
           branch: item.data.branch,

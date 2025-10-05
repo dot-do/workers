@@ -94,6 +94,7 @@ export default {
  * Determine which worker to route to based on URL
  *
  * Routing strategies:
+ * 0. Versioned URLs: v1.gateway.do → gateway-v1, v2.db.do → db-v2
  * 1. International character domains (彡.io, 口.io, etc.)
  * 2. Subdomain-based: gateway.do → gateway worker
  * 3. Path-based: /api/db/* → db worker
@@ -106,6 +107,19 @@ function determineWorker(url: URL): string | null {
 
   // List of valid worker services
   const validWorkers = ['gateway', 'db', 'auth', 'schedule', 'webhooks', 'email', 'mcp', 'queue', 'fn', 'agent', 'workflows']
+
+  // Strategy 0: Versioned URL routing
+  // Examples:
+  //   - v1.gateway.do → gateway-v1
+  //   - v2.db.do → db-v2
+  //   - v1-alpha.gateway.do → gateway-v1-alpha
+  const versionMatch = hostname.match(/^(v[\w-]+)\.([^\.]+)\./)
+  if (versionMatch) {
+    const [, version, service] = versionMatch
+    if (validWorkers.includes(service)) {
+      return `${service}-${version}`
+    }
+  }
 
   // Strategy 1: International character domain routing
   // Maps semantic character domains to services

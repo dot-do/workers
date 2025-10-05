@@ -29,6 +29,7 @@ interface WorkerFrontmatter {
   name: string
   main?: string
   compatibility_date?: string
+  version?: string
   observability?: any
   services?: any[]
   vars?: Record<string, any>
@@ -104,6 +105,11 @@ function generateWranglerConfig(frontmatter: WorkerFrontmatter): string {
     compatibility_date: frontmatter.compatibility_date || '2025-01-01',
   }
 
+  // Add version field if present
+  if (frontmatter.version) {
+    config.version = frontmatter.version
+  }
+
   // Copy optional fields
   if (frontmatter.account_id) config.account_id = frontmatter.account_id
   if (frontmatter.observability) config.observability = frontmatter.observability
@@ -129,7 +135,8 @@ function generateWranglerConfig(frontmatter: WorkerFrontmatter): string {
 
   // Format as JSONC with comments
   const jsonc = JSON.stringify(config, null, '\t')
-  const header = `/**\n * ${frontmatter.name} Worker Configuration\n * Generated from ${path.basename(frontmatter.filePath || '')}\n */\n`
+  const versionNote = frontmatter.version ? ` (version: ${frontmatter.version})` : ''
+  const header = `/**\n * ${frontmatter.name} Worker Configuration${versionNote}\n * Generated from ${path.basename(frontmatter.filePath || '')}\n */\n`
 
   return header + jsonc
 }

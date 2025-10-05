@@ -1,198 +1,296 @@
+import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { z } from 'zod'
+import type { Env, TraceData, MetricBatch } from './types'
+import { TraceDataSchema, MetricBatchSchema } from './types'
+import { Tracer } from './tracing'
+import { MetricsCollector } from './metrics'
+import { ServiceMap } from './service-map'
+import { AlertEngine } from './alerts'
+import { observabilityMiddleware } from './middleware'
+
+const app = new Hono<{ Bindings: Env }>()
+
+// CORS for Grafana
+app.use('*', cors())
+
+// Note: We do NOT apply observability middleware to the observability service itself
+// to avoid circular dependencies and recursion
+
+// Health check
+app.get('/health', (c) => {
+  return c.json({ status: 'healthy', service: 'observability-collector' })
+})
+
+// ============================================================================
+// OTLP-compatible endpoints
+// ============================================================================
+
 /**
- * Observability Worker - Centralized Logging and Error Tracking
- *
- * Provides:
- * - Log aggregation from all services
- * - Error and crash tracking
- * - Query and filter capabilities
- * - Real-time log streaming
- * - Analytics and metrics
+ * POST /v1/traces - OpenTelemetry trace ingestion
  */
+app.post('/v1/traces', async (c) => {
+  try {
+    const body = await c.req.json()
+    const traceData = TraceDataSchema.parse(body)
 
-interface Env {
-	GATEWAY_SERVICE: Fetcher
-	DB_SERVICE: Fetcher
-	AUTH_SERVICE: Fetcher
-	SCHEDULE_SERVICE: Fetcher
-	WEBHOOKS_SERVICE: Fetcher
-	EMAIL_SERVICE: Fetcher
-	MCP_SERVICE: Fetcher
-	QUEUE_SERVICE: Fetcher
-	LOGS: AnalyticsEngineDataset
-}
+    const tracer = new Tracer(c.env, traceData.resource)
+    await tracer.writeTrace(traceData)
 
-interface LogEntry {
-	timestamp: number
-	service: string
-	level: 'debug' | 'info' | 'warn' | 'error' | 'fatal'
-	message: string
-	metadata?: Record<string, any>
-	error?: {
-		name: string
-		message: string
-		stack?: string
-	}
-	requestId?: string
-	userId?: string
-}
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('Error ingesting traces:', error)
+    return c.json({ error: error instanceof Error ? error.message : 'Invalid trace data' }, 400)
+  }
+})
 
-export default {
-	async fetch(request: Request, env: Env): Promise<Response> {
-		const url = new URL(request.url)
+/**
+ * POST /v1/metrics - Metrics ingestion
+ */
+app.post('/v1/metrics', async (c) => {
+  try {
+    const body = await c.req.json()
+    const metricBatch = MetricBatchSchema.parse(body)
 
-		// Health check
-		if (url.pathname === '/health') {
-			return Response.json({
-				status: 'ok',
-				service: 'observability',
-				features: ['logs', 'errors', 'metrics', 'streaming'],
-			})
-		}
+    const collector = new MetricsCollector(c.env, metricBatch.resource)
 
-		// Log a new entry
-		if (url.pathname === '/log' && request.method === 'POST') {
-			try {
-				const log: LogEntry = await request.json()
+    for (const metric of metricBatch.metrics) {
+      switch (metric.type) {
+        case 'counter':
+          collector.counter(metric.name, metric.value, metric.labels)
+          break
+        case 'gauge':
+          collector.gauge(metric.name, metric.value, metric.labels)
+          break
+        case 'histogram':
+          collector.histogram(metric.name, metric.value, metric.labels)
+          break
+      }
+    }
 
-				// Validate log entry
-				if (!log.service || !log.level || !log.message) {
-					return Response.json({ error: 'Invalid log entry' }, { status: 400 })
-				}
+    await collector.flush()
 
-				// Store in Analytics Engine
-				env.LOGS.writeDataPoint({
-					indexes: [log.service, log.level, log.requestId || '', log.userId || ''],
-					blobs: [log.message, JSON.stringify(log.metadata || {}), log.error ? JSON.stringify(log.error) : ''],
-					doubles: [log.timestamp],
-				})
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('Error ingesting metrics:', error)
+    return c.json({ error: error instanceof Error ? error.message : 'Invalid metric data' }, 400)
+  }
+})
 
-				return Response.json({ success: true, logged: log })
-			} catch (error) {
-				return Response.json(
-					{
-						error: 'Failed to log entry',
-						message: error instanceof Error ? error.message : String(error),
-					},
-					{ status: 500 }
-				)
-			}
-		}
+// ============================================================================
+// Service Map API
+// ============================================================================
 
-		// Get logs for a service
-		if (url.pathname.startsWith('/logs/')) {
-			const service = url.pathname.split('/')[2]
-			const params = url.searchParams
+/**
+ * GET /api/services - List all services
+ */
+app.get('/api/services', async (c) => {
+  const serviceMap = new ServiceMap(c.env)
+  const services = await serviceMap.getServices()
+  return c.json({ services })
+})
 
-			const level = params.get('level')
-			const limit = parseInt(params.get('limit') || '100')
-			const since = params.get('since') // ISO timestamp
+/**
+ * GET /api/services/:id - Get service details
+ */
+app.get('/api/services/:id', async (c) => {
+  const serviceId = c.req.param('id')
+  const serviceMap = new ServiceMap(c.env)
 
-			return Response.json({
-				service,
-				filters: { level, limit, since },
-				logs: [], // TODO: Query Analytics Engine
-				note: 'Analytics Engine query not yet implemented',
-			})
-		}
+  const [service, dependencies] = await Promise.all([serviceMap.getService(serviceId), serviceMap.getServiceDependencies(serviceId)])
 
-		// Get all errors
-		if (url.pathname === '/errors') {
-			const params = url.searchParams
-			const service = params.get('service')
-			const limit = parseInt(params.get('limit') || '50')
+  if (!service) {
+    return c.json({ error: 'Service not found' }, 404)
+  }
 
-			return Response.json({
-				filters: { service, limit },
-				errors: [], // TODO: Query Analytics Engine for errors
-				note: 'Error query not yet implemented',
-			})
-		}
+  return c.json({ service, dependencies })
+})
 
-		// Get service health status
-		if (url.pathname === '/status') {
-			const services = ['gateway', 'db', 'auth', 'schedule', 'webhooks', 'email', 'mcp', 'queue']
+/**
+ * GET /api/service-map - Get service dependency graph
+ */
+app.get('/api/service-map', async (c) => {
+  const serviceMap = new ServiceMap(c.env)
+  const graph = await serviceMap.getCytoscapeGraph()
+  return c.json(graph)
+})
 
-			// Check health of all services
-			const healthChecks = await Promise.all(
-				services.map(async service => {
-					try {
-						const binding = (service.toUpperCase() + '_SERVICE') as keyof Env
-						const fetcher = env[binding] as Fetcher
+/**
+ * GET /api/service-map/cycles - Detect circular dependencies
+ */
+app.get('/api/service-map/cycles', async (c) => {
+  const serviceMap = new ServiceMap(c.env)
+  const cycles = await serviceMap.detectCircularDependencies()
+  return c.json({ cycles, count: cycles.length })
+})
 
-						const response = await fetcher.fetch(`http://${service}/health`)
-						const data = await response.json()
+// ============================================================================
+// Traces Query API (for Grafana)
+// ============================================================================
 
-						return {
-							service,
-							status: response.status === 200 ? 'healthy' : 'unhealthy',
-							data,
-						}
-					} catch (error) {
-						return {
-							service,
-							status: 'error',
-							error: error instanceof Error ? error.message : String(error),
-						}
-					}
-				})
-			)
+/**
+ * GET /api/traces - Search traces
+ */
+app.get('/api/traces', async (c) => {
+  const serviceName = c.req.query('service')
+  const operation = c.req.query('operation')
+  const status = c.req.query('status')
+  const minDuration = c.req.query('minDuration')
+  const limit = parseInt(c.req.query('limit') || '100', 10)
 
-			const healthyCount = healthChecks.filter(h => h.status === 'healthy').length
-			const unhealthyCount = healthChecks.filter(h => h.status === 'unhealthy').length
-			const errorCount = healthChecks.filter(h => h.status === 'error').length
+  let query = `SELECT * FROM trace_metadata WHERE 1=1`
+  const params: any[] = []
 
-			return Response.json({
-				overall: healthyCount === services.length ? 'healthy' : 'degraded',
-				summary: {
-					total: services.length,
-					healthy: healthyCount,
-					unhealthy: unhealthyCount,
-					error: errorCount,
-				},
-				services: healthChecks,
-			})
-		}
+  if (serviceName) {
+    query += ` AND service_name = ?`
+    params.push(serviceName)
+  }
 
-		// Get metrics
-		if (url.pathname === '/metrics') {
-			return Response.json({
-				metrics: {
-					totalLogs: 0, // TODO: Query Analytics Engine
-					totalErrors: 0,
-					logsByService: {},
-					errorsByService: {},
-				},
-				note: 'Metrics not yet implemented',
-			})
-		}
+  if (operation) {
+    query += ` AND operation_name LIKE ?`
+    params.push(`%${operation}%`)
+  }
 
-		// Stream logs in real-time (SSE)
-		if (url.pathname === '/stream') {
-			const service = url.searchParams.get('service')
-			const level = url.searchParams.get('level')
+  if (status) {
+    query += ` AND status = ?`
+    params.push(status)
+  }
 
-			// TODO: Implement real-time log streaming with SSE
-			return new Response('Log streaming not yet implemented', {
-				headers: { 'Content-Type': 'text/plain' },
-			})
-		}
+  if (minDuration) {
+    query += ` AND duration_ms >= ?`
+    params.push(parseFloat(minDuration))
+  }
 
-		// Default response
-		return Response.json(
-			{
-				error: 'Not Found',
-				message: 'Observability Worker - Centralized logging and error tracking',
-				endpoints: {
-					'GET /health': 'Health check',
-					'POST /log': 'Log a new entry',
-					'GET /logs/:service': 'Get logs for a service',
-					'GET /errors': 'Get all errors',
-					'GET /status': 'Get service health status',
-					'GET /metrics': 'Get log metrics',
-					'GET /stream': 'Stream logs in real-time (SSE)',
-				},
-			},
-			{ status: 404 }
-		)
-	},
-} satisfies ExportedHandler<Env>
+  query += ` ORDER BY timestamp DESC LIMIT ?`
+  params.push(limit)
+
+  const result = await c.env.DB.prepare(query).bind(...params).all()
+
+  return c.json({
+    traces: result.results.map((row: any) => ({
+      traceId: row.trace_id,
+      serviceName: row.service_name,
+      operationName: row.operation_name,
+      durationMs: row.duration_ms,
+      status: row.status,
+      errorMessage: row.error_message,
+      spanCount: row.span_count,
+      timestamp: row.timestamp,
+      labels: row.labels ? JSON.parse(row.labels) : {},
+    })),
+  })
+})
+
+/**
+ * GET /api/traces/:traceId - Get trace details
+ * Note: This would query Analytics Engine for full span data
+ */
+app.get('/api/traces/:traceId', async (c) => {
+  const traceId = c.req.param('traceId')
+
+  // Get trace metadata
+  const metadata = await c.env.DB.prepare(`SELECT * FROM trace_metadata WHERE trace_id = ?`).bind(traceId).first()
+
+  if (!metadata) {
+    return c.json({ error: 'Trace not found' }, 404)
+  }
+
+  // In production, this would query Analytics Engine for full span data
+  // For now, return metadata only
+  return c.json({
+    traceId: metadata.trace_id,
+    serviceName: metadata.service_name,
+    operationName: metadata.operation_name,
+    durationMs: metadata.duration_ms,
+    status: metadata.status,
+    errorMessage: metadata.error_message,
+    spanCount: metadata.span_count,
+    timestamp: metadata.timestamp,
+    labels: metadata.labels ? JSON.parse(metadata.labels as string) : {},
+  })
+})
+
+// ============================================================================
+// Alerts API
+// ============================================================================
+
+/**
+ * GET /api/alerts/configs - List alert configurations
+ */
+app.get('/api/alerts/configs', async (c) => {
+  const alertEngine = new AlertEngine(c.env)
+  const configs = await alertEngine.getAlertConfigs()
+  return c.json({ configs })
+})
+
+/**
+ * POST /api/alerts/configs - Create alert configuration
+ */
+app.post('/api/alerts/configs', async (c) => {
+  try {
+    const body = await c.req.json()
+    const alertEngine = new AlertEngine(c.env)
+    const id = await alertEngine.createAlertConfig(body)
+    return c.json({ id })
+  } catch (error) {
+    return c.json({ error: error instanceof Error ? error.message : 'Invalid alert config' }, 400)
+  }
+})
+
+/**
+ * GET /api/alerts/incidents - List alert incidents
+ */
+app.get('/api/alerts/incidents', async (c) => {
+  const state = c.req.query('state') as 'firing' | 'resolved' | undefined
+  const alertEngine = new AlertEngine(c.env)
+  const incidents = await alertEngine.getIncidents(state)
+  return c.json({ incidents })
+})
+
+/**
+ * POST /api/alerts/incidents/:id/acknowledge - Acknowledge incident
+ */
+app.post('/api/alerts/incidents/:id/acknowledge', async (c) => {
+  const incidentId = c.req.param('id')
+  const { acknowledgedBy } = await c.req.json()
+
+  const alertEngine = new AlertEngine(c.env)
+  await alertEngine.acknowledgeIncident(incidentId, acknowledgedBy)
+
+  return c.json({ success: true })
+})
+
+/**
+ * POST /api/alerts/evaluate - Manually trigger alert evaluation
+ */
+app.post('/api/alerts/evaluate', async (c) => {
+  const alertEngine = new AlertEngine(c.env)
+  const incidents = await alertEngine.evaluateAlerts()
+  return c.json({ incidents, count: incidents.length })
+})
+
+// ============================================================================
+// Analytics Engine SQL Proxy (for Grafana)
+// ============================================================================
+
+/**
+ * POST /api/query - Execute SQL query on Analytics Engine
+ * This endpoint would be used by Grafana's ClickHouse datasource
+ */
+app.post('/api/query', async (c) => {
+  try {
+    const { query } = await c.req.json()
+
+    // In production, this would execute the query against Analytics Engine
+    // For now, return a placeholder response
+    return c.json({
+      data: [],
+      meta: [],
+      rows: 0,
+    })
+  } catch (error) {
+    return c.json({ error: error instanceof Error ? error.message : 'Query failed' }, 400)
+  }
+})
+
+export default app

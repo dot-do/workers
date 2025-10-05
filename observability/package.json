@@ -1,19 +1,29 @@
 {
-	"name": "observability",
-	"version": "0.0.0",
-	"private": true,
-	"scripts": {
-		"deploy": "wrangler deploy",
-		"dev": "wrangler dev",
-		"start": "wrangler dev",
-		"test": "vitest",
-		"cf-typegen": "wrangler types"
-	},
-	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "^0.9.10",
-		"@cloudflare/workers-types": "^4.20241106.0",
-		"typescript": "^5.5.2",
-		"vitest": "~3.2.0",
-		"wrangler": "^4.24.3"
-	}
+  "name": "@dot-do/observability",
+  "version": "1.0.0",
+  "description": "Distributed observability platform using Workers Analytics Engine and Grafana",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "start": "wrangler dev",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit",
+    "cf-typegen": "wrangler types",
+    "db:migrate": "wrangler d1 execute observability-db --file=./schema.sql",
+    "db:local": "wrangler d1 execute observability-db --local --file=./schema.sql"
+  },
+  "dependencies": {
+    "hono": "^4.6.14",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.9.10",
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.99.0"
+  }
 }

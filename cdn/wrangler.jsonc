@@ -1,0 +1,78 @@
+{
+  "name": "cdn",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-12-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+
+  // Observability
+  "observability": {
+    "enabled": true
+  },
+
+  // D1 Database for content metadata and events
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cdn-cache-db",
+      "database_id": "0df8ed4b-98db-4569-9bfc-8271fb946a8f"
+    }
+  ],
+
+  // KV namespace for caching
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "45b6ccbc3c674bd696704f1c70e72195"
+    }
+  ],
+
+  // R2 bucket for content storage
+  "r2_buckets": [
+    {
+      "binding": "CONTENT",
+      "bucket_name": "cdn-content"
+    }
+  ],
+
+  // Analytics Engine for consumption tracking
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS",
+      "dataset": "cdn_consumption"
+    }
+  ],
+
+  // Pipelines for streaming events to R2 (if needed later)
+  // "pipelines": [
+  //   {
+  //     "binding": "EVENTS_PIPELINE",
+  //     "pipeline": "cdn-events-pipeline"
+  //   }
+  // ],
+
+  // Queue for async event processing
+  "queues": {
+    "producers": [
+      {
+        "binding": "EVENT_QUEUE",
+        "queue": "cdn-events"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "cdn-events",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "cdn-events-dlq"
+      }
+    ]
+  },
+
+  // Environment variables
+  "vars": {
+    "ENVIRONMENT": "production",
+    "API_VERSION": "v1"
+  }
+}

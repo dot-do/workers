@@ -1,37 +1,50 @@
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "observability",
-	"main": "src/index.ts",
-	"compatibility_date": "2025-01-01",
-	"compatibility_flags": ["nodejs_compat"],
-	"account_id": "b6641681fe423910342b9ffa1364c76d",
-	"observability": {
-		"enabled": true
-	},
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "observability-collector",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-12-18",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
 
-	/**
-	 * Service Bindings - Core services to observe
-	 */
-	"services": [
-		{ "binding": "GATEWAY_SERVICE", "service": "gateway" },
-		{ "binding": "DB_SERVICE", "service": "db" },
-		{ "binding": "AUTH_SERVICE", "service": "auth" },
-		{ "binding": "SCHEDULE_SERVICE", "service": "schedule" },
-		{ "binding": "WEBHOOKS_SERVICE", "service": "webhooks" },
-		{ "binding": "EMAIL_SERVICE", "service": "email" },
-		{ "binding": "MCP_SERVICE", "service": "mcp" },
-		{ "binding": "QUEUE_SERVICE", "service": "queue" }
-	],
+  // Observability enabled
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1.0
+  },
 
-	/**
-	 * Analytics Engine for log storage
-	 */
-	"analytics_engine_datasets": [{ "binding": "LOGS" }],
+  // Analytics Engine binding for metrics and traces
+  "analytics_engine_datasets": [
+    {
+      "binding": "METRICS",
+      "dataset": "worker_metrics"
+    },
+    {
+      "binding": "TRACES",
+      "dataset": "distributed_traces"
+    }
+  ],
 
-	/**
-	 * Environment Variables
-	 */
-	"vars": {
-		"ENVIRONMENT": "production"
-	}
+  // D1 database for service registry and alert configs
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "observability-db",
+      "database_id": "e21c4ae8-3166-43ad-8e18-df9c16228f24"
+    }
+  ],
+
+  // KV for fast alert state lookups
+  "kv_namespaces": [
+    {
+      "binding": "ALERT_STATE",
+      "id": "4e36c4d6bfc04dd7912ca4ea1b1da9f4"
+    }
+  ],
+
+  // Environment variables
+  "vars": {
+    "ENVIRONMENT": "production",
+    "SERVICE_NAME": "observability-collector",
+    "ALERT_WEBHOOK_URL": "https://your-webhook-url.com/alerts"
+  }
 }

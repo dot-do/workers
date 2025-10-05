@@ -24,12 +24,14 @@ import * as path from 'path'
 import * as yaml from 'yaml'
 
 interface WorkerFrontmatter {
-  $type: string
+  $type: 'Worker' | 'Snippet'
   $id: string
   name: string
   main?: string
   compatibility_date?: string
   version?: string
+  tier?: 'internal' | 'public' | 'tenant' // 3-tier namespace
+  environment?: 'production' | 'staging' | 'development' // Legacy environment
   observability?: any
   services?: any[]
   vars?: Record<string, any>
@@ -58,9 +60,9 @@ function parseMdxWorker(filePath: string): ExtractedWorker {
   const frontmatterYaml = frontmatterMatch[1]
   const frontmatter = yaml.parse(frontmatterYaml) as WorkerFrontmatter
 
-  // Validate it's a Worker type
-  if (frontmatter.$type !== 'Worker') {
-    throw new Error(`File ${filePath} is not a Worker (type: ${frontmatter.$type})`)
+  // Validate it's a Worker or Snippet type
+  if (frontmatter.$type !== 'Worker' && frontmatter.$type !== 'Snippet') {
+    throw new Error(`File ${filePath} is not a Worker or Snippet (type: ${frontmatter.$type})`)
   }
 
   // Extract TypeScript code blocks
@@ -142,17 +144,33 @@ function generateWranglerConfig(frontmatter: WorkerFrontmatter): string {
 }
 
 /**
- * Build a worker from an MDX file
+ * Build a worker or snippet from an MDX file
  */
 function buildWorker(mdxPath: string, outputDir?: string): void {
-  console.log(`Building worker from: ${mdxPath}`)
-
   // Parse MDX file
   const extracted = parseMdxWorker(mdxPath)
+  const type = extracted.frontmatter.$type
+  const name = extracted.frontmatter.name
+
+  console.log(`Building ${type} from: ${mdxPath}`)
 
   // Determine output directory
+  const outputPath = outputDir || path.join(path.dirname(mdxPath), name)
+
+  if (type === 'Worker') {
+    // Build full Cloudflare Worker
+    buildFullWorker(outputPath, extracted, mdxPath)
+  } else if (type === 'Snippet') {
+    // Build ultra-lightweight Cloudflare Snippet
+    buildSnippet(outputPath, extracted, mdxPath)
+  }
+}
+
+/**
+ * Build a full Cloudflare Worker
+ */
+function buildFullWorker(outputPath: string, extracted: ExtractedWorker, mdxPath: string): void {
   const workerName = extracted.frontmatter.name
-  const outputPath = outputDir || path.join(path.dirname(mdxPath), workerName)
 
   // Create directories
   const srcDir = path.join(outputPath, 'src')
@@ -175,12 +193,114 @@ function buildWorker(mdxPath: string, outputDir?: string): void {
   fs.writeFileSync(readmePath, readmeContent)
   console.log(`  ✓ Generated ${readmePath}`)
 
+  // Generate deployment metadata
+  const tier = extracted.frontmatter.tier
+  const environment = extracted.frontmatter.environment
+  const version = extracted.frontmatter.version
+
+  if (tier || environment || version) {
+    const metadata = {
+      type: 'Worker',
+      name: workerName,
+      tier,
+      environment,
+      version,
+      source: path.basename(mdxPath),
+      generatedAt: new Date().toISOString(),
+    }
+
+    const metadataPath = path.join(outputPath, '.mdx-metadata.json')
+    fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2))
+    console.log(`  ✓ Generated ${metadataPath}`)
+  }
+
   console.log(`\n✅ Worker built successfully: ${outputPath}`)
   console.log(`\nDeploy with: cd ${path.relative(process.cwd(), outputPath)} && wrangler deploy`)
 }
 
 /**
- * Find all .mdx worker files
+ * Build an ultra-lightweight Cloudflare Snippet
+ */
+function buildSnippet(outputPath: string, extracted: ExtractedWorker, mdxPath: string): void {
+  const snippetName = extracted.frontmatter.name
+
+  // Create output directory
+  fs.mkdirSync(outputPath, { recursive: true })
+
+  // Write snippet code directly (no src/ directory needed)
+  const snippetPath = path.join(outputPath, 'snippet.js')
+  fs.writeFileSync(snippetPath, extracted.code)
+  console.log(`  ✓ Generated ${snippetPath}`)
+
+  // Write README.md with deployment instructions
+  const readmePath = path.join(outputPath, 'README.md')
+  const readmeContent = `# ${snippetName} (Cloudflare Snippet)
+
+${extracted.documentation}
+
+## Deployment Instructions
+
+Cloudflare Snippets must be deployed manually via the Cloudflare Dashboard:
+
+1. **Go to Cloudflare Dashboard**
+   - Navigate to: Workers & Pages > Snippets
+   - Click "Create Snippet"
+
+2. **Configure Snippet**
+   - Name: \`${snippetName}\`
+   - Code: Paste contents from \`snippet.js\`
+
+3. **Set Triggers**
+   - URL Pattern: \`/*\` (or specific paths)
+   - Zone: Select your domain
+   - Placement: Before or After cache
+
+4. **Enable & Deploy**
+   - Click "Save and Deploy"
+   - Test the snippet on your domain
+
+---
+
+**Type:** Snippet
+**Generated from:** ${path.basename(mdxPath)}
+**Build command:** \`tsx scripts/build-mdx-worker.ts ${path.relative(process.cwd(), mdxPath)}\`
+
+**Size Limit:** 32KB (Snippets are ultra-lightweight)
+`
+  fs.writeFileSync(readmePath, readmeContent)
+  console.log(`  ✓ Generated ${readmePath}`)
+
+  // Generate snippet metadata
+  const metadata = {
+    type: 'Snippet',
+    name: snippetName,
+    size: Buffer.from(extracted.code).length,
+    maxSize: 32768, // 32KB limit for snippets
+    source: path.basename(mdxPath),
+    generatedAt: new Date().toISOString(),
+    deploymentMethod: 'manual', // Snippets require manual dashboard deployment
+  }
+
+  const metadataPath = path.join(outputPath, '.mdx-metadata.json')
+  fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2))
+  console.log(`  ✓ Generated ${metadataPath}`)
+
+  // Size check
+  const sizeKB = (metadata.size / 1024).toFixed(2)
+  const maxSizeKB = (metadata.maxSize / 1024).toFixed(0)
+  console.log(`\n✅ Snippet built successfully: ${outputPath}`)
+  console.log(`📦 Size: ${sizeKB}KB / ${maxSizeKB}KB limit`)
+
+  if (metadata.size > metadata.maxSize) {
+    console.log(`\n⚠️  WARNING: Snippet size exceeds 32KB limit!`)
+    console.log(`   Consider using a full Worker instead.`)
+  }
+
+  console.log(`\n📋 Deploy manually via Cloudflare Dashboard (Workers & Pages > Snippets)`)
+}
+
+/**
+ * Find all .mdx worker/snippet files
  */
 function findMdxWorkers(dir: string): string[] {
   const mdxFiles: string[] = []
@@ -194,10 +314,10 @@ function findMdxWorkers(dir: string): string[] {
       if (entry.isDirectory()) {
         scan(fullPath)
       } else if (entry.isFile() && entry.name.endsWith('.mdx')) {
-        // Check if it's a Worker type
+        // Check if it's a Worker or Snippet type
         try {
           const content = fs.readFileSync(fullPath, 'utf-8')
-          if (content.includes('$type: Worker')) {
+          if (content.includes('$type: Worker') || content.includes('$type: Snippet')) {
             mdxFiles.push(fullPath)
           }
         } catch (err) {
@@ -219,29 +339,38 @@ function main() {
 
   if (args.length === 0 || args.includes('--help')) {
     console.log(`
-Build Cloudflare Workers from .mdx files
+Build Cloudflare Workers and Snippets from .mdx files
+
+Supports:
+  - $type: Worker   → Full Cloudflare Worker (wrangler.jsonc + src/index.ts)
+  - $type: Snippet  → Ultra-lightweight Snippet (snippet.js, <32KB)
 
 Usage:
-  tsx scripts/build-mdx-worker.ts <path-to-worker.mdx>
+  tsx scripts/build-mdx-worker.ts <path-to-file.mdx>
   tsx scripts/build-mdx-worker.ts --all
 
 Options:
-  --all       Build all .mdx workers in workers/ directory
+  --all       Build all .mdx workers/snippets in workers/ directory
   --help      Show this help message
 
 Examples:
   tsx scripts/build-mdx-worker.ts workers/examples/hello-world.mdx
+  tsx scripts/build-mdx-worker.ts workers/examples/analytics-snippet.mdx
   tsx scripts/build-mdx-worker.ts --all
+
+Output Formats:
+  Worker:   <name>/wrangler.jsonc, <name>/src/index.ts, <name>/README.md
+  Snippet:  <name>/snippet.js, <name>/README.md, <name>/.mdx-metadata.json
 `)
     process.exit(0)
   }
 
   if (args.includes('--all')) {
-    // Build all workers
+    // Build all workers/snippets
     const workersDir = path.join(process.cwd(), 'workers')
     const mdxFiles = findMdxWorkers(workersDir)
 
-    console.log(`Found ${mdxFiles.length} .mdx worker(s)\n`)
+    console.log(`Found ${mdxFiles.length} .mdx worker(s)/snippet(s)\n`)
 
     for (const mdxFile of mdxFiles) {
       try {
@@ -253,9 +382,9 @@ Examples:
       }
     }
 
-    console.log(`✅ Built ${mdxFiles.length} worker(s)`)
+    console.log(`✅ Built ${mdxFiles.length} worker(s)/snippet(s)`)
   } else {
-    // Build single worker
+    // Build single worker/snippet
     const mdxPath = path.resolve(args[0])
 
     if (!fs.existsSync(mdxPath)) {
@@ -266,7 +395,7 @@ Examples:
     try {
       buildWorker(mdxPath)
     } catch (err) {
-      console.error(`❌ Failed to build worker:`, err)
+      console.error(`❌ Failed to build worker/snippet:`, err)
       process.exit(1)
     }
   }

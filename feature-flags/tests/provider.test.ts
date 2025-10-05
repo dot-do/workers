@@ -66,7 +66,10 @@ class MockKVNamespace implements KVNamespace {
   async get(key: string, options?: any): Promise<any> {
     const value = this.data.get(key)
     if (!value) return null
-    if (options?.type === 'json') return JSON.parse(value)
+
+    // Handle both string type and options object
+    const type = typeof options === 'string' ? options : options?.type
+    if (type === 'json') return JSON.parse(value)
     return value
   }
 

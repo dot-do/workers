@@ -33,6 +33,10 @@ DROP TABLE IF EXISTS meta;
 DROP TABLE IF EXISTS relationships;
 DROP TABLE IF EXISTS embeddings;
 DROP TABLE IF EXISTS ai_fallback_events;
+DROP TABLE IF EXISTS integrations;
+DROP TABLE IF EXISTS oauth_tokens;
+DROP TABLE IF EXISTS generated_api_code;
+DROP TABLE IF EXISTS api_executions;
 
 DROP FUNCTION IF EXISTS isULID;
 DROP FUNCTION IF EXISTS randomizeULID;
@@ -166,6 +170,73 @@ CREATE TABLE ai_fallback_events (
 ENGINE = MergeTree
 ORDER BY (service, ts)
 SETTINGS index_granularity = 8192;
+
+CREATE TABLE integrations (
+  id String,
+  provider String,
+  name String,
+  base_url String,
+  oauth_config JSON,
+  requires_oauth Bool DEFAULT true,
+  api_docs_url Nullable(String),
+  rate_limit_per_min UInt16 DEFAULT 60,
+  rate_limit_per_hour UInt32 DEFAULT 1000,
+  ts DateTime64,
+  ulid String
+)
+ENGINE = CoalescingMergeTree
+ORDER BY (provider);
+
+CREATE TABLE oauth_tokens (
+  id String DEFAULT generateULID(),
+  user_id String,
+  provider String,
+  encrypted_access_token String,
+  encrypted_refresh_token Nullable(String),
+  expires_at Nullable(DateTime64),
+  scopes JSON,
+  ts DateTime64 DEFAULT ULIDStringToDateTime(id, 'America/Chicago'),
+  updated_at DateTime64 DEFAULT now64()
+)
+ENGINE = MergeTree
+ORDER BY (user_id, provider);
+
+CREATE TABLE generated_api_code (
+  id String DEFAULT generateULID(),
+  provider String,
+  method String,
+  args_hash String,
+  generated_code String,
+  success_count UInt32 DEFAULT 0,
+  failure_count UInt32 DEFAULT 0,
+  last_success_at Nullable(DateTime64),
+  last_failure_at Nullable(DateTime64),
+  model String,
+  prompt_tokens Nullable(UInt32),
+  completion_tokens Nullable(UInt32),
+  cost_usd Float64,
+  ts DateTime64 DEFAULT ULIDStringToDateTime(id, 'America/Chicago'),
+  validated Bool DEFAULT false
+)
+ENGINE = MergeTree
+ORDER BY (provider, method, args_hash);
+
+CREATE TABLE api_executions (
+  ulid String DEFAULT generateULID(),
+  ts DateTime64 DEFAULT ULIDStringToDateTime(ulid, 'America/Chicago'),
+  user_id String,
+  provider String,
+  method String,
+  args JSON,
+  success Bool,
+  latency_ms UInt32,
+  cached Bool DEFAULT false,
+  code_id Nullable(String),
+  result Nullable(JSON),
+  error Nullable(String)
+)
+ENGINE = MergeTree
+ORDER BY (provider, ts);
 
 CREATE MATERIALIZED VIEW versionEvents TO versions
 AS SELECT

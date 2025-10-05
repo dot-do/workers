@@ -348,6 +348,203 @@ export default class DatabaseService extends WorkerEntrypoint<Env> {
   }
 
   // ============================================================================
+  // UNIVERSAL API - RPC Methods for Phase 7
+  // ============================================================================
+
+  /**
+   * Get integration configuration by provider name
+   */
+  async getIntegration(provider: string) {
+    try {
+      const query = `
+        SELECT * FROM integrations
+        WHERE provider = {provider: String}
+        ORDER BY ts DESC
+        LIMIT 1
+      `
+      const result = await clickhouse.query({
+        query,
+        query_params: { provider },
+        format: 'JSON',
+      })
+      const data = await result.json()
+      return data.data && data.data.length > 0 ? data.data[0] : null
+    } catch (error) {
+      console.error('Failed to get integration:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get OAuth token for user and provider
+   */
+  async getOAuthToken(userId: string, provider: string) {
+    try {
+      const query = `
+        SELECT * FROM oauth_tokens
+        WHERE user_id = {userId: String}
+          AND provider = {provider: String}
+        ORDER BY updated_at DESC
+        LIMIT 1
+      `
+      const result = await clickhouse.query({
+        query,
+        query_params: { userId, provider },
+        format: 'JSON',
+      })
+      const data = await result.json()
+      return data.data && data.data.length > 0 ? data.data[0] : null
+    } catch (error) {
+      console.error('Failed to get OAuth token:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Save OAuth token for user and provider
+   */
+  async saveOAuthToken(token: {
+    userId: string
+    provider: string
+    encryptedAccessToken: string
+    encryptedRefreshToken?: string
+    expiresAt?: Date
+    scopes: string[]
+  }) {
+    try {
+      await clickhouse.insert({
+        table: 'oauth_tokens',
+        values: [{
+          user_id: token.userId,
+          provider: token.provider,
+          encrypted_access_token: token.encryptedAccessToken,
+          encrypted_refresh_token: token.encryptedRefreshToken || null,
+          expires_at: token.expiresAt || null,
+          scopes: JSON.stringify(token.scopes),
+        }],
+        format: 'JSONEachRow',
+        clickhouse_settings: {
+          enable_json_type: 1,
+        },
+      })
+      return { success: true }
+    } catch (error) {
+      console.error('Failed to save OAuth token:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get generated code from cache
+   */
+  async getGeneratedCode(provider: string, method: string, argsHash: string) {
+    try {
+      const query = `
+        SELECT * FROM generated_api_code
+        WHERE provider = {provider: String}
+          AND method = {method: String}
+          AND args_hash = {argsHash: String}
+          AND validated = true
+        ORDER BY ts DESC
+        LIMIT 1
+      `
+      const result = await clickhouse.query({
+        query,
+        query_params: { provider, method, argsHash },
+        format: 'JSON',
+      })
+      const data = await result.json()
+      return data.data && data.data.length > 0 ? data.data[0] : null
+    } catch (error) {
+      console.error('Failed to get generated code:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Save generated code to cache
+   */
+  async saveGeneratedCode(code: {
+    provider: string
+    method: string
+    argsHash: string
+    generatedCode: string
+    model: string
+    promptTokens?: number
+    completionTokens?: number
+    costUsd: number
+    validated: boolean
+  }) {
+    try {
+      await clickhouse.insert({
+        table: 'generated_api_code',
+        values: [{
+          provider: code.provider,
+          method: code.method,
+          args_hash: code.argsHash,
+          generated_code: code.generatedCode,
+          model: code.model,
+          prompt_tokens: code.promptTokens || null,
+          completion_tokens: code.completionTokens || null,
+          cost_usd: code.costUsd,
+          validated: code.validated,
+        }],
+        format: 'JSONEachRow',
+        clickhouse_settings: {
+          enable_json_type: 1,
+        },
+      })
+      return { success: true }
+    } catch (error) {
+      console.error('Failed to save generated code:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Log API execution for analytics
+   */
+  async logAPIExecution(execution: {
+    userId: string
+    provider: string
+    method: string
+    args: any[]
+    success: boolean
+    latencyMs: number
+    cached: boolean
+    codeId?: string
+    result?: any
+    error?: string
+  }) {
+    try {
+      await clickhouse.insert({
+        table: 'api_executions',
+        values: [{
+          user_id: execution.userId,
+          provider: execution.provider,
+          method: execution.method,
+          args: JSON.stringify(execution.args),
+          success: execution.success,
+          latency_ms: execution.latencyMs,
+          cached: execution.cached,
+          code_id: execution.codeId || null,
+          result: execution.result ? JSON.stringify(execution.result) : null,
+          error: execution.error || null,
+        }],
+        format: 'JSONEachRow',
+        clickhouse_settings: {
+          enable_json_type: 1,
+        },
+      })
+      return { success: true }
+    } catch (error) {
+      console.error('Failed to log API execution:', error)
+      // Don't throw - we don't want to break user flow if logging fails
+      return { success: false, error: String(error) }
+    }
+  }
+
+  // ============================================================================
   // VECTOR SEARCH & EMBEDDINGS - RPC Methods
   // ============================================================================
 

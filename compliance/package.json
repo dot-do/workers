@@ -1,0 +1,40 @@
+{
+  "name": "@dotdo/compliance",
+  "version": "1.0.0",
+  "description": "Policy and compliance rules engine - GDPR, SOC2, HIPAA, PCI-DSS compliance enforcement at the edge",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "tail": "wrangler tail compliance"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "policy-engine",
+    "compliance",
+    "gdpr",
+    "hipaa",
+    "soc2",
+    "pci-dss",
+    "rbac",
+    "abac",
+    "edge-computing"
+  ],
+  "dependencies": {
+    "hono": "^4.6.14",
+    "zod": "^3.24.1",
+    "@ai-sdk/cloudflare": "^1.0.7",
+    "ai": "^4.0.61"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241205.0",
+    "@cloudflare/vitest-pool-workers": "^0.5.29",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.101.0"
+  }
+}

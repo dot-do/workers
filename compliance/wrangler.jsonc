@@ -1,0 +1,59 @@
+{
+  "name": "compliance",
+  "main": "src/engine/index.ts",
+  "compatibility_date": "2024-11-30",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
+
+  "workers_dev": true,
+
+  "kv_namespaces": [
+    {
+      "binding": "POLICY_KV",
+      "id": "08650de539a44ba6a72e2bb634a2f9f0",
+      "preview_id": "f985f0b0b3e4420e911e5fc5d9944b01"
+    }
+  ],
+
+  "d1_databases": [
+    {
+      "binding": "POLICY_DB",
+      "database_name": "compliance-db",
+      "database_id": "8ac58c1f-9b8e-4d08-9ab1-8504ae5b0435"
+    }
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "COMPLIANCE_DOCS",
+      "bucket_name": "compliance-docs"
+    }
+  ],
+
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "RATE_LIMIT_DO",
+        "class_name": "RateLimitDO",
+        "script_name": "compliance"
+      }
+    ]
+  },
+
+  "analytics_engine_datasets": [
+    {
+      "binding": "ANALYTICS",
+      "dataset": "compliance_checks"
+    }
+  ],
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["RateLimitDO"]
+    }
+  ],
+
+  "observability": {
+    "enabled": true
+  }
+}

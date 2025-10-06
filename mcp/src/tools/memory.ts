@@ -1,5 +1,6 @@
 import type { Context } from 'hono'
 import type { Env, User, MCPTool } from '../types'
+import { trackBatchOperation, formatBatchMetrics } from '../metrics'
 
 /**
  * Knowledge Graph Memory Tools
@@ -8,6 +9,7 @@ import type { Env, User, MCPTool } from '../types'
  * ⚡ These tools are optimized with CapnWeb queuing for batch operations!
  * - Creating 10 entities = 1 RPC batch (not 10 round-trips)
  * - All memory operations use efficient batching internally
+ * - Performance metrics tracked automatically
  */
 
 export function getTools(): MCPTool[] {
@@ -181,6 +183,8 @@ export async function memory_create_entities(
   const db = c.env.DB
   if (!db) throw new Error('DB service not available')
 
+  const startTime = Date.now()
+
   // Store entities in database with CapnWeb queuing
   // ⚡ Queue all upserts without await, then batch them
   const promises = []
@@ -195,7 +199,25 @@ export async function memory_create_entities(
   // Single RPC batch for all entities (much faster than sequential awaits!)
   await Promise.all(promises)
 
-  return { created: args.entities }
+  const duration = Date.now() - startTime
+
+  // Track CapnWeb metrics
+  const metrics = trackBatchOperation(
+    'memory_create_entities',
+    args.entities.length,
+    duration,
+    'create'
+  )
+
+  return {
+    created: args.entities,
+    performance: {
+      operationCount: args.entities.length,
+      duration: `${duration}ms`,
+      speedup: `${metrics.speedup.toFixed(2)}x faster than sequential`,
+      details: formatBatchMetrics(metrics)
+    }
+  }
 }
 
 export async function memory_create_relations(
@@ -205,6 +227,8 @@ export async function memory_create_relations(
 ): Promise<any> {
   const db = c.env.DB
   if (!db) throw new Error('DB service not available')
+
+  const startTime = Date.now()
 
   // ⚡ CapnWeb: Queue all upserts, then batch
   const promises = []
@@ -219,7 +243,25 @@ export async function memory_create_relations(
 
   await Promise.all(promises)
 
-  return { created: args.relations }
+  const duration = Date.now() - startTime
+
+  // Track CapnWeb metrics
+  const metrics = trackBatchOperation(
+    'memory_create_relations',
+    args.relations.length,
+    duration,
+    'create'
+  )
+
+  return {
+    created: args.relations,
+    performance: {
+      operationCount: args.relations.length,
+      duration: `${duration}ms`,
+      speedup: `${metrics.speedup.toFixed(2)}x faster than sequential`,
+      details: formatBatchMetrics(metrics)
+    }
+  }
 }
 
 export async function memory_add_observations(
@@ -229,6 +271,8 @@ export async function memory_add_observations(
 ): Promise<any> {
   const db = c.env.DB
   if (!db) throw new Error('DB service not available')
+
+  const startTime = Date.now()
 
   // ⚡ CapnWeb: Batch reads first, then batch writes
   // Step 1: Queue all gets (reads must be awaited)
@@ -264,7 +308,26 @@ export async function memory_add_observations(
 
   await Promise.all(upsertPromises)
 
-  return results
+  const duration = Date.now() - startTime
+
+  // Track CapnWeb metrics (mixed = reads + writes = 2 batches)
+  const totalOps = args.observations.length * 2 // reads + writes
+  const metrics = trackBatchOperation(
+    'memory_add_observations',
+    totalOps,
+    duration,
+    'mixed'
+  )
+
+  return {
+    results,
+    performance: {
+      operationCount: totalOps,
+      duration: `${duration}ms`,
+      speedup: `${metrics.speedup.toFixed(2)}x faster than sequential`,
+      details: formatBatchMetrics(metrics)
+    }
+  }
 }
 
 export async function memory_delete_entities(
@@ -274,6 +337,8 @@ export async function memory_delete_entities(
 ): Promise<any> {
   const db = c.env.DB
   if (!db) throw new Error('DB service not available')
+
+  const startTime = Date.now()
 
   // ⚡ CapnWeb: Batch reads first, then batch deletes
   // Get all relations first (single query)
@@ -285,18 +350,40 @@ export async function memory_delete_entities(
   )
 
   // Queue relation deletes for entities being removed
+  let relationDeleteCount = 0
   if (relations.items) {
     for (const rel of relations.items) {
       const relData = rel.data as Relation
       if (args.entityNames.includes(relData.from) || args.entityNames.includes(relData.to)) {
         deletePromises.push(db.delete({ ns: 'memory_relations', id: rel.id }))
+        relationDeleteCount++
       }
     }
   }
 
   await Promise.all(deletePromises)
 
-  return { deleted: args.entityNames }
+  const duration = Date.now() - startTime
+
+  // Track CapnWeb metrics
+  const totalOps = args.entityNames.length + relationDeleteCount
+  const metrics = trackBatchOperation(
+    'memory_delete_entities',
+    totalOps,
+    duration,
+    'delete'
+  )
+
+  return {
+    deleted: args.entityNames,
+    relationsDeleted: relationDeleteCount,
+    performance: {
+      operationCount: totalOps,
+      duration: `${duration}ms`,
+      speedup: `${metrics.speedup.toFixed(2)}x faster than sequential`,
+      details: formatBatchMetrics(metrics)
+    }
+  }
 }
 
 export async function memory_delete_observations(
@@ -306,6 +393,8 @@ export async function memory_delete_observations(
 ): Promise<any> {
   const db = c.env.DB
   if (!db) throw new Error('DB service not available')
+
+  const startTime = Date.now()
 
   // ⚡ CapnWeb: Batch reads first, then batch writes
   const getPromises = args.deletions.map(deletion =>
@@ -336,7 +425,26 @@ export async function memory_delete_observations(
 
   await Promise.all(upsertPromises)
 
-  return { success: true }
+  const duration = Date.now() - startTime
+
+  // Track CapnWeb metrics (mixed = reads + writes = 2 batches)
+  const totalOps = args.deletions.length * 2
+  const metrics = trackBatchOperation(
+    'memory_delete_observations',
+    totalOps,
+    duration,
+    'mixed'
+  )
+
+  return {
+    success: true,
+    performance: {
+      operationCount: totalOps,
+      duration: `${duration}ms`,
+      speedup: `${metrics.speedup.toFixed(2)}x faster than sequential`,
+      details: formatBatchMetrics(metrics)
+    }
+  }
 }
 
 export async function memory_delete_relations(
@@ -347,6 +455,8 @@ export async function memory_delete_relations(
   const db = c.env.DB
   if (!db) throw new Error('DB service not available')
 
+  const startTime = Date.now()
+
   // ⚡ CapnWeb: Queue all deletes, then batch
   const deletePromises = args.relations.map(relation => {
     const id = `${relation.from}:${relation.relationType}:${relation.to}`
@@ -355,7 +465,25 @@ export async function memory_delete_relations(
 
   await Promise.all(deletePromises)
 
-  return { success: true }
+  const duration = Date.now() - startTime
+
+  // Track CapnWeb metrics
+  const metrics = trackBatchOperation(
+    'memory_delete_relations',
+    args.relations.length,
+    duration,
+    'delete'
+  )
+
+  return {
+    success: true,
+    performance: {
+      operationCount: args.relations.length,
+      duration: `${duration}ms`,
+      speedup: `${metrics.speedup.toFixed(2)}x faster than sequential`,
+      details: formatBatchMetrics(metrics)
+    }
+  }
 }
 
 export async function memory_read_graph(

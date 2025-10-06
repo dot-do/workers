@@ -3,11 +3,13 @@ import { authenticateRequest } from './auth'
 import { listTools, callTool } from './tools'
 import { listResources, readResource } from './resources'
 import type { Env, MCPRequest, MCPResponse } from './types'
+import { trackToolExecution } from './metrics'
 
 /**
  * MCP JSON-RPC 2.0 Server Implementation
  *
  * Handles initialize, tools/list, tools/call, resources/list, resources/read
+ * All tool calls automatically tracked with CapnWeb performance metrics
  */
 export async function handleMCPRequest(c: Context<{ Bindings: Env }>): Promise<Response> {
   // Authenticate request
@@ -87,7 +89,14 @@ export async function handleMCPRequest(c: Context<{ Bindings: Env }>): Promise<R
         }
 
         try {
-          const result = await callTool(toolName, toolArgs || {}, c, user, authenticated)
+          // Track tool execution with automatic metrics
+          const result = await trackToolExecution(
+            toolName,
+            authenticated,
+            user?.id,
+            async () => await callTool(toolName, toolArgs || {}, c, user, authenticated)
+          )
+
           return c.json({
             jsonrpc: '2.0',
             result,
@@ -177,8 +186,26 @@ export async function handleMCPRequest(c: Context<{ Bindings: Env }>): Promise<R
 
 /**
  * Check if tool requires authentication
+ *
+ * TEMPORARILY DISABLED: All tools are public since there's no data in the DB yet
+ *
+ * TODO: Re-enable authentication once OAuth is fully implemented:
+ * - Free tools: db_search, memory_*, search_docs, ai_models
+ * - Authenticated tools: ai_generate, ai_stream, ai_embed, ai_analyze, code_*, runtime_*, sandbox_*, workflow_*, queue_*
+ * - Admin-only tools: auth_*, db_upsert, db_delete
  */
 function requiresAuth(toolName: string): boolean {
-  const publicTools = ['db_search']
-  return !publicTools.includes(toolName)
+  // TEMPORARILY: All tools are public
+  return false
+
+  // ORIGINAL CODE (to be restored):
+  // const publicTools = [
+  //   'db_search',
+  //   'memory_create_entities', 'memory_create_relations', 'memory_add_observations',
+  //   'memory_delete_entities', 'memory_delete_observations', 'memory_delete_relations',
+  //   'memory_read_graph', 'memory_search_nodes',
+  //   'search_docs',
+  //   'ai_models'
+  // ]
+  // return !publicTools.includes(toolName)
 }

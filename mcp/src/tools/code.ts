@@ -12,6 +12,16 @@ export function getTools(): MCPTool[] {
       name: 'do',
       description: `Execute TypeScript code with full access to the .do platform via the $ runtime.
 
+⚡ CRITICAL: CapnWeb Queuing - Only await when reading results!
+
+The $ runtime uses CapnWeb which queues operations automatically. Operations without await are queued locally and sent as a single RPC batch for 3-4x faster performance.
+
+Performance Impact:
+- Without CapnWeb: 4 operations = 4 round-trips = ~400ms
+- With CapnWeb: 4 operations = 1 batch = ~100ms (4x faster!)
+
+Rule: Only await when you need to READ results. Write operations are queued automatically.
+
 Available primitives (accessible as $ or directly):
 - $.ai / ai - AI operations (generateText, generate, generateStream, embed, classify, extract)
 - $.db / db - Database operations (find, create, update, delete, forEvery)
@@ -24,13 +34,17 @@ Available primitives (accessible as $ or directly):
 
 Documentation: Use $.md to get full docs, or specific docs like db.md, ai.md, etc.
 
-Examples:
-- await ai.generateText('Write a haiku')
-- await $.ai.generateText('Write a haiku')
-- await db.users.find({ email: 'user@example.com' })
-- await send.email('user@example.com', 'Subject', 'Body')
-- every.hour(async () => { /* task */ })
-- on.user.created(async (user) => { /* handler */ })
+Examples with CapnWeb queuing:
+- await ai.generateText('Write a haiku')  // READ - must await
+- db.users.create({ name: 'Alice' })  // WRITE - queued, no await
+- db.users.create({ name: 'Bob' })  // WRITE - queued, no await
+- send.email('user@example.com', 'Subject', 'Body')  // WRITE - queued, no await
+// All three writes sent as single RPC batch!
+- const users = await db.users.find({ role: 'admin' })  // READ - must await
+
+CapnWeb Examples:
+❌ SLOW: await db.create({}); await db.create({}); await send.email(...); // 3 round-trips
+✅ FAST: db.create({}); db.create({}); send.email(...); // 1 batch, 3x faster!
 
 Code runs in a secure V8 isolate with rollback capability. All mutations are non-destructive.`,
       inputSchema: {
@@ -56,7 +70,7 @@ Code runs in a secure V8 isolate with rollback capability. All mutations are non
     },
     {
       name: 'code_execute',
-      description: 'Execute TypeScript code in a secure V8 isolate. Use this for complex logic, data transformations, or when you need to run code with access to platform services (db, ai, mcp). Returns the result, console logs, and execution metrics.',
+      description: 'Execute TypeScript code in a secure V8 isolate with CapnWeb queuing. Use this for complex logic, data transformations, or when you need to run code with access to platform services (db, ai, mcp). Operations are queued automatically - only await when reading results for maximum performance. Returns the result, console logs, and execution metrics.',
       inputSchema: {
         type: 'object',
         properties: {

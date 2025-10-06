@@ -16,20 +16,27 @@ export interface Env {
 
   // Durable Objects
   SANDBOX?: DurableObjectNamespace<Sandbox> // Sandbox instances for Python/JS execution
+  MCP_AGENT?: DurableObjectNamespace // OAuth-authenticated MCP agent instances
 
-  // KV namespace
+  // KV namespaces
   KV?: KVNamespace // Cache for sandbox metadata
+  OAUTH_KV?: KVNamespace // OAuth state storage
 
   // D1 databases
   WORKER_REGISTRY_DB?: D1Database // Dynamic worker registry
 
   // Environment variables
+  ENVIRONMENT?: string
   POSTGRES_URL?: string
   ANTHROPIC_API_KEY?: string
   OPENAI_API_KEY?: string
   SANDBOX_TIMEOUT_MS?: string
   MAX_SANDBOX_INSTANCES?: string
   LOG_LEVEL?: string
+
+  // WorkOS OAuth credentials
+  WORKOS_CLIENT_ID?: string
+  WORKOS_CLIENT_SECRET?: string
 }
 
 export interface User {

@@ -3,6 +3,7 @@
   "name": "mcp",
   "main": "src/index.ts",
   "compatibility_date": "2025-07-08",
+  "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "account_id": "b6641681fe423910342b9ffa1364c76d",
   "observability": {
@@ -60,12 +61,17 @@
       "namespace": "dotdo-tenant"
     }
   ],
-  // Durable Objects for sandbox instances
+  // Durable Objects for sandbox instances (and MCP_AGENT for compatibility)
   "durable_objects": {
     "bindings": [
       {
         "name": "SANDBOX",
         "class_name": "Sandbox",
+        "script_name": "mcp"
+      },
+      {
+        "name": "MCP_AGENT",
+        "class_name": "DoMCPAgent",
         "script_name": "mcp"
       }
     ]
@@ -75,6 +81,10 @@
     {
       "tag": "v1",
       "new_sqlite_classes": ["Sandbox"]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": []
     }
   ]
 }

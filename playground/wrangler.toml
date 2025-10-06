@@ -1,0 +1,12 @@
+name = "playground"
+main = "src/index.ts"
+compatibility_date = "2025-01-05"
+workers_dev = true
+
+# Custom domain
+# routes = [
+#   { pattern = "playground.do/*", zone_name = "do" }
+# ]
+
+[vars]
+ENVIRONMENT = "production"

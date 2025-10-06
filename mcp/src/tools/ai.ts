@@ -9,6 +9,14 @@ import type { Env, User, MCPTool } from '../types'
 export function getTools(): MCPTool[] {
   return [
     {
+      name: 'ai_models',
+      description: 'List available AI models and their capabilities (FREE)',
+      inputSchema: {
+        type: 'object',
+        properties: {}
+      }
+    },
+    {
       name: 'ai_generate',
       description: 'Generate text using AI models',
       inputSchema: {
@@ -160,6 +168,53 @@ export async function ai_embed(
     text: args.text,
     model: args.model || 'bge-base-en-v1.5'
   })
+}
+
+export async function ai_models(
+  args: {},
+  c: Context<{ Bindings: Env }>,
+  user: User | null
+): Promise<any> {
+  // Return list of available AI models
+  return {
+    models: [
+      {
+        id: 'llama-3.1-8b',
+        name: 'Llama 3.1 8B',
+        type: 'text-generation',
+        description: 'Fast, efficient text generation',
+        free: true
+      },
+      {
+        id: 'llama-3.1-70b',
+        name: 'Llama 3.1 70B',
+        type: 'text-generation',
+        description: 'High-quality text generation',
+        free: false
+      },
+      {
+        id: 'bge-base-en-v1.5',
+        name: 'BGE Base v1.5',
+        type: 'embeddings',
+        description: 'Text embeddings for semantic search',
+        free: true
+      },
+      {
+        id: 'gpt-4',
+        name: 'GPT-4',
+        type: 'text-generation',
+        description: 'OpenAI GPT-4 (requires API key)',
+        free: false
+      },
+      {
+        id: 'claude-3-sonnet',
+        name: 'Claude 3 Sonnet',
+        type: 'text-generation',
+        description: 'Anthropic Claude 3 Sonnet (requires API key)',
+        free: false
+      }
+    ]
+  }
 }
 
 export async function ai_analyze(

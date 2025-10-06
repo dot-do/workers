@@ -8,9 +8,6 @@ import type { Env } from './types'
 // Export Sandbox Durable Object class for real code execution
 export { Sandbox } from '@cloudflare/sandbox'
 
-// Export DoMCPAgent for migration compatibility (OAuth implementation)
-export { DoMCPAgent } from './mcp-agent'
-
 /**
  * MCP Server - Exposes all platform capabilities as AI-accessible tools
  *

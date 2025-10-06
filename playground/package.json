@@ -1,0 +1,16 @@
+{
+  "name": "@do/worker-playground",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build:playground": "cd ../../sdk/packages/playground && pnpm build:standalone"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250110.0",
+    "wrangler": "^3.105.0"
+  }
+}

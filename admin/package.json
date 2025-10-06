@@ -1,0 +1,28 @@
+{
+  "name": "@do/admin-worker",
+  "version": "1.0.0",
+  "description": "Admin service with Payload RPC and vector search",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "payload": "^3.14.0",
+    "@payloadcms/db-postgres": "^3.14.0",
+    "@payloadcms/richtext-lexical": "^3.14.0",
+    "@payloadcms/plugin-stripe": "^3.14.0",
+    "@payloadcms/plugin-multi-tenant": "^3.14.0",
+    "@payloadcms/plugin-search": "^3.14.0",
+    "sharp": "^0.33.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250104.0",
+    "@cloudflare/vitest-pool-workers": "^0.5.23",
+    "typescript": "^5.7.2",
+    "vitest": "2.1.8",
+    "wrangler": "^4.0.0"
+  }
+}

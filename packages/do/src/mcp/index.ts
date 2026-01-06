@@ -1,5 +1,5 @@
 /**
- * @dotdo/db/mcp - MCP Layer
+ * @dotdo/do/mcp - MCP Layer
  *
  * Model Context Protocol support with OAuth 2.1.
  * Provides tools for AI integration (search, fetch, do).
@@ -64,10 +64,10 @@ export const MCP_TOOLS: McpTool[] = [
  * MCP protocol handler
  */
 export class McpHandler {
-  private db: { search: Function; fetch: Function; do: Function }
+  private target: { search: Function; fetch: Function; do: Function }
 
-  constructor(db: { search: Function; fetch: Function; do: Function }) {
-    this.db = db
+  constructor(target: { search: Function; fetch: Function; do: Function }) {
+    this.target = target
   }
 
   /**
@@ -99,9 +99,9 @@ export class McpHandler {
    */
   private handleManifest(): Response {
     return Response.json({
-      name: 'DB',
+      name: 'DO',
       version: '1.0.0',
-      description: 'Database with AI-compatible tools',
+      description: 'An agentic database that can DO anything',
       tools: MCP_TOOLS,
     })
   }
@@ -131,18 +131,18 @@ export class McpHandler {
 
       switch (toolName) {
         case 'search':
-          const searchResult = await this.db.search(body.query, {
+          const searchResult = await this.target.search(body.query, {
             collection: body.collection,
             limit: body.limit,
           })
           return Response.json({ result: searchResult })
 
         case 'fetch':
-          const fetchResult = await this.db.fetch(body.target)
+          const fetchResult = await this.target.fetch(body.target)
           return Response.json({ result: fetchResult })
 
         case 'do':
-          const doResult = await this.db.do(body.code, {
+          const doResult = await this.target.do(body.code, {
             timeout: body.timeout,
           })
           return Response.json({ result: doResult })

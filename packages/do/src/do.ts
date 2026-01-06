@@ -1,5 +1,7 @@
 /**
- * @dotdo/db - Core DB Base Class
+ * @dotdo/do - Core DO Base Class
+ *
+ * An agentic database that can DO anything.
  *
  * Extends Cloudflare's Agent class with:
  * - RpcTarget implementation (capnweb style)
@@ -40,15 +42,15 @@ type DurableObjectState = {
 }
 
 /**
- * DB - Core Database Base Class
+ * DO - Core Durable Object Base Class
  *
- * The foundational layer for all .do workers that need database capabilities.
- * Designed to be lightweight (~20-30KB treeshaken) while providing:
+ * The foundational layer for all .do workers.
+ * An agentic database that can DO anything - providing:
  * - Multi-transport RPC (Workers RPC, HTTP, WebSocket, MCP)
  * - Simple CRUD operations
  * - MCP tools for AI integration
  */
-export class DB<Env = unknown, State = unknown> {
+export class DO<Env = unknown, State = unknown> {
   protected ctx: DurableObjectState
   protected env: Env
 
@@ -214,7 +216,7 @@ export class DB<Env = unknown, State = unknown> {
   /**
    * Handle incoming HTTP requests
    */
-  async fetch(request: Request): Promise<Response> {
+  async handleRequest(request: Request): Promise<Response> {
     // TODO: Implement Hono router
     return new Response('Not implemented', { status: 501 })
   }

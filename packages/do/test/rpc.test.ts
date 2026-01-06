@@ -1,5 +1,5 @@
 /**
- * @dotdo/db - RPC Layer Tests (RED Phase)
+ * @dotdo/do - RPC Layer Tests (RED Phase)
  *
  * Tests for RpcTarget implementation and multi-transport RPC support.
  */

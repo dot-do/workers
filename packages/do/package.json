@@ -1,7 +1,7 @@
 {
-  "name": "@dotdo/db",
+  "name": "@dotdo/do",
   "version": "0.0.1",
-  "description": "Base DB class for Cloudflare Workers with multi-transport RPC support",
+  "description": "Base DO class for Cloudflare Workers - an agentic database that can DO anything",
   "author": "Nathan Clevenger",
   "license": "MIT",
   "type": "module",
@@ -60,7 +60,8 @@
     "durable-objects",
     "rpc",
     "mcp",
-    "database"
+    "database",
+    "agentic"
   ],
   "engines": {
     "node": ">=18.0.0"

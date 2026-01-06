@@ -1,7 +1,9 @@
 /**
- * @dotdo/db - Core Database Package
+ * @dotdo/do - Core DO Package
  *
- * Base DB class for Cloudflare Workers with:
+ * An agentic database that can DO anything.
+ *
+ * Base DO class for Cloudflare Workers with:
  * - Multi-transport RPC (Workers RPC, HTTP, WebSocket, MCP)
  * - Simple CRUD operations (ai-database compatible)
  * - MCP tools (search, fetch, do)
@@ -10,7 +12,7 @@
  * - Monaco Editor UI
  */
 
-export { DB } from './db'
+export { DO } from './do'
 export * from './types'
 export * from './rpc'
 export * from './mcp'

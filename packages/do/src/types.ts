@@ -1,9 +1,9 @@
 /**
- * Core types for @dotdo/db
+ * Core types for @dotdo/do
  *
  * Implements ai-database compatible interfaces:
  * - EntityOperations for per-collection CRUD
- * - DBClient for graph operations (Things + Relationships)
+ * - DOClient for graph operations (Things + Relationships)
  */
 
 // ============================================================================
@@ -179,13 +179,13 @@ export interface EntityOperations<T> {
 }
 
 // ============================================================================
-// DBClient Interface (ai-database graph operations)
+// DOClient Interface (ai-database graph operations)
 // ============================================================================
 
 /**
- * Database client interface for graph operations (from ai-database)
+ * DO client interface for graph operations (from ai-database)
  */
-export interface DBClient<TData extends Record<string, unknown> = Record<string, unknown>> {
+export interface DOClient<TData extends Record<string, unknown> = Record<string, unknown>> {
   // Thing operations
   list(options?: ListOptions): Promise<Thing<TData>[]>
   find(options: ListOptions): Promise<Thing<TData>[]>
@@ -392,14 +392,14 @@ export interface ActionQueryOptions {
 }
 
 // ============================================================================
-// DBClientExtended (Events + Actions + Artifacts)
+// DOClientExtended (Events + Actions + Artifacts)
 // ============================================================================
 
 /**
- * Extended DBClient with Events, Actions, and Artifacts (from ai-database)
+ * Extended DO client with Events, Actions, and Artifacts (from ai-database)
  */
-export interface DBClientExtended<TData extends Record<string, unknown> = Record<string, unknown>>
-  extends DBClient<TData> {
+export interface DOClientExtended<TData extends Record<string, unknown> = Record<string, unknown>>
+  extends DOClient<TData> {
   // Event operations (immutable, append-only)
   /** Track an event (analytics-style, append-only) */
   track<T extends Record<string, unknown>>(options: CreateEventOptions<T>): Promise<Event<T>>
@@ -464,7 +464,7 @@ export interface WorkflowContext {
   log: (message: string, data?: unknown) => void
 
   /** Access to database */
-  db?: DBClientExtended
+  db?: DOClientExtended
 }
 
 /**

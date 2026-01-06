@@ -56,8 +56,9 @@ Agent<Env, State, Props> extends Server extends DurableObject
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              @dotdo/workers/db (alias: @dotdo/db)            │
-│                         DB                                   │
+│          @dotdo/do (standalone repo: github.com/dotdo/do)   │
+│                         DO                                   │
+│   "An agentic database that can DO anything"                │
 │   • RpcTarget implementation (capnweb style)                │
 │   • HTTP + WS dual transport                                │
 │   • WebSocket hibernation handlers                          │
@@ -76,34 +77,38 @@ Agent<Env, State, Props> extends Server extends DurableObject
 │   compatibility │  │ • Workflows     │  │ • Humans        │
 │ • Aggregation   │  │ • Workers       │  │ • OAuth         │
 │ • Wire protocol │  │                 │  │                 │
-│ • BSON, etc.    │  │ Use DB for      │  │ Use DB for      │
+│ • BSON, etc.    │  │ Use DO for      │  │ Use DO for      │
 │ • ~176KB bundle │  │ simple storage  │  │ simple storage  │
+│ Extends DO      │  │ Extends DO      │  │ Extends DO      │
 └─────────────────┘  └─────────────────┘  └─────────────────┘
 ```
 
-### Key Design: DB as the Core Base Class
+### Key Design: DO as the Core Base Class
 
-The `DB` class is the foundational layer that:
+The `DO` class ("An agentic database that can DO anything") is the foundational layer that:
 1. **Extends Agent** from Cloudflare's `agents` package (getting state, scheduling, WebSocket)
 2. **Adds RpcTarget** capabilities (capnweb-style HTTP/WS/RPC transport)
 3. **Provides simple CRUD** that's ai-database compatible
 4. **Stays lightweight** - workers that just need simple storage don't get MongoDB bloat
 
+**Standalone repo**: `@dotdo/do` lives at github.com/dotdo/do (~/projects/do)
+This is the foundational primitive that everything else builds on.
+
 **mongo.do refactor**: Currently `MondoDatabase` is a plain DurableObject.
-We'll refactor it to extend `DB`, inheriting all the base capabilities while
+We'll refactor it to extend `DO`, inheriting all the base capabilities while
 adding full MongoDB compatibility (aggregation, wire protocol, BSON, etc.).
 
-### 1b. DB Class Specification
+### 1b. DO Class Specification
 
 ```typescript
-// @dotdo/workers/db (also published as @dotdo/db)
+// @dotdo/do (standalone repo: github.com/dotdo/do)
 import { Agent, callable } from 'agents'
 import { RpcTarget } from 'capnweb'
 
 /**
- * DB - Base class for all .do workers
+ * DO - "An agentic database that can DO anything"
  *
- * Extends Cloudflare's Agent with:
+ * Base class for all .do workers. Extends Cloudflare's Agent with:
  * - Workers RPC (service bindings)
  * - Capnweb RPC (HTTP + WS)
  * - MCP (HTTP with optional OAuth 2.1)
@@ -116,7 +121,7 @@ import { RpcTarget } from 'capnweb'
  * - fetch: Retrieve documents/resources
  * - do: Secure arbitrary code execution via ai-evaluate
  */
-export class DB<Env = unknown, State = unknown> extends Agent<Env, State>
+export class DO<Env = unknown, State = unknown> extends Agent<Env, State>
   implements RpcTarget {
 
   // ============================================
@@ -915,14 +920,14 @@ import { AggregationExecutor } from './executor/aggregation-executor'
 /**
  * MongoDB - Full MongoDB-compatible database
  *
- * Extends DB base class with:
+ * Extends DO base class with:
  * - Full MongoDB query language
  * - Aggregation pipeline
  * - Wire protocol support
  * - BSON types
  * - Index management
  */
-export class MongoDB<Env = MondoEnv> extends DB<Env> {
+export class MongoDB<Env = MondoEnv> extends DO<Env> {
   private schemaManager: SchemaManager
 
   constructor(ctx: DurableObjectState, env: Env) {
@@ -1413,3 +1418,448 @@ Every DO supports both:
 - WebSocket for streaming and real-time
 - Same methods accessible via both
 - Client chooses based on use case
+
+---
+
+## Storage Architecture (gitx patterns)
+
+### Tiered Storage Strategy
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Hot Tier (DO SQLite)                    │
+│  • Things, Relationships (rowid-based)                       │
+│  • Events (recent, append-only)                              │
+│  • Actions (pending/active)                                  │
+│  • LRU Cache (in-memory, 25MB limit)                        │
+│  • WAL for crash recovery                                    │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ (CDC Pipeline)
+┌─────────────────────────────────────────────────────────────┐
+│                     Warm Tier (R2 Packfiles)                 │
+│  • Batched events (Parquet format)                          │
+│  • Large artifacts                                           │
+│  • Object index for tier tracking                           │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ (Analytics)
+┌─────────────────────────────────────────────────────────────┐
+│                     Cold Tier (R2 SQL/Parquet)               │
+│  • Historical events                                         │
+│  • Analytics queries                                         │
+│  • Archival storage                                         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Core Storage Components (from gitx)
+
+```typescript
+// WAL Manager - Write-Ahead Log for durability
+class WALManager {
+  async append(operation: string, payload: Uint8Array): Promise<number>
+  async beginTransaction(): Promise<string>
+  async commitTransaction(txId: string): Promise<void>
+  async rollbackTransaction(txId: string): Promise<void>
+  async recover(): Promise<WALEntry[]>
+  async createCheckpoint(label: string): Promise<void>
+}
+
+// LRU Cache - In-memory hot objects
+class LRUCache<K, V> {
+  constructor(options: {
+    maxCount?: number       // Default: 500
+    maxBytes?: number       // Default: 25MB
+    defaultTTL?: number     // Default: 1 hour
+    onEvict?: (key: K, value: V, reason: string) => void
+  })
+  get(key: K): V | undefined
+  set(key: K, value: V): void
+  delete(key: K): boolean
+  getStats(): CacheStats
+}
+
+// Object Index - Track locations across tiers
+class ObjectIndex {
+  async recordLocation(location: ObjectLocation): Promise<void>
+  async lookupLocation(id: string): Promise<ObjectLocation | null>
+  async batchLookup(ids: string[]): Promise<Map<string, ObjectLocation>>
+  async getStatsByTier(): Promise<TierStats>
+}
+
+// Schema Manager - Table initialization and migrations
+class SchemaManager {
+  async initializeSchema(): Promise<void>
+  async migrate(fromVersion: number, toVersion: number): Promise<void>
+  getVersion(): number
+}
+```
+
+### SQL Schema
+
+```sql
+-- Things (graph nodes with rowid for lightweight relationships)
+CREATE TABLE things (
+  rowid INTEGER PRIMARY KEY AUTOINCREMENT,
+  ns TEXT NOT NULL,
+  type TEXT NOT NULL,
+  id TEXT NOT NULL,
+  url TEXT,
+  data TEXT NOT NULL,  -- JSON
+  context TEXT,        -- JSON-LD @context
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  UNIQUE(ns, type, id)
+);
+CREATE INDEX idx_things_url ON things(url);
+CREATE INDEX idx_things_type ON things(ns, type);
+
+-- Relationships (graph edges using rowid)
+CREATE TABLE relationships (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  from_rowid INTEGER NOT NULL REFERENCES things(rowid),
+  to_rowid INTEGER NOT NULL REFERENCES things(rowid),
+  data TEXT,           -- JSON metadata
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX idx_rel_from ON relationships(from_rowid, type);
+CREATE INDEX idx_rel_to ON relationships(to_rowid, type);
+
+-- Events (append-only audit log)
+CREATE TABLE events (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  source TEXT NOT NULL,
+  data TEXT NOT NULL,  -- JSON
+  correlation_id TEXT,
+  causation_id TEXT,
+  created_at INTEGER NOT NULL
+);
+CREATE INDEX idx_events_type ON events(type, created_at);
+CREATE INDEX idx_events_correlation ON events(correlation_id);
+
+-- Actions (durable execution)
+CREATE TABLE actions (
+  id TEXT PRIMARY KEY,
+  actor TEXT NOT NULL,
+  object TEXT NOT NULL,
+  action TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  metadata TEXT,       -- JSON
+  result TEXT,         -- JSON
+  error TEXT,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  started_at INTEGER,
+  completed_at INTEGER
+);
+CREATE INDEX idx_actions_status ON actions(status);
+CREATE INDEX idx_actions_actor ON actions(actor);
+
+-- Artifact Index (locations, content in R2)
+CREATE TABLE artifact_index (
+  key TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  source TEXT NOT NULL,
+  source_hash TEXT NOT NULL,
+  tier TEXT NOT NULL DEFAULT 'r2',
+  pack_id TEXT,
+  offset INTEGER,
+  size INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER,
+  metadata TEXT        -- JSON
+);
+CREATE INDEX idx_artifacts_source ON artifact_index(source, type);
+
+-- WAL (Write-Ahead Log)
+CREATE TABLE wal (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  operation TEXT NOT NULL,
+  payload BLOB NOT NULL,
+  transaction_id TEXT,
+  created_at INTEGER NOT NULL,
+  flushed INTEGER DEFAULT 0
+);
+CREATE INDEX idx_wal_unflushed ON wal(flushed) WHERE flushed = 0;
+
+-- Schema version
+CREATE TABLE schema_version (
+  version INTEGER PRIMARY KEY,
+  applied_at INTEGER NOT NULL
+);
+```
+
+---
+
+## Natural Language Interface
+
+### GET /do?q= - Natural Language Queries
+
+```typescript
+// Route: GET /do?q=show+me+all+users+created+today
+app.get('/do', async (c) => {
+  const query = c.req.query('q')
+  if (!query) {
+    return c.json({ error: 'Query parameter q is required' }, 400)
+  }
+  return this.handleNaturalLanguageQuery(c, query)
+})
+
+// Handler
+protected async handleNaturalLanguageQuery(c: Context, query: string): Promise<Response> {
+  // 1. Build context for the AI
+  const context = {
+    availableMethods: Array.from(this.allowedMethods),
+    collections: await this.listCollections(),
+    schema: await this.getSchema(),
+  }
+
+  // 2. Call Workers AI to interpret query
+  const ai = c.env.AI
+  const prompt = `
+You are a database assistant. Convert natural language queries to function calls.
+
+Available methods: ${context.availableMethods.join(', ')}
+Available collections: ${context.collections.join(', ')}
+
+User query: "${query}"
+
+Respond with JSON: { "method": "...", "params": [...] }
+`
+
+  const response = await ai.run('@cf/openai/gpt-oss-120b', {
+    messages: [{ role: 'user', content: prompt }]
+  })
+
+  // 3. Parse and execute
+  const parsed = JSON.parse(response.response)
+  const result = await this.invoke(parsed.method, parsed.params)
+
+  return c.json({
+    query,
+    interpreted: parsed,
+    result
+  })
+}
+```
+
+### Example Queries
+
+```
+GET /do?q=show+me+all+users
+→ { method: "list", params: ["users"] }
+
+GET /do?q=find+user+with+email+john@example.com
+→ { method: "find", params: ["users", { email: "john@example.com" }] }
+
+GET /do?q=count+orders+from+last+week
+→ { method: "list", params: ["orders", { where: { createdAt: { $gte: "..." } } }] }
+
+GET /do?q=delete+expired+sessions
+→ { method: "delete", params: ["sessions", { expiresAt: { $lt: "..." } }] }
+```
+
+---
+
+## CDC Pipeline (Event Streaming)
+
+### Event Flow
+
+```
+Operation (create/update/delete)
+    │
+    ▼
+CDCEventCapture
+    │ Creates CDCEvent { type, source, timestamp, payload, sequence }
+    ▼
+CDCBatcher
+    │ Batches by size (100) or time (5s)
+    ▼
+ParquetTransformer
+    │ Converts to columnar Parquet format
+    ▼
+R2 Upload
+    │ /events/{year}/{month}/{day}/{batch_id}.parquet
+    ▼
+Update artifact_index
+```
+
+### Implementation
+
+```typescript
+interface CDCEvent {
+  id: string
+  type: 'THING_CREATED' | 'THING_UPDATED' | 'THING_DELETED' |
+        'REL_CREATED' | 'REL_DELETED' |
+        'ACTION_STARTED' | 'ACTION_COMPLETED' | 'ACTION_FAILED'
+  source: 'api' | 'rpc' | 'workflow' | 'internal'
+  timestamp: number
+  sequence: number
+  payload: unknown
+}
+
+class CDCPipeline {
+  private batcher: EventBatcher
+  private r2: R2Bucket
+
+  constructor(config: {
+    batchSize: number         // 100
+    flushIntervalMs: number   // 5000
+    parquetCompression: 'snappy' | 'gzip'
+  })
+
+  async process(event: CDCEvent): Promise<void> {
+    const batch = await this.batcher.add(event)
+    if (batch) {
+      const parquet = await this.toParquet(batch.events)
+      const path = this.getPath(batch)
+      await this.r2.put(path, parquet)
+      await this.updateIndex(batch)
+    }
+  }
+
+  private getPath(batch: Batch): string {
+    const d = new Date(batch.timestamp)
+    return `events/${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}/${batch.id}.parquet`
+  }
+}
+```
+
+---
+
+## Workflow Integration
+
+### WorkflowContext ($)
+
+```typescript
+class DB implements WorkflowContext {
+  // Fire-and-forget event
+  async send<T>(event: string, data: T): Promise<void> {
+    await this.track({
+      type: event,
+      source: 'workflow',
+      data: data as Record<string, unknown>
+    })
+  }
+
+  // Durable execution with retry
+  async do<TData, TResult>(event: string, data: TData): Promise<TResult> {
+    const action = await this.createAction({
+      actor: 'workflow',
+      object: event,
+      action: 'execute',
+      status: 'active',
+      metadata: { data }
+    })
+
+    try {
+      const result = await this.executeHandler(event, data)
+      await this.completeAction(action.id, result)
+      return result as TResult
+    } catch (error) {
+      await this.failAction(action.id, error.message)
+      throw error
+    }
+  }
+
+  // Non-durable execution
+  async try<TData, TResult>(event: string, data: TData): Promise<TResult> {
+    return this.executeHandler(event, data)
+  }
+
+  // State management
+  state: Record<string, unknown> = {}
+
+  set<T>(key: string, value: T): void {
+    this.state[key] = value
+  }
+
+  get<T>(key: string): T | undefined {
+    return this.state[key] as T | undefined
+  }
+
+  getState(): WorkflowState {
+    return {
+      context: { ...this.state },
+      history: this.history
+    }
+  }
+
+  log(message: string, data?: unknown): void {
+    console.log(`[Workflow] ${message}`, data)
+    this.history.push({
+      timestamp: Date.now(),
+      type: 'action',
+      name: 'log',
+      data: { message, data }
+    })
+  }
+
+  private history: WorkflowHistoryEntry[] = []
+}
+```
+
+---
+
+## gitx.do Refactor
+
+gitx.do can be refactored to extend the DB base class:
+
+```typescript
+// gitx.do/src/git-store.ts
+import { DO } from '@dotdo/do'
+import { WALManager, LRUCache, ObjectIndex } from '@dotdo/db/storage'
+
+export class GitStore extends DO {
+  private packStorage: R2PackStorage
+
+  constructor(ctx: DurableObjectState, env: GitEnv) {
+    super(ctx, env)
+
+    // Extend allowed methods for Git operations
+    this.allowedMethods = new Set([
+      ...this.allowedMethods,
+      'putObject', 'getObject', 'deleteObject',
+      'updateRef', 'resolveRef',
+      'push', 'fetch', 'clone',
+    ])
+
+    this.packStorage = new R2PackStorage({
+      bucket: env.GIT_OBJECTS,
+      prefix: 'packs/'
+    })
+  }
+
+  // Git-specific operations
+  @callable()
+  async putObject(type: ObjectType, data: Uint8Array): Promise<string> {
+    const sha = await hashObject(type, data)
+
+    // Track as event
+    await this.track({
+      type: 'OBJECT_CREATED',
+      source: 'git',
+      data: { sha, type, size: data.length }
+    })
+
+    // Store in Things table
+    await this.create('objects', {
+      id: sha,
+      type,
+      size: data.length,
+      data: Buffer.from(data).toString('base64')
+    })
+
+    return sha
+  }
+
+  // Reuse base class for:
+  // - WAL management
+  // - LRU caching
+  // - Object indexing
+  // - Event streaming
+  // - Action tracking
+}
+```

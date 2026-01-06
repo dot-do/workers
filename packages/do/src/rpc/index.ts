@@ -1,5 +1,5 @@
 /**
- * @dotdo/db/rpc - RPC Layer
+ * @dotdo/do/rpc - RPC Layer
  *
  * Implements RpcTarget pattern with capnweb-style HTTP/WS support.
  */

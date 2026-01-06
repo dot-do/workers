@@ -1,11 +1,11 @@
 /**
- * @dotdo/db - REST API Tests (RED Phase)
+ * @dotdo/do - REST API Tests (RED Phase)
  *
  * Tests for HATEOAS REST API and Monaco Editor routes.
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { DB } from '../src/db'
+import { DO } from '../src/do'
 
 // Mock execution context
 const mockCtx = {
@@ -22,23 +22,23 @@ const mockCtx = {
 
 // Mock environment
 const mockEnv = {
-  DB_NAMESPACE: {
+  DO_NAMESPACE: {
     idFromName: vi.fn(() => ({ toString: () => 'mock-id' })),
     get: vi.fn(),
   },
 }
 
 describe('HATEOAS REST API', () => {
-  let db: DB
+  let doInstance: DO
 
   beforeEach(() => {
-    db = new DB(mockCtx as any, mockEnv)
+    doInstance = new DO(mockCtx as any, mockEnv)
   })
 
   describe('Root Discovery (/)', () => {
     it('should return HATEOAS discovery response', async () => {
       const request = new Request('https://database.do/')
-      const response = await db.fetch(request)
+      const response = await doInstance.handleRequest(request)
 
       expect(response.status).toBe(200)
       expect(response.headers.get('Content-Type')).toBe('application/json')
@@ -69,7 +69,7 @@ describe('HATEOAS REST API', () => {
           'User-Agent': 'TestClient/1.0',
         },
       })
-      const response = await db.fetch(request)
+      const response = await doInstance.handleRequest(request)
       const body = await response.json() as { request: { origin: string; country: string } }
 
       expect(body.request.origin).toBe('1.2.3.4')
@@ -81,7 +81,7 @@ describe('HATEOAS REST API', () => {
     describe('GET /api', () => {
       it('should list all collections', async () => {
         const request = new Request('https://database.do/api')
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         expect(response.status).toBe(200)
         const body = await response.json() as { collections: Array<{ name: string; href: string }> }
@@ -93,7 +93,7 @@ describe('HATEOAS REST API', () => {
     describe('GET /api/:resource', () => {
       it('should list documents in collection', async () => {
         const request = new Request('https://database.do/api/users')
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         expect(response.status).toBe(200)
         const body = await response.json() as { data: unknown[]; links: object }
@@ -104,14 +104,14 @@ describe('HATEOAS REST API', () => {
 
       it('should support query parameters for pagination', async () => {
         const request = new Request('https://database.do/api/users?limit=10&offset=5')
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         expect(response.status).toBe(200)
       })
 
       it('should support orderBy query parameter', async () => {
         const request = new Request('https://database.do/api/users?orderBy=createdAt&order=desc')
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         expect(response.status).toBe(200)
       })
@@ -125,12 +125,12 @@ describe('HATEOAS REST API', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: 'Test User' }),
         })
-        const createResponse = await db.fetch(createRequest)
+        const createResponse = await doInstance.handleRequest(createRequest)
         const created = await createResponse.json() as { data: { id: string } }
 
         // Then fetch it
         const request = new Request(`https://database.do/api/users/${created.data.id}`)
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         expect(response.status).toBe(200)
         const body = await response.json() as {
@@ -146,7 +146,7 @@ describe('HATEOAS REST API', () => {
 
       it('should return 404 for non-existent document', async () => {
         const request = new Request('https://database.do/api/users/nonexistent')
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         expect(response.status).toBe(404)
         const body = await response.json() as { error: string }
@@ -161,7 +161,7 @@ describe('HATEOAS REST API', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: 'New User', email: 'new@example.com' }),
         })
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         expect(response.status).toBe(201)
         const body = await response.json() as {
@@ -184,7 +184,7 @@ describe('HATEOAS REST API', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: 'Original' }),
         })
-        const createResponse = await db.fetch(createRequest)
+        const createResponse = await doInstance.handleRequest(createRequest)
         const created = await createResponse.json() as { data: { id: string } }
 
         // Update
@@ -193,7 +193,7 @@ describe('HATEOAS REST API', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: 'Updated' }),
         })
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         expect(response.status).toBe(200)
         const body = await response.json() as { data: { name: string } }
@@ -206,7 +206,7 @@ describe('HATEOAS REST API', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: 'Test' }),
         })
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         expect(response.status).toBe(404)
       })
@@ -217,7 +217,7 @@ describe('HATEOAS REST API', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: 'Test' }),
         })
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         // PUT without ID should not match the route
         expect(response.status).toBe(405) // Method not allowed for this route
@@ -232,14 +232,14 @@ describe('HATEOAS REST API', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: 'To Delete' }),
         })
-        const createResponse = await db.fetch(createRequest)
+        const createResponse = await doInstance.handleRequest(createRequest)
         const created = await createResponse.json() as { data: { id: string } }
 
         // Delete
         const request = new Request(`https://database.do/api/users/${created.data.id}`, {
           method: 'DELETE',
         })
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         expect(response.status).toBe(200)
         const body = await response.json() as { success: boolean }
@@ -247,7 +247,7 @@ describe('HATEOAS REST API', () => {
 
         // Verify deleted
         const getRequest = new Request(`https://database.do/api/users/${created.data.id}`)
-        const getResponse = await db.fetch(getRequest)
+        const getResponse = await doInstance.handleRequest(getRequest)
         expect(getResponse.status).toBe(404)
       })
 
@@ -255,7 +255,7 @@ describe('HATEOAS REST API', () => {
         const request = new Request('https://database.do/api/users/nonexistent', {
           method: 'DELETE',
         })
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         expect(response.status).toBe(404)
       })
@@ -264,7 +264,7 @@ describe('HATEOAS REST API', () => {
     describe('Schema Routes', () => {
       it('should return all method schemas', async () => {
         const request = new Request('https://database.do/api/.schema')
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         expect(response.status).toBe(200)
         const body = await response.json() as Record<string, object>
@@ -277,7 +277,7 @@ describe('HATEOAS REST API', () => {
 
       it('should return specific method schema', async () => {
         const request = new Request('https://database.do/api/.schema/get')
-        const response = await db.fetch(request)
+        const response = await doInstance.handleRequest(request)
 
         expect(response.status).toBe(200)
         const body = await response.json() as { params: string[]; returns: string }
@@ -290,7 +290,7 @@ describe('HATEOAS REST API', () => {
   describe('Health Check', () => {
     it('should return health status', async () => {
       const request = new Request('https://database.do/health')
-      const response = await db.fetch(request)
+      const response = await doInstance.handleRequest(request)
 
       expect(response.status).toBe(200)
       const body = await response.json() as { status: string }
@@ -300,16 +300,16 @@ describe('HATEOAS REST API', () => {
 })
 
 describe('Monaco Editor Routes (/~)', () => {
-  let db: DB
+  let doInstance: DO
 
   beforeEach(() => {
-    db = new DB(mockCtx as any, mockEnv)
+    doInstance = new DO(mockCtx as any, mockEnv)
   })
 
   describe('GET /~', () => {
     it('should return collection picker HTML', async () => {
       const request = new Request('https://database.do/~')
-      const response = await db.fetch(request)
+      const response = await doInstance.handleRequest(request)
 
       expect(response.status).toBe(200)
       expect(response.headers.get('Content-Type')).toBe('text/html')
@@ -323,7 +323,7 @@ describe('Monaco Editor Routes (/~)', () => {
   describe('GET /~/:resource', () => {
     it('should return document list HTML', async () => {
       const request = new Request('https://database.do/~/users')
-      const response = await db.fetch(request)
+      const response = await doInstance.handleRequest(request)
 
       expect(response.status).toBe(200)
       expect(response.headers.get('Content-Type')).toBe('text/html')
@@ -337,10 +337,10 @@ describe('Monaco Editor Routes (/~)', () => {
   describe('GET /~/:resource/:id', () => {
     it('should return Monaco editor HTML', async () => {
       // Create a document first
-      await db.create('users', { id: 'test-user', name: 'Test' })
+      await doInstance.create('users', { id: 'test-user', name: 'Test' })
 
       const request = new Request('https://database.do/~/users/test-user')
-      const response = await db.fetch(request)
+      const response = await doInstance.handleRequest(request)
 
       expect(response.status).toBe(200)
       expect(response.headers.get('Content-Type')).toBe('text/html')
@@ -355,7 +355,7 @@ describe('Monaco Editor Routes (/~)', () => {
 
     it('should include save button that PUTs to /api', async () => {
       const request = new Request('https://database.do/~/users/test-id')
-      const response = await db.fetch(request)
+      const response = await doInstance.handleRequest(request)
       const html = await response.text()
 
       // Check that the save action targets the REST API
@@ -365,7 +365,7 @@ describe('Monaco Editor Routes (/~)', () => {
 
     it('should support Ctrl+S keyboard shortcut', async () => {
       const request = new Request('https://database.do/~/users/test-id')
-      const response = await db.fetch(request)
+      const response = await doInstance.handleRequest(request)
       const html = await response.text()
 
       expect(html).toContain('CtrlCmd')
@@ -374,7 +374,7 @@ describe('Monaco Editor Routes (/~)', () => {
 
     it('should show empty JSON for non-existent document', async () => {
       const request = new Request('https://database.do/~/users/nonexistent')
-      const response = await db.fetch(request)
+      const response = await doInstance.handleRequest(request)
       const html = await response.text()
 
       // Should still render editor with empty object

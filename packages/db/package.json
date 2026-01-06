@@ -1,0 +1,68 @@
+{
+  "name": "@dotdo/db",
+  "version": "0.0.1",
+  "description": "Base DB class for Cloudflare Workers with multi-transport RPC support",
+  "author": "Nathan Clevenger",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./rpc": {
+      "import": "./dist/rpc/index.js",
+      "types": "./dist/rpc/index.d.ts"
+    },
+    "./mcp": {
+      "import": "./dist/mcp/index.js",
+      "types": "./dist/mcp/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "agents": "^0.0.66",
+    "hono": "^4.6.0",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.11.1",
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "@types/node": "^20.19.27",
+    "tsup": "^8.5.1",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "wrangler": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "wrangler": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "durable-objects",
+    "rpc",
+    "mcp",
+    "database"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

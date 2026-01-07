@@ -23,9 +23,9 @@ You're a founder. You need a team, but you're early. Maybe it's just you.
 ```typescript
 import { engineering, product, marketing } from 'teams.do'
 
-product`define the MVP`
-engineering`build it`
-marketing`launch it`
+product`define ${feature}`
+engineering`build ${feature}`
+marketing`launch ${feature}`
 ```
 
 That's your startup. Running.

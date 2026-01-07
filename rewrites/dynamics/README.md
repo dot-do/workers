@@ -7,21 +7,37 @@
 
 ---
 
+Microsoft Dynamics 365 is the only enterprise platform that unifies CRM and ERP. Sales, Service, Finance, Supply Chain, HR - all on one data platform. But it costs $65-200+ per user per month, requires months of implementation, and locks you into Microsoft's ecosystem.
+
+**dynamics.do** is the open-source alternative. One Dataverse. Every module. AI-native from day one. Deploy in minutes.
+
 ## The Problem
 
 Enterprise CRM and ERP systems are broken.
 
-**Microsoft Dynamics 365 costs $65-200 per user per month.** A 500-person company pays $390,000 to $1.2M annually just for licensing. Add implementation partners, Microsoft consultants, and ongoing maintenance — enterprises hemorrhage millions.
+**Microsoft Dynamics 365 costs $65-200 per user per month.** A 500-person company pays $390,000 to $1.2M annually just for licensing. Add implementation partners, Microsoft consultants, and ongoing maintenance - enterprises hemorrhage millions.
+
+| Module | D365 Pricing | What You Get |
+|--------|--------------|--------------|
+| Sales Professional | $65/user/mo | Basic CRM |
+| Sales Enterprise | $95/user/mo | Advanced CRM |
+| Customer Service | $50-95/user/mo | Support desk |
+| Finance | $180/user/mo | GL, AP, AR |
+| Supply Chain | $180/user/mo | Inventory, procurement |
+| Human Resources | $120/user/mo | HCM |
+| **Full Suite** | **$500+/user/mo** | Everything |
+
+For a 200-user company needing full CRM + ERP: **$1.2M/year minimum**.
 
 But the cost is only half the problem:
 
-- **Vendor lock-in** — Your customer data trapped in Microsoft's ecosystem
-- **Deployment complexity** — Months of implementation, armies of consultants
-- **AI as afterthought** — Copilot bolted on, not built in
-- **Licensing labyrinth** — Sales Professional vs. Enterprise vs. Premium vs. add-ons
-- **Geographic restrictions** — Data residency nightmares, compliance theater
+- **Vendor lock-in** - Your business data trapped in Microsoft's ecosystem
+- **Deployment complexity** - Months of implementation, armies of consultants
+- **AI as afterthought** - Copilot bolted on, not built in
+- **Licensing labyrinth** - Sales Professional vs. Enterprise vs. Premium vs. add-ons
+- **Geographic restrictions** - Data residency nightmares, compliance theater
 
-Meanwhile, the CRM itself? It's just CRUD operations over entities with business rules.
+Meanwhile, the platform itself? It's Dataverse - CRUD operations over entities with business rules. We can build this.
 
 ---
 
@@ -37,7 +53,7 @@ One command. Your own Dynamics 365. Your data. Your rules.
 
 | Dynamics 365 | dynamics.do |
 |--------------|-------------|
-| $65-200/user/month | **Free** (open source) |
+| $65-200+/user/month | **Free** (open source) |
 | Months to deploy | **Minutes** |
 | Microsoft data centers | **Your Cloudflare account** |
 | AI is an add-on | **AI is the foundation** |
@@ -48,40 +64,311 @@ One command. Your own Dynamics 365. Your data. Your rules.
 
 ## Features
 
-### Sales
+### Sales (CRM)
 
-Full CRM functionality out of the box:
+Full sales automation out of the box:
 
-- **Accounts & Contacts** — Company and person records with relationships
-- **Leads** — Qualification workflows, lead scoring, conversion
-- **Opportunities** — Pipeline management, probability forecasting
-- **Quotes & Orders** — Product catalog, pricing rules, line items
-- **Activities** — Tasks, emails, phone calls, appointments
+```typescript
+import { dynamics } from 'dynamics.do'
+
+// Create a lead
+const lead = await dynamics.leads.create({
+  firstname: 'John',
+  lastname: 'Smith',
+  companyname: 'Acme Corp',
+  emailaddress1: 'john@acme.com',
+  leadsourcecode: 'web'
+})
+
+// Qualify lead to opportunity
+const { account, contact, opportunity } = await dynamics.leads.qualify(lead.id, {
+  createAccount: true,
+  createContact: true,
+  createOpportunity: true
+})
+
+// Manage opportunity through pipeline
+await dynamics.opportunities.update(opportunity.id, {
+  estimatedvalue: 150000,
+  estimatedclosedate: '2025-03-31',
+  salesstage: 'propose'
+})
+```
+
+**Included:**
+- **Accounts & Contacts** - Company and person records with relationships
+- **Leads** - Qualification workflows, lead scoring, conversion
+- **Opportunities** - Pipeline management, probability forecasting
+- **Quotes & Orders** - Product catalog, pricing rules, line items
+- **Activities** - Tasks, emails, phone calls, appointments
+- **Goals** - Sales quotas and KPI tracking
 
 ### Customer Service
 
-- **Cases** — Incident management with SLA tracking
-- **Queues** — Routing rules, assignment logic
-- **Knowledge Base** — Article management with AI search
-- **Entitlements** — Service contracts and support terms
+Omnichannel support desk:
 
-### Core Platform
+```typescript
+// Create a case
+const incident = await dynamics.incidents.create({
+  title: 'Product not working as expected',
+  customerid: 'CONTACT-001',
+  caseorigincode: 'email',
+  prioritycode: 'high',
+  entitlementid: 'ENT-001'  // Links to service contract
+})
 
-- **Custom Entities** — Define any business object with relationships
-- **Business Process Flows** — Visual stage-gate workflows
-- **Business Rules** — No-code field validation and automation
-- **Security Roles** — Row-level security, team hierarchies
-- **Workflows** — Background and real-time automation
+// Track SLA
+const sla = await dynamics.incidents.getSlaStatus(incident.id)
+// { firstResponse: { due: '2025-01-15T10:00:00Z', status: 'in-progress' } }
+
+// Route to queue
+await dynamics.incidents.route(incident.id, { queue: 'tier-2-support' })
+
+// Resolve
+await dynamics.incidents.resolve(incident.id, {
+  resolution: 'Provided configuration update',
+  billabletime: 30
+})
+```
+
+**Included:**
+- **Cases** - Incident management with SLA tracking
+- **Queues** - Routing rules, assignment logic
+- **Knowledge Base** - Article management with AI search
+- **Entitlements** - Service contracts and support terms
+- **Omnichannel** - Chat, email, voice unified routing
+
+### Finance
+
+Enterprise-grade financial management:
+
+```typescript
+// General Ledger
+await dynamics.finance.journalEntry({
+  journalType: 'daily',
+  date: '2025-01-15',
+  lines: [
+    { account: '6100-00', debit: 5000, dimension: { department: 'Engineering' } },
+    { account: '2100-00', credit: 5000 }
+  ]
+})
+
+// Accounts Receivable
+const invoice = await dynamics.finance.customerInvoice({
+  customer: 'CUST-001',
+  lines: [
+    { item: 'SERV-001', quantity: 10, unitPrice: 500 }
+  ],
+  paymentTerms: 'Net30'
+})
+
+// Apply payment
+await dynamics.finance.customerPayment({
+  customer: 'CUST-001',
+  amount: 5000,
+  invoices: [{ invoice: invoice.id, amount: 5000 }]
+})
+
+// Accounts Payable
+const vendorInvoice = await dynamics.finance.vendorInvoice({
+  vendor: 'VEND-001',
+  invoiceNumber: 'INV-12345',
+  lines: [
+    { account: '5100-00', amount: 10000, description: 'Raw materials' }
+  ]
+})
+
+// Payment proposal
+const proposal = await dynamics.finance.paymentProposal({
+  vendors: 'all',
+  dueBy: '2025-01-31',
+  method: 'ACH'
+})
+```
+
+**Included:**
+- **General Ledger** - Chart of accounts, journal entries, dimensions
+- **Accounts Receivable** - Customer invoicing, payments, aging
+- **Accounts Payable** - Vendor bills, payment processing
+- **Cash Management** - Bank accounts, reconciliation
+- **Fixed Assets** - Asset tracking, depreciation
+- **Budgeting** - Budget creation, variance analysis
+- **Financial Reporting** - Statements, consolidation
+
+### Supply Chain Management
+
+End-to-end supply chain operations:
+
+```typescript
+// Inventory Management
+await dynamics.inventory.adjust({
+  item: 'WIDGET-001',
+  warehouse: 'WH-01',
+  quantity: 100,
+  reason: 'physical-count'
+})
+
+// Check availability across locations
+const availability = await dynamics.inventory.availability('WIDGET-001')
+// { total: 500, byWarehouse: { 'WH-01': 300, 'WH-02': 200 }, reserved: 50, available: 450 }
+
+// Procurement
+const po = await dynamics.procurement.purchaseOrder({
+  vendor: 'VEND-001',
+  lines: [
+    { item: 'RAW-001', quantity: 1000, unitPrice: 5.00 }
+  ],
+  requestedDate: '2025-02-01'
+})
+
+// Receive against PO
+await dynamics.procurement.productReceipt({
+  purchaseOrder: po.id,
+  lines: [{ item: 'RAW-001', quantity: 1000 }]
+})
+
+// Sales Order fulfillment
+const salesOrder = await dynamics.sales.salesOrder({
+  customer: 'CUST-001',
+  lines: [
+    { item: 'WIDGET-001', quantity: 50 }
+  ]
+})
+
+// Create shipment
+await dynamics.warehouse.createShipment({
+  salesOrder: salesOrder.id,
+  warehouse: 'WH-01'
+})
+```
+
+**Included:**
+- **Inventory Management** - Stock levels, movements, valuation
+- **Warehouse Management** - Locations, picking, packing
+- **Procurement** - Purchase orders, vendor management
+- **Sales Order Processing** - Order entry, fulfillment
+- **Transportation** - Shipment management, carrier integration
+- **Master Planning** - MRP, demand forecasting
+
+### Project Operations
+
+Project-based businesses:
+
+```typescript
+// Create project
+const project = await dynamics.projects.create({
+  name: 'Website Redesign',
+  customer: 'CUST-001',
+  type: 'time-and-material',
+  startDate: '2025-02-01',
+  endDate: '2025-04-30',
+  budget: 75000
+})
+
+// Add work breakdown structure
+await dynamics.projects.addTasks(project.id, [
+  { name: 'Discovery', hours: 40, assignee: 'USR-001' },
+  { name: 'Design', hours: 80, assignee: 'USR-002', predecessor: 'Discovery' },
+  { name: 'Development', hours: 200, assignee: 'USR-003', predecessor: 'Design' }
+])
+
+// Record time
+await dynamics.projects.timeEntry({
+  project: project.id,
+  task: 'Discovery',
+  hours: 8,
+  date: '2025-02-03',
+  description: 'Requirements gathering'
+})
+
+// Generate invoice
+await dynamics.projects.invoice(project.id, {
+  throughDate: '2025-02-28',
+  includeExpenses: true
+})
+```
+
+**Included:**
+- **Project Planning** - WBS, scheduling, resource allocation
+- **Time & Expense** - Entry, approval workflows
+- **Project Accounting** - Budgets, actuals, recognition
+- **Resource Management** - Skills, availability, utilization
+- **Billing** - Time-and-material, fixed-price, milestones
+
+### Human Resources
+
+Complete HCM solution:
+
+```typescript
+// Employee lifecycle
+const employee = await dynamics.hr.hire({
+  name: 'Alice Johnson',
+  position: 'Software Engineer',
+  department: 'Engineering',
+  startDate: '2025-02-15',
+  compensation: { salary: 120000, currency: 'USD' }
+})
+
+// Benefits enrollment
+await dynamics.hr.enrollBenefits(employee.id, {
+  plans: ['medical-hmo', 'dental', '401k'],
+  coverage: { medical: 'employee+family' }
+})
+
+// Leave management
+await dynamics.hr.requestLeave({
+  employee: employee.id,
+  type: 'vacation',
+  startDate: '2025-03-10',
+  endDate: '2025-03-14'
+})
+
+// Performance review
+await dynamics.hr.performanceReview({
+  employee: employee.id,
+  period: '2024',
+  rating: 4,
+  goals: [
+    { objective: 'Ship authentication system', result: 'exceeded' }
+  ]
+})
+```
+
+**Included:**
+- **Core HR** - Employee records, org structure
+- **Recruiting** - Job postings, applications, hiring
+- **Onboarding** - Task workflows, document collection
+- **Benefits** - Enrollment, life events
+- **Leave Management** - Accruals, requests, approvals
+- **Performance** - Goals, reviews, feedback
+- **Compensation** - Pay structures, adjustments
 
 ---
 
 ## OData v4 Compatible
 
-Standard OData — existing Power Platform integrations work.
+Standard OData - existing Power Platform integrations work.
 
 ```bash
 # Query accounts with related contacts
 GET /api/data/v9.2/accounts?$select=name,revenue&$expand=contact_customer_accounts($select=fullname,emailaddress1)&$filter=revenue gt 1000000&$orderby=revenue desc&$top=10
+
+# Create a sales order
+POST /api/data/v9.2/salesorders
+Content-Type: application/json
+{
+  "customerid_account@odata.bind": "/accounts(12345)",
+  "name": "SO-2025-001"
+}
+
+# Execute action
+POST /api/data/v9.2/leads(67890)/Microsoft.Dynamics.CRM.QualifyLead
+Content-Type: application/json
+{
+  "CreateAccount": true,
+  "CreateContact": true,
+  "CreateOpportunity": true
+}
 ```
 
 Every OData operation you know:
@@ -100,22 +387,19 @@ Every OData operation you know:
 ### FetchXML Support
 
 ```typescript
-const response = await fetch('/api/data/v9.2/accounts/Microsoft.Dynamics.CRM.FetchXml', {
-  method: 'POST',
-  body: JSON.stringify({
-    fetchXml: `
-      <fetch mapping="logical" count="50">
-        <entity name="account">
-          <attribute name="name" />
-          <attribute name="revenue" />
-          <filter>
-            <condition attribute="statecode" operator="eq" value="0" />
-          </filter>
-          <order attribute="revenue" descending="true" />
-        </entity>
-      </fetch>
-    `
-  })
+const response = await dynamics.query({
+  fetchXml: `
+    <fetch mapping="logical" count="50">
+      <entity name="account">
+        <attribute name="name" />
+        <attribute name="revenue" />
+        <filter>
+          <condition attribute="statecode" operator="eq" value="0" />
+        </filter>
+        <order attribute="revenue" descending="true" />
+      </entity>
+    </fetch>
+  `
 })
 ```
 
@@ -125,9 +409,74 @@ const response = await fetch('/api/data/v9.2/accounts/Microsoft.Dynamics.CRM.Fet
 
 dynamics.do is built for AI agents, not retrofitted.
 
+### Natural Language Everything
+
+```typescript
+import { dynamics } from 'dynamics.do'
+
+// Sales queries
+const deals = await dynamics.ask('Show me all opportunities closing this quarter over $50k')
+
+// Finance queries
+const aging = await dynamics.ask('What invoices are past due?')
+
+// Supply chain
+const stock = await dynamics.ask('Which items are below reorder point?')
+
+// HR queries
+const headcount = await dynamics.ask('How many engineers have we hired this year?')
+```
+
+### AI Agents for Every Module
+
+```typescript
+import { sally, ada, ralph } from 'dynamics.do/agents'
+
+// Sales agent
+await sally`
+  Review the pipeline for Q1.
+  Identify deals at risk of slipping.
+  Create follow-up tasks for the sales team.
+`
+
+// Finance agent
+await ada`
+  Run month-end close for January.
+  Generate variance analysis vs budget.
+  Flag any unusual transactions.
+`
+
+// Operations agent
+await ralph`
+  Check inventory levels against demand forecast.
+  Create purchase orders for items below safety stock.
+  Optimize warehouse replenishment.
+`
+```
+
+### AI-Powered Automation
+
+**Sales Intelligence:**
+- Predictive lead scoring
+- Opportunity risk analysis
+- Next best action recommendations
+- Email sentiment detection
+
+**Finance Intelligence:**
+- Anomaly detection in transactions
+- Cash flow forecasting
+- Automated bank reconciliation
+- Invoice matching
+
+**Supply Chain Intelligence:**
+- Demand forecasting
+- Inventory optimization
+- Supplier risk scoring
+- Delivery prediction
+
 ### MCP Server
 
-Every entity, every action — exposed as AI tools:
+Every entity, every action - exposed as AI tools:
 
 ```json
 {
@@ -144,19 +493,7 @@ Every entity, every action — exposed as AI tools:
 }
 ```
 
-### Natural Language Queries
-
-```typescript
-import { dynamics } from 'dynamics.do'
-
-// Ask questions, get answers
-const result = await dynamics.ask('Show me all opportunities closing this quarter over $50k')
-
-// AI translates to OData automatically
-// GET /api/data/v9.2/opportunities?$filter=estimatedclosedate ge 2025-01-01 and estimatedclosedate le 2025-03-31 and estimatedvalue gt 50000
-```
-
-### Available MCP Tools
+Available tools:
 
 | Tool | Description |
 |------|-------------|
@@ -168,64 +505,8 @@ const result = await dynamics.ask('Show me all opportunities closing this quarte
 | `dynamics_metadata` | Explore entity definitions |
 | `dynamics_associate` | Create relationships between records |
 | `dynamics_workflow` | Trigger business process flows |
-
-### AI-Powered Features
-
-- **Predictive Lead Scoring** — ML models rank leads by likelihood to convert
-- **Opportunity Insights** — Risk analysis, competitor intelligence
-- **Smart Recommendations** — Next best action suggestions
-- **Conversation Intelligence** — Call transcription and sentiment analysis
-- **Email Intelligence** — Auto-draft responses, sentiment detection
-
----
-
-## Quick Start
-
-### One-Click Deploy
-
-```bash
-npx create-dotdo dynamics
-```
-
-This creates a new Cloudflare Worker with:
-- Full dynamics.do deployment
-- SQLite database per tenant
-- Sample Sales entities configured
-- MCP server endpoint enabled
-
-### Manual Setup
-
-```bash
-git clone https://github.com/dot-do/dynamics.git
-cd dynamics
-npm install
-npm run deploy
-```
-
-### Connect
-
-```typescript
-import { DynamicsClient } from 'dynamics.do'
-
-const client = new DynamicsClient({
-  url: 'https://your-dynamics.workers.dev',
-  token: 'your-token'
-})
-
-// Create an account
-const account = await client.accounts.create({
-  name: 'Contoso Ltd',
-  revenue: 5000000,
-  industrycode: 1  // Accounting
-})
-
-// Query with OData
-const opportunities = await client.opportunities.query({
-  $filter: 'estimatedvalue gt 100000',
-  $orderby: 'estimatedclosedate asc',
-  $expand: 'customerid_account($select=name)'
-})
-```
+| `dynamics_finance` | Financial operations |
+| `dynamics_inventory` | Inventory operations |
 
 ---
 
@@ -248,63 +529,61 @@ const opportunities = await client.opportunities.query({
                     |                                       |
                     +-------------------+-------------------+
                                         |
-                              Durable Objects
-                         (One per Tenant/Organization)
-                                        |
-                    +-------------------+-------------------+
-                    |                   |                   |
-               SQLite               Vectorize              R2
-           (Entity Data)         (AI Embeddings)     (Attachments)
+                        +---------------+---------------+
+                        |               |               |
+                  +----------+    +----------+    +----------+
+                  |  Sales   |    | Finance  |    |  Supply  |
+                  |   DO     |    |   DO     |    | Chain DO |
+                  +----------+    +----------+    +----------+
+                        |               |               |
+                    +-------+-------+-------+-------+-------+
+                    |       |       |       |       |       |
+                 SQLite  SQLite  SQLite  SQLite  SQLite   R2
+                 (CRM)   (GL)    (AP/AR) (Inv)   (HR)   (Docs)
 ```
 
-### Durable Objects Per Tenant
+### Durable Objects Per Module
 
-Each organization gets isolated:
-- **SQLite database** — All entity data, relationships, metadata
-- **Vectorize index** — Semantic search across records
-- **R2 bucket** — Attachments, documents, images
+Each business domain runs in its own Durable Object:
+
+| Durable Object | Module | Entities |
+|----------------|--------|----------|
+| `SalesDO` | Sales | Account, Contact, Lead, Opportunity, Quote, Order |
+| `ServiceDO` | Customer Service | Case, Queue, Knowledge, Entitlement |
+| `FinanceDO` | Finance | Journal, Customer Invoice, Vendor Invoice, Payment |
+| `InventoryDO` | Supply Chain | Item, Warehouse, Stock, Movement |
+| `ProcurementDO` | Procurement | Vendor, PO, Receipt |
+| `ProjectDO` | Project Ops | Project, Task, Time, Expense |
+| `HRDO` | Human Resources | Employee, Position, Leave, Performance |
+
+### Cross-Module Integration
+
+The magic of unified CRM+ERP - transactions flow automatically:
+
+```typescript
+// When a sales order is confirmed:
+// 1. SalesDO creates the order
+// 2. InventoryDO reserves stock
+// 3. FinanceDO creates revenue recognition schedule
+// 4. ProjectDO creates project (if project-based)
+
+const salesOrder = await dynamics.sales.confirm('SO-001')
+// All of the above happens transactionally
+```
 
 ### Tiered Storage
 
 | Tier | Storage | Use Case |
 |------|---------|----------|
-| Hot | SQLite in DO | Active records, recent data |
-| Warm | R2 | Archived records, attachments |
-| Cold | R2 + Parquet | Historical analytics, compliance |
+| Hot | SQLite in DO | Active records, recent transactions |
+| Warm | R2 | Historical data, closed periods |
+| Cold | R2 + Parquet | Analytics, compliance retention |
 
 ---
 
-## Entity Model
+## Built-in Entities
 
-dynamics.do uses a Dataverse-compatible entity model:
-
-```typescript
-// Define a custom entity
-await client.metadata.createEntity({
-  logicalName: 'new_project',
-  displayName: 'Project',
-  primaryAttribute: 'new_name',
-  attributes: [
-    { logicalName: 'new_name', type: 'string', maxLength: 200 },
-    { logicalName: 'new_budget', type: 'money' },
-    { logicalName: 'new_startdate', type: 'datetime' },
-    { logicalName: 'new_status', type: 'picklist', options: [
-      { value: 1, label: 'Not Started' },
-      { value: 2, label: 'In Progress' },
-      { value: 3, label: 'Completed' }
-    ]}
-  ],
-  relationships: [
-    {
-      type: 'ManyToOne',
-      relatedEntity: 'account',
-      lookupAttribute: 'new_customerid'
-    }
-  ]
-})
-```
-
-### Built-in Entities
+### Sales & Marketing
 
 | Entity | Description |
 |--------|-------------|
@@ -314,18 +593,46 @@ await client.metadata.createEntity({
 | `opportunity` | Sales opportunities |
 | `quote` | Price proposals |
 | `salesorder` | Confirmed orders |
-| `invoice` | Billing records |
-| `incident` | Service cases |
-| `task` | To-do items |
-| `email` | Email activities |
-| `phonecall` | Call records |
-| `appointment` | Calendar events |
 | `product` | Product catalog |
 | `pricelevel` | Price lists |
-| `team` | User groups |
-| `systemuser` | Users |
-| `businessunit` | Organizational units |
-| `role` | Security roles |
+| `campaign` | Marketing campaigns |
+
+### Customer Service
+
+| Entity | Description |
+|--------|-------------|
+| `incident` | Service cases |
+| `queue` | Work queues |
+| `knowledgearticle` | Knowledge base |
+| `entitlement` | Service contracts |
+
+### Finance
+
+| Entity | Description |
+|--------|-------------|
+| `msdyn_journalentry` | General ledger entries |
+| `invoice` | Customer invoices |
+| `msdyn_vendorinvoice` | Vendor bills |
+| `msdyn_payment` | Payment records |
+| `msdyn_fixedasset` | Fixed assets |
+
+### Supply Chain
+
+| Entity | Description |
+|--------|-------------|
+| `msdyn_warehouse` | Storage locations |
+| `msdyn_inventoryadjustment` | Stock adjustments |
+| `msdyn_purchaseorder` | Purchase orders |
+| `msdyn_productreceipt` | Goods receipt |
+
+### Human Resources
+
+| Entity | Description |
+|--------|-------------|
+| `msdyn_employee` | Workers |
+| `msdyn_position` | Job positions |
+| `msdyn_leaverequest` | Time off requests |
+| `msdyn_performancereview` | Reviews |
 
 ---
 
@@ -334,7 +641,7 @@ await client.metadata.createEntity({
 Visual stage-gate workflows for any entity:
 
 ```typescript
-await client.workflows.createBusinessProcess({
+await dynamics.workflows.createBusinessProcess({
   name: 'Lead to Opportunity',
   entity: 'lead',
   stages: [
@@ -363,6 +670,20 @@ await client.workflows.createBusinessProcess({
 })
 ```
 
+### Finance Workflows
+
+```typescript
+await dynamics.workflows.createApproval({
+  name: 'Vendor Invoice Approval',
+  entity: 'msdyn_vendorinvoice',
+  conditions: [
+    { when: 'amount > 10000', require: 'manager' },
+    { when: 'amount > 50000', require: 'director' },
+    { when: 'amount > 100000', require: 'cfo' }
+  ]
+})
+```
+
 ---
 
 ## Security Model
@@ -371,7 +692,7 @@ Row-level security matching Dynamics 365:
 
 ```typescript
 // Create a security role
-await client.security.createRole({
+await dynamics.security.createRole({
   name: 'Sales Representative',
   privileges: [
     { entity: 'account', create: 'User', read: 'BusinessUnit', write: 'User', delete: 'None' },
@@ -379,14 +700,23 @@ await client.security.createRole({
     { entity: 'lead', create: 'User', read: 'BusinessUnit', write: 'User', delete: 'User' }
   ]
 })
+
+// Finance role with sensitive access
+await dynamics.security.createRole({
+  name: 'Accounts Payable Clerk',
+  privileges: [
+    { entity: 'msdyn_vendorinvoice', create: 'BusinessUnit', read: 'BusinessUnit', write: 'BusinessUnit' },
+    { entity: 'msdyn_payment', create: 'None', read: 'BusinessUnit', write: 'None' }  // Can't create payments
+  ]
+})
 ```
 
 Access levels:
-- **None** — No access
-- **User** — Own records only
-- **BusinessUnit** — Records in user's business unit
-- **ParentChild** — Parent and child business units
-- **Organization** — All records
+- **None** - No access
+- **User** - Own records only
+- **BusinessUnit** - Records in user's business unit
+- **ParentChild** - Parent and child business units
+- **Organization** - All records
 
 ---
 
@@ -424,26 +754,57 @@ https://your-dynamics.workers.dev/api/data/v9.2/
 
 ---
 
-## Local Development
+## Quick Start
+
+### One-Click Deploy
 
 ```bash
-# Start local server
-npm run dev
+npx create-dotdo dynamics
 
-# Connect with any OData client
-# Base URL: http://localhost:8787/api/data/v9.2/
+# Follow prompts:
+# - Organization name
+# - Modules to enable (Sales, Service, Finance, Supply Chain, HR)
+# - Base currency
+# - Fiscal year
 ```
 
-### Seed Sample Data
+This creates a new Cloudflare Worker with:
+- Full dynamics.do deployment
+- SQLite database per module
+- Sample data for selected modules
+- MCP server endpoint enabled
+
+### Manual Setup
 
 ```bash
-npm run seed
+git clone https://github.com/dot-do/dynamics.git
+cd dynamics
+npm install
+npm run deploy
+```
 
-# Creates:
-# - 100 accounts
-# - 500 contacts
-# - 200 opportunities
-# - Sample products and price lists
+### Connect
+
+```typescript
+import { DynamicsClient } from 'dynamics.do'
+
+const client = new DynamicsClient({
+  url: 'https://your-dynamics.workers.dev',
+  token: 'your-token'
+})
+
+// Create an account
+const account = await client.accounts.create({
+  name: 'Contoso Ltd',
+  revenue: 5000000,
+  industrycode: 1
+})
+
+// Create a customer invoice (Finance)
+const invoice = await client.finance.customerInvoice({
+  customer: account.id,
+  lines: [{ item: 'SERV-001', amount: 10000 }]
+})
 ```
 
 ---
@@ -461,49 +822,89 @@ dynamics365-export --environment contoso.crm.dynamics.com --entities account,con
 
 ```bash
 npx dynamics.do import ./export --url https://your-dynamics.workers.dev
+
+# Migrates:
+# - All entity data
+# - Relationships
+# - Custom entities
+# - Business process flows
+# - Security roles
 ```
 
 Supported formats:
 - Dynamics 365 Data Export JSON
 - CSV with relationship mapping
 - XrmToolBox export format
+- Solution package (.zip)
 
 ---
 
 ## Comparison
 
-| Feature | Dynamics 365 | Salesforce | dynamics.do |
-|---------|--------------|------------|-------------|
-| Pricing | $65-200/user/mo | $25-330/user/mo | **Free** |
-| Deployment | Months | Weeks | **Minutes** |
-| Data Location | Microsoft | Salesforce | **Your infrastructure** |
-| API | OData + Proprietary | REST + SOAP | **OData v4** |
-| AI | Copilot (add-on) | Einstein (add-on) | **Built-in** |
-| Customization | Power Platform | Force.com | **Code + No-code** |
-| Open Source | No | No | **Yes (MIT)** |
-| Vendor Lock-in | High | High | **None** |
+| Feature | Dynamics 365 | Salesforce | SAP | dynamics.do |
+|---------|--------------|------------|-----|-------------|
+| Pricing | $65-200/user/mo | $25-330/user/mo | $95-500/user/mo | **Free** |
+| CRM | Yes | Yes | Limited | **Yes** |
+| ERP | Yes | No | Yes | **Yes** |
+| Unified Platform | Yes | No | No | **Yes** |
+| Deployment | Months | Weeks | Months | **Minutes** |
+| AI | Copilot (add-on) | Einstein (add-on) | SAP AI (add-on) | **Built-in** |
+| Open Source | No | No | No | **Yes (MIT)** |
+
+### Cost Comparison
+
+**200-user company needing CRM + ERP:**
+
+| | Dynamics 365 | dynamics.do |
+|-|--------------|-------------|
+| Sales (100 users) | $79,200/yr | $0 |
+| Service (50 users) | $47,500/yr | $0 |
+| Finance (30 users) | $64,800/yr | $0 |
+| Supply Chain (20 users) | $43,200/yr | $0 |
+| **Annual Total** | **$234,700** | **$5** (Workers) |
+| **5-Year TCO** | **$1,500,000+** | **$300** |
 
 ---
 
 ## Roadmap
 
 ### Now
-- Core CRUD operations
-- OData v4 query support
-- Basic entity metadata
-- MCP server for AI
+- [x] Core CRUD operations
+- [x] OData v4 query support
+- [x] Sales entities
+- [x] Customer Service entities
+- [x] MCP server for AI
 
 ### Next
-- Business Process Flows
-- Security roles and row-level access
-- FetchXML parser
-- Change tracking and sync
+- [ ] Finance module (GL, AP, AR)
+- [ ] Supply Chain (Inventory, Procurement)
+- [ ] Business Process Flows
+- [ ] Security roles and row-level access
+- [ ] FetchXML parser
 
 ### Later
-- Plugins (pre/post operation)
-- Real-time workflows
-- Solution packaging
-- Multi-tenant with isolation
+- [ ] Project Operations
+- [ ] Human Resources
+- [ ] Plugins (pre/post operation)
+- [ ] Real-time workflows
+- [ ] Solution packaging
+- [ ] Multi-currency
+- [ ] Consolidation
+
+---
+
+## Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [Quick Start](./docs/quickstart.mdx) | Deploy in 5 minutes |
+| [Sales Module](./docs/sales.mdx) | CRM functionality |
+| [Finance Module](./docs/finance.mdx) | Financial management |
+| [Supply Chain](./docs/supply-chain.mdx) | Inventory and procurement |
+| [AI Features](./docs/ai.mdx) | Natural language, agents |
+| [OData API](./docs/odata.mdx) | API reference |
+| [Security](./docs/security.mdx) | Roles and permissions |
+| [Migration](./docs/migration.mdx) | Moving from Dynamics 365 |
 
 ---
 
@@ -521,22 +922,23 @@ npm test
 npm run dev
 ```
 
-### Architecture Docs
+### Key Areas
 
-- [Entity Model](docs/entity-model.md)
-- [OData Implementation](docs/odata.md)
-- [Security Model](docs/security.md)
-- [AI Integration](docs/ai.md)
+- Finance module implementation
+- Supply Chain entities
+- OData query translation
+- Business Process Flow engine
+- Security model
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+MIT - see [LICENSE](LICENSE)
 
 ---
 
 <p align="center">
-  <strong>Enterprise CRM, liberated.</strong><br/>
-  Built on Cloudflare Workers. Designed for AI. Open to everyone.
+  <strong>The complete business platform, liberated.</strong><br/>
+  CRM + ERP. Built on Cloudflare Workers. Designed for AI. Open to everyone.
 </p>

@@ -47,9 +47,9 @@ export {
   // Utilities
   ToAsync,
   ToRpc,
-  FnReturn,
-  FnArgs,
-  FnConfig,
+  FnOut,
+  FnIn,
+  FnOpts,
 
   // Template extraction
   ExtractParams,
@@ -61,7 +61,7 @@ export {
   RpcPromise,
 } from './fn.js'
 
-// Legacy type aliases
+// Legacy type aliases for backwards compatibility
 export type { Fn as TypedFunction } from './fn.js'
 export type { AsyncFn as AsyncTypedFunction } from './fn.js'
 export type { RpcFn as RpcFunction } from './fn.js'
@@ -78,3 +78,8 @@ export type { FnBuilder as FunctionBuilder } from './fn.js'
 export type { AIFn as AIFunction } from './fn.js'
 export type { AITool as AIToolDefinition } from './fn.js'
 export type { Fn as SchemaFunction } from './fn.js'
+
+// Legacy utility aliases
+export type { FnOut as FnReturn } from './fn.js'
+export type { FnIn as FnArgs } from './fn.js'
+export type { FnOpts as FnConfig } from './fn.js'

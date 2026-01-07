@@ -1,25 +1,51 @@
 {
   "name": "@dotdo/auth",
   "version": "0.0.1",
-  "private": true,
-  "description": "RBAC permission checking for @dotdo/workers",
+  "description": "Authentication for workers.do - RBAC and Better Auth plugins",
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./better-auth": {
+      "types": "./src/better-auth.ts",
+      "import": "./src/better-auth.ts"
+    },
+    "./plugins": {
+      "types": "./src/plugins/index.ts",
+      "import": "./src/plugins/index.ts"
+    },
+    "./plugins/api-key": {
+      "types": "./src/plugins/api-key.ts",
+      "import": "./src/plugins/api-key.ts"
+    },
+    "./plugins/mcp": {
+      "types": "./src/plugins/mcp.ts",
+      "import": "./src/plugins/mcp.ts"
+    },
+    "./plugins/organization": {
+      "types": "./src/plugins/organization.ts",
+      "import": "./src/plugins/organization.ts"
+    },
+    "./plugins/admin": {
+      "types": "./src/plugins/admin.ts",
+      "import": "./src/plugins/admin.ts"
+    },
+    "./plugins/oauth-proxy": {
+      "types": "./src/plugins/oauth-proxy.ts",
+      "import": "./src/plugins/oauth-proxy.ts"
     }
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest"
+  },
+  "dependencies": {
+    "better-auth": "^1.0.0",
+    "@better-auth/oauth-provider": "^1.0.0",
+    "drizzle-orm": "^0.36.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240925.0",

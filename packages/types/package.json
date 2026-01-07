@@ -30,14 +30,7 @@
     "human-in-the-loop": "*"
   },
   "devDependencies": {
-    "typescript": "^5.7.3",
-    "mdxld": "workspace:*",
-    "ai-functions": "workspace:*",
-    "ai-workflows": "workspace:*",
-    "ai-database": "workspace:*",
-    "digital-workers": "workspace:*",
-    "autonomous-agents": "workspace:*",
-    "human-in-the-loop": "workspace:*"
+    "typescript": "^5.7.3"
   },
   "keywords": [
     "types",

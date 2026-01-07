@@ -10,10 +10,31 @@
  */
 
 import type { R2Storage } from '../storage/r2.js'
+import { decompress } from './compression.js'
+import { parseGitObject } from './git-object.js'
+import { hashToPath } from './path-mapping.js'
+import { ENOENT } from '../core/errors.js'
 
 export interface GitObject {
   type: string
   content: Uint8Array
+}
+
+/**
+ * Validate that a hash is properly formatted
+ * @param hash - The hash to validate
+ * @throws Error if hash is invalid
+ */
+function validateHash(hash: string): void {
+  // Check length (SHA-1 = 40, SHA-256 = 64)
+  if (hash.length !== 40 && hash.length !== 64) {
+    throw new Error(`Invalid hash length: expected 40 (SHA-1) or 64 (SHA-256), got ${hash.length}`)
+  }
+
+  // Check for valid hex characters
+  if (!/^[0-9a-fA-F]+$/.test(hash)) {
+    throw new Error('Invalid hash: contains non-hex characters')
+  }
 }
 
 /**
@@ -26,6 +47,25 @@ export interface GitObject {
  * @throws Error if data is corrupted or invalid format
  */
 export async function getObject(hash: string, storage: R2Storage): Promise<GitObject> {
-  // TODO: Implement
-  throw new Error('Not implemented')
+  // Step 1: Validate hash format
+  validateHash(hash)
+
+  // Step 2: Normalize hash to lowercase and get storage path
+  const normalizedHash = hash.toLowerCase()
+  const path = hashToPath(normalizedHash)
+
+  // Step 3: Read compressed data from storage
+  const result = await storage.get(path)
+  if (!result) {
+    throw new ENOENT('open', path)
+  }
+
+  // Step 4: Decompress the data
+  const decompressed = await decompress(result.data)
+
+  // Step 5: Parse git object format
+  const { type, content } = parseGitObject(decompressed)
+
+  // Step 6: Return the object
+  return { type, content }
 }

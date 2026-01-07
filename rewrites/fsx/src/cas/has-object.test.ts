@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { hasObject } from './has-object'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { hasObject, setStorage, type HasObjectStorage } from './has-object'
+import { hashToPath } from './path-mapping'
 
 /**
  * Tests for hasObject - checking git object existence in CAS
@@ -16,11 +17,40 @@ import { hasObject } from './has-object'
 const VALID_SHA1_HASH = 'aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d'
 const VALID_SHA256_HASH = '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
 
+/**
+ * Create a mock storage with specific hashes that "exist"
+ */
+function createMockStorage(existingHashes: Set<string> = new Set()): HasObjectStorage {
+  return {
+    exists: vi.fn(async (path: string): Promise<boolean> => {
+      // Check if the path corresponds to an existing hash
+      for (const hash of existingHashes) {
+        if (hashToPath(hash) === path) {
+          return true
+        }
+      }
+      return false
+    }),
+  }
+}
+
 describe('hasObject', () => {
+  let mockStorage: HasObjectStorage
+
+  beforeEach(() => {
+    // Set up mock storage with VALID_SHA1_HASH existing
+    mockStorage = createMockStorage(new Set([VALID_SHA1_HASH]))
+    setStorage(mockStorage)
+  })
+
+  afterEach(() => {
+    // Clean up storage after each test
+    setStorage(null)
+  })
+
   describe('Basic Existence Check', () => {
     it('should return true for existing object', async () => {
       // This test expects the implementation to check actual storage
-      // In RED phase, we verify it fails with "Not implemented"
       const result = await hasObject(VALID_SHA1_HASH)
       expect(result).toBe(true)
     })

@@ -10,6 +10,12 @@
  */
 
 import type { GitObjectType } from './git-object'
+import { createGitObject } from './git-object'
+import { sha1 } from './hash'
+import { compress } from './compression'
+import { hashToPath } from './path-mapping'
+
+const VALID_TYPES = ['blob', 'tree', 'commit', 'tag'] as const
 
 /**
  * Storage interface for writing objects
@@ -31,6 +37,30 @@ export async function putObject(
   type: string,
   content: Uint8Array
 ): Promise<string> {
-  // TODO: Implement
-  throw new Error('Not implemented')
+  // Validate type: non-empty, no spaces, no null bytes, must be valid git type
+  if (!type || type.includes(' ') || type.includes('\0')) {
+    throw new Error('Invalid type: type must be non-empty and not contain spaces or null bytes')
+  }
+
+  if (!VALID_TYPES.includes(type as GitObjectType)) {
+    throw new Error(`Invalid type: must be one of ${VALID_TYPES.join(', ')}`)
+  }
+
+  // Create the git object (header + content)
+  const gitObject = createGitObject(type, content)
+
+  // Compute SHA-1 hash of the uncompressed git object
+  const hash = await sha1(gitObject)
+
+  // Compress the git object with zlib
+  const compressedData = await compress(gitObject)
+
+  // Get the storage path from the hash
+  const path = hashToPath(hash)
+
+  // Write the compressed data to storage
+  await storage.write(path, compressedData)
+
+  // Return the 40-character hex hash
+  return hash
 }

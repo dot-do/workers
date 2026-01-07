@@ -318,25 +318,31 @@ describe('putObject', () => {
     it('should throw error for invalid type', async () => {
       const content = new TextEncoder().encode('test')
 
-      await expect(putObject(storage, 'invalid', content)).rejects.toThrow()
+      await expect(putObject(storage, 'invalid', content)).rejects.toThrow(
+        /invalid.*type/i
+      )
     })
 
     it('should throw error for empty type', async () => {
       const content = new TextEncoder().encode('test')
 
-      await expect(putObject(storage, '', content)).rejects.toThrow()
+      await expect(putObject(storage, '', content)).rejects.toThrow(/type/i)
     })
 
     it('should throw error for type with spaces', async () => {
       const content = new TextEncoder().encode('test')
 
-      await expect(putObject(storage, 'blob ', content)).rejects.toThrow()
+      await expect(putObject(storage, 'blob ', content)).rejects.toThrow(
+        /invalid.*type/i
+      )
     })
 
     it('should throw error for type with null bytes', async () => {
       const content = new TextEncoder().encode('test')
 
-      await expect(putObject(storage, 'blob\0', content)).rejects.toThrow()
+      await expect(putObject(storage, 'blob\0', content)).rejects.toThrow(
+        /invalid.*type/i
+      )
     })
   })
 

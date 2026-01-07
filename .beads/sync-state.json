@@ -1,0 +1,7 @@
+{
+  "last_failure": "2026-01-07T13:36:17.279932-06:00",
+  "failure_count": 1,
+  "backoff_until": "2026-01-07T13:36:47.279933-06:00",
+  "needs_manual_sync": false,
+  "failure_reason": "git pull failed: exit status 1\nfatal: unable to access 'https://github.com/dot-do/workers.git/': Could not resolve host: github.com\n"
+}

@@ -1,8 +1,8 @@
 {
-  "name": "@dotdo/workers-stripe",
+  "name": "@dotdo/workers-domains",
   "version": "0.0.1",
   "private": true,
-  "description": "Stripe Connect Platform Worker (payments.do) - Stripe service as Durable Object",
+  "description": "Domains Worker (builder.domains) - Free domain management for builders",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -18,14 +18,11 @@
   ],
   "scripts": {
     "build": "tsup",
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@dotdo/do": "workspace:*",
-    "stripe": "^17.0.0"
+    "@dotdo/do": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240925.0",

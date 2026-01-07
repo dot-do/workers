@@ -59,25 +59,26 @@ Each agent passes their work to the next. No boilerplate. No orchestration code.
 
 ## Automate Everything
 
-Your startup responds to events automatically:
+Complex processes run themselves:
 
 ```typescript
 import { on } from 'workflows.do'
+import { priya, ralph, tom, quinn, mark } from 'agents.do'
 
-on.idea(async idea => {
-  const spec = await priya`evaluate ${idea}`
-  const code = await ralph`build ${spec}`
-  await tom`review ${code}`
-  await mark`announce ${code}`
-})
+on.Idea.captured(async idea => {
+  const product = await priya`brainstorm ${idea}`
+  const backlog = await priya.plan(product)
 
-on.bug(async bug => {
-  const fix = await ralph`fix ${bug}`
-  await quinn`verify ${fix}`
-})
+  for (const issue of backlog.ready) {
+    const pr = await ralph`implement ${issue}`
 
-on.customer.signup(async customer => {
-  await sally`welcome ${customer}`
+    do await ralph`update ${pr}`
+    while (!await pr.approvedBy(quinn, tom, priya))
+
+    await pr.merge()
+  }
+
+  await mark`document ${product}`
 })
 ```
 

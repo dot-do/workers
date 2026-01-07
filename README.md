@@ -63,7 +63,7 @@ Complex processes run themselves:
 
 ```typescript
 import { on } from 'workflows.do'
-import { priya, ralph, tom, quinn, mark } from 'agents.do'
+import { priya, ralph, tom, quinn, mark, sally } from 'agents.do'
 
 on.Idea.captured(async idea => {
   const product = await priya`brainstorm ${idea}`
@@ -78,7 +78,8 @@ on.Idea.captured(async idea => {
     await pr.merge()
   }
 
-  await mark`document ${product}`
+  await mark`document and launch ${product}`
+  await sally`start outbound for ${product}`
 })
 ```
 

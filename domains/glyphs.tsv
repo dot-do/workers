@@ -1,0 +1,18 @@
+glyph	name	pinyin	meaning	concept	maps_to	domains
+# CJK Execution Glyphs
+入	enter	rù	enter/input	function/invoke	functions.do	入.io,入.dev,入.sh,入.studio
+人	person	rén	person	worker/agent/human	workers.do	人.io,人.studio
+# CJK Flow Glyphs
+巛	river	chuān	river/stream	event/stream	events.do	巛.io,巛.net,巛.co,巛.studio
+卌	forty	xì	four lines	queue/parallel	queues.do	卌.io
+# CJK Data Glyphs
+彡	hair	shān	hair/bristles	database/layers	database.do	彡.io,彡.studio,彡.dev,彡.app,彡.management
+田	field	tián	field/grid	collection	collections.do	田.io
+目	eye	mù	eye/rows	list	lists.do	目.io
+口	mouth	kǒu	mouth/opening	type/schema	nouns.do	口.io
+回	return	huí	return/circle	instance/object	resources.do	回.io
+# CJK Content Glyphs
+亘	span	gèn	span/extend	website	sites.do	亘.io
+# Decorative Bar Glyphs
+ılıl	bars	-	bar chart	chart/metrics	kpis.do	ılıl.net,ılıl.com,ılıl.dev,ılıl.app,ılıl.website,ılıl.rest,ılıl.ad
+ııl	bars-alt	-	bar chart alt	chart/metrics	kpis.do	ııl.com

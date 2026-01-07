@@ -19,6 +19,30 @@ Amplitude built a product analytics empire on:
 
 10 million MTUs? You're looking at **$100k+/year**. And that's before experiments.
 
+## The workers.do Way
+
+You're scaling fast. Your analytics bill just hit $100k/year. Every tracked user costs money. Every funnel you analyze, every cohort you build, every experiment you run - another line item on a bill that grows with your success.
+
+What if analytics was just a conversation?
+
+```typescript
+import { amplitude, priya } from 'workers.do'
+
+// Natural language analytics
+const funnel = await amplitude`show signup funnel for ${cohort}`
+const retention = await amplitude`analyze retention for users who ${action}`
+const insights = await amplitude`why did signups drop on ${date}?`
+
+// Chain analytics into product decisions
+const roadmap = await amplitude`analyze user activation patterns`
+  .map(patterns => amplitude`identify friction points in ${patterns}`)
+  .map(friction => priya`recommend product changes for ${friction}`)
+```
+
+One import. Natural language. AI-powered insights that chain into action.
+
+That's analytics that works for you.
+
 ## The Solution
 
 **amplitude.do** is Amplitude reimagined:

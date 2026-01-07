@@ -1,5 +1,7 @@
 # salesforce.do
 
+> You're a startup founder. You need CRM. Salesforce wants $500k/year and a 12-month implementation. Your sales team needs to close deals, not wait for consultants.
+
 <p align="center">
   <strong>The $300B CRM. Reimagined. Open Source. AI-Native.</strong>
 </p>
@@ -9,6 +11,41 @@
   <a href="https://www.npmjs.com/package/salesforce.do"><img src="https://img.shields.io/npm/dm/salesforce.do.svg" alt="npm downloads" /></a>
   <a href="https://github.com/drivly/salesforce.do/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/salesforce.do.svg" alt="license" /></a>
 </p>
+
+---
+
+## The workers.do Way
+
+Talk to your CRM like a colleague:
+
+```typescript
+import { salesforce, sally, priya, tom } from 'workers.do'
+
+// Natural language queries
+const pipeline = await salesforce`show pipeline for Q1`
+const leads = await salesforce`find enterprise leads from ${campaign}`
+const forecast = await salesforce`forecast revenue for next quarter`
+
+// AI agents work your CRM
+await sally`qualify all new leads from yesterday`
+await sally`send follow-up to deals with no activity in 7 days`
+```
+
+### Promise Pipelining
+
+Chain operations without waiting. One network round trip:
+
+```typescript
+// Find leads, send proposals, get reviews - all pipelined
+const closed = await salesforce`find qualified leads over $50k`
+  .map(lead => sally`send proposal to ${lead}`)
+  .map(proposal => [priya, tom].map(r => r`review ${proposal}`))
+
+// AI-driven pipeline management
+const atRisk = await salesforce`find stalled opportunities`
+  .map(opp => priya`analyze risk factors for ${opp}`)
+  .map(analysis => sally`create re-engagement plan for ${analysis}`)
+```
 
 ---
 

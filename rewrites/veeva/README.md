@@ -6,6 +6,42 @@ Veeva built a $50B+ empire on pharma's regulatory burden. 21 CFR Part 11 complia
 
 **veeva.do** is the open-source alternative. Deploy your own compliant life sciences platform. AI-native from day one. Audit-ready out of the box.
 
+## The workers.do Way
+
+You're a clinical operations lead who needs to move fast but can't afford compliance mistakes. Every day you juggle trial data, regulatory submissions, and medical affairs - while Veeva charges you per seat to access your own data.
+
+**workers.do** gives you AI agents that speak life sciences:
+
+```typescript
+import { veeva, mark } from 'workers.do'
+
+// Natural language for clinical operations
+const trials = await veeva`find active Phase 3 trials for ${compound}`
+const deviations = await veeva`list protocol deviations in ${study} last 30 days`
+const submissions = await veeva`show pending eCTD documents for ${nda}`
+```
+
+Promise pipelining for complex workflows - one network round trip:
+
+```typescript
+// Trial monitoring to regulatory submission
+const submitted = await veeva`find overdue safety reports for ${study}`
+  .map(report => veeva`generate narrative for ${report}`)
+  .map(narrative => veeva`attach to eCTD section 2.7.4`)
+  .map(section => mark`notify regulatory team about ${section}`)
+```
+
+AI agents that understand 21 CFR Part 11:
+
+```typescript
+import { priya, ralph, tom } from 'agents.do'
+
+// Regulatory intelligence
+await priya`review FDA feedback on ${submission} and prioritize responses`
+await ralph`cross-reference ${protocol} amendments with IRB approvals`
+await tom`audit trail analysis for ${document} - flag any compliance gaps`
+```
+
 ## The Problem
 
 Life sciences companies are trapped:

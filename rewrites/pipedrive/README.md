@@ -1,5 +1,7 @@
 # pipedrive.do
 
+> You're a startup founder. You need a visual pipeline your sales team will actually use. Pipedrive wants $99/user/month plus add-ons for every feature. Your reps need to sell, not fight software.
+
 <p align="center">
   <strong>Visual Sales Pipeline. AI-Powered. Radically Simple.</strong>
 </p>
@@ -9,6 +11,41 @@
   <a href="https://www.npmjs.com/package/pipedrive.do"><img src="https://img.shields.io/npm/dm/pipedrive.do.svg" alt="npm downloads" /></a>
   <a href="https://github.com/drivly/pipedrive.do/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/pipedrive.do.svg" alt="license" /></a>
 </p>
+
+---
+
+## The workers.do Way
+
+Talk to your pipeline like a colleague:
+
+```typescript
+import { pipedrive, sally, priya } from 'workers.do'
+
+// Natural language queries
+const deals = await pipedrive`show deals closing this week`
+const stalled = await pipedrive`find deals with no activity in 5 days`
+const forecast = await pipedrive`forecast Q1 revenue by stage`
+
+// AI agents work your pipeline
+await sally`prioritize today's activities by deal value`
+await sally`send follow-ups to stalled deals`
+```
+
+### Promise Pipelining
+
+Chain operations without waiting. One network round trip:
+
+```typescript
+// Find stalled deals, analyze risk, create action plans - all pipelined
+const revived = await pipedrive`find deals stalled over 7 days`
+  .map(deal => priya`analyze why ${deal} is stalled`)
+  .map(analysis => sally`create re-engagement plan for ${analysis}`)
+
+// Activity-based selling flow
+const priorities = await pipedrive`get hot deals by close date`
+  .map(deal => sally`schedule next best activity for ${deal}`)
+  .map(activity => [priya, sally].map(r => r`review ${activity} effectiveness`))
+```
 
 ---
 

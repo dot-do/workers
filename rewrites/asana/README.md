@@ -55,6 +55,40 @@ Your own Asana. Running on Cloudflare. AI that actually coordinates work.
 npx dotdo add asana
 ```
 
+## The workers.do Way
+
+You're building a product. Your team needs work coordination. Asana wants $60k/year with goals and portfolios locked behind premium tiers. AI is an afterthought. There's a better way.
+
+**Natural language. Tagged templates. AI agents that work.**
+
+```typescript
+import { asana } from 'asana.do'
+import { priya, ralph, quinn } from 'agents.do'
+
+// Talk to your work manager like a human
+const blocked = await asana`what's blocking the mobile app?`
+const capacity = await asana`does the team have bandwidth?`
+const priorities = await asana`what should I focus on today?`
+```
+
+**Promise pipelining - chain work without Promise.all:**
+
+```typescript
+// Goal tracking pipeline
+const tracked = await asana`get Q1 goals`
+  .map(goal => priya`analyze progress on ${goal}`)
+  .map(goal => asana`update status for ${goal}`)
+  .map(status => mark`write executive summary for ${status}`)
+
+// Task delegation pipeline
+const delegated = await asana`get new tasks`
+  .map(task => priya`analyze requirements for ${task}`)
+  .map(task => ralph`estimate ${task}`)
+  .map(task => asana`assign ${task} to best fit`)
+```
+
+One network round trip. Record-replay pipelining. Workers working for you.
+
 ## Features
 
 ### Tasks

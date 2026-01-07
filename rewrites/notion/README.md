@@ -54,6 +54,39 @@ Your own Notion. Running on Cloudflare. AI everywhere.
 npx dotdo add notion
 ```
 
+## The workers.do Way
+
+You're building a product. Your team needs an everything workspace. Notion wants $30k/year with AI as a premium add-on, and it gets slower as you scale. There's a better way.
+
+**Natural language. Tagged templates. AI agents that work.**
+
+```typescript
+import { notion } from 'notion.do'
+import { priya, ralph, mark } from 'agents.do'
+
+// Talk to your workspace like a human
+const tasks = await notion`show my tasks for ${week}`
+const projects = await notion`find projects over budget`
+const insights = await notion`which team has the most blockers?`
+```
+
+**Promise pipelining - chain work without Promise.all:**
+
+```typescript
+// Product planning pipeline
+const planned = await notion`get feature requests`
+  .map(request => priya`prioritize ${request}`)
+  .map(feature => ralph`estimate ${feature}`)
+  .map(feature => notion`add ${feature} to roadmap`)
+
+// Meeting to action items
+const actioned = await notion`get meeting notes from ${meeting}`
+  .map(notes => priya`extract action items from ${notes}`)
+  .map(item => notion`create task for ${item}`)
+```
+
+One network round trip. Record-replay pipelining. Workers working for you.
+
 ## Features
 
 ### Block-Based Editor

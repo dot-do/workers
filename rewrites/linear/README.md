@@ -53,6 +53,40 @@ Your own Linear. Running on Cloudflare. Faster than ever.
 npx dotdo add linear
 ```
 
+## The workers.do Way
+
+You're building a product. Your team needs issue tracking that doesn't suck. Linear is beautiful and fast, but it's still $17k/year with no self-hosting option. Your engineering workflow lives on someone else's servers. There's a better way.
+
+**Natural language. Tagged templates. AI agents that work.**
+
+```typescript
+import { linear } from 'linear.do'
+import { priya, ralph, quinn } from 'agents.do'
+
+// Talk to your issue tracker like a human
+const blocked = await linear`what's blocking the release?`
+const myWork = await linear`what should I work on today?`
+const velocity = await linear`how did we do last cycle?`
+```
+
+**Promise pipelining - chain work without Promise.all:**
+
+```typescript
+// Release pipeline
+const shipped = await linear`find completed issues in ${cycle}`
+  .map(issue => mark`write release notes for ${issue}`)
+  .map(notes => priya`review ${notes}`)
+  .map(notes => linear`publish ${notes}`)
+
+// Triage pipeline
+const triaged = await linear`get triage inbox`
+  .map(issue => priya`analyze and prioritize ${issue}`)
+  .map(issue => ralph`estimate ${issue}`)
+  .map(issue => linear`route ${issue} to project`)
+```
+
+One network round trip. Record-replay pipelining. Workers working for you.
+
 ## Features
 
 ### Issues

@@ -56,6 +56,39 @@ Your own Airtable. Running on Cloudflare. No limits.
 npx dotdo add airtable
 ```
 
+## The workers.do Way
+
+You're building a product. Your team needs a flexible database. Airtable wants $27k/year with row limits and 5 requests/second API throttling. AI locked behind enterprise. There's a better way.
+
+**Natural language. Tagged templates. AI agents that work.**
+
+```typescript
+import { airtable } from 'airtable.do'
+import { priya, ralph, mark } from 'agents.do'
+
+// Talk to your database like a human
+const deals = await airtable`show deals over $50k closing this month`
+const forecast = await airtable`projected revenue for Q2?`
+const churn = await airtable`which customers are at risk?`
+```
+
+**Promise pipelining - chain work without Promise.all:**
+
+```typescript
+// CRM automation pipeline
+const processed = await airtable`get new leads`
+  .map(lead => priya`qualify ${lead}`)
+  .map(lead => sally`draft outreach for ${lead}`)
+  .map(lead => airtable`update ${lead} status`)
+
+// Data cleanup pipeline
+const cleaned = await airtable`find records with missing data`
+  .map(record => ralph`enrich ${record} from sources`)
+  .map(record => airtable`update ${record}`)
+```
+
+One network round trip. Record-replay pipelining. Workers working for you.
+
 ## Features
 
 ### Bases & Tables

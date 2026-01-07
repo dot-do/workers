@@ -19,6 +19,30 @@ Datadog built an observability empire on:
 
 A 500-host infrastructure with logs and APM? **$300k+/year**. With custom metrics and long retention? **$500k+**.
 
+## The workers.do Way
+
+It's 3am. Your pager goes off. Production is down. You need answers now - not after navigating five dashboards and writing three queries. Every minute of downtime costs money. Every metric you track costs money. You're paying to find problems and paying while they burn.
+
+What if incident response was a conversation?
+
+```typescript
+import { datadog, tom } from 'workers.do'
+
+// Natural language observability
+const status = await datadog`what's the health of production right now?`
+const cause = await datadog`why is the API slow?`
+const alert = await datadog`alert when ${metric} exceeds ${threshold}`
+
+// Chain diagnostics into resolution
+const resolution = await datadog`show me the error spike timeline`
+  .map(timeline => datadog`correlate with deployments and changes`)
+  .map(correlation => tom`identify root cause and suggest fix for ${correlation}`)
+```
+
+One import. Natural language. AI-powered incident response.
+
+That's observability that works for you.
+
 ## The Solution
 
 **datadog.do** is Datadog reimagined:

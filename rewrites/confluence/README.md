@@ -55,6 +55,39 @@ Your team wiki. Running on Cloudflare. AI-native.
 npx dotdo add confluence
 ```
 
+## The workers.do Way
+
+You're building a product. Your team needs documentation. Confluence wants $70k/year for a wiki where knowledge goes to die. Your engineers can't find anything. Docs drift from reality. There's a better way.
+
+**Natural language. Tagged templates. AI agents that work.**
+
+```typescript
+import { confluence } from 'confluence.do'
+import { mark, tom, priya } from 'agents.do'
+
+// Talk to your wiki like a human
+const docs = await confluence`search ${query} in ${space}`
+const answer = await confluence`how do we handle authentication?`
+const stale = await confluence`find outdated documentation`
+```
+
+**Promise pipelining - chain work without Promise.all:**
+
+```typescript
+// Keep docs in sync with code
+const synced = await confluence`find docs about ${feature}`
+  .map(doc => tom`verify ${doc} against codebase`)
+  .map(doc => mark`update ${doc} if stale`)
+  .map(doc => priya`review ${doc}`)
+
+// Generate docs from code changes
+const documented = await git`recent commits to ${repo}`
+  .map(commit => mark`document ${commit}`)
+  .map(doc => confluence`publish ${doc} to ${space}`)
+```
+
+One network round trip. Record-replay pipelining. Workers working for you.
+
 ## Features
 
 ### Spaces & Pages

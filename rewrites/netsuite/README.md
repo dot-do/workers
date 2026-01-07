@@ -11,6 +11,47 @@ Oracle NetSuite dominates mid-market ERP with $2.3B+ in annual revenue. They cha
 
 **netsuite.do** is the open-source alternative. Deploy your own ERP in one click. AI does your journal entries. SuiteTalk API compatible - your existing integrations just work.
 
+## The workers.do Way
+
+You're building a real business. You need ERP. NetSuite wants $500k/year plus consultants. SAP wants $10M plus a 3-year implementation. You just want to invoice customers and pay vendors.
+
+**workers.do** gives you an AI finance team that speaks plain English:
+
+```typescript
+import { netsuite } from 'netsuite.do'
+import { cfo, controller } from 'agents.do'
+
+// Natural language ERP operations
+const invoice = await netsuite`create invoice for ${customer} with items ${lineItems}`
+const forecast = await netsuite`show cash flow forecast for ${quarter}`
+const reconciled = await netsuite`reconcile bank statement for ${account}`
+```
+
+### Promise Pipelining
+
+Chain complex financial workflows with a single network round trip:
+
+```typescript
+const closed = await netsuite`close ${period} books`
+  .map(period => netsuite`generate financials for ${period}`)
+  .map(statements => [cfo, controller].map(r => r`approve ${statements}`))
+```
+
+### AI Agents for Finance
+
+```typescript
+// CFO agent handles strategic questions
+await cfo`Why did gross margin drop 3% this quarter?`
+
+// Controller agent handles month-end close
+await controller`Close January 2025 books`
+
+// AR agent handles collections
+await ar`Which customers are past due? Draft collection emails.`
+```
+
+One import. Natural language. Your AI finance department.
+
 ## The Problem
 
 NetSuite was revolutionary in 1998. But the model is broken:

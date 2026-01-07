@@ -19,6 +19,30 @@ Cisco acquired Splunk for $28B and built a data empire on:
 
 100 GB/day? **$15,000/day**. That's **$5.5 million/year**. Just for logs.
 
+## The workers.do Way
+
+Your security team is drowning. Logs are pouring in from everywhere. Every query in SPL requires a specialist. Every GB stored is another $150. And when a breach happens, you need answers in minutes, not hours of query tuning.
+
+What if log analysis was a conversation?
+
+```typescript
+import { splunk, tom } from 'workers.do'
+
+// Natural language log analytics
+const errors = await splunk`search errors from ${service} last hour`
+const attack = await splunk`find brute force attempts against ${system}`
+const anomaly = await splunk`what's unusual in network traffic today?`
+
+// Chain security investigation into response
+const incident = await splunk`show failed logins followed by successful access`
+  .map(events => splunk`correlate with data exfiltration patterns`)
+  .map(findings => tom`assess severity and recommend response for ${findings}`)
+```
+
+One import. Natural language. AI-powered security operations.
+
+That's log analytics that works for you.
+
 ## The Solution
 
 **splunk.do** is Splunk reimagined:

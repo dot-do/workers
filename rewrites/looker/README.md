@@ -19,6 +19,36 @@ Google acquired Looker for $2.6B and built an enterprise moat on:
 
 A mid-size company with 100 analysts? **$100k+/year** just for BI access.
 
+## The workers.do Way
+
+Your board wants metrics. Your team needs self-service analytics. Looker wants $5k/month minimum and a dedicated LookML engineer.
+
+**What if analytics just understood what you meant?**
+
+```typescript
+import { looker } from 'looker.do'
+import { priya, tom } from 'agents.do'
+
+// Conversational analytics
+const answer = await looker`how many users signed up this week?`
+const trends = await looker`show revenue by product category over time`
+const deep = await looker`why did churn spike in Q3?`
+
+// AI agents build your semantic layer
+const model = await priya`create LookML model for our SaaS metrics`
+const review = await tom`review the model for performance issues`
+```
+
+**Promise pipelining** - chain analytics without `Promise.all`:
+
+```typescript
+const insights = await looker`query ${customerData}`
+  .map(data => looker`build explore from ${data}`)
+  .map(explore => [priya, tom].map(r => r`review ${explore} for accuracy`))
+```
+
+One network round trip. Natural language. Your semantic layer, AI-generated.
+
 ## The Solution
 
 **looker.do** is Looker reimagined:

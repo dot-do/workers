@@ -56,6 +56,39 @@ Your own Work OS. Running on Cloudflare. AI-orchestrated.
 npx dotdo add monday
 ```
 
+## The workers.do Way
+
+You're building a product. Your team needs work management. Monday.com wants $29k/year with automation limits and AI as an add-on. Colorful boards, but your work still doesn't manage itself. There's a better way.
+
+**Natural language. Tagged templates. AI agents that work.**
+
+```typescript
+import { monday } from 'monday.do'
+import { priya, ralph, quinn } from 'agents.do'
+
+// Talk to your work OS like a human
+const stuck = await monday`what items are stuck and why?`
+const capacity = await monday`who has bandwidth for more work?`
+const forecast = await monday`will we hit the Q1 deadline?`
+```
+
+**Promise pipelining - chain work without Promise.all:**
+
+```typescript
+// Sprint planning pipeline
+const planned = await monday`get backlog items`
+  .map(item => priya`prioritize ${item} for sprint`)
+  .map(item => ralph`estimate ${item}`)
+  .map(item => monday`add ${item} to ${sprint}`)
+
+// Status update pipeline
+const updated = await monday`get items completed this week`
+  .map(item => mark`write status update for ${item}`)
+  .map(update => monday`post ${update} to board`)
+```
+
+One network round trip. Record-replay pipelining. Workers working for you.
+
 ## Features
 
 ### Boards & Items

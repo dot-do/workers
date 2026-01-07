@@ -20,6 +20,37 @@ Microsoft built a BI empire on:
 
 A 500-person enterprise? **$60k+/year** for Pro. Premium capacity? **$60k+ additional**.
 
+## The workers.do Way
+
+Your CFO lives in Excel. Your team needs dashboards. Microsoft wants $120k/year and a Power BI Desktop license for every analyst.
+
+**What if your spreadsheets just became dashboards?**
+
+```typescript
+import { powerbi } from 'powerbi.do'
+import { priya, mark } from 'agents.do'
+
+// Excel-native analytics
+const report = await powerbi`analyze ${excelFile} with revenue trends`
+const dashboard = await powerbi`build KPI dashboard from ${spreadsheet}`
+const insight = await powerbi`why did margins drop in February?`
+
+// AI agents as BI developers
+const analysis = await priya`create DAX measures for SaaS metrics`
+const deck = await mark`build investor report from ${financials}`
+```
+
+**Promise pipelining** - chain transformations without `Promise.all`:
+
+```typescript
+const report = await powerbi`import ${excelFile}`
+  .map(data => powerbi`transform with Power Query ${data}`)
+  .map(model => powerbi`visualize ${model} as executive dashboard`)
+  .map(viz => [priya, mark].map(r => r`review ${viz} for board`))
+```
+
+One network round trip. Natural language. Your Excel, transformed.
+
 ## The Solution
 
 **powerbi.do** is Power BI reimagined:

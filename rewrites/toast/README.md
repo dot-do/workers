@@ -6,6 +6,42 @@ Toast built a $14B company by giving away POS hardware and charging 2.99% + $0.1
 
 **toast.do** is the open-source alternative. Run your own POS. Choose your own payment processor. AI that actually runs your restaurant.
 
+## The workers.do Way
+
+You're a restaurant owner who pours your heart into every plate. But 3% of every sale goes to your POS company - that's $30K a year on a million in sales. That's a line cook's salary. That's your kid's college fund.
+
+**workers.do** gives you AI that runs front and back of house:
+
+```typescript
+import { toast, mark } from 'workers.do'
+
+// Natural language for the dinner rush
+const covers = await toast`show tonight's reservations`
+const prep = await toast`what should we 86 based on inventory`
+const labor = await toast`are we overstaffed for projected covers`
+```
+
+Promise pipelining for service workflows - one network round trip:
+
+```typescript
+// Online order through delivery
+const delivered = await toast`new online order from ${customer}`
+  .map(order => toast`fire to kitchen with 25 min estimate`)
+  .map(ready => toast`assign to ${driver} for delivery`)
+  .map(delivered => mark`send thank you with feedback link to ${customer}`)
+```
+
+AI agents that understand hospitality:
+
+```typescript
+import { priya, ralph, tom } from 'agents.do'
+
+// Restaurant intelligence
+await priya`forecast covers for Saturday given weather and local events`
+await ralph`optimize next week's schedule within 28% labor target`
+await tom`analyze menu engineering - which items are dogs vs stars`
+```
+
 ## The Problem
 
 Restaurants operate on 3-5% margins. Yet POS companies extract:

@@ -6,6 +6,42 @@ DocuSign turned "send a PDF for signature" into a $15B company charging $10-60 p
 
 **docusign.do** is the open-source alternative. Send documents for signature. Full contract lifecycle management. AI that actually reads and negotiates contracts.
 
+## The workers.do Way
+
+You're a founder who just wants to close deals. But every contract becomes a negotiation nightmare - redlines flying back and forth, legal review backlogs, signature chasing. Meanwhile, DocuSign charges you per envelope to send PDFs.
+
+**workers.do** gives you AI that closes deals:
+
+```typescript
+import { docusign, mark } from 'workers.do'
+
+// Natural language for agreements
+const contracts = await docusign`find contracts expiring in 90 days`
+const risks = await docusign`analyze ${vendor} agreement for liability gaps`
+const status = await docusign`which signatures are we waiting on for ${deal}`
+```
+
+Promise pipelining for contract workflows - one network round trip:
+
+```typescript
+// Proposal to signed deal
+const signed = await docusign`generate ${service} agreement for ${customer}`
+  .map(contract => docusign`apply our standard negotiation playbook`)
+  .map(redlined => docusign`send for signature to ${customer.legal}`)
+  .map(executed => mark`notify sales team about ${executed}`)
+```
+
+AI agents that negotiate for you:
+
+```typescript
+import { priya, tom, sally } from 'agents.do'
+
+// Contract intelligence
+await priya`compare ${vendor} terms against our standard positions`
+await tom`identify non-standard clauses in ${agreement} requiring review`
+await sally`draft response to ${vendor} redlines - protect our interests`
+```
+
 ## The Problem
 
 DocuSign built a toll booth on a public road:

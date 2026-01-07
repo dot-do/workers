@@ -2,6 +2,32 @@
 
 > Payroll that runs itself. Benefits that make sense. Compliance on autopilot.
 
+You're a startup founder. You just made your first hires. Payroll software wants $40/employee/month - that's $9,600/year for a 20-person team. To do math. And send ACH transfers. Your payroll cost shouldn't scale with your headcount.
+
+## The workers.do Way
+
+```typescript
+import { gusto, penny } from 'gusto.do'
+
+// Natural language payroll operations
+const payroll = await gusto`run payroll for ${period}`
+const taxes = await gusto`calculate Q1 tax liability`
+const raise = await penny`give ${employee} a raise to ${amount}`
+
+// Promise pipelining for compensation changes
+const processed = await penny`promote ${employee} to ${newRole}`
+  .map(emp => gusto`update salary to ${newSalary}`)
+  .map(emp => gusto`recalculate tax withholdings`)
+  .map(emp => penny`notify ${emp} of compensation change`)
+
+// AI-assisted benefits enrollment
+const enrolled = await penny`help ${employee} pick health insurance`
+  .map(selection => gusto`enroll ${employee} in ${selection}`)
+  .map(enrollment => gusto`update payroll deductions`)
+```
+
+One API call. Natural language. AI handles the complexity.
+
 ## The Problem
 
 Gusto made payroll approachable for startups. That was the innovation. But now:

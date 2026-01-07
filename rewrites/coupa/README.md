@@ -6,6 +6,43 @@ Coupa built a $8B company (acquired by Thoma Bravo) managing enterprise procurem
 
 **coupa.do** is the open-source alternative. One-click deploy your own procurement platform. AI that actually finds savings. No per-seat ransomware.
 
+## The workers.do Way
+
+You're a CFO trying to control spend across a growing company. But your "spend management" platform costs more than some of the things you're buying. And half your team doesn't have seats because of per-user pricing.
+
+**workers.do** gives you AI that finds real savings:
+
+```typescript
+import { coupa, mark } from 'workers.do'
+
+// Natural language for procurement
+const savings = await coupa`find contracts up for renewal with negotiation leverage`
+const maverick = await coupa`show off-contract spend by department this quarter`
+const suppliers = await coupa`which suppliers have declining performance scores`
+```
+
+Promise pipelining for procure-to-pay - one network round trip:
+
+```typescript
+// Requisition to payment
+const paid = await coupa`create requisition for ${items} from ${supplier}`
+  .map(req => coupa`route for approval based on amount and category`)
+  .map(approved => coupa`generate PO and send to supplier portal`)
+  .map(received => coupa`three-way match and schedule payment`)
+  .map(invoice => mark`notify AP that ${invoice} is ready for payment`)
+```
+
+AI agents that optimize your spend:
+
+```typescript
+import { priya, tom, sally } from 'agents.do'
+
+// Procurement intelligence
+await priya`analyze supplier concentration risk across categories`
+await tom`benchmark our SaaS spend against industry rates`
+await sally`prepare negotiation brief for ${vendor} renewal`
+```
+
 ## The Problem
 
 Procurement software that costs as much as the procurement team:

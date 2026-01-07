@@ -58,6 +58,39 @@ Or deploy to an existing workers.do project:
 npx dotdo add jira
 ```
 
+## The workers.do Way
+
+You're building a product. Your team needs issue tracking. Jira wants $100k/year and your developers spend more time waiting for pages to load than writing code. There's a better way.
+
+**Natural language. Tagged templates. AI agents that work.**
+
+```typescript
+import { jira } from 'jira.do'
+import { priya, ralph, quinn } from 'agents.do'
+
+// Talk to your issue tracker like a human
+const bugs = await jira`find critical bugs from ${sprint}`
+const blocked = await jira`which stories are blocked and why?`
+const myWork = await jira`what am I working on?`
+```
+
+**Promise pipelining - chain work without Promise.all:**
+
+```typescript
+// Ship a release with one pipeline
+const shipped = await jira`find completed issues in ${cycle}`
+  .map(issue => mark`write release notes for ${issue}`)
+  .map(notes => priya`review ${notes}`)
+
+// AI triage pipeline
+const triaged = await jira`show untriaged issues`
+  .map(issue => priya`analyze and prioritize ${issue}`)
+  .map(issue => ralph`estimate ${issue}`)
+  .map(issue => quinn`identify test cases for ${issue}`)
+```
+
+One network round trip. Record-replay pipelining. Workers working for you.
+
 ## Features
 
 ### Issue Tracking

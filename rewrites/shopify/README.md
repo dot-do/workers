@@ -6,6 +6,42 @@ Shopify powers millions of stores, taking a cut of every transaction. 2.9% + $0.
 
 **shopify.do** is the open-source alternative. Deploy your own e-commerce platform. Choose your payment processor. AI that actually sells for you.
 
+## The workers.do Way
+
+You built a brand people love. You've got product-market fit. But every sale, Shopify takes nearly 3%. At scale, that's hundreds of thousands of dollars - money that should go into inventory, marketing, or your own pocket.
+
+**workers.do** gives you AI that actually sells:
+
+```typescript
+import { shopify, mark } from 'workers.do'
+
+// Natural language for commerce
+const orders = await shopify`find orders from ${campaign} this week`
+const inventory = await shopify`which SKUs are below reorder point`
+const customers = await shopify`show VIP customers who haven't ordered in 60 days`
+```
+
+Promise pipelining for order fulfillment - one network round trip:
+
+```typescript
+// Campaign to customer delight
+const delighted = await shopify`find orders from ${campaign}`
+  .map(order => shopify`fulfill ${order} with expedited shipping`)
+  .map(fulfilled => mark`send thank you to ${fulfilled.customer}`)
+  .map(thanked => shopify`add ${thanked.customer} to VIP segment`)
+```
+
+AI agents that grow your store:
+
+```typescript
+import { priya, ralph, sally } from 'agents.do'
+
+// E-commerce intelligence
+await priya`analyze cart abandonment and recommend recovery flow`
+await ralph`optimize product page for ${sku} based on conversion data`
+await sally`draft win-back email sequence for churned subscribers`
+```
+
 ## The Problem
 
 Shopify democratized e-commerce, then monetized it aggressively:

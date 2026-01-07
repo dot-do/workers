@@ -19,6 +19,36 @@ Salesforce acquired Tableau for $15.7B and built an empire on:
 
 A 50-person analytics team? **$50k+/year** before you connect a single data source.
 
+## The workers.do Way
+
+Your investors want dashboards. Your team needs metrics. Tableau wants $50k/year and a dedicated admin just to show bar charts.
+
+**What if visualization was as simple as asking?**
+
+```typescript
+import { tableau } from 'tableau.do'
+import { priya, mark } from 'agents.do'
+
+// Natural language to visualization
+const chart = await tableau`show ${metric} by ${dimension} over time`
+const dashboard = await tableau`build executive dashboard from ${salesModel}`
+const insight = await tableau`what's driving the Q3 decline?`
+
+// AI agents as analysts
+const analysis = await priya`analyze funnel conversion and visualize drop-off`
+const report = await mark`create board deck with revenue trends`
+```
+
+**Promise pipelining** - chain operations without `Promise.all`:
+
+```typescript
+const deck = await tableau`query ${salesData}`
+  .map(data => tableau`visualize ${data} as ${chartType}`)
+  .map(viz => [priya, mark].map(r => r`review ${viz} for board`))
+```
+
+One network round trip. Natural language. Your data, visualized.
+
 ## The Solution
 
 **tableau.do** is Tableau reimagined:

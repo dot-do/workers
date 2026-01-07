@@ -2,6 +2,33 @@
 
 > AI-native recruiting. From job post to hired. No per-seat fees.
 
+You're a startup founder. You're hiring your first 10 engineers. ATS software wants $15,000/year before you hire anyone. Every recruiter, every hiring manager adds cost. You have 500 resumes to screen. Manually. Your recruiting shouldn't cost more than your first hire's signing bonus.
+
+## The workers.do Way
+
+```typescript
+import { greenhouse, scout } from 'greenhouse.do'
+
+// Natural language recruiting operations
+const job = await greenhouse`post Senior Engineer role in ${department}`
+const candidates = await scout`screen applications for ${job}`
+const schedule = await scout`schedule ${candidate}'s onsite`
+
+// Promise pipelining for the full hiring funnel
+const hired = await scout`source candidates for ${role}`
+  .map(candidates => scout`screen ${candidates} against requirements`)
+  .map(qualified => scout`schedule interviews for ${qualified}`)
+  .map(interviewed => greenhouse`extend offer to ${topCandidate}`)
+  .map(accepted => bamboohr`onboard ${accepted}`)
+
+// AI-assisted interview coordination
+const prepped = await scout`prepare interview for ${candidate}`
+  .map(prep => [sarah, alex, chris].map(i => i`interview ${candidate}`))
+  .map(feedback => scout`summarize feedback for ${hiringManager}`)
+```
+
+One API call. AI screens 500 resumes. You make the decisions.
+
 ## The Problem
 
 Greenhouse and Lever built the modern ATS. Recruiting became structured, data-driven, measurable.

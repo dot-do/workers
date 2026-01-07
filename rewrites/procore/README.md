@@ -6,6 +6,42 @@ Procore built a $12B+ company managing construction chaos - RFIs, submittals, dr
 
 **procore.do** is the open-source alternative. One-click deploy your own construction management platform. AI that actually understands blueprints. Field-first, not afterthought.
 
+## The workers.do Way
+
+You're a superintendent standing in a muddy trailer at 6 AM, trying to figure out why steel delivery is late and whether you can pour concrete tomorrow. Your field crew needs answers, not software licenses.
+
+**workers.do** gives you AI that speaks construction:
+
+```typescript
+import { procore, mark } from 'workers.do'
+
+// Natural language for the jobsite
+const rfis = await procore`create RFI for ${issue} on ${project}`
+const submittals = await procore`show pending submittals blocking steel erection`
+const schedule = await procore`what activities are impacted if concrete slips 2 days`
+```
+
+Promise pipelining for field-to-office workflows - one network round trip:
+
+```typescript
+// RFI through resolution
+const resolved = await procore`photograph ${issue} at grid B-7`
+  .map(photo => procore`create RFI with ${photo} for structural engineer`)
+  .map(rfi => procore`track response and update drawing markup`)
+  .map(resolution => mark`notify foreman about ${resolution}`)
+```
+
+AI agents that understand construction:
+
+```typescript
+import { priya, ralph, tom } from 'agents.do'
+
+// Project intelligence
+await priya`analyze punch list and prioritize by trade for ${project}`
+await ralph`compare change order ${pco} against original bid quantities`
+await tom`review ${drawing} rev 3 against rev 2 - flag coordination issues`
+```
+
 ## The Problem
 
 Construction is the least digitized major industry. And the software that exists?

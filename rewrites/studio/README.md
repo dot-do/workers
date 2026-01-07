@@ -2,6 +2,45 @@
 
 Database Studio on Cloudflare Durable Objects - A database management UI for every AI agent.
 
+## The workers.do Way
+
+Your AI agents need to see the data. Existing tools are built for humans at dashboards. But when Tom needs to understand why queries are slow, or Ralph needs to implement a migration, they shouldn't have to navigate a GUI designed for human fingers.
+
+**Natural Language First**
+
+```typescript
+import { tom, ralph } from 'agents.do'
+import { studio } from 'studio.do'
+
+// Tagged template literals - talk to your agents
+const schema = await tom`show me the database schema`
+const slow = await tom`find slow queries from today`
+const migration = await studio`generate migration for ${changes}`
+```
+
+**Promise Pipelining**
+
+Chain operations without `Promise.all`. One network round trip:
+
+```typescript
+const optimized = await studio`introspect ${database}`
+  .map(table => tom`analyze ${table} for optimization`)
+  .map(suggestion => ralph`implement ${suggestion}`)
+```
+
+**Migrations and Schema Management**
+
+```typescript
+// Migrations
+await studio.migrate.generate()    // Generate from schema diff
+await studio.migrate.push()        // Apply pending migrations
+await studio.migrate.status()      // Check migration state
+
+// Schema management
+await studio.schema.diff(a, b)     // Compare schemas
+await studio.schema.snapshot()     // Save current state
+```
+
 ## The Problem
 
 AI agents need to inspect and manage databases. But existing tools like Drizzle Studio are:

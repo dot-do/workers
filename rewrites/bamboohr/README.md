@@ -2,6 +2,32 @@
 
 > Simple HR for growing teams. AI-powered. Zero per-employee fees.
 
+You're a startup founder. Your team just hit 50 people. HR software wants $6/employee/month - that's $3,600/year just to track PTO and store employee records. For what is essentially a spreadsheet with a nice UI. Your growing team shouldn't be penalized for growing.
+
+## The workers.do Way
+
+```typescript
+import { bamboohr, olive } from 'bamboohr.do'
+
+// Natural language HR operations
+const balance = await bamboohr`get ${employee} PTO balance`
+const directory = await bamboohr`who reports to ${manager}?`
+const policy = await olive`what's our remote work policy?`
+
+// Promise pipelining for onboarding workflows
+const onboarded = await bamboohr`hire ${candidate}`
+  .map(emp => bamboohr`provision ${emp} with ${apps}`)
+  .map(emp => bamboohr`assign ${emp} to ${team}`)
+  .map(emp => olive`guide ${emp} through day one`)
+
+// AI-assisted performance reviews
+const review = await olive`prepare ${employee}'s quarterly review`
+  .map(draft => manager`review and approve ${draft}`)
+  .map(final => bamboohr`submit ${final} to HR`)
+```
+
+One API call. Natural language. AI handles the complexity.
+
 ## The Problem
 
 BambooHR built a great product for SMBs. But then they adopted enterprise pricing.

@@ -11,6 +11,58 @@ SAP is the $200B gorilla of enterprise software. S/4HANA implementations cost $1
 
 **sap.do** is the open-source alternative. Manufacturing-grade ERP on Cloudflare Workers. AI runs your MRP. Deploy in minutes, not years. OData compatible for existing integrations.
 
+## The workers.do Way
+
+You're running a manufacturing business. You need MRP, BOMs, production orders, quality control. SAP wants $10M and 3 years. Your competitors are shipping while you're still in "discovery."
+
+**workers.do** gives you an AI manufacturing team that understands your shop floor:
+
+```typescript
+import { sap } from 'sap.do'
+import { ops, planner, quality } from 'agents.do'
+
+// Natural language manufacturing operations
+const mrp = await sap`plan production for ${salesOrder}`
+const bom = await sap`explode BOM for ${finishedGood} with all components`
+const capacity = await sap`check capacity for ${workCenter} next ${weeks} weeks`
+```
+
+### Promise Pipelining
+
+Chain complex manufacturing workflows with a single network round trip:
+
+```typescript
+const produced = await sap`create production order for ${material}`
+  .map(order => sap`release ${order} to shop floor`)
+  .map(order => sap`confirm operations for ${order}`)
+  .map(order => [quality, ops].map(r => r`inspect ${order}`))
+```
+
+### AI Agents for Manufacturing
+
+```typescript
+// Planner agent handles MRP
+await planner`
+  Run MRP for next quarter.
+  Identify materials with lead time risk.
+  Suggest purchase orders to place this week.
+`
+
+// Shop floor agent handles execution
+await shopfloor`What should I work on next?`
+// "Production order PRD-001 for FINISHED-001 is highest priority.
+//  Materials staged at bin STAGING-01.
+//  Estimated completion: 2.5 hours."
+
+// Quality agent handles inspections
+await quality`
+  Predict quality outcomes for incoming batch from ${vendor}.
+  Flag any high-risk materials for 100% inspection.
+`
+```
+
+One import. Natural language. Your AI manufacturing team.
+
 ## The Problem
 
 SAP has become synonymous with "enterprise complexity":

@@ -2,6 +2,34 @@
 
 > One system for people and devices. Unified IT + HR. AI-powered provisioning.
 
+You're a startup founder. You just hired employee #25. You need to create their email, add them to Slack, provision GitHub, ship a laptop, set up payroll, enroll benefits... Two systems. Duplicate data. Manual processes. And both want $35/employee/month. Your growth shouldn't come with a per-seat tax.
+
+## The workers.do Way
+
+```typescript
+import { rippling, rio } from 'rippling.do'
+
+// Natural language provisioning
+const employee = await rippling`onboard ${candidate} to ${department}`
+const access = await rippling`grant ${employee} access to ${app}`
+const device = await rio`ship laptop to ${employee}`
+
+// Promise pipelining for complete onboarding
+const provisioned = await rippling`hire ${candidate}`
+  .map(emp => rippling`create accounts for ${emp}`)
+  .map(emp => rippling`provision ${emp} with ${departmentApps}`)
+  .map(emp => rio`ship ${device} to ${emp}`)
+  .map(emp => rio`guide ${emp} through IT setup`)
+
+// AI-assisted offboarding
+const offboarded = await rio`${employee}'s last day is ${date}`
+  .map(emp => rippling`revoke all app access for ${emp}`)
+  .map(emp => rippling`recover devices from ${emp}`)
+  .map(emp => rippling`transfer ${emp}'s files to ${manager}`)
+```
+
+One record. Everything flows. AI handles the provisioning.
+
 ## The Problem
 
 When Sarah joins your company, you need to:

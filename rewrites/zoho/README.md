@@ -1,5 +1,7 @@
 # zoho.do
 
+> You're a startup founder. You need CRM, projects, support, invoicing - the whole stack. Zoho offers 50+ apps but they're all separate databases. Your data is fragmented. Your AI can't see the full picture.
+
 <p align="center">
   <strong>The Everything Suite. Unified. AI-Native. Actually Affordable.</strong>
 </p>
@@ -9,6 +11,42 @@
   <a href="https://www.npmjs.com/package/zoho.do"><img src="https://img.shields.io/npm/dm/zoho.do.svg" alt="npm downloads" /></a>
   <a href="https://github.com/drivly/zoho.do/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/zoho.do.svg" alt="license" /></a>
 </p>
+
+---
+
+## The workers.do Way
+
+Talk to your unified suite like a colleague:
+
+```typescript
+import { zoho, sally, priya, tom, ralph } from 'workers.do'
+
+// Natural language queries across all apps
+const health = await zoho`how is the Acme Corp relationship?`
+const pipeline = await zoho`show deals closing this quarter`
+const capacity = await zoho`what's engineering capacity for Q1?`
+
+// AI agents work your entire suite
+await sally`qualify leads and create deals for hot prospects`
+await priya`check project status for enterprise customers`
+```
+
+### Promise Pipelining
+
+Chain operations across apps without waiting. One network round trip:
+
+```typescript
+// Deal won -> project -> invoice -> support - all pipelined
+const onboarded = await zoho`find deals closed this week`
+  .map(deal => ralph`create implementation project for ${deal}`)
+  .map(project => zoho`create invoice for ${project.deal}`)
+  .map(invoice => priya`setup support account for ${invoice.customer}`)
+
+// Cross-app customer health
+const atRisk = await zoho`find customers with open tickets`
+  .map(customer => priya`analyze churn risk for ${customer}`)
+  .map(risk => [sally, tom].map(r => r`review ${risk} and create action plan`))
+```
 
 ---
 

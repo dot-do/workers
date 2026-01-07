@@ -19,6 +19,30 @@ Mixpanel built a user analytics empire on:
 
 At 1 million MTUs? **$24,000/month**. That's **$288,000/year** just for analytics.
 
+## The workers.do Way
+
+You're building a product people love. Every user interaction tells a story. But reading those stories costs $288k/year? Your success is being taxed by your analytics vendor.
+
+What if understanding your users was as simple as asking?
+
+```typescript
+import { mixpanel, priya } from 'workers.do'
+
+// Natural language user analytics
+const journey = await mixpanel`show me the path to purchase for ${segment}`
+const churn = await mixpanel`which users are likely to churn this month?`
+const why = await mixpanel`why are mobile users converting better than web?`
+
+// Chain insights into product strategy
+const strategy = await mixpanel`identify our power users`
+  .map(users => mixpanel`what behaviors drive retention in ${users}`)
+  .map(behaviors => priya`design features that encourage ${behaviors}`)
+```
+
+One import. Natural language. User insights that drive product decisions.
+
+That's analytics that works for you.
+
 ## The Solution
 
 **mixpanel.do** is Mixpanel reimagined:

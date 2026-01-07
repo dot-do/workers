@@ -11,6 +11,60 @@ Microsoft Dynamics 365 is the only enterprise platform that unifies CRM and ERP.
 
 **dynamics.do** is the open-source alternative. One Dataverse. Every module. AI-native from day one. Deploy in minutes.
 
+## The workers.do Way
+
+You need a unified platform for sales, service, finance, and operations. Microsoft wants $1.2M/year for Dynamics 365. Plus consultants. Plus Power Platform add-ons. Plus Copilot licenses.
+
+**workers.do** gives you an AI business team that just works:
+
+```typescript
+import { dynamics } from 'dynamics.do'
+import { sally, ada, ralph } from 'agents.do'
+
+// Natural language CRM + ERP
+const forecast = await dynamics`show pipeline forecast for ${quarter}`
+const cases = await dynamics`list all open support cases for ${customer}`
+const inventory = await dynamics`check stock levels for ${product} across all warehouses`
+```
+
+### Promise Pipelining
+
+Chain complex business workflows with a single network round trip:
+
+```typescript
+const deal = await dynamics`close opportunity ${opportunityId}`
+  .map(opp => dynamics`create sales order from ${opp}`)
+  .map(order => dynamics`generate invoice for ${order}`)
+  .map(invoice => [cfo, controller].map(r => r`approve ${invoice}`))
+```
+
+### AI Agents for Every Module
+
+```typescript
+// Sales agent handles pipeline
+await sally`
+  Review the pipeline for Q1.
+  Identify deals at risk of slipping.
+  Create follow-up tasks for the sales team.
+`
+
+// Finance agent handles month-end
+await ada`
+  Run month-end close for January.
+  Generate variance analysis vs budget.
+  Flag any unusual transactions.
+`
+
+// Operations agent handles supply chain
+await ralph`
+  Check inventory levels against demand forecast.
+  Create purchase orders for items below safety stock.
+  Optimize warehouse replenishment.
+`
+```
+
+One platform. Natural language. Your entire AI business team.
+
 ## The Problem
 
 Enterprise CRM and ERP systems are broken.

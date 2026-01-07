@@ -1,9 +1,46 @@
 # hubspot.do
 
+> You're a startup founder. You need CRM and marketing automation. HubSpot wants $3,600/month. Your runway is shrinking. Your competitors are closing deals while you're negotiating enterprise contracts.
+
 > Your own HubSpot. One click. AI-native. Open source.
 
 [![npm version](https://img.shields.io/npm/v/hubspot.do.svg)](https://www.npmjs.com/package/hubspot.do)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+---
+
+## The workers.do Way
+
+Talk to your CRM like a colleague:
+
+```typescript
+import { hubspot, sally, mark, priya } from 'workers.do'
+
+// Natural language queries
+const leads = await hubspot`find leads from ${campaign}`
+const engaged = await hubspot`show contacts who opened last email`
+const pipeline = await hubspot`deals closing this month over $25k`
+
+// AI agents work your CRM
+await sally`qualify inbound leads from today`
+await mark`create nurture sequence for ${segment}`
+```
+
+### Promise Pipelining
+
+Chain operations without waiting. One network round trip:
+
+```typescript
+// Find leads, send outreach, schedule follow-ups - all pipelined
+const nurtured = await hubspot`find warm leads from webinar`
+  .map(lead => sally`send personalized outreach to ${lead}`)
+  .map(outreach => mark`schedule follow-up content for ${outreach}`)
+
+// Marketing to sales handoff
+const mqls = await hubspot`find marketing qualified leads`
+  .map(lead => [priya, sally].map(r => r`review ${lead} for sales readiness`))
+  .map(qualified => sally`create deal for ${qualified}`)
+```
 
 ---
 

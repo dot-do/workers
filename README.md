@@ -1,6 +1,6 @@
-# workers.do
+# Workers.do Services-as-Software
 
-> Workers work for you.
+> AI + Code Workers `.do` work for you.
 
 ```typescript
 import { priya, ralph, tom, mark } from 'agents.do'
@@ -11,7 +11,7 @@ tom`review the architecture`
 mark`write the launch announcement`
 ```
 
-**workers.do** is the platform for building Autonomous Startups. Your workers are AI agents and humans—and they run on Cloudflare Workers.
+**workers.do** is the platform for building Autonomous Startups with [Business-as-Code](https://agi.do/business-as-code). Your workers are AI agents and humans—and they run on Cloudflare Workers.
 
 Both kinds of workers. Working for you.
 

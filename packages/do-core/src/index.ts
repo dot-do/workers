@@ -68,3 +68,6 @@ export * from './cold-vector-search.js'
 
 // Re-export Two-Phase Search (MRL hot/cold vector search)
 export * from './two-phase-search.js'
+
+// Re-export ParquetSerializer (Parquet-compatible binary serialization)
+export * from './parquet-serializer.js'

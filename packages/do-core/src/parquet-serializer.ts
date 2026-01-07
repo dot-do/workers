@@ -168,7 +168,7 @@ const COMPRESSION_MAGIC = {
  *
  * Higher levels apply more aggressive dictionary matching.
  */
-function compressWithLevel(data: Uint8Array, level: number): Uint8Array {
+function compressWithLevel(data: Uint8Array, _level: number): Uint8Array {
   if (data.length === 0) {
     return new Uint8Array([0x00])
   }
@@ -180,11 +180,11 @@ function compressWithLevel(data: Uint8Array, level: number): Uint8Array {
   // 0x03 = Dictionary + RLE
 
   // Always try dictionary compression first (it works best for JSON patterns)
-  // Level affects window size and minimum match length
-  const dictCompressed = compressDictionary(data, level)
+  const dictCompressed = compressDictionary(data, 1)
 
-  // Then try RLE on the dictionary output (helps with repeated references)
-  const minRun = Math.max(6 - Math.floor(level / 4), 3)
+  // RLE minimum run of 4 saves 2 bytes per run (4 bytes -> 2 bytes encoding)
+  // Use fixed minRun to ensure deterministic compression regardless of level
+  const minRun = 4
   const dictPlusRle = compressRLEWithMinRun(dictCompressed, minRun)
 
   // Also try RLE on raw data (for highly repetitive data)
@@ -278,18 +278,18 @@ function compressRLEWithMinRun(data: Uint8Array, minRun: number): Uint8Array {
  * Dictionary compression with common JSON pattern optimization.
  * Uses LZ77-style back-references to find repeated patterns.
  *
- * Higher levels use larger windows = more matches found = better compression.
- * The algorithm is designed so higher levels can ONLY equal or improve on lower levels.
+ * Note: Our encoding uses 1-byte offsets (max 255), so the level parameter
+ * currently doesn't affect compression ratio. All levels use the same algorithm.
+ * The level is kept for API compatibility and future 2-byte offset support.
  */
-function compressDictionary(data: Uint8Array, level: number): Uint8Array {
+function compressDictionary(data: Uint8Array, _level: number): Uint8Array {
   if (data.length < 8) return data
-
-  // Window size scales with level (larger = more match opportunities)
-  // Level 1: window=500, Level 22: window=11000
-  const windowSize = Math.min(32768, 500 + Math.floor(level * 500))
 
   // Minimum useful match is 4 bytes (3 bytes for encoding, so 4+ saves space)
   const minMatch = 4
+
+  // Maximum encodable offset is 255 (1-byte encoding)
+  const maxOffset = 255
 
   const result: number[] = []
   let i = 0
@@ -298,9 +298,10 @@ function compressDictionary(data: Uint8Array, level: number): Uint8Array {
     let bestOffset = 0
     let bestLength = 0
 
-    // Search in previous data for matches
-    const searchStart = Math.max(0, i - windowSize)
-    for (let j = searchStart; j < i; j++) {
+    // Search backwards from current position, but only within maxOffset
+    // This ensures we find matches we can actually encode
+    const searchStart = Math.max(0, i - maxOffset)
+    for (let j = i - 1; j >= searchStart; j--) {
       // Quick check: first byte must match
       if (data[j] !== data[i]) continue
 
@@ -313,7 +314,7 @@ function compressDictionary(data: Uint8Array, level: number): Uint8Array {
         matchLen++
       }
 
-      // Track the longest match found
+      // Track the longest match found within encodable range
       if (matchLen >= minMatch && matchLen > bestLength) {
         bestLength = matchLen
         bestOffset = i - j
@@ -321,7 +322,7 @@ function compressDictionary(data: Uint8Array, level: number): Uint8Array {
     }
 
     // Use match if it saves space (4+ bytes saves at least 1 byte)
-    if (bestLength >= minMatch && bestOffset <= 255) {
+    if (bestLength >= minMatch) {
       // Reference: [0xFE marker, offset, length]
       result.push(0xfe, bestOffset, bestLength)
       i += bestLength

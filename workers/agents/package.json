@@ -1,0 +1,30 @@
+{
+  "name": "@dotdo/workers-agents",
+  "version": "0.0.1",
+  "description": "Autonomous agents worker for agents.do",
+  "type": "module",
+  "main": "src/agents.ts",
+  "exports": {
+    ".": "./src/agents.ts"
+  },
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.8"
+  },
+  "keywords": [
+    "agents",
+    "ai-agents",
+    "autonomous-agents",
+    "durable-objects",
+    "cloudflare-workers",
+    "workers.do"
+  ]
+}

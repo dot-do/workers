@@ -1,0 +1,22 @@
+{
+  "name": "@dotdo/workers-oauth",
+  "version": "0.0.1",
+  "description": "OAuth 2.0/OIDC Durable Object with WorkOS AuthKit integration",
+  "type": "module",
+  "main": "src/oauth.ts",
+  "exports": {
+    ".": "./src/oauth.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@workos-inc/node": "^7.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0"
+  }
+}

@@ -237,9 +237,7 @@ export function Wiki(options?: ClientOptions): WikiAsClient {
 /**
  * Default wiki.as client instance
  */
-export const wiki: WikiAsClient = Wiki({
-  apiKey: typeof process !== 'undefined' ? (process.env?.WIKI_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const wiki: WikiAsClient = Wiki()
 
 // Convenience exports
 export const create = (config: WikiConfig) => wiki.create(config)

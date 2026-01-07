@@ -252,9 +252,7 @@ export function Directories(options?: ClientOptions): DirectoriesAsClient {
 /**
  * Default directories.as client instance
  */
-export const directories: DirectoriesAsClient = Directories({
-  apiKey: typeof process !== 'undefined' ? (process.env?.DIRECTORIES_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const directories: DirectoriesAsClient = Directories()
 
 // Convenience exports
 export const create = (config: DirectoryConfig) => directories.create(config)

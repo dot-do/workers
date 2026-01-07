@@ -239,9 +239,7 @@ export function AS(options?: ClientOptions): AGIAsClient {
  * const strategy = await ceo.do('What should our 2024 priorities be?')
  * ```
  */
-export const as: AGIAsClient = AS({
-  apiKey: typeof process !== 'undefined' ? (process.env?.AGI_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const as: AGIAsClient = AS()
 
 // Convenience exports for direct persona access
 export const developer = (spec?: string) => as.developer(spec)

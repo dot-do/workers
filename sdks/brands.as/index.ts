@@ -272,9 +272,7 @@ export function Brands(options?: ClientOptions): BrandsAsClient {
 /**
  * Default brands.as client instance
  */
-export const brands: BrandsAsClient = Brands({
-  apiKey: typeof process !== 'undefined' ? (process.env?.BRANDS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const brands: BrandsAsClient = Brands()
 
 // Convenience exports
 export const create = (config: BrandConfig) => brands.create(config)

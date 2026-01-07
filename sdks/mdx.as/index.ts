@@ -243,9 +243,7 @@ export function Mdx(options?: ClientOptions): MdxAsClient {
 /**
  * Default mdx.as client instance
  */
-export const mdx: MdxAsClient = Mdx({
-  apiKey: typeof process !== 'undefined' ? (process.env?.MDX_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const mdx: MdxAsClient = Mdx()
 
 // Convenience exports
 export const compile = (content: string, options?: Omit<CompileOptions, 'content'>) => mdx.compile(content, options)

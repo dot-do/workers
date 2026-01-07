@@ -106,7 +106,7 @@ export interface ServicesClient {
  * ```
  */
 export function Services(options?: ClientOptions): ServicesClient {
-  return createClient<ServicesClient>('services', options)
+  return createClient<ServicesClient>('https://services.do', options)
 }
 
 /**

@@ -63,7 +63,7 @@ export interface EventsClient {
  * ```
  */
 export function Events(options?: ClientOptions): EventsClient {
-  return createClient<EventsClient>('events', options)
+  return createClient<EventsClient>('https://events.do', options)
 }
 
 /**

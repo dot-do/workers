@@ -38,7 +38,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from 'rpc.do'
+import { createClient, tagged, type ClientOptions, type TaggedTemplate, type DoOptions } from 'rpc.do'
 
 // Types
 
@@ -134,29 +134,6 @@ export interface MigrationOperation {
   noun: string
   field?: string
   details?: Record<string, unknown>
-}
-
-export interface DoOptions {
-  context?: Record<string, unknown>
-  schemaId?: string
-}
-
-// Tagged template helper
-type TaggedTemplate<T> = {
-  (strings: TemplateStringsArray, ...values: unknown[]): T
-  (prompt: string, options?: DoOptions): T
-}
-
-function tagged<T>(fn: (prompt: string, options?: DoOptions) => T): TaggedTemplate<T> {
-  return function (stringsOrPrompt: TemplateStringsArray | string, ...values: unknown[]): T {
-    if (typeof stringsOrPrompt === 'string') {
-      return fn(stringsOrPrompt, values[0] as DoOptions | undefined)
-    }
-    const prompt = stringsOrPrompt.reduce((acc, str, i) =>
-      acc + str + (values[i] !== undefined ? String(values[i]) : ''), ''
-    )
-    return fn(prompt)
-  } as TaggedTemplate<T>
 }
 
 // Field definition helpers
@@ -328,7 +305,7 @@ export interface NounsClient {
  * ```
  */
 export function Nouns(options?: ClientOptions): NounsClient {
-  return createClient<NounsClient>('nouns', options)
+  return createClient<NounsClient>('https://nouns.do', options)
 }
 
 /**

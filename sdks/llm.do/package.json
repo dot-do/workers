@@ -27,7 +27,12 @@
   "devDependencies": {
     "@dotdo/types": "workspace:*",
     "dotdo": "workspace:*",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^3.0.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [
     "llm",

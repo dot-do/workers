@@ -210,9 +210,7 @@ export function Startups(options?: ClientOptions): StartupsAsClient {
 /**
  * Default startups.as client instance
  */
-export const startups: StartupsAsClient = Startups({
-  apiKey: typeof process !== 'undefined' ? (process.env?.STARTUPS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const startups: StartupsAsClient = Startups()
 
 // Convenience exports
 export const create = (config: StartupConfig) => startups.create(config)

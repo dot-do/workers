@@ -211,9 +211,7 @@ export function Waitlist(options?: ClientOptions): WaitlistAsClient {
 /**
  * Default waitlist.as client instance
  */
-export const waitlist: WaitlistAsClient = Waitlist({
-  apiKey: typeof process !== 'undefined' ? (process.env?.WAITLIST_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const waitlist: WaitlistAsClient = Waitlist()
 
 // Convenience exports
 export const create = (config: WaitlistConfig) => waitlist.create(config)

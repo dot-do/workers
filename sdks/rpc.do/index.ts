@@ -142,13 +142,29 @@ export const DEFAULT_BASE_URL = 'https://rpc.do'
 const API_KEY_ENV_VARS = ['DO_API_KEY', 'DO_TOKEN', 'ORG_AI_API_KEY', 'ORG_AI_TOKEN']
 
 /**
+ * Get the effective environment (explicit > global > Node.js process.env)
+ */
+function getEffectiveEnv(envOverride?: Record<string, unknown>): Record<string, unknown> | null {
+  if (envOverride) return envOverride
+  if (globalEnv) return globalEnv
+  // Auto-detect Node.js
+  if (typeof globalThis !== 'undefined' && (globalThis as any).process?.env) {
+    return (globalThis as any).process.env
+  }
+  return null
+}
+
+/**
  * Get default API key from environment
  * Checks: DO_API_KEY, DO_TOKEN, ORG_AI_API_KEY, ORG_AI_TOKEN
  *
- * Uses global env set via setEnv() or falls back to passed env
+ * Resolution order:
+ * 1. Explicit envOverride parameter
+ * 2. Global env set via setEnv()
+ * 3. Node.js process.env (auto-detected)
  */
 export async function getDefaultApiKey(envOverride?: Record<string, unknown>): Promise<string | undefined> {
-  const env = envOverride || globalEnv
+  const env = getEffectiveEnv(envOverride)
 
   if (env) {
     for (const key of API_KEY_ENV_VARS) {
@@ -168,10 +184,14 @@ export async function getDefaultApiKey(envOverride?: Record<string, unknown>): P
 
 /**
  * Sync version for default client initialization
- * Uses global env set via setEnv()
+ *
+ * Resolution order:
+ * 1. Explicit envOverride parameter
+ * 2. Global env set via setEnv()
+ * 3. Node.js process.env (auto-detected)
  */
 export function getDefaultApiKeySync(envOverride?: Record<string, string | undefined>): string | undefined {
-  const env = envOverride || globalEnv
+  const env = getEffectiveEnv(envOverride)
 
   if (env) {
     for (const key of API_KEY_ENV_VARS) {
@@ -569,11 +589,46 @@ export function createAutoClient<T extends object>(
 }
 
 // =============================================================================
+// Fn Proxy exports
+// =============================================================================
+
+export {
+  createFnProxy,
+  createStreamFnProxy,
+  createContextFnProxy,
+  batchRpc,
+  withDefaultOpts,
+  toSafe,
+  serializeFnCall,
+  isTemplateStringsArray,
+  hasNamedParams,
+  extractParamNames,
+} from './fn-proxy.js'
+
+export type {
+  Fn,
+  AsyncFn,
+  RpcFn,
+  StreamFn,
+  RpcStreamFn,
+  RpcStream,
+  ExtractParams,
+  TaggedResult,
+  FnTransformOptions,
+  SerializableFnCall,
+  FnError,
+  FnResult,
+  FnContext,
+  ParsedTemplate,
+} from './fn-proxy.js'
+
+// =============================================================================
 // SQL Proxy exports
 // =============================================================================
 
 export {
   createSqlProxy,
+  createTypedSqlProxy,
   createSqlHandler,
   withSqlProxy,
 } from './sql-proxy.js'
@@ -585,6 +640,12 @@ export type {
   SqlTransformOptions,
   ParsedSqlTemplate,
 } from './sql-proxy.js'
+
+// =============================================================================
+// Tagged template helper exports
+// =============================================================================
+
+export { tagged, type TaggedTemplate, type DoOptions } from './tagged.js'
 
 // =============================================================================
 // Re-export all types for consumers

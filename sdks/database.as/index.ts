@@ -52,7 +52,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from 'rpc.do'
+import { createClient, tagged, type ClientOptions, type TaggedTemplate, type DoOptions } from 'rpc.do'
 
 // Re-export core types from ai-database
 export type {
@@ -99,29 +99,6 @@ export interface NounDefinition {
   }>
   actions?: string[]
   events?: string[]
-}
-
-export interface DoOptions {
-  context?: Record<string, unknown>
-  name?: string
-}
-
-// Tagged template helper
-type TaggedTemplate<T> = {
-  (strings: TemplateStringsArray, ...values: unknown[]): T
-  (prompt: string, options?: DoOptions): T
-}
-
-function tagged<T>(fn: (prompt: string, options?: DoOptions) => T): TaggedTemplate<T> {
-  return function (stringsOrPrompt: TemplateStringsArray | string, ...values: unknown[]): T {
-    if (typeof stringsOrPrompt === 'string') {
-      return fn(stringsOrPrompt, values[0] as DoOptions | undefined)
-    }
-    const prompt = stringsOrPrompt.reduce((acc, str, i) =>
-      acc + str + (values[i] !== undefined ? String(values[i]) : ''), ''
-    )
-    return fn(prompt)
-  } as TaggedTemplate<T>
 }
 
 // Schema builder for fluent API
@@ -290,9 +267,7 @@ export function DatabaseAs(options?: ClientOptions): DatabaseAsClient {
 /**
  * Default database.as client
  */
-export const database: DatabaseAsClient = DatabaseAs({
-  apiKey: typeof process !== 'undefined' ? (process.env?.DATABASE_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const database: DatabaseAsClient = DatabaseAs()
 
 export default database
 

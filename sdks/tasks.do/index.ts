@@ -35,7 +35,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from 'rpc.do'
+import { createClient, tagged, type ClientOptions, type TaggedTemplate, type DoOptions } from 'rpc.do'
 
 // Types
 export type Priority = 'critical' | 'high' | 'medium' | 'low'
@@ -156,31 +156,6 @@ export interface ListOptions {
   offset?: number
   orderBy?: 'createdAt' | 'updatedAt' | 'dueAt' | 'priority'
   order?: 'asc' | 'desc'
-}
-
-export interface DoOptions {
-  assignee?: string | Assignee
-  priority?: Priority
-  dueAt?: Date | string
-  context?: Record<string, unknown>
-}
-
-// Tagged template helper
-type TaggedTemplate<T> = {
-  (strings: TemplateStringsArray, ...values: unknown[]): T
-  (prompt: string, options?: DoOptions): T
-}
-
-function tagged<T>(fn: (prompt: string, options?: DoOptions) => T): TaggedTemplate<T> {
-  return function (stringsOrPrompt: TemplateStringsArray | string, ...values: unknown[]): T {
-    if (typeof stringsOrPrompt === 'string') {
-      return fn(stringsOrPrompt, values[0] as DoOptions | undefined)
-    }
-    const prompt = stringsOrPrompt.reduce((acc, str, i) =>
-      acc + str + (values[i] !== undefined ? String(values[i]) : ''), ''
-    )
-    return fn(prompt)
-  } as TaggedTemplate<T>
 }
 
 // Client interface
@@ -402,7 +377,7 @@ export interface TasksClient {
  * ```
  */
 export function Tasks(options?: ClientOptions): TasksClient {
-  return createClient<TasksClient>('tasks', options)
+  return createClient<TasksClient>('https://tasks.do', options)
 }
 
 /**

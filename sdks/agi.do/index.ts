@@ -26,22 +26,9 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from 'rpc.do'
+import { createClient, tagged, type ClientOptions, type TaggedTemplate, type DoOptions } from 'rpc.do'
 
 // Types
-export interface DoOptions {
-  /** Context to provide to the AGI */
-  context?: string | Record<string, unknown>
-  /** Specific capabilities to use */
-  capabilities?: string[]
-  /** Output format preference */
-  format?: 'text' | 'json' | 'markdown' | 'code'
-  /** Maximum execution time in seconds */
-  timeout?: number
-  /** Whether to execute actions or just plan them */
-  execute?: boolean
-}
-
 export interface DoResult {
   /** Unique result ID */
   id: string
@@ -93,28 +80,6 @@ export interface Capability {
   name: string
   description: string
   examples: string[]
-}
-
-// Tagged template helper type
-type TaggedTemplate<T> = {
-  (strings: TemplateStringsArray, ...values: unknown[]): T
-  (prompt: string, options?: DoOptions): T
-}
-
-/**
- * Helper to create tagged template functions that also accept string arguments
- */
-function tagged<T>(fn: (prompt: string, options?: DoOptions) => T): TaggedTemplate<T> {
-  return function (stringsOrPrompt: TemplateStringsArray | string, ...values: unknown[]): T {
-    if (typeof stringsOrPrompt === 'string') {
-      return fn(stringsOrPrompt, values[0] as DoOptions | undefined)
-    }
-    // Tagged template: interpolate values into the string
-    const prompt = stringsOrPrompt.reduce((acc, str, i) =>
-      acc + str + (values[i] !== undefined ? String(values[i]) : ''), ''
-    )
-    return fn(prompt)
-  } as TaggedTemplate<T>
 }
 
 // Client interface
@@ -229,9 +194,7 @@ export function AGI(options?: ClientOptions): AGIClient {
  * const result = await agi.do('What can you do for me?')
  * ```
  */
-export const agi: AGIClient = AGI({
-  apiKey: typeof process !== 'undefined' ? (process.env?.AGI_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const agi: AGIClient = AGI()
 
 // Legacy alias
 export const createAGI = AGI

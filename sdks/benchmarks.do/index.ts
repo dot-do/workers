@@ -26,7 +26,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from 'rpc.do'
+import { createClient, tagged, type ClientOptions, type TaggedTemplate, type DoOptions } from 'rpc.do'
 
 // Standard benchmark names
 export type StandardBenchmark =
@@ -163,32 +163,6 @@ export interface ComparisonResult {
     rank: number
     delta?: number // difference from top
   }>
-}
-
-export interface DoOptions {
-  models?: string[]
-  benchmarks?: StandardBenchmark[]
-  categories?: string[]
-  detailed?: boolean
-}
-
-// Tagged template helper
-type TaggedTemplate<T> = {
-  (strings: TemplateStringsArray, ...values: unknown[]): T
-  (prompt: string, options?: DoOptions): T
-}
-
-function tagged<T>(fn: (prompt: string, options?: DoOptions) => T): TaggedTemplate<T> {
-  return function (stringsOrPrompt: TemplateStringsArray | string, ...values: unknown[]): T {
-    if (typeof stringsOrPrompt === 'string') {
-      return fn(stringsOrPrompt, values[0] as DoOptions | undefined)
-    }
-    const prompt = stringsOrPrompt.reduce(
-      (acc, str, i) => acc + str + (values[i] !== undefined ? String(values[i]) : ''),
-      ''
-    )
-    return fn(prompt)
-  } as TaggedTemplate<T>
 }
 
 // Client interface

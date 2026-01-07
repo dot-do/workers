@@ -10,17 +10,20 @@
  * ```typescript
  * import { db } from 'database.do'
  *
+ * // Access entities via explicit entity() method
+ * const users = await db.entity<User>('User').list()
+ * const lead = await db.entity<Lead>('Lead').get('lead-123')
+ *
  * // Natural language queries with tagged templates
- * const leads = await db.Lead`who closed deals this month?`
- * const users = await db.User`active in the last 7 days`
+ * const results = await db.do`find all active users created this week`
  *
  * // Promise pipelining - chain without await
- * const qualified = await db.Lead.list()
+ * const qualified = await db.entity<Lead>('Lead').list()
  *   .filter(l => l.score > 80)
  *   .map(l => ({ name: l.name, company: l.company }))
  *
  * // Batch relationship loading
- * const posts = await db.Post.list()
+ * const posts = await db.entity<Post>('Post').list()
  *   .map(p => ({
  *     title: p.title,
  *     author: p.author,  // Batch loaded!
@@ -33,7 +36,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from 'rpc.do'
+import { createClient, tagged, type ClientOptions, type TaggedTemplate, type DoOptions } from 'rpc.do'
 
 // Re-export core types from ai-database
 export type {
@@ -61,30 +64,6 @@ export type {
   Verb,
   TypeMeta,
 } from 'ai-database'
-
-// Types
-export interface DoOptions {
-  context?: Record<string, unknown>
-  timeout?: number
-}
-
-// Tagged template helper
-type TaggedTemplate<T> = {
-  (strings: TemplateStringsArray, ...values: unknown[]): T
-  (prompt: string, options?: DoOptions): T
-}
-
-function tagged<T>(fn: (prompt: string, options?: DoOptions) => T): TaggedTemplate<T> {
-  return function (stringsOrPrompt: TemplateStringsArray | string, ...values: unknown[]): T {
-    if (typeof stringsOrPrompt === 'string') {
-      return fn(stringsOrPrompt, values[0] as DoOptions | undefined)
-    }
-    const prompt = stringsOrPrompt.reduce((acc, str, i) =>
-      acc + str + (values[i] !== undefined ? String(values[i]) : ''), ''
-    )
-    return fn(prompt)
-  } as TaggedTemplate<T>
-}
 
 /**
  * Entity operations with promise pipelining
@@ -181,10 +160,15 @@ export interface DatabaseClient {
   do: TaggedTemplate<Promise<unknown[]>>
 
   /**
-   * Access entity operations by type
-   * Returns a proxy that creates EntityOperations for any entity name
+   * Access entity operations by type name
+   *
+   * @example
+   * ```typescript
+   * const users = await db.entity<User>('User').list()
+   * const lead = await db.entity<Lead>('Lead').get('lead-123')
+   * ```
    */
-  [entityType: string]: EntityOperations<unknown>
+  entity<T = unknown>(name: string): EntityOperations<T>
 
   // Event operations
 
@@ -286,9 +270,7 @@ export function Database(options?: ClientOptions): DatabaseClient {
 /**
  * Default database client
  */
-export const database: DatabaseClient = Database({
-  apiKey: typeof process !== 'undefined' ? (process.env?.DATABASE_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const database: DatabaseClient = Database()
 
 // Alias for shorter import
 export const db = database

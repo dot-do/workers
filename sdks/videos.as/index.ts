@@ -275,9 +275,7 @@ export function Videos(options?: ClientOptions): VideosAsClient {
 /**
  * Default videos.as client instance
  */
-export const videos: VideosAsClient = Videos({
-  apiKey: typeof process !== 'undefined' ? (process.env?.VIDEOS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const videos: VideosAsClient = Videos()
 
 // Convenience exports
 export const upload = (config: UploadConfig) => videos.upload(config)

@@ -1,19 +1,12 @@
 /**
- * rpc.do/env/node - Node.js environment adapter
+ * rpc.do/env/node - Node.js environment adapter (OPTIONAL)
  *
- * Import this at your Node.js app's entry point to configure all .do SDKs
- * to use process.env for environment variables.
+ * NOTE: This import is no longer required! Node.js process.env is now
+ * auto-detected. This file is kept for backwards compatibility.
  *
- * @example
- * ```typescript
- * // app.ts (entry point)
- * import 'rpc.do/env/node'
- * import { workflows } from 'workflows.do'
- * import { tasks } from 'tasks.do'
+ * For loading .env files, use `import 'rpc.do/dotenv'` instead.
  *
- * // All SDKs now have access to process.env
- * const flows = await workflows.list()
- * ```
+ * @deprecated Node.js environment is auto-detected - no import needed
  */
 
 import { setEnv } from './index.js'

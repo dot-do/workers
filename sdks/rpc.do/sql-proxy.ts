@@ -1,7 +1,7 @@
 /**
- * SQL Proxy - Tagged Template to RPC Transform
+ * SQL Proxy - Tagged Template to RPC Transform for SQL
  *
- * Transforms tagged template calls into serializable RPC format:
+ * Transforms tagged template SQL calls into serializable RPC format:
  *
  * ```ts
  * // User writes:
@@ -12,6 +12,8 @@
  * ```
  *
  * This enables template literal syntax to work over CapnWeb RPC.
+ *
+ * @packageDocumentation
  */
 
 import type {
@@ -21,7 +23,13 @@ import type {
   SqlTransformOptions,
   ParsedSqlTemplate,
 } from '@dotdo/types/sql'
+import type { RpcFn, SQLOptions } from '@dotdo/types/fn'
 import type { RpcPromise } from '@dotdo/types/rpc'
+import {
+  isTemplateStringsArray,
+  hasNamedParams,
+  extractParamNames,
+} from './fn-proxy.js'
 
 // Re-export types for convenience
 export type {
@@ -33,19 +41,8 @@ export type {
 }
 
 // =============================================================================
-// Template Parsing
+// SQL Template Parsing
 // =============================================================================
-
-/**
- * Check if an argument is a TemplateStringsArray (from tagged template call)
- */
-function isTemplateStringsArray(arg: unknown): arg is TemplateStringsArray {
-  return (
-    Array.isArray(arg) &&
-    'raw' in arg &&
-    Array.isArray((arg as TemplateStringsArray).raw)
-  )
-}
 
 /**
  * Parse a tagged template into SQL query with ? placeholders and bindings.
@@ -76,18 +73,11 @@ function parseTemplateToSql(
  *
  * Returns a function that accepts the named parameters.
  */
-function parseNamedTemplate(
+function parseNamedSqlTemplate(
   strings: TemplateStringsArray
 ): { paramNames: string[]; buildQuery: (params: Record<string, unknown>) => ParsedSqlTemplate } {
-  const paramNames: string[] = []
+  const paramNames = extractParamNames(strings)
   const raw = strings.raw.join('')
-
-  // Extract {param} names
-  const paramRegex = /\{(\w+)\}/g
-  let match
-  while ((match = paramRegex.exec(raw)) !== null) {
-    paramNames.push(match[1]!)
-  }
 
   // Build template with placeholders preserved
   const templateParts = raw.split(/\{\w+\}/)
@@ -119,13 +109,6 @@ function parseNamedTemplate(
   }
 }
 
-/**
- * Check if template has named {param} placeholders
- */
-function hasNamedParams(strings: TemplateStringsArray): boolean {
-  return /\{\w+\}/.test(strings.raw.join(''))
-}
-
 // =============================================================================
 // SQL Proxy Implementation
 // =============================================================================
@@ -133,22 +116,27 @@ function hasNamedParams(strings: TemplateStringsArray): boolean {
 /**
  * Create a SQL proxy that transforms tagged templates to RPC-serializable format.
  *
+ * Uses the Fn<Out, In, Opts> pattern:
+ * - Out = SqlResult<T>
+ * - In = any (accepts string query, template, or SerializableSqlQuery)
+ * - Opts = SQLOptions
+ *
  * @example
  * ```ts
- * const sql = createSqlProxy(rpcCall)
+ * const sql = createSqlProxy<User>(rpcCall)
  *
  * // All of these work:
  * await sql`SELECT * FROM users WHERE id = ${id}`
  * await sql('SELECT * FROM users WHERE id = ?', id)
  * await sql({ query: 'SELECT * FROM users WHERE id = ?', bindings: [id] })
- * await sql`SELECT * FROM {table}`({ table: 'users' })
+ * await sql`SELECT * FROM {table}`({ table: 'users', timeout: 5000 })
  * ```
  */
 export function createSqlProxy<T = Record<string, unknown>>(
   rpcCall: (query: SerializableSqlQuery) => RpcPromise<SqlResult<T>>,
   options: SqlTransformOptions = {}
 ): SqlClientProxy<T> {
-  const { debug = false, validate = false } = options
+  const { debug = false } = options
 
   // The actual handler function
   function sqlHandler<R = T>(
@@ -164,7 +152,7 @@ export function createSqlProxy<T = Record<string, unknown>>(
       if (debug) {
         console.log('[SQL] Direct query:', queryOrStrings)
       }
-      return rpcCall(queryOrStrings as SerializableSqlQuery) as RpcPromise<SqlResult<R>>
+      return rpcCall(queryOrStrings as SerializableSqlQuery) as unknown as RpcPromise<SqlResult<R>>
     }
 
     // Case 2: Regular string query with bindings
@@ -176,7 +164,7 @@ export function createSqlProxy<T = Record<string, unknown>>(
       if (debug) {
         console.log('[SQL] String query:', serializable)
       }
-      return rpcCall(serializable) as RpcPromise<SqlResult<R>>
+      return rpcCall(serializable) as unknown as RpcPromise<SqlResult<R>>
     }
 
     // Case 3: Tagged template literal
@@ -184,7 +172,7 @@ export function createSqlProxy<T = Record<string, unknown>>(
       // Check for named parameters
       if (hasNamedParams(queryOrStrings)) {
         // Return a function that accepts the params
-        const { paramNames, buildQuery } = parseNamedTemplate(queryOrStrings)
+        const { paramNames, buildQuery } = parseNamedSqlTemplate(queryOrStrings)
 
         if (debug) {
           console.log('[SQL] Named template, params:', paramNames)
@@ -192,14 +180,24 @@ export function createSqlProxy<T = Record<string, unknown>>(
 
         return (params: Record<string, unknown>) => {
           const parsed = buildQuery(params)
+          // Extract SQLOptions from params
+          const opts: SQLOptions = {}
+          for (const [key, value] of Object.entries(params)) {
+            if (!paramNames.includes(key)) {
+              if (key === 'timeout' || key === 'transaction' || key === 'returnType') {
+                (opts as Record<string, unknown>)[key] = value
+              }
+            }
+          }
           const serializable: SerializableSqlQuery = {
             query: parsed.query,
             bindings: parsed.bindings,
+            returnType: opts.returnType,
           }
           if (debug) {
             console.log('[SQL] Named query resolved:', serializable)
           }
-          return rpcCall(serializable) as RpcPromise<SqlResult<R>>
+          return rpcCall(serializable) as unknown as RpcPromise<SqlResult<R>>
         }
       }
 
@@ -212,16 +210,41 @@ export function createSqlProxy<T = Record<string, unknown>>(
       if (debug) {
         console.log('[SQL] Template query:', serializable)
       }
-      return rpcCall(serializable) as RpcPromise<SqlResult<R>>
+      return rpcCall(serializable) as unknown as RpcPromise<SqlResult<R>>
     }
 
     throw new Error('Invalid SQL query format')
   }
 
   // Add config property
-  ;(sqlHandler as SqlClientProxy<T>).config = options
+  ;(sqlHandler as unknown as { config: SqlTransformOptions }).config = options
 
   return sqlHandler as SqlClientProxy<T>
+}
+
+// =============================================================================
+// Typed SQL Proxy (using Fn pattern)
+// =============================================================================
+
+/**
+ * Create a typed SQL function using the Fn<Out, In, Opts> pattern.
+ *
+ * This is the recommended way to create SQL proxies as it integrates
+ * with the broader Fn type system.
+ *
+ * @example
+ * ```ts
+ * const sql = createTypedSqlProxy<User[]>(rpcCall)
+ *
+ * // Fully typed
+ * const users: User[] = await sql`SELECT * FROM users`.all()
+ * ```
+ */
+export function createTypedSqlProxy<T = Record<string, unknown>>(
+  rpcCall: (query: SerializableSqlQuery) => RpcPromise<SqlResult<T>>,
+  options: SqlTransformOptions = {}
+): RpcFn<SqlResult<T>, any, SQLOptions> {
+  return createSqlProxy<T>(rpcCall, options) as unknown as RpcFn<SqlResult<T>, any, SQLOptions>
 }
 
 // =============================================================================
@@ -235,7 +258,7 @@ export function createSqlHandler<T = Record<string, unknown>>(
   storage: { exec: <R>(query: string, ...bindings: unknown[]) => { toArray: () => R[]; one: () => R | null } }
 ): (args: SerializableSqlQuery) => SqlResult<T> {
   return (args: SerializableSqlQuery): SqlResult<T> => {
-    const { query, bindings = [], returnType = 'cursor' } = args
+    const { query, bindings = [] } = args
 
     const cursor = storage.exec<T>(query, ...bindings)
 
@@ -303,3 +326,8 @@ export function withSqlProxy<T extends object>(
   }) as T & { sql: SqlClientProxy }
 }
 
+// =============================================================================
+// Convenience Exports
+// =============================================================================
+
+export { isTemplateStringsArray, hasNamedParams, extractParamNames }

@@ -246,9 +246,7 @@ export function Forms(options?: ClientOptions): FormsAsClient {
 /**
  * Default forms.as client instance
  */
-export const forms: FormsAsClient = Forms({
-  apiKey: typeof process !== 'undefined' ? (process.env?.FORMS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const forms: FormsAsClient = Forms()
 
 // Convenience exports
 export const create = (config: FormConfig) => forms.create(config)

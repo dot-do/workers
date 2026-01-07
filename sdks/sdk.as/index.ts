@@ -205,9 +205,7 @@ export function Sdk(options?: ClientOptions): SdkAsClient {
 /**
  * Default sdk.as client instance
  */
-export const sdk: SdkAsClient = Sdk({
-  apiKey: typeof process !== 'undefined' ? (process.env?.SDK_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const sdk: SdkAsClient = Sdk()
 
 // Convenience exports
 export const generate = (config: GenerateConfig) => sdk.generate(config)

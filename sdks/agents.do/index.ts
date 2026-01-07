@@ -25,7 +25,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from 'rpc.do'
+import { createClient, tagged, type ClientOptions, type TaggedTemplate, type DoOptions } from 'rpc.do'
 
 // Types
 export interface AgentConfig {
@@ -84,36 +84,6 @@ export interface OrchestrationResult {
   agents: Array<{ id: string; name: string; status: string }>
   result: Record<string, unknown>
   usage: { tokens: number; cost: number; duration: number }
-}
-
-export interface DoOptions {
-  /** Additional context */
-  context?: string | Record<string, unknown>
-  /** Tools to enable */
-  tools?: string[]
-  /** Run immediately or schedule */
-  immediate?: boolean
-}
-
-// Tagged template helper type
-type TaggedTemplate<T> = {
-  (strings: TemplateStringsArray, ...values: unknown[]): T
-  (prompt: string, options?: DoOptions): T
-}
-
-/**
- * Helper to create tagged template functions
- */
-function tagged<T>(fn: (prompt: string, options?: DoOptions) => T): TaggedTemplate<T> {
-  return function (stringsOrPrompt: TemplateStringsArray | string, ...values: unknown[]): T {
-    if (typeof stringsOrPrompt === 'string') {
-      return fn(stringsOrPrompt, values[0] as DoOptions | undefined)
-    }
-    const prompt = stringsOrPrompt.reduce((acc, str, i) =>
-      acc + str + (values[i] !== undefined ? String(values[i]) : ''), ''
-    )
-    return fn(prompt)
-  } as TaggedTemplate<T>
 }
 
 // Client interface
@@ -216,9 +186,7 @@ export function Agents(options?: ClientOptions): AgentsClient {
 /**
  * Default agents client instance
  */
-export const agents: AgentsClient = Agents({
-  apiKey: typeof process !== 'undefined' ? (process.env?.AGENTS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const agents: AgentsClient = Agents()
 
 export default agents
 

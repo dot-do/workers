@@ -32,7 +32,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from 'rpc.do'
+import { createClient, tagged, type ClientOptions, type TaggedTemplate, type DoOptions } from 'rpc.do'
 
 // Re-export core types from ai-workflows pattern
 export type {
@@ -102,28 +102,8 @@ export interface StepRun {
   completedAt?: Date
 }
 
-export interface DoOptions {
-  context?: Record<string, unknown>
-  timeout?: string
-}
-
-// Tagged template helper
-type TaggedTemplate<T> = {
-  (strings: TemplateStringsArray, ...values: unknown[]): T
-  (prompt: string, options?: DoOptions): T
-}
-
-function tagged<T>(fn: (prompt: string, options?: DoOptions) => T): TaggedTemplate<T> {
-  return function (stringsOrPrompt: TemplateStringsArray | string, ...values: unknown[]): T {
-    if (typeof stringsOrPrompt === 'string') {
-      return fn(stringsOrPrompt, values[0] as DoOptions | undefined)
-    }
-    const prompt = stringsOrPrompt.reduce((acc, str, i) =>
-      acc + str + (values[i] !== undefined ? String(values[i]) : ''), ''
-    )
-    return fn(prompt)
-  } as TaggedTemplate<T>
-}
+// Re-export DoOptions and TaggedTemplate from rpc.do for SDK consumers
+export type { DoOptions, TaggedTemplate }
 
 /**
  * Workflow context ($) for defining workflows
@@ -283,7 +263,7 @@ export interface WorkflowsClient {
  * ```
  */
 export function Workflows(options?: ClientOptions): WorkflowsClient {
-  return createClient<WorkflowsClient>('workflows', options)
+  return createClient<WorkflowsClient>('https://workflows.do', options)
 }
 
 /**
@@ -293,9 +273,6 @@ export function Workflows(options?: ClientOptions): WorkflowsClient {
  * For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based config.
  */
 export const workflows: WorkflowsClient = Workflows()
-
-// Named exports
-export { Workflows, workflows }
 
 // Default export = camelCase instance
 export default workflows

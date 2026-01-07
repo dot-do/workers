@@ -28,7 +28,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from 'rpc.do'
+import { createClient, tagged, type ClientOptions, type TaggedTemplate, type DoOptions } from 'rpc.do'
 
 // Types
 export interface AssistantDefinition {
@@ -65,34 +65,11 @@ export interface AssistantProfile {
   }
 }
 
-export interface DoOptions {
-  context?: string | Record<string, unknown>
-  format?: 'text' | 'json' | 'markdown'
-}
-
 export interface DoResult {
   id: string
   content: string
   data?: Record<string, unknown>
   usage: { tokens: number; cost: number }
-}
-
-// Tagged template helper type
-type TaggedTemplate<T> = {
-  (strings: TemplateStringsArray, ...values: unknown[]): T
-  (prompt: string, options?: DoOptions): T
-}
-
-function tagged<T>(fn: (prompt: string, options?: DoOptions) => T): TaggedTemplate<T> {
-  return function (stringsOrPrompt: TemplateStringsArray | string, ...values: unknown[]): T {
-    if (typeof stringsOrPrompt === 'string') {
-      return fn(stringsOrPrompt, values[0] as DoOptions | undefined)
-    }
-    const prompt = stringsOrPrompt.reduce((acc, str, i) =>
-      acc + str + (values[i] !== undefined ? String(values[i]) : ''), ''
-    )
-    return fn(prompt)
-  } as TaggedTemplate<T>
 }
 
 // Instantiated assistant interface
@@ -264,9 +241,7 @@ export function Assistant(options?: ClientOptions): AssistantAsClient {
 /**
  * Default assistant.as client instance
  */
-export const assistant: AssistantAsClient = Assistant({
-  apiKey: typeof process !== 'undefined' ? (process.env?.ASSISTANT_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const assistant: AssistantAsClient = Assistant()
 
 // Convenience exports
 export const executive = (opts?: { name?: string }) => assistant.executive(opts)

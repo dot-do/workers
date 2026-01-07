@@ -176,9 +176,7 @@ export function SAS(options?: ClientOptions): ServicesAsClient {
  * const services = await sas.discover({ category: 'marketing' })
  * ```
  */
-export const sas: ServicesAsClient = SAS({
-  apiKey: typeof process !== 'undefined' ? (process.env?.SAS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const sas: ServicesAsClient = SAS()
 
 // Alias for clarity
 export const services = sas

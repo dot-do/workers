@@ -34,7 +34,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from 'rpc.do'
+import { createClient, tagged, type ClientOptions, type TaggedTemplate, type DoOptions } from 'rpc.do'
 
 // Types
 export interface Objective {
@@ -112,29 +112,6 @@ export interface PlanShare {
   shareWith: string // email or team ID
   expiresAt?: Date
   createdAt: Date
-}
-
-export interface DoOptions {
-  context?: Record<string, unknown>
-  template?: 'okr' | 'roadmap' | 'sprint' | 'strategic'
-}
-
-// Tagged template helper
-type TaggedTemplate<T> = {
-  (strings: TemplateStringsArray, ...values: unknown[]): T
-  (prompt: string, options?: DoOptions): T
-}
-
-function tagged<T>(fn: (prompt: string, options?: DoOptions) => T): TaggedTemplate<T> {
-  return function (stringsOrPrompt: TemplateStringsArray | string, ...values: unknown[]): T {
-    if (typeof stringsOrPrompt === 'string') {
-      return fn(stringsOrPrompt, values[0] as DoOptions | undefined)
-    }
-    const prompt = stringsOrPrompt.reduce((acc, str, i) =>
-      acc + str + (values[i] !== undefined ? String(values[i]) : ''), ''
-    )
-    return fn(prompt)
-  } as TaggedTemplate<T>
 }
 
 // Milestones sub-client
@@ -329,7 +306,7 @@ export interface PlansClient {
  * ```
  */
 export function Plans(options?: ClientOptions): PlansClient {
-  return createClient<PlansClient>('plans', options)
+  return createClient<PlansClient>('https://plans.do', options)
 }
 
 /**

@@ -119,9 +119,6 @@ export function LLM(options?: ClientOptions): LLMClient {
  */
 export const llm: LLMClient = LLM()
 
-// Named exports
-export { LLM, llm }
-
 // Default export = camelCase instance
 export default llm
 

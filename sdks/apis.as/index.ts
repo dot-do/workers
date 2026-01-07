@@ -208,9 +208,7 @@ export function Apis(options?: ClientOptions): ApisAsClient {
 /**
  * Default apis.as client instance
  */
-export const apis: ApisAsClient = Apis({
-  apiKey: typeof process !== 'undefined' ? (process.env?.APIS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const apis: ApisAsClient = Apis()
 
 // Convenience exports
 export const create = (config: ApiConfig) => apis.create(config)

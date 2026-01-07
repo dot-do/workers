@@ -1,7 +1,7 @@
 {
   "name": "rpc.do",
   "version": "0.1.5",
-  "description": "Base CapnWeb RPC client for .do SDKs with tagged template SQL support",
+  "description": "Base CapnWeb RPC client for .do SDKs with unified Fn<Out,In,Opts> tagged template support",
   "type": "module",
   "main": "index.ts",
   "scripts": {
@@ -12,7 +12,11 @@
     ".": "./index.ts",
     "./env": "./env.ts",
     "./env/node": "./env-node.ts",
-    "./sql-proxy": "./sql-proxy.ts"
+    "./dotenv": "./dotenv.ts",
+    "./fn": "./fn-proxy.ts",
+    "./sql": "./sql-proxy.ts",
+    "./sql-proxy": "./sql-proxy.ts",
+    "./tagged": "./tagged.ts"
   },
   "author": ".do",
   "license": "MIT",
@@ -31,20 +35,29 @@
     "workers.do",
     "cloudflare",
     "sdk",
+    "fn",
     "sql",
-    "tagged-template"
+    "tagged-template",
+    "streaming"
   ],
   "dependencies": {
     "@dotdo/types": "workspace:*"
   },
   "peerDependencies": {
     "capnweb": "^0.2.0",
+    "dotenv": "^16.0.0",
     "org.ai": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "dotenv": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@dotdo/types": "workspace:*",
     "capnweb": "^0.2.0",
     "dotdo": "workspace:*",
+    "dotenv": "^16.0.0",
     "org.ai": "workspace:*",
     "typescript": "^5.0.0",
     "vitest": "^2.0.0"

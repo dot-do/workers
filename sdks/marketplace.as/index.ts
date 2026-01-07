@@ -328,9 +328,7 @@ export function Marketplace(options?: ClientOptions): MarketplaceAsClient {
 /**
  * Default marketplace.as client instance
  */
-export const marketplace: MarketplaceAsClient = Marketplace({
-  apiKey: typeof process !== 'undefined' ? (process.env?.MARKETPLACE_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const marketplace: MarketplaceAsClient = Marketplace()
 
 // Convenience exports
 export const create = (config: MarketplaceConfig) => marketplace.create(config)

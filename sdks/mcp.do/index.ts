@@ -26,7 +26,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from 'rpc.do'
+import { createClient, tagged, type ClientOptions, type TaggedTemplate, type DoOptions } from 'rpc.do'
 
 // Types
 export interface MCPTool {
@@ -91,29 +91,6 @@ export interface MCPClient {
   readResource(uri: string): Promise<string>
   listPrompts(): Promise<MCPPrompt[]>
   getPrompt(name: string, args?: Record<string, string>): Promise<string>
-}
-
-export interface DoOptions {
-  name?: string
-  transport?: 'stdio' | 'http' | 'websocket'
-}
-
-// Tagged template helper
-type TaggedTemplate<T> = {
-  (strings: TemplateStringsArray, ...values: unknown[]): T
-  (prompt: string, options?: DoOptions): T
-}
-
-function tagged<T>(fn: (prompt: string, options?: DoOptions) => T): TaggedTemplate<T> {
-  return function (stringsOrPrompt: TemplateStringsArray | string, ...values: unknown[]): T {
-    if (typeof stringsOrPrompt === 'string') {
-      return fn(stringsOrPrompt, values[0] as DoOptions | undefined)
-    }
-    const prompt = stringsOrPrompt.reduce((acc, str, i) =>
-      acc + str + (values[i] !== undefined ? String(values[i]) : ''), ''
-    )
-    return fn(prompt)
-  } as TaggedTemplate<T>
 }
 
 /**
@@ -295,9 +272,7 @@ export function MCP(options?: ClientOptions): MCPDoClient {
 /**
  * Default MCP client
  */
-export const mcp: MCPDoClient = MCP({
-  apiKey: typeof process !== 'undefined' ? (process.env?.MCP_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const mcp: MCPDoClient = MCP()
 
 export default mcp
 

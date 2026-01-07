@@ -1,0 +1,74 @@
+{
+  "name": "oauth.do",
+  "version": "0.2.0",
+  "description": "OAuth authentication SDK and CLI for .do Platform",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "bin": {
+    "oauth.do": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./node": {
+      "types": "./src/node.ts",
+      "import": "./src/node.ts"
+    },
+    "./mdx/*": "./src/mdx/*"
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "oauth",
+    "authentication",
+    "auth",
+    "login",
+    "api-key",
+    "cli",
+    "sdk",
+    "platform",
+    "workos",
+    "device-flow",
+    "github"
+  ],
+  "author": {
+    "name": ".do",
+    "email": "npm@platform.do",
+    "url": "https://workers.do"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "homepage": "https://oauth.do",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "org.ai": "workspace:*",
+    "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "tsup": "^8.0.0",
+    "typescript": "^5.5.2",
+    "vitest": "^2.1.8"
+  }
+}

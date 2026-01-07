@@ -186,9 +186,7 @@ export function Apps(options?: ClientOptions): AppsAsClient {
 /**
  * Default apps.as client instance
  */
-export const apps: AppsAsClient = Apps({
-  apiKey: typeof process !== 'undefined' ? (process.env?.APPS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const apps: AppsAsClient = Apps()
 
 // Convenience exports
 export const deploy = (config: AppConfig) => apps.deploy(config)

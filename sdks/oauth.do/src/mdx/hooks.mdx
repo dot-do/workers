@@ -1,0 +1,119 @@
+# Auth Hooks
+
+Framework-agnostic auth hooks for use with MDX. The MDX compiler will inject the appropriate JSX runtime.
+
+```tsx
+import { useState, useEffect, useCallback, useRef } from 'react' // or 'preact/hooks' or your framework
+import { auth, login as loginFn, logout as logoutFn } from 'oauth.do'
+
+export function useAuth(token) {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const mounted = useRef(true)
+
+  useEffect(() => {
+    mounted.current = true
+    auth(token).then(result => {
+      if (mounted.current) {
+        setUser(result.user)
+        setLoading(false)
+      }
+    }).catch(err => {
+      if (mounted.current) {
+        setError(err)
+        setLoading(false)
+      }
+    })
+    return () => { mounted.current = false }
+  }, [token])
+
+  return { user, loading, error }
+}
+
+export function useLogin() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const login = useCallback(async (credentials) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await loginFn(credentials)
+      setLoading(false)
+      return result
+    } catch (err) {
+      setError(err)
+      setLoading(false)
+      throw err
+    }
+  }, [])
+
+  return { login, loading, error }
+}
+
+export function useLogout() {
+  const [loading, setLoading] = useState(false)
+
+  const logout = useCallback(async (token) => {
+    setLoading(true)
+    await logoutFn(token)
+    setLoading(false)
+  }, [])
+
+  return { logout, loading }
+}
+```
+
+## Usage with React
+
+```tsx
+import { useAuth, useLogin, useLogout } from './hooks'
+
+function Profile() {
+  const { user, loading, error } = useAuth()
+  const { logout } = useLogout()
+
+  if (loading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+  if (!user) return <div>Not logged in</div>
+
+  return (
+    <div>
+      <p>Hello, {user.name}</p>
+      <button onClick={() => logout()}>Logout</button>
+    </div>
+  )
+}
+```
+
+## Usage with Preact
+
+```tsx
+// Just change the import
+import { useState, useEffect, useCallback, useRef } from 'preact/hooks'
+```
+
+## Usage with Hono/JSX
+
+For Hono, use server-side rendering with the core auth functions directly:
+
+```tsx
+import { Hono } from 'hono'
+import { auth } from 'oauth.do'
+
+const app = new Hono()
+
+app.get('/profile', async (c) => {
+  const token = c.req.header('Authorization')?.replace('Bearer ', '')
+  const { user } = await auth(token)
+
+  if (!user) return c.redirect('/login')
+
+  return c.html(
+    <div>
+      <h1>Hello, {user.name}</h1>
+    </div>
+  )
+})
+```

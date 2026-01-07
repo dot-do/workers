@@ -239,9 +239,7 @@ export function Page(options?: ClientOptions): PageAsClient {
 /**
  * Default page.as client instance
  */
-export const page: PageAsClient = Page({
-  apiKey: typeof process !== 'undefined' ? (process.env?.PAGE_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const page: PageAsClient = Page()
 
 // Convenience exports
 export const create = (config: PageConfig) => page.create(config)

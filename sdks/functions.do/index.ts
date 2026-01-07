@@ -73,7 +73,7 @@ export interface FunctionsClient {
  * ```
  */
 export function Functions(options?: ClientOptions): FunctionsClient {
-  return createClient<FunctionsClient>('functions', options)
+  return createClient<FunctionsClient>('https://functions.do', options)
 }
 
 /**

@@ -13,10 +13,6 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./middleware": {
-      "import": "@dotdo/middleware",
-      "types": "@dotdo/middleware"
-    },
     "./auth": {
       "import": "@dotdo/auth",
       "types": "@dotdo/auth"
@@ -38,7 +34,6 @@
   "dependencies": {
     "@dotdo/auth": "workspace:*",
     "@dotdo/edge-api": "workspace:*",
-    "@dotdo/middleware": "workspace:*",
     "@dotdo/rpc": "workspace:*",
     "capnweb": "^0.2.0",
     "cli.do": "workspace:*",

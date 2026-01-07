@@ -1,6 +1,6 @@
 # workers.do
 
-> Workers work for you.
+> AI + Code Workers `.do` work for you.
 
 ```typescript
 import { tom, priya, mark } from 'agents.do'

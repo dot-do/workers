@@ -1,28 +1,9 @@
-# [Workers.do](https://workers.do) [Services-as-Software](https://services.as/software)
+# [Workers.do](https://workers.do)
 
-> AI + Code Workers `.do` work for you.
-
-```typescript
-import { priya, ralph, tom, mark } from 'agents.do'
-
-priya`plan the Q1 roadmap`
-ralph`build the authentication system`
-tom`review the architecture`
-mark`write the launch announcement`
-```
-
-**workers.do** is the platform for building Autonomous Startups with [Business-as-Code](https://agi.do/business-as-code). Your workers are AI agents and humans—and they run on Cloudflare Workers.
-
-Both kinds of workers. Working for you.
-
-## The Vision
-
-You're a founder. You need a team, but you're early. Maybe it's just you.
-
-**workers.do** gives you an AI team that works like real people:
+You're a founder. You need a team.
 
 ```typescript
-import { engineering, product, marketing } from 'teams.do'
+import { product, engineering, marketing } from 'teams.do'
 
 const mvp = await product`define the MVP`
 const app = await engineering`build ${mvp}`
@@ -31,288 +12,145 @@ await marketing`launch ${app}`
 
 That's your startup. Running.
 
-## Your Team
+## Meet Your Team
 
-| Agent | Role | What They Do |
-|-------|------|--------------|
-| **Priya** | Product | Specs, prioritization, roadmaps, product review |
-| **Ralph** | Developer | Implementation, coding, iteration |
-| **Tom** | Tech Lead | Architecture, TypeScript, code review |
-| **Rae** | Frontend | React, UI/UX, accessibility |
-| **Mark** | Marketing | Copy, content, documentation |
-| **Sally** | Sales | Outreach, demos, closing |
-| **Quinn** | QA | Testing, edge cases, quality |
-
-Each agent has real identity—email, GitHub account, avatar. When Tom reviews your PR, you'll see `@tom-do` commenting.
-
-## Natural Language
+| Agent | Role |
+|-------|------|
+| **Priya** | Product—specs, roadmaps, priorities |
+| **Ralph** | Engineering—builds what you need |
+| **Tom** | Tech Lead—architecture, code review |
+| **Rae** | Frontend—React, UI, accessibility |
+| **Mark** | Marketing—copy, content, launches |
+| **Sally** | Sales—outreach, demos, closing |
+| **Quinn** | QA—testing, edge cases, quality |
 
 Just tell them what you need:
 
 ```typescript
-priya`what should we build next?`
-ralph`implement the user dashboard`
-tom`review the pull request`
-mark`write a blog post about our launch`
-quinn`test ${feature} thoroughly`
+import { priya, ralph, tom, mark, quinn } from 'agents.do'
+
+await priya`what should we build next?`
+await ralph`implement the user dashboard`
+await tom`review the pull request`
+await mark`write a blog post about our launch`
+await quinn`test the checkout flow`
 ```
 
-No method names. No parameters. Just say what you want.
+## Build Features
 
-## Promise Pipelining
-
-Chain promises without round trips:
+Work flows through your team naturally:
 
 ```typescript
-const spec = await priya`spec out user auth`
-const code = await ralph`implement ${spec}`
-const reviews = await [priya, tom, quinn].map(r => r`review ${code}`)
-const docs = await mark`document ${code}`
+const spec = await priya`spec out user authentication`
+const code = await ralph`build ${spec}`
+const reviewed = await tom`review ${code}`
+const docs = await mark`document ${reviewed}`
 ```
 
-Or pipeline everything in a single network call:
+Or pipeline an entire sprint:
 
 ```typescript
-const shipped = await priya`plan ${feature}`
-  .map(issue => ralph`implement ${issue}`)
-  .map(code => [priya, tom, quinn].map(r => r`review ${code}`))
+const sprint = await priya`plan the sprint`
+  .map(issue => ralph`build ${issue}`)
+  .map(code => tom`review ${code}`)
 ```
 
-No `Promise.all`. No callback hell. One round trip.
+Each agent passes their work to the next. No boilerplate. No orchestration code.
 
-### Magic Map
+## Automate Everything
 
-The `.map()` isn't JavaScript's—it's a remote operation:
-
-```typescript
-// This doesn't fetch issues, then loop locally
-// It records the transform and executes remotely
-const implementations = await priya`plan the sprint`
-  .map(issue => ralph`implement ${issue}`)
-```
-
-The callback `issue => ralph\`implement ${issue}\`` is recorded, not executed. The server receives the entire pipeline and executes it in one pass. Results stream back.
-
-This is [CapnWeb](https://github.com/cloudflare/capnweb) pipelining—record-replay promises that batch automatically. See [rpc.do](https://rpc.do) for the technical details.
-
-## Workflows
-
-Complex processes run themselves:
+Your startup responds to events automatically:
 
 ```typescript
 import { on } from 'workflows.do'
-import { priya, ralph, tom, quinn, mark } from 'agents.do'
 
-on.Idea.captured(async idea => {
-  const product = await priya`brainstorm ${idea}`
-  const backlog = await priya.plan(product)
+on.idea(async idea => {
+  const spec = await priya`evaluate ${idea}`
+  const code = await ralph`build ${spec}`
+  await tom`review ${code}`
+  await mark`announce ${code}`
+})
 
-  for (const issue of backlog.ready) {
-    const pr = await ralph`implement ${issue}`
+on.bug(async bug => {
+  const fix = await ralph`fix ${bug}`
+  await quinn`verify ${fix}`
+})
 
-    do await ralph`update ${pr}`
-    while (!await pr.approvedBy(quinn, tom, priya))
-
-    await pr.merge()
-  }
-
-  await mark`document ${product}`
+on.customer.signup(async customer => {
+  await sally`welcome ${customer}`
 })
 ```
 
-Event-driven. PR-based. Real development workflow.
+## Humans When It Matters
 
-## When You Need Humans
-
-Same interface, different workers:
+AI does the work. Humans make the decisions.
 
 ```typescript
-import { pdm, legal, ceo } from 'humans.do'
+import { legal, ceo } from 'humans.do'
 
-await pdm`approve this spec`      // → Slack message, waits for response
-await legal`review this contract` // → Email with attachment
-await ceo`sign off on funding`    // → Chat with approve/reject buttons
+const contract = await legal`review this agreement`
+const approved = await ceo`approve the partnership`
 ```
 
-AI agents do the work. Humans make the decisions.
+Same syntax. Messages go to Slack, email, or wherever your humans are. Your workflow waits for their response.
 
-## The Architecture
-
-```
-roles/        Base job descriptions (CEO, CTO, PDM, Dev...)
-agents/       AI workers (Priya, Tom, Rae, Mark, Sally, Quinn)
-humans/       Human workers (via Slack, Email, Teams, Discord)
-teams/        Groups (Engineering, Product, Sales, Marketing)
-workflows/    Processes (DevLoop, CodeReview, SalesCycle)
-```
-
-[roles.do](https://roles.do) · [agents.do](https://agents.do) · [humans.do](https://humans.do) · [teams.do](https://teams.do) · [workflows.do](https://workflows.do)
-
-## The Double Meaning
-
-**workers.do** runs on Cloudflare Workers—the fastest serverless runtime.
-
-Your AI agents and human team members are also workers—digital workers that work for you.
-
-Both kinds of workers. On [workers.do](https://workers.do).
-
-## Business-as-Code
-
-Define your entire startup in code:
+## Your Startup in Code
 
 ```typescript
 import { Startup } from 'startups.do'
 import { engineering, product, sales } from 'teams.do'
-import { dev, sales as salesWorkflow } from 'workflows.do'
 
 export default Startup({
   name: 'Acme AI',
-
   teams: { engineering, product, sales },
-
-  workflows: {
-    build: dev,
-    sell: salesWorkflow,
-  },
-
-  services: ['llm.do', 'payments.do', 'org.ai'],
 })
 ```
 
-Your business runs itself. With human oversight when it matters.
+That's a company. It builds products, sells them, and grows.
 
-## Platform Services
+## Everything You Need
 
-Everything you need to run a startup:
-
-| Service | Domain | What It Does |
-|---------|--------|--------------|
-| **Database** | [database.do](https://database.do) | Typed data with AI-native queries |
-| **Functions** | [functions.do](https://functions.do) | Code, Generative, Agentic, Human |
-| **Workflows** | [workflows.do](https://workflows.do) | Event-driven orchestration |
-| **Triggers** | [triggers.do](https://triggers.do) | Webhooks, schedules, events |
-| **Searches** | [searches.do](https://searches.do) | Semantic & vector search |
-| **Actions** | [actions.do](https://actions.do) | Tool calling & side effects |
-| **Integrations** | [integrations.do](https://integrations.do) | Connect external services |
-| **Analytics** | [analytics.do](https://analytics.do) | Metrics, traces, insights |
-| **Payments** | [payments.do](https://payments.do) | Stripe Connect billing |
-| **Services** | [services.do](https://services.do) | AI-delivered service marketplace |
-| **Identity** | [org.ai](https://org.ai) | SSO, users, secrets |
-| **Domains** | [builder.domains](https://builder.domains) | Free domains for builders |
+**AI** — [llm.do](https://llm.do) powers your agents
+**Payments** — [payments.do](https://payments.do) handles billing
+**Identity** — [org.ai](https://org.ai) manages users and auth
+**Database** — [database.do](https://database.do) stores your data
+**Workflows** — [workflows.do](https://workflows.do) runs your processes
+**Domains** — [builder.domains](https://builder.domains) gives you free domains
 
 ```typescript
-import { ai, code, agent, human } from 'functions.do'
-import { DB, Noun, Verb, Thing, Relationship } from 'database.do'
-import { on, every } from 'triggers.do'
-import { search } from 'searches.do'
+import { llm } from 'llm.do'
+import { payments } from 'payments.do'
+import { org } from 'org.ai'
 
-// Four function types
-const double = code((x: number) => x * 2)          // CodeFunction
-const summary = ai`summarize ${article}`            // GenerativeFunction
-const plan = agent(priya)`roadmap for ${feature}`  // AgenticFunction
-const approval = human(pdm)`approve ${spec}`       // HumanFunction
-
-// Event-driven triggers
-on.User.signup(user => welcome(user))
-on.Payment.received(payment => fulfill(payment))
-every.Monday.at9am(() => sendWeeklyReport())
-
-// AI-native database with cascading generation
-const db = DB({
-  Blog: {
-    title: 'SEO-optimized blog title',
-    topics: ['5 topics to cover ->Topic'],    // Forward: creates 5 Topics
-    posts: ['<-Post'],                         // Backward: collects all Posts
-  },
-  Topic: {
-    name: 'PascalCase topic name',
-    posts: ['3 post titles ->Post'],          // Forward: creates 3 Posts each
-  },
-  Post: {
-    title: 'SEO title',
-    content: 'Markdown content',
-  },
-})
-
-// One call generates Blog -> 5 Topics -> 15 Posts
-const blog = await db.Blog('AI Startups')
+await llm`summarize this article`
+await payments.charge(customer, amount)
+await org.users.invite(email)
 ```
 
-## Quick Start
+## Get Started
 
 ```bash
 npm install agents.do
-
-# Or individual agents
-npm install priya.do ralph.do tom.do quinn.do mark.do
 ```
 
 ```typescript
-import { priya, ralph, tom, quinn, mark } from 'agents.do'
+import { priya, ralph, tom } from 'agents.do'
 
-// Your first feature
-const spec = await priya`spec out user authentication`
-const code = await ralph`implement ${spec}`
-await [priya, tom, quinn].map(r => r`review ${code}`)
-const docs = await mark`document ${code}`
+const idea = await priya`what should we build?`
+const code = await ralph`build ${idea}`
+const shipped = await tom`review and ship ${code}`
 ```
 
-## The Journey
-
-| Step | Platform | What You Do |
-|------|----------|-------------|
-| **Create** | [startups.new](https://startups.new) | Launch your startup |
-| **Build** | [startups.studio](https://startups.studio) | Develop and deploy |
-| **Learn** | [startup.games](https://startup.games) | Practice and iterate |
-
-## SDKs
-
-Every service is an SDK:
-
-```typescript
-// Agents
-import { tom, priya } from 'agents.do'
-import { tom } from 'tom.do'
-
-// Teams
-import { engineering } from 'teams.do'
-
-// Workflows
-import { dev } from 'workflows.do'
-
-// Platform
-import { llm } from 'llm.do'
-import { org } from 'org.ai'
-import { payments } from 'payments.do'
-```
-
-## Repository Structure
-
-```
-agents/        AI agents (Priya, Tom, Rae, Mark, Sally, Quinn)
-roles/         Base roles (CEO, CTO, PDM, Dev, QA...)
-humans/        Human workers + channels (Slack, Email, Discord...)
-teams/         Team compositions (Engineering, Product, Sales...)
-workflows/     Workflow definitions (DevLoop, CodeReview...)
-workers/       Cloudflare Workers (the runtime kind)
-sdks/          SDK packages (tom.do, priya.do, llm.do...)
-objects/       Durable Objects (Agent, Human, Workflow...)
-primitives/    TypeScript interfaces (submodule)
-apps/          Web applications (Dashboard, Admin, Docs)
-```
-
-## Why workers.do?
-
-**For solo founders**: You get a team without hiring one.
-
-**For small teams**: AI handles the work, humans make decisions.
-
-**For growing startups**: Add humans to teams without changing code.
-
-**For everyone**: Business runs itself. You focus on what matters.
+You just shipped your first feature. With a team.
 
 ---
 
-Workers work for you.
+**Solo founders** — Get a team without hiring one.
 
-[workers.do](https://workers.do) · [agents.do](https://agents.do) · [teams.do](https://teams.do) · [workflows.do](https://workflows.do) · [agi.do](https://agi.do)
+**Small teams** — AI does the work, humans decide.
+
+**Growing startups** — Add humans without changing code.
+
+---
+
+[workers.do](https://workers.do) | [agents.do](https://agents.do) | [teams.do](https://teams.do) | [workflows.do](https://workflows.do)

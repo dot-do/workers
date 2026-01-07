@@ -107,7 +107,7 @@ on.Idea.captured(async idea => {
   const product = await priya`brainstorm ${idea}`
   const backlog = await priya.plan.tdd`${product}`
 
-  for (const issue of backlog) {
+  for (const issue of backlog.ready) {
     const pr = await ralph`implement ${issue}`
 
     do await ralph`update ${pr}`

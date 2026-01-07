@@ -1,0 +1,94 @@
+{
+  "name": "trigger.do",
+  "version": "0.0.1",
+  "description": "Trigger.dev on Cloudflare - Background jobs with great DX",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./do": {
+      "types": "./dist/durable-object/index.d.ts",
+      "import": "./dist/durable-object/index.js"
+    },
+    "./mcp": {
+      "types": "./dist/mcp/index.d.ts",
+      "import": "./dist/mcp/index.js"
+    },
+    "./hono": {
+      "types": "./dist/hono/index.d.ts",
+      "import": "./dist/hono/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "lint": "eslint src test --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "trigger",
+    "background-jobs",
+    "tasks",
+    "cloudflare",
+    "durable-objects",
+    "edge",
+    "mcp",
+    "ai",
+    "scheduler",
+    "cron",
+    "retries",
+    "long-running"
+  ],
+  "author": "dot-do",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/trigger"
+  },
+  "homepage": "https://trigger.do",
+  "bugs": {
+    "url": "https://github.com/dot-do/trigger/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.99.0"
+  },
+  "dependencies": {
+    "hono": "^4.0.0"
+  },
+  "peerDependencies": {
+    "fsx.do": ">=0.0.1",
+    "gitx.do": ">=0.0.1"
+  },
+  "peerDependenciesMeta": {
+    "fsx.do": {
+      "optional": true
+    },
+    "gitx.do": {
+      "optional": true
+    }
+  }
+}

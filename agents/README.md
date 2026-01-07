@@ -1,138 +1,118 @@
 # agents.do
 
-> Your AI team. Just tell them what to do.
+> You're building something great. You need a team.
+
+You're a founder. You have the vision. But right now it's just you, or maybe a tiny crew. You need people who can turn ideas into reality.
+
+Meet your team:
 
 ```typescript
-import { priya, ralph, tom, mark } from 'agents.do'
+import { priya, ralph, tom } from 'agents.do'
 
-priya`plan the MVP features`
-ralph`build the authentication system`
-tom`review the architecture`
-mark`write copy for the landing page`
-```
-
-That's it. You now have a product manager, developer, tech lead, and marketing lead working for you.
-
-## Your Team
-
-| Agent | Role | Expertise |
-|-------|------|-----------|
-| **Priya** | Product | Specs, prioritization, roadmaps, product review |
-| **Ralph** | Developer | Implementation, coding, iteration |
-| **Tom** | Tech Lead | Architecture, TypeScript, code review |
-| **Rae** | Frontend | React, UI/UX, accessibility |
-| **Mark** | Marketing | Copy, content, MDX documentation |
-| **Sally** | Sales | Outreach, demos, closing |
-| **Quinn** | QA | Testing, edge cases, quality |
-
-## Talk to Your Team
-
-Just say what you need:
-
-```typescript
 priya`what should we build first?`
-ralph`implement ${feature}`
-tom`review the pull request`
-rae`make the dashboard responsive`
-mark`write a blog post about ${launch}`
-sally`draft an outreach email for ${lead}`
-quinn`test ${feature} thoroughly`
+ralph`build that for me`
+tom`review Ralph's work`
 ```
 
-They understand natural language. Be specific or be vague—they'll figure it out.
+That's it. Just talk to them.
 
-## Chain Tasks
+## Your Core Team
 
-Work flows from one agent to the next:
+**Priya** is your product partner. Tell her what you're thinking, and she'll help you shape it.
 
 ```typescript
-const features = await priya`plan the v1 roadmap`
-const code = await features.map(f => ralph`implement ${f}`)
-const tested = await code.map(c => quinn`test ${c}`)
-const docs = await tested.map(t => mark`document ${t}`)
+priya`I want to build a marketplace for freelance designers`
+priya`what's the simplest version we could ship this week?`
+priya`prioritize these features for me: ${ideas}`
 ```
 
-One network round trip. CapnWeb pipelines everything.
-
-## Parallel Work
-
-Multiple agents work simultaneously:
+**Ralph** is your developer. Give him a task, he builds it.
 
 ```typescript
-const feedback = [
-  priya`product review`,
-  tom`architecture and TypeScript review`,
-  rae`UI/UX review`,
-  quinn`test coverage review`,
-]
-// All four work in parallel, results batch together
+ralph`build user authentication`
+ralph`add Stripe payments`
+ralph`fix that bug where users can't upload images`
 ```
 
-## Real Identity
-
-Each agent has real accounts:
+**Tom** is your tech lead. He keeps the code clean and catches issues.
 
 ```typescript
-tom.identity
-// {
-//   name: 'Tom',
-//   email: 'tom@agents.do',
-//   github: 'tom-do',
-//   avatar: 'https://tom.do/avatar.png'
-// }
+tom`review what Ralph just built`
+tom`is this architecture going to scale?`
+tom`check for security issues`
 ```
 
-When Tom reviews your PR, you'll see `@tom-do` commenting on GitHub.
+## Talk Like They're Real
 
-## Custom Agents
-
-Create your own:
+Because they are. No special syntax. No configuration. Just say what you need:
 
 ```typescript
-import { Agent } from 'agents.do'
-import { CTO } from 'roles.do'
+// Be specific
+ralph`implement OAuth with Google and GitHub using Better Auth`
 
-export class Alex extends CTO {
-  identity = {
-    name: 'Alex',
-    email: 'alex@yourstartup.com',
-    expertise: ['rust', 'distributed-systems', 'databases'],
-  }
-}
+// Or be vague
+ralph`add social login`
+
+// They figure it out
 ```
 
-## Individual Packages
+## Work Flows Naturally
 
-Import agents individually:
+Hand off work from one teammate to the next:
 
 ```typescript
-import { priya } from 'priya.do'
-import { ralph } from 'ralph.do'
-import { tom } from 'tom.do'
-import { quinn } from 'quinn.do'
-import { mark } from 'mark.do'
+const plan = await priya`plan our MVP`
+const code = await ralph`build ${plan}`
+const review = await tom`review ${code}`
 ```
 
-Each agent is also available at their own domain: [priya.do](https://priya.do), [ralph.do](https://ralph.do), [tom.do](https://tom.do), [quinn.do](https://quinn.do), [mark.do](https://mark.do).
+## Parallel When You Need It
 
-## For Startup Founders
-
-You're building something. You need a team. But you're early—maybe it's just you, maybe you have a small crew. These agents fill the gaps.
-
-They're not replacing humans. They're giving you leverage until you can hire.
+Get multiple perspectives at once:
 
 ```typescript
-import { priya, ralph, tom, quinn, mark } from 'agents.do'
-
-// Your first sprint, planned and executed
-const sprint = await priya`plan a 2-week sprint for MVP launch`
-await sprint.map(task => ralph`implement ${task}`)
-await [priya, tom, quinn].map(r => r`review the implementation`)
-await mark`write release notes for everything we shipped`
+const feedback = await Promise.all([
+  priya`does this solve the user problem?`,
+  tom`is the implementation solid?`,
+])
 ```
 
-Welcome to [Business-as-Code](https://agi.do/business-as-code).
+## Real GitHub Accounts
+
+When Tom reviews your PR, you'll see `@tom-do` commenting. When Ralph pushes code, it's from his account. They're real team members with real identities.
+
+```typescript
+tom.github   // 'tom-do'
+ralph.github // 'ralph-do'
+priya.github // 'priya-do'
+```
+
+## Your Journey
+
+**Week 1:** You have an idea.
+```typescript
+priya`help me think through this idea: ${pitch}`
+```
+
+**Week 2:** You have a plan.
+```typescript
+const mvp = await priya`what's the smallest thing we can ship?`
+await ralph`build ${mvp}`
+```
+
+**Week 4:** You have a product.
+```typescript
+await tom`make sure everything is production-ready`
+```
+
+**Month 2:** You have customers.
+
+**Month 6:** You hire your first human. Your agents trained them on the codebase.
 
 ---
 
-[agents.do](https://agents.do) · [roles.do](https://roles.do) · [teams.do](https://teams.do) · [humans.do](https://humans.do) · [workflows.do](https://workflows.do)
+They're not replacing the humans you'll eventually hire. They're giving you leverage until you get there.
+
+Welcome to your team.
+
+[agents.do](https://agents.do) | [priya.do](https://priya.do) | [ralph.do](https://ralph.do) | [tom.do](https://tom.do)

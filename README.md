@@ -187,24 +187,37 @@ Everything you need to run a startup:
 
 | Service | Domain | What It Does |
 |---------|--------|--------------|
-| **AI Gateway** | [llm.do](https://llm.do) | Multi-model LLM with metering |
-| **Identity** | [org.ai](https://org.ai) | SSO, users, secrets |
+| **Database** | [database.do](https://database.do) | Typed data with AI-native queries |
+| **Functions** | [functions.do](https://functions.do) | Code, Generative, Agentic, Human |
+| **Workflows** | [workflows.do](https://workflows.do) | Event-driven orchestration |
+| **Triggers** | [triggers.do](https://triggers.do) | Webhooks, schedules, events |
+| **Searches** | [searches.do](https://searches.do) | Semantic & vector search |
+| **Actions** | [actions.do](https://actions.do) | Tool calling & side effects |
+| **Integrations** | [integrations.do](https://integrations.do) | Connect external services |
+| **Analytics** | [analytics.do](https://analytics.do) | Metrics, traces, insights |
 | **Payments** | [payments.do](https://payments.do) | Stripe Connect billing |
+| **Services** | [services.do](https://services.do) | AI-delivered service marketplace |
+| **Identity** | [org.ai](https://org.ai) | SSO, users, secrets |
 | **Domains** | [builder.domains](https://builder.domains) | Free domains for builders |
 
 ```typescript
-import { llm } from 'llm.do'
-import { org } from 'org.ai'
-import { payments } from 'payments.do'
+import { db } from 'database.do'
+import { fn } from 'functions.do'
+import { on } from 'triggers.do'
+import { search } from 'searches.do'
 
-// AI does the work
-const content = await llm.complete({ model: 'claude-3-opus', prompt })
+// Four function types
+const code = fn.code(async (x) => x * 2)           // CodeFunction
+const ai = fn.ai`summarize ${article}`              // GenerativeFunction
+const agent = fn.agent(priya)                       // AgenticFunction
+const human = fn.human(pdm)                         // HumanFunction
 
-// Platform handles identity
-const user = await org.users.get(userId)
+// Event-driven
+on.User.signup(user => welcome(user))
+on.Payment.received(payment => fulfill(payment))
 
-// Platform handles billing
-await payments.usage.record(user.id, { tokens: content.usage.total })
+// Semantic search
+const results = await search`customers interested in ${topic}`
 ```
 
 ## Quick Start

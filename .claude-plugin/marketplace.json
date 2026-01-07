@@ -1,0 +1,40 @@
+{
+  "name": "workers-do-marketplace",
+  "description": "Plugin marketplace for workers.do platform - skills for building Autonomous Startups",
+  "owner": {
+    "name": "workers.do",
+    "email": "support@workers.do"
+  },
+  "plugins": [
+    {
+      "name": "workers-do",
+      "description": "Core skills for workers.do platform development",
+      "version": "0.1.0",
+      "source": "./",
+      "author": {
+        "name": "workers.do",
+        "email": "support@workers.do"
+      }
+    },
+    {
+      "name": "ralph-loop",
+      "description": "Continuous self-referential AI loops implementing the Ralph Wiggum technique",
+      "version": "1.0.0",
+      "source": "./plugins/ralph-loop",
+      "author": {
+        "name": "Anthropic (forked)",
+        "email": "support@workers.do"
+      }
+    },
+    {
+      "name": "dev-loop",
+      "description": "Development lifecycle outer loop: brainstorm → TDD planning → ralph → review → feedback loop",
+      "version": "1.0.0",
+      "source": "./plugins/dev-loop",
+      "author": {
+        "name": "workers.do",
+        "email": "support@workers.do"
+      }
+    }
+  ]
+}

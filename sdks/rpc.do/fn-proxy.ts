@@ -349,17 +349,33 @@ export function createContextFnProxy<Out, In = any, Opts extends Record<string, 
 // =============================================================================
 
 /**
- * Execute multiple RPC calls in a single batch.
+ * @deprecated batchRpc has been removed - promises execute immediately when created,
+ * making batching impossible with this API design.
+ *
+ * For batching, use one of these patterns instead:
+ *
+ * 1. Promise.all with concurrent calls:
+ * ```ts
+ * const [a, b, c] = await Promise.all([
+ *   fn('input1'),
+ *   fn('input2'),
+ *   fn('input3'),
+ * ])
+ * ```
+ *
+ * 2. Create a batch context (future API):
+ * ```ts
+ * const batch = createBatchContext(rpcClient)
+ * batch.add(fn`query 1`)
+ * batch.add(fn`query 2`)
+ * const results = await batch.execute()
+ * ```
  */
-export async function batchRpc<T extends RpcPromise<unknown>[]>(
-  calls: [...T],
-  _rpcBatch: (calls: SerializableFnCall[]) => Promise<unknown[]>
-): Promise<{ [K in keyof T]: Awaited<T[K]> }> {
-  // Note: This requires the calls to expose their serialized form
-  // Implementation depends on how RpcPromise captures the call
-  // TODO: Use _rpcBatch for actual batching once RpcPromise captures serialized calls
-  const results = await Promise.all(calls)
-  return results as { [K in keyof T]: Awaited<T[K]> }
+export function batchRpc(): never {
+  throw new Error(
+    'batchRpc has been removed. Use Promise.all() for concurrent calls, ' +
+    'or see documentation for proper batching patterns.'
+  )
 }
 
 // =============================================================================

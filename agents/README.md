@@ -17,7 +17,8 @@ That's it. You now have a tech lead, product manager, and marketing lead working
 | Agent | Role | Expertise |
 |-------|------|-----------|
 | **Priya** | Product | Specs, prioritization, roadmaps |
-| **Tom** | Tech Lead | TypeScript, architecture, code review |
+| **Tom** | Tech Lead | Architecture, TypeScript, code review |
+| **Ralph** | Developer | Implementation, coding, iteration |
 | **Rae** | Frontend | React, UI/UX, accessibility |
 | **Mark** | Marketing | Copy, content, MDX documentation |
 | **Sally** | Sales | Outreach, demos, closing |
@@ -29,7 +30,8 @@ Just say what you need:
 
 ```typescript
 priya`what should we build first?`
-tom`review this pull request`
+ralph`implement the authentication system`
+tom`review the architecture and TypeScript`
 rae`make the dashboard responsive`
 mark`write a blog post about our launch`
 sally`draft an outreach email for enterprise leads`
@@ -44,7 +46,7 @@ Work flows from one agent to the next:
 
 ```typescript
 const features = await priya`plan the v1 roadmap`
-const code = await features.map(f => tom`implement ${f}`)
+const code = await features.map(f => ralph`implement ${f}`)
 const tested = await code.map(c => quinn`test ${c}`)
 const docs = await tested.map(t => mark`document ${t}`)
 ```
@@ -57,11 +59,12 @@ Multiple agents work simultaneously:
 
 ```typescript
 const feedback = [
-  tom`architectural review`,
+  priya`product review`,
+  tom`architecture and TypeScript review`,
   rae`UI/UX review`,
   quinn`test coverage review`,
 ]
-// All three work in parallel, results batch together
+// All four work in parallel, results batch together
 ```
 
 ## Real Identity
@@ -102,13 +105,14 @@ export class Alex extends CTO {
 Import agents individually:
 
 ```typescript
-import { tom } from 'tom.do'
 import { priya } from 'priya.do'
+import { ralph } from 'ralph.do'
+import { tom } from 'tom.do'
 import { quinn } from 'quinn.do'
 import { mark } from 'mark.do'
 ```
 
-Each agent is also available at their own domain: [tom.do](https://tom.do), [priya.do](https://priya.do), [quinn.do](https://quinn.do), [mark.do](https://mark.do).
+Each agent is also available at their own domain: [priya.do](https://priya.do), [ralph.do](https://ralph.do), [tom.do](https://tom.do), [quinn.do](https://quinn.do), [mark.do](https://mark.do).
 
 ## For Startup Founders
 
@@ -117,12 +121,12 @@ You're building something. You need a team. But you're early—maybe it's just y
 They're not replacing humans. They're giving you leverage until you can hire.
 
 ```typescript
-import { priya, tom, quinn, mark } from 'agents.do'
+import { priya, ralph, tom, quinn, mark } from 'agents.do'
 
 // Your first sprint, planned and executed
 const sprint = await priya`plan a 2-week sprint for MVP launch`
-await sprint.map(task => tom`implement ${task}`)
-await quinn`run full test suite and fix any issues`
+await sprint.map(task => ralph`implement ${task}`)
+await [priya, tom, quinn].map(r => r`review the implementation`)
 await mark`write release notes for everything we shipped`
 ```
 

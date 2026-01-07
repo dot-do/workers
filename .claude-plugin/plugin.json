@@ -1,0 +1,13 @@
+{
+  "name": "workers-do",
+  "description": "Skills and plugins for building Autonomous Startups on workers.do platform",
+  "version": "0.1.0",
+  "author": {
+    "name": "workers.do",
+    "email": "support@workers.do"
+  },
+  "homepage": "https://workers.do",
+  "repository": "https://github.com/dot-do/workers",
+  "license": "MIT",
+  "keywords": ["workers", "cloudflare", "autonomous-startups", "ai", "agents", "tdd", "brainstorming"]
+}

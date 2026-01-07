@@ -19,6 +19,8 @@
     "hono": "^4.0.0"
   },
   "peerDependenciesMeta": {
-    "hono": { "optional": true }
+    "hono": {
+      "optional": true
+    }
   }
 }

@@ -1,0 +1,24 @@
+{
+  "name": "services.do",
+  "version": "0.0.1",
+  "description": "AI Services Marketplace SDK - Discover, deploy, and sell AI services",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/rpc-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "services",
+    "marketplace",
+    "ai",
+    "saas",
+    "sdk",
+    "workers.do"
+  ]
+}

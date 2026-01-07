@@ -1,0 +1,24 @@
+{
+  "name": "id.org.ai",
+  "version": "0.0.1",
+  "description": "Auth for AI and Humans - SSO, Vault, Users, Organizations",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/rpc-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "auth",
+    "sso",
+    "identity",
+    "workos",
+    "sdk",
+    "workers.do"
+  ]
+}

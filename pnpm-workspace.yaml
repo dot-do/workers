@@ -5,6 +5,7 @@ packages:
   - 'objects/*'
   - 'snippets/*'
   - 'packages/*'
+  - 'sdks/*'
   - 'auth/*'
   - 'plugins/*'
   - 'primitives/packages/*'

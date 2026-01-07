@@ -1,0 +1,17 @@
+{
+  "name": "analytics.do",
+  "version": "0.0.1",
+  "description": "Analytics and Business Intelligence SDK",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/rpc-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": ["analytics", "tracking", "bi", "sdk", "workers.do"]
+}

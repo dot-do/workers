@@ -1,0 +1,17 @@
+{
+  "name": "workflows.do",
+  "version": "0.0.1",
+  "description": "Durable Workflows SDK - Define and run multi-step workflows",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/rpc-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": ["workflows", "orchestration", "durable", "sdk", "workers.do"]
+}

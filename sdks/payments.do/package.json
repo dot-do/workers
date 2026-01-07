@@ -1,0 +1,24 @@
+{
+  "name": "payments.do",
+  "version": "0.0.1",
+  "description": "Stripe Connect Platform SDK - Billing, subscriptions, marketplace payouts",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/rpc-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "payments",
+    "stripe",
+    "billing",
+    "subscriptions",
+    "sdk",
+    "workers.do"
+  ]
+}

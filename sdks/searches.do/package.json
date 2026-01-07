@@ -1,0 +1,17 @@
+{
+  "name": "searches.do",
+  "version": "0.0.1",
+  "description": "Vector Search and RAG SDK - Semantic search and embeddings",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/rpc-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": ["search", "vector", "rag", "embeddings", "ai", "sdk", "workers.do"]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "llm.do",
+  "version": "0.0.1",
+  "description": "AI Gateway SDK - Multi-model LLM access with metering and billing",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/rpc-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "llm",
+    "ai",
+    "claude",
+    "gpt",
+    "openai",
+    "anthropic",
+    "sdk",
+    "workers.do"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "actions.do",
+  "version": "0.0.1",
+  "description": "AI Actions SDK - Define and execute AI-powered actions",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/rpc-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": ["actions", "ai", "automation", "sdk", "workers.do"]
+}

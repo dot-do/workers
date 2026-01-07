@@ -1,0 +1,17 @@
+{
+  "name": "events.do",
+  "version": "0.0.1",
+  "description": "Event-Driven Architecture SDK - Publish, subscribe, and replay events",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/rpc-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": ["events", "pubsub", "streaming", "sdk", "workers.do"]
+}

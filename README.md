@@ -322,6 +322,41 @@ workers.do dev
 workers.do deploy
 ```
 
+## SDKs
+
+Strongly-typed clients for all platform services. Each SDK auto-discovers its endpoint from its package name.
+
+```typescript
+import { llm } from 'llm.do'
+import { org } from 'id.org.ai'
+import { payments } from 'payments.do'
+import { services } from 'services.do'
+import { domains } from 'builder.domains'
+
+// Use default client (reads DO_API_KEY or ORG_AI_API_KEY from env)
+const response = await llm.complete({ model: 'claude-3-opus', prompt: 'Hello!' })
+
+// Or create with options
+import { LLM } from 'llm.do'
+const myLLM = LLM({ apiKey: 'xxx', timeout: 60000 })
+```
+
+| SDK | npm | Description |
+|-----|-----|-------------|
+| `llm.do` | `llm.do` | AI Gateway - Multi-model LLM access with billing |
+| `id.org.ai` | `id.org.ai` | Auth for AI and Humans - SSO, Vault, Users |
+| `payments.do` | `payments.do` | Stripe Connect - Billing, subscriptions, payouts |
+| `services.do` | `services.do` | AI Services Marketplace |
+| `builder.domains` | `builder.domains` | Free domains for builders |
+| `analytics.do` | `analytics.do` | Analytics and business intelligence |
+| `events.do` | `events.do` | Event-driven architecture |
+| `actions.do` | `actions.do` | AI-powered actions |
+| `searches.do` | `searches.do` | Vector search and RAG |
+| `functions.do` | `functions.do` | Serverless functions |
+| `workflows.do` | `workflows.do` | Durable workflows |
+
+**Authentication:** Set `DO_API_KEY` or `ORG_AI_API_KEY` environment variable.
+
 ## Packages
 
 | Package | Description |
@@ -333,6 +368,7 @@ workers.do deploy
 | `@dotdo/snippets` | Cloudflare Snippets utilities |
 | `@dotdo/edge-api` | HATEOAS API framework |
 | `@dotdo/rpc` | Universal RPC wrapper for npm packages |
+| `@dotdo/rpc-client` | Base CapnWeb RPC client for SDKs |
 
 ## Design Principles
 

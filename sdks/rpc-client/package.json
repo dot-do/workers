@@ -1,0 +1,14 @@
+{
+  "name": "@dotdo/rpc-client",
+  "version": "0.0.1",
+  "description": "Base CapnWeb RPC client for .do SDKs",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

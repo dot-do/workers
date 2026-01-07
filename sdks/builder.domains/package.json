@@ -1,0 +1,24 @@
+{
+  "name": "builder.domains",
+  "version": "0.0.1",
+  "description": "Free Domains for Builders - Claim and manage domains for AI projects",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/rpc-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "domains",
+    "dns",
+    "free",
+    "builders",
+    "sdk",
+    "workers.do"
+  ]
+}

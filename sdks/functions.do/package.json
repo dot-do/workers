@@ -1,0 +1,17 @@
+{
+  "name": "functions.do",
+  "version": "0.0.1",
+  "description": "Serverless Functions SDK - Define and invoke functions",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/rpc-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": ["functions", "serverless", "faas", "sdk", "workers.do"]
+}

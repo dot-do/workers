@@ -17,7 +17,8 @@ workers.do is the platform for building **Autonomous Startups** - businesses tha
 
 ```
 apps/           # Full applications (Vite + React Router + shadcn)
-workers/        # Cloudflare Workers (deployable)
+workers/        # Cloudflare Workers (deployable) - internal bindings
+sdks/           # Client SDKs for external access (npm packages)
 middleware/     # Hono middleware
 objects/        # Durable Objects
 snippets/       # Cloudflare Snippets (free tier)
@@ -26,6 +27,30 @@ primitives/     # TypeScript interfaces (submodule)
 auth/           # Better Auth integration
 plugins/        # Extensibility plugins
 ```
+
+## Internal vs External Access
+
+**Internal (workers.do platform):** Service bindings in `env`
+```typescript
+// Inside workers.do
+await env.LLM.complete({ model, prompt })
+await env.STRIPE.charges.create({ amount })
+await env.ORG.sso.getAuthorizationUrl({ organization })
+```
+
+**External (customers via SDKs):** CapnWeb RPC clients
+```typescript
+// Outside workers.do - install the SDK
+import { llm } from 'llm.do'
+import { payments } from 'payments.do'
+import { org } from 'id.org.ai'
+
+await llm.complete({ model, prompt })
+await payments.charges.create({ amount })
+await org.sso.getAuthorizationUrl({ organization })
+```
+
+**Authentication:** `DO_API_KEY` or `ORG_AI_API_KEY` environment variable
 
 ## Key Design Principles
 

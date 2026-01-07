@@ -39,6 +39,12 @@ export * from './events.js'
 // Re-export Things mixin (depends on core)
 export * from './things-mixin.js'
 
+// Re-export Event mixin (event sourcing, depends on core)
+export * from './event-mixin.js'
+
+// Re-export EventStore (stream-based event sourcing repository)
+export * from './event-store.js'
+
 // Re-export Repository pattern (base classes and interfaces)
 export * from './repository.js'
 
@@ -50,3 +56,9 @@ export * from './things-repository.js'
 
 // Re-export ErrorBoundary (no dependencies)
 export * from './error-boundary.js'
+
+// Re-export Projections (CQRS read models, depends on events)
+export * from './projections.js'
+
+// Re-export MRL (Matryoshka Representation Learning) utilities
+export * from './mrl.js'

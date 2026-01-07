@@ -6,6 +6,18 @@
 npm install benchmarks.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { benchmarks } from 'benchmarks.do'
+
+// Or use the factory for custom config
+import { Benchmarks } from 'benchmarks.do'
+const benchmarks = Benchmarks({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## AI Claims Are Everywhere. Proof Isn't.
@@ -205,14 +217,19 @@ for await (const event of benchmarks.stream(run.id)) {
 ## Configuration
 
 ```typescript
-import { Benchmarks } from 'benchmarks.do'
+// Workers - import env adapter for automatic env resolution
+import 'rpc.do/env'
+import { benchmarks } from 'benchmarks.do'
 
-const benchmarks = Benchmarks({
-  apiKey: process.env.BENCHMARKS_API_KEY,
+// Or use factory with custom config
+import { Benchmarks } from 'benchmarks.do'
+const customBenchmarks = Benchmarks({
+  baseURL: 'https://custom.example.com',
+  apiKey: 'your-api-key'
 })
 ```
 
-Or set `BENCHMARKS_API_KEY` or `DO_API_KEY` in your environment.
+Set `BENCHMARKS_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Stop Guessing. Start Measuring.
 

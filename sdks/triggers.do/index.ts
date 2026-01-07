@@ -285,7 +285,7 @@ export interface TriggersClient {
    * const trigger = await triggers.webhook({
    *   name: 'github-push',
    *   path: '/webhooks/github',
-   *   secret: process.env.GITHUB_WEBHOOK_SECRET,
+   *   secret: env.GITHUB_WEBHOOK_SECRET, // via rpc.do/env
    *   actions: [{ type: 'workflow', id: 'ci-pipeline' }]
    * })
    * // Returns: { url: 'https://triggers.do/webhooks/github', ... }

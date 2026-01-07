@@ -44,13 +44,13 @@ const sync = await integrations.do`
   map email and name, update on changes
 `
 
-// Or connect with full control
+// Or connect with full control (API keys from environment via rpc.do/env)
 const stripe = await integrations.connect('stripe', {
-  apiKey: process.env.STRIPE_API_KEY
+  apiKey: env.STRIPE_API_KEY
 })
 
 const hubspot = await integrations.connect('hubspot', {
-  apiKey: process.env.HUBSPOT_API_KEY
+  apiKey: env.HUBSPOT_API_KEY
 })
 
 // Define your mapping
@@ -82,16 +82,16 @@ await integrations.sync('stripe-to-hubspot')
 ```typescript
 import { integrations } from 'integrations.do'
 
-// API key authentication
+// API key authentication (API keys from environment via rpc.do/env)
 const stripe = await integrations.connect('stripe', {
-  apiKey: process.env.STRIPE_API_KEY
+  apiKey: env.STRIPE_API_KEY
 })
 
 // OAuth authentication (redirects user)
 const salesforce = await integrations.connect('salesforce', {
   oauth: {
-    clientId: process.env.SF_CLIENT_ID,
-    clientSecret: process.env.SF_CLIENT_SECRET
+    clientId: env.SF_CLIENT_ID,
+    clientSecret: env.SF_CLIENT_SECRET
   }
 })
 

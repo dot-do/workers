@@ -189,9 +189,9 @@ export PAYMENTS_API_KEY=your_api_key
 Or configure the client directly:
 
 ```typescript
-import { createPayments } from 'payments.do'
+import { Payments } from 'payments.do'
 
-const payments = createPayments({
+const payments = Payments({
   apiKey: 'your_api_key'
 })
 ```

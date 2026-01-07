@@ -6,6 +6,18 @@
 npm install evals.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { evals } from 'evals.do'
+
+// Or use the factory for custom config
+import { Evals } from 'evals.do'
+const evals = Evals({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## AI Quality Is a Black Box
@@ -217,14 +229,19 @@ const failures = await evals.results('customer-support', {
 ## Configuration
 
 ```typescript
-import { Evals } from 'evals.do'
+// Workers - import env adapter for automatic env resolution
+import 'rpc.do/env'
+import { evals } from 'evals.do'
 
-const evals = Evals({
-  apiKey: process.env.EVALS_API_KEY
+// Or use factory with custom config
+import { Evals } from 'evals.do'
+const customEvals = Evals({
+  baseURL: 'https://custom.example.com',
+  apiKey: 'your-api-key'
 })
 ```
 
-Or set `EVALS_API_KEY` or `DO_API_KEY` in your environment.
+Set `EVALS_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Stop Guessing About AI Quality
 

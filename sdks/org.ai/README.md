@@ -6,6 +6,18 @@
 npm install org.ai
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { org } from 'org.ai'
+
+// Or use the factory for custom config
+import { Org } from 'org.ai'
+const org = Org({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## You're Losing Enterprise Deals You Should Be Winning
@@ -198,10 +210,10 @@ export ORG_API_KEY=your_api_key
 Or configure directly:
 
 ```typescript
-import { createOrg } from 'org.ai'
+import { Org } from 'org.ai'
 
-const org = createOrg({
-  apiKey: process.env.ORG_API_KEY
+const org = Org({
+  apiKey: 'your_api_key'
 })
 ```
 

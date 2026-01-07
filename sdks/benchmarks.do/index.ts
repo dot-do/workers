@@ -353,21 +353,39 @@ export interface BenchmarksClient {
 
 /**
  * Create a configured benchmarks client
+ *
+ * @example
+ * ```typescript
+ * import { Benchmarks } from 'benchmarks.do'
+ *
+ * const benchmarks = Benchmarks({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function Benchmarks(options?: ClientOptions): BenchmarksClient {
   return createClient<BenchmarksClient>('https://benchmarks.do', options)
 }
 
 /**
- * Default benchmarks client
+ * Default benchmarks client instance
+ *
+ * For Workers environment, import 'rpc.do/env' first to enable
+ * automatic environment variable resolution.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { benchmarks } from 'benchmarks.do'
+ *
+ * const all = await benchmarks.list()
+ * ```
  */
-export const benchmarks: BenchmarksClient = Benchmarks({
-  apiKey:
-    typeof process !== 'undefined'
-      ? process.env?.BENCHMARKS_API_KEY || process.env?.DO_API_KEY
-      : undefined,
-})
+export const benchmarks: BenchmarksClient = Benchmarks()
 
+// Named exports
+export { Benchmarks, benchmarks }
+
+// Default export = camelCase instance
 export default benchmarks
 
 export type { ClientOptions } from 'rpc.do'

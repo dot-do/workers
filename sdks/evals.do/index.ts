@@ -488,18 +488,39 @@ export interface EvalsClient {
 
 /**
  * Create a configured evals client
+ *
+ * @example
+ * ```typescript
+ * import { Evals } from 'evals.do'
+ *
+ * const evals = Evals({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function Evals(options?: ClientOptions): EvalsClient {
   return createClient<EvalsClient>('https://evals.do', options)
 }
 
 /**
- * Default evals client
+ * Default evals client instance
+ *
+ * For Workers environment, import 'rpc.do/env' first to enable
+ * automatic environment variable resolution.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { evals } from 'evals.do'
+ *
+ * const all = await evals.list()
+ * ```
  */
-export const evals: EvalsClient = Evals({
-  apiKey: typeof process !== 'undefined' ? (process.env?.EVALS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const evals: EvalsClient = Evals()
 
+// Named exports
+export { Evals, evals }
+
+// Default export = camelCase instance
 export default evals
 
 export type { ClientOptions } from 'rpc.do'

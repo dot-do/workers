@@ -6,6 +6,18 @@
 npm install builder.domains
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { domains } from 'builder.domains'
+
+// Or use the factory for custom config
+import { Domains } from 'builder.domains'
+const domains = Domains({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## You're Ready to Ship. Your Domain Isn't.
@@ -153,10 +165,10 @@ npm install builder.domains
 
 Set your API key:
 ```typescript
-import { createDomains } from 'builder.domains'
+import { Domains } from 'builder.domains'
 
-const domains = createDomains({
-  apiKey: process.env.DOMAINS_API_KEY
+const domains = Domains({
+  apiKey: 'your_api_key'
 })
 ```
 

@@ -16,9 +16,9 @@
  *   map email and name, update on changes
  * `
  *
- * // Connect services
+ * // Connect services (API keys from environment via rpc.do/env)
  * const stripe = await integrations.connect('stripe', {
- *   apiKey: process.env.STRIPE_API_KEY
+ *   apiKey: env.STRIPE_API_KEY
  * })
  *
  * // Define data mappings
@@ -274,8 +274,9 @@ export interface IntegrationsClient {
    *
    * @example
    * ```typescript
+   * // API keys from environment via rpc.do/env
    * const stripe = await integrations.connect('stripe', {
-   *   apiKey: process.env.STRIPE_API_KEY
+   *   apiKey: env.STRIPE_API_KEY
    * })
    * ```
    */

@@ -179,7 +179,7 @@ const reliable = {
 const github = await triggers.webhook({
   name: 'github-push',
   path: '/webhooks/github',
-  secret: process.env.GITHUB_WEBHOOK_SECRET,
+  secret: env.GITHUB_WEBHOOK_SECRET, // via rpc.do/env
   conditions: [{ field: 'ref', operator: 'eq', value: 'refs/heads/main' }],
   actions: [{ type: 'workflow', id: 'ci-pipeline' }]
 })

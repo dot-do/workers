@@ -24,7 +24,10 @@
     "version": "changeset version && tsx scripts/sync-service-versions.ts",
     "publish": "tsx scripts/publish.ts",
     "release": "pnpm build && pnpm version && pnpm publish",
-    "check-versions": "tsx scripts/get-npm-versions.ts"
+    "check-versions": "tsx scripts/get-npm-versions.ts",
+    "check-domains": "tsx scripts/check-domains.ts",
+    "test:e2e": "vitest run --config tests/vitest.config.ts",
+    "prerelease": "pnpm check-domains && pnpm check-versions"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0",

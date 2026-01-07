@@ -328,7 +328,7 @@ Strongly-typed clients for all platform services. Each SDK auto-discovers its en
 
 ```typescript
 import { llm } from 'llm.do'
-import { org } from 'id.org.ai'
+import { org } from 'org.ai'
 import { payments } from 'payments.do'
 import { services } from 'services.do'
 import { domains } from 'builder.domains'
@@ -344,7 +344,7 @@ const myLLM = LLM({ apiKey: 'xxx', timeout: 60000 })
 | SDK | npm | Description |
 |-----|-----|-------------|
 | `llm.do` | `llm.do` | AI Gateway - Multi-model LLM access with billing |
-| `id.org.ai` | `id.org.ai` | Auth for AI and Humans - SSO, Vault, Users |
+| `org.ai` | `org.ai` | Auth for AI and Humans - SSO, Vault, Users (id.org.ai) |
 | `payments.do` | `payments.do` | Stripe Connect - Billing, subscriptions, payouts |
 | `services.do` | `services.do` | AI Services Marketplace |
 | `builder.domains` | `builder.domains` | Free domains for builders |

@@ -1,7 +1,7 @@
 {
-  "name": "id.org.ai",
+  "name": "org.ai",
   "version": "0.0.1",
-  "description": "Auth for AI and Humans - SSO, Vault, Users, Organizations",
+  "description": "Auth for AI and Humans - SSO, Vault, Users, Organizations (id.org.ai)",
   "type": "module",
   "main": "index.ts",
   "exports": {

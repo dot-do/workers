@@ -43,7 +43,7 @@ await env.ORG.sso.getAuthorizationUrl({ organization })
 // Outside workers.do - install the SDK
 import { llm } from 'llm.do'
 import { payments } from 'payments.do'
-import { org } from 'id.org.ai'
+import { org } from 'org.ai'
 
 await llm.complete({ model, prompt })
 await payments.charges.create({ amount })

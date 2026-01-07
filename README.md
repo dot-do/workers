@@ -105,7 +105,7 @@ import { priya, ralph, tom, quinn, mark } from 'agents.do'
 
 on.Idea.captured(async idea => {
   const product = await priya`brainstorm ${idea}`
-  const backlog = await priya.plan.tdd`${product}`
+  const backlog = await priya.planTDD(product)
 
   for (const issue of backlog.ready) {
     const pr = await ralph`implement ${issue}`

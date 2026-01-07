@@ -100,30 +100,27 @@ This is [CapnWeb](https://github.com/cloudflare/capnweb) pipelining—record-rep
 Complex processes run themselves:
 
 ```typescript
+import { on } from 'workflows.do'
 import { priya, ralph, tom, quinn, mark } from 'agents.do'
 
-const features = await priya.list`features that need to be built next`
+on.Idea.captured(async idea => {
+  const product = await priya`brainstorm ${idea}`
+  const backlog = await priya.plan.tdd`${product}`
 
-for (const feature of features) {
-  let code = await ralph`implement ${feature}`
+  for (const issue of backlog) {
+    const pr = await ralph`implement ${issue}`
 
-  // Review loop - iterate until approved
-  do {
-    const reviews = await [
-      priya.review`${code}`,
-      tom.review`${code}`,
-      quinn.review`${code}`,
-    ]
+    do await ralph`update ${pr}`
+    while (!await pr.approvedBy(quinn, tom, priya))
 
-    if (reviews.every(r => r.approved)) break
-    code = await ralph`address feedback ${reviews}`
-  } while (true)
+    await pr.merge()
+  }
 
-  await mark`document ${feature}`
-}
+  await mark`document ${product}`
+})
 ```
 
-Natural loops. Real iteration. Your team working.
+Event-driven. PR-based. Real development workflow.
 
 ## When You Need Humans
 

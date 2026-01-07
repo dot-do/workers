@@ -3,22 +3,23 @@
 > Your AI team. Just tell them what to do.
 
 ```typescript
-import { tom, priya, mark } from 'agents.do'
+import { priya, ralph, tom, mark } from 'agents.do'
 
-tom`build the authentication system`
 priya`plan the MVP features`
+ralph`build the authentication system`
+tom`review the architecture`
 mark`write copy for the landing page`
 ```
 
-That's it. You now have a tech lead, product manager, and marketing lead working for you.
+That's it. You now have a product manager, developer, tech lead, and marketing lead working for you.
 
 ## Your Team
 
 | Agent | Role | Expertise |
 |-------|------|-----------|
-| **Priya** | Product | Specs, prioritization, roadmaps |
-| **Tom** | Tech Lead | Architecture, TypeScript, code review |
+| **Priya** | Product | Specs, prioritization, roadmaps, product review |
 | **Ralph** | Developer | Implementation, coding, iteration |
+| **Tom** | Tech Lead | Architecture, TypeScript, code review |
 | **Rae** | Frontend | React, UI/UX, accessibility |
 | **Mark** | Marketing | Copy, content, MDX documentation |
 | **Sally** | Sales | Outreach, demos, closing |

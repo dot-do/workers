@@ -1,0 +1,38 @@
+{
+  "name": "workflows.do",
+  "version": "0.0.1",
+  "description": "Processes that run themselves.",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./dev": "./dev/index.ts",
+    "./review": "./review/index.ts",
+    "./marketing": "./marketing/index.ts",
+    "./sales": "./sales/index.ts",
+    "./incident": "./incident/index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://workflows.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "dependencies": {
+    "agents.do": "workspace:*",
+    "humans.do": "workspace:*",
+    "teams.do": "workspace:*",
+    "ai-workflows": "workspace:*",
+    "capnweb": "^0.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "workflows",
+    "orchestration",
+    "workers.do",
+    "business-as-code"
+  ]
+}

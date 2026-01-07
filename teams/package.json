@@ -1,0 +1,37 @@
+{
+  "name": "teams.do",
+  "version": "0.0.1",
+  "description": "Tell the team what to do. They figure out who does what.",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./engineering": "./engineering/index.ts",
+    "./product": "./product/index.ts",
+    "./marketing": "./marketing/index.ts",
+    "./sales": "./sales/index.ts",
+    "./leadership": "./leadership/index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://teams.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "dependencies": {
+    "agents.do": "workspace:*",
+    "humans.do": "workspace:*",
+    "roles.do": "workspace:*",
+    "capnweb": "^0.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "teams",
+    "organization",
+    "workers.do",
+    "business-as-code"
+  ]
+}

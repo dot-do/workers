@@ -1,0 +1,44 @@
+{
+  "name": "humans.do",
+  "version": "0.0.1",
+  "description": "When you need a real person.",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./ceo": "./ceo/index.ts",
+    "./cto": "./cto/index.ts",
+    "./cfo": "./cfo/index.ts",
+    "./cmo": "./cmo/index.ts",
+    "./cro": "./cro/index.ts",
+    "./pdm": "./pdm/index.ts",
+    "./dev": "./dev/index.ts",
+    "./legal": "./legal/index.ts",
+    "./channels/slack": "./channels/slack/index.ts",
+    "./channels/discord": "./channels/discord/index.ts",
+    "./channels/teams": "./channels/teams/index.ts",
+    "./channels/email": "./channels/email/index.ts",
+    "./channels/chat": "./channels/chat/index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://humans.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "dependencies": {
+    "roles.do": "workspace:*",
+    "capnweb": "^0.2.0",
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "human-in-the-loop",
+    "approvals",
+    "workers.do",
+    "business-as-code"
+  ]
+}

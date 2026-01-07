@@ -1,0 +1,38 @@
+{
+  "name": "agents.do",
+  "version": "0.0.1",
+  "description": "Your AI team. Just tell them what to do.",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./priya": "./priya/index.ts",
+    "./tom": "./tom/index.ts",
+    "./rae": "./rae/index.ts",
+    "./mark": "./mark/index.ts",
+    "./sally": "./sally/index.ts",
+    "./quinn": "./quinn/index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://agents.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "dependencies": {
+    "roles.do": "workspace:*",
+    "capnweb": "^0.2.0",
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "agents",
+    "ai-agents",
+    "autonomous-agents",
+    "workers.do",
+    "business-as-code"
+  ]
+}

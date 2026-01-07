@@ -1,0 +1,42 @@
+{
+  "name": "roles.do",
+  "version": "0.0.1",
+  "description": "Job descriptions for AI agents and humans.",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./role": "./role.ts",
+    "./ceo": "./ceo/index.ts",
+    "./cto": "./cto/index.ts",
+    "./cfo": "./cfo/index.ts",
+    "./cmo": "./cmo/index.ts",
+    "./cro": "./cro/index.ts",
+    "./pdm": "./pdm/index.ts",
+    "./architect": "./architect/index.ts",
+    "./dev": "./dev/index.ts",
+    "./qa": "./qa/index.ts",
+    "./designer": "./designer/index.ts",
+    "./bdr": "./bdr/index.ts",
+    "./sdr": "./sdr/index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://roles.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "dependencies": {
+    "dotdo": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "roles",
+    "job-descriptions",
+    "workers.do",
+    "business-as-code"
+  ]
+}

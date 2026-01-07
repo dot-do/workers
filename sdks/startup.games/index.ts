@@ -23,7 +23,7 @@
  * ```
  */
 
-import { createClient, getDefaultApiKeySync, type ClientOptions } from '@dotdo/rpc-client'
+import { createClient, getDefaultApiKeySync, type ClientOptions } from 'rpc.do'
 
 // =============================================================================
 // Types

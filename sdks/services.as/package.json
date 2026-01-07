@@ -1,0 +1,36 @@
+{
+  "name": "services.as",
+  "version": "0.0.1",
+  "description": "Services-as-Software SDK - AI agents delivering services humans used to",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://services.as",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "services-as-software",
+    "ai-services",
+    "autonomous",
+    "sdk",
+    "workers.do",
+    "cloudflare-workers"
+  ]
+}

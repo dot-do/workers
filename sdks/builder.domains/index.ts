@@ -19,7 +19,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from '@dotdo/rpc-client'
+import { createClient, type ClientOptions } from 'rpc.do'
 
 // Types
 export interface Domain {
@@ -99,4 +99,4 @@ export const domains: DomainsClient = createDomains({
   apiKey: typeof process !== 'undefined' ? process.env?.DOMAINS_API_KEY : undefined,
 })
 
-export type { ClientOptions } from '@dotdo/rpc-client'
+export type { ClientOptions } from 'rpc.do'

@@ -1,31 +1,35 @@
 # startup.games
 
-> Gamified entrepreneurship - test business models, compete, and learn startup skills
-
-Part of the [workers.do](https://workers.do) Autonomous Startup platform.
-
-## Overview
-
-startup.games brings gamification to entrepreneurship. Simulate business models, make strategic decisions, compete on leaderboards, and develop real startup skills in a risk-free environment.
-
-**Why gamify startups?**
-- **Learn by doing** - Experience the startup journey without the financial risk
-- **Test hypotheses** - Validate business models before committing real resources
-- **Build intuition** - Develop pattern recognition for market dynamics
-- **Compete & collaborate** - Learn from a community of aspiring founders
-
-## Installation
+**Master the startup game before you play it for real.**
 
 ```bash
 npm install startup.games
 ```
 
-## Quick Start
+---
+
+## You Want to Build a Startup. But the Learning Curve Is Deadly.
+
+Every aspiring founder faces the same brutal reality:
+
+- Real startups mean real money lost on real mistakes
+- Books and courses teach theory, not instinct
+- MBA case studies are history lessons, not practice
+- The only way to learn is to burn runway
+
+For educators, it's even harder:
+- How do you teach entrepreneurship without real stakes?
+- How do you give students 10 years of pattern recognition in 10 weeks?
+- How do you make business concepts tangible, not theoretical?
+
+**What if you could simulate a startup before you stake your life on one?**
+
+## The Flight Simulator for Founders
 
 ```typescript
 import { games } from 'startup.games'
 
-// Start a SaaS business simulation
+// Start a realistic business simulation
 const sim = await games.simulate({
   model: 'saas-b2b',
   market: 'developer-tools',
@@ -33,168 +37,165 @@ const sim = await games.simulate({
   difficulty: 'normal'
 })
 
-// Make decisions
+// Make the decisions real founders make
 await sim.decide({ action: 'hire', role: 'engineer', salary: 120000 })
 await sim.decide({ action: 'build', feature: 'api-v2' })
 await sim.decide({ action: 'market', channel: 'content', budget: 5000 })
 
-// Advance time and see results
+// See what happens
 const results = await sim.advance({ months: 3 })
 console.log(`MRR: $${results.state.revenue}`)
 console.log(`Customers: ${results.state.customers}`)
-console.log(`Score: ${results.score}`)
 ```
 
-## Features
+**startup.games** is gamified entrepreneurship:
+- Simulations based on real startup data
+- Strategic decisions with realistic consequences
+- Random events that test your adaptability
+- Compete on leaderboards, earn achievements
+- Build intuition before you build a company
 
-### Business Simulations
+## Learn Startup Skills in 3 Steps
 
-Realistic simulations based on real startup data:
+### 1. Choose Your Business Model
 
 ```typescript
-// Get available business models
-const models = await games.models()
-// ['saas-b2b', 'saas-b2c', 'marketplace', 'ecommerce', 'agency', ...]
+import { games } from 'startup.games'
 
-// Each model has different dynamics
-const saas = models.find(m => m.type === 'saas')
-console.log(saas.metrics)
-// { cac: 500, ltv: 6000, churn: 0.05, margins: 0.8, payback: 6 }
+// Pick from realistic business models
+const sim = await games.simulate({
+  model: 'saas-b2b',        // or 'marketplace', 'ecommerce', 'agency'
+  market: 'developer-tools',
+  initialCapital: 50000,
+  difficulty: 'normal'      // 'easy' | 'normal' | 'hard' | 'nightmare'
+})
+
+// Each model has real-world dynamics
+// SaaS: High margins, subscription revenue, churn battles
+// Marketplace: Cold start problem, network effects, take rates
+// Agency: Margins vs scale, client concentration, productization
 ```
 
-### Strategic Decisions
-
-Make the decisions real founders face:
+### 2. Make Strategic Decisions
 
 ```typescript
-// Hiring
+// Hiring - who do you need and when?
 await sim.decide({ action: 'hire', role: 'engineer' })
 await sim.decide({ action: 'hire', role: 'sales' })
 
-// Product
+// Product - what do you build?
 await sim.decide({ action: 'build', feature: 'integrations' })
 await sim.decide({ action: 'launch', feature: 'api-v2' })
 
-// Growth
+// Growth - how do you acquire customers?
 await sim.decide({ action: 'market', channel: 'paid', budget: 10000 })
 await sim.decide({ action: 'market', channel: 'content' })
 
-// Fundraising
+// Fundraising - when and how much?
 await sim.decide({ action: 'raise', amount: 1000000, dilution: 0.15 })
 
-// Pivots
+// Pivots - when do you change direction?
 await sim.decide({ action: 'pivot', from: 'b2c', to: 'b2b' })
 ```
 
-### Dynamic Events
-
-Random events add realism and challenge:
+### 3. Learn from Outcomes
 
 ```typescript
-const results = await sim.advance({ months: 1 })
+// Advance time and face the consequences
+const results = await sim.advance({ months: 3 })
 
+// Track your metrics
+const metrics = await sim.getMetrics()
+console.log(`Burn rate: $${metrics.burnRate}/month`)
+console.log(`Runway: ${metrics.runway} months`)
+console.log(`MRR: $${metrics.mrr}`)
+console.log(`Growth: ${metrics.growthRate}%`)
+
+// Handle random events
 for (const event of results.events) {
   if (event.type === 'opportunity') {
-    console.log(`Opportunity: ${event.title}`)
     // "A large enterprise wants to become your customer..."
   }
-
   if (event.type === 'crisis') {
-    console.log(`Crisis: ${event.title}`)
     // "Your main competitor just raised $50M..."
   }
 }
 ```
 
-### Challenges & Achievements
+## Learning by Reading vs Learning by Doing
 
-Structured learning through challenges:
+**Without startup.games:**
+- Read 50 startup books, still freeze on first real decision
+- Case studies feel distant and theoretical
+- No feedback loop on your intuition
+- Learn from failure when failure costs everything
+
+**With startup.games:**
+- Experience years of startup decisions in hours
+- Immediate feedback on every choice
+- Pattern recognition built through repetition
+- Fail fast, learn fast, no money lost
+
+## Compete. Achieve. Master.
 
 ```typescript
-// Get available challenges
+// Challenges give you structured learning goals
 const challenges = await games.challenges()
-
-// Attempt a challenge
 const result = await games.attemptChallenge('first-100-customers')
 if (result.success) {
   console.log(`Earned: ${result.rewards.map(r => r.item).join(', ')}`)
 }
 
-// View achievements
-const achievements = await games.achievements()
-for (const a of achievements) {
-  console.log(`${a.icon} ${a.name} - ${a.description}`)
-}
-```
-
-### Leaderboards
-
-Compete with other aspiring founders:
-
-```typescript
+// Leaderboards let you compete with other aspiring founders
 const leaderboard = await games.leaderboard({ period: 'weekly', limit: 10 })
-
 for (const entry of leaderboard.entries) {
-  console.log(`#${entry.rank} ${entry.username} - ${entry.score} (${entry.startupName})`)
+  console.log(`#${entry.rank} ${entry.username} - ${entry.score}`)
 }
+
+// Achievements track your progress
+const achievements = await games.achievements()
+// "First Exit", "Unicorn Builder", "Pivot Master", "Ramen Profitable"
 ```
 
-## API Reference
-
-### `games.simulate(config)`
-
-Start a new simulation.
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `model` | `string` | Business model type |
-| `market` | `string` | Target market |
-| `initialCapital` | `number` | Starting capital (default: 10000) |
-| `difficulty` | `string` | 'easy' \| 'normal' \| 'hard' \| 'nightmare' |
-
-### `sim.decide(decision)`
-
-Make a strategic decision.
-
-### `sim.advance({ months })`
-
-Advance the simulation by N months.
-
-### `sim.getMetrics()`
-
-Get current business metrics.
-
-### `games.challenges()`
-
-List available challenges.
-
-### `games.leaderboard(options)`
-
-Get leaderboard rankings.
-
-### `games.achievements(userId?)`
-
-Get achievements for a user.
-
-## Configuration
+## Perfect for Educators
 
 ```typescript
 import { Games } from 'startup.games'
 
-const client = Games({
-  apiKey: process.env.DO_API_KEY,
-  timeout: 60000, // Longer timeout for simulations
+// Create a custom environment for your class
+const classroom = Games({
+  apiKey: process.env.EDUCATOR_API_KEY
 })
+
+// Set up competitions between student teams
+// Track progress across the semester
+// Grade based on decision quality, not just outcomes
+// Give students real entrepreneurship intuition
 ```
 
-## Part of the Startup Journey
+**Use startup.games to:**
+- Run semester-long startup simulations
+- Create hackathon-style competitions
+- Supplement case studies with hands-on practice
+- Build entrepreneurship curriculum that actually sticks
 
-startup.games is part of the workers.do Autonomous Startup platform:
+## Your Path to Founder-Ready
 
-1. **[startups.new](https://startups.new)** - Launch your Autonomous Startup
-2. **[startups.studio](https://startups.studio)** - Build and manage your startup
-3. **[startup.games](https://startup.games)** - Learn and practice startup skills
+The best time to learn startup skills was 10 years ago. The second best time is to practice them today, risk-free.
 
-## License
+**Don't wait for your first startup to start learning.**
 
-MIT
+```bash
+npm install startup.games
+```
+
+[Start playing at startup.games](https://startup.games)
+
+---
+
+Part of the [workers.do](https://workers.do) Autonomous Startup platform:
+- **[startups.new](https://startups.new)** - Launch your startup
+- **[startups.studio](https://startups.studio)** - Build and grow your startup
+- **[startup.games](https://startup.games)** - Practice startup skills
+
+MIT License

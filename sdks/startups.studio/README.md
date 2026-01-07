@@ -1,289 +1,152 @@
 # startups.studio
 
-> Build and manage your Autonomous Startup portfolio - the venture studio for Business-as-Code
-
-Part of the [workers.do](https://workers.do) Autonomous Startup platform.
-
-## Overview
-
-startups.studio is your workspace for building and managing Autonomous Startups. Deploy code, monitor health, view analytics, and manage your entire startup portfolio from a single interface.
-
-Think of it as the "venture studio" for your Business-as-Code companies.
-
-## Installation
+**Build a portfolio of startups. Not a mountain of infrastructure.**
 
 ```bash
 npm install startups.studio
 ```
 
-## Quick Start
+---
+
+## You're Not Building One Startup. You're Building Many.
+
+You're a serial entrepreneur. A venture studio. A builder who sees opportunities everywhere.
+
+But every new idea means:
+- Rebuilding the same infrastructure from scratch
+- Context-switching between a dozen dashboards
+- Inconsistent patterns that slow down every launch
+- Wasted weeks on plumbing instead of products
+- No unified view of your entire portfolio
+
+**What if you could manage all your startups from a single command?**
+
+## Your Venture Studio, Automated
 
 ```typescript
 import { studio } from 'startups.studio'
 
-// Get your portfolio overview
+// See your entire empire at a glance
 const portfolio = await studio.portfolio()
 console.log(`Managing ${portfolio.stats.totalStartups} startups`)
 console.log(`Total MRR: $${portfolio.stats.totalMRR}`)
+console.log(`Portfolio uptime: ${portfolio.stats.avgUptime}%`)
 
-// Deploy an update
-await studio.deploy('my-startup', {
-  code: updatedWorkerCode,
-  message: 'Add user dashboard feature'
+// Deploy to any startup in seconds
+await studio.deploy('new-venture', {
+  code: latestBuild,
+  message: 'Launch v2.0'
 })
-
-// Check health across all startups
-const health = await studio.health()
-for (const startup of health.startups) {
-  console.log(`${startup.name}: ${startup.status}`)
-}
 ```
 
-## Features
+**startups.studio** is the control center for your Autonomous Startup portfolio:
+- Unified dashboard across all your ventures
+- Deploy, monitor, and scale from one place
+- Shared infrastructure, unique businesses
+- Portfolio-wide analytics and health checks
 
-### Portfolio Management
+## Build Your Empire in 3 Steps
 
-View and manage all your startups:
+### 1. Connect Your Portfolio
 
 ```typescript
+import { studio } from 'startups.studio'
+
 const portfolio = await studio.portfolio()
 
-// Portfolio stats
-console.log(portfolio.stats)
-// {
-//   totalStartups: 5,
-//   activeStartups: 4,
-//   totalMRR: 15000,
-//   totalCustomers: 450,
-//   totalRequests: 1200000,
-//   avgUptime: 99.95
-// }
-
-// Individual startup metrics
 for (const startup of portfolio.startups) {
-  console.log(`${startup.name}:`)
-  console.log(`  MRR: $${startup.metrics.mrr}`)
-  console.log(`  Customers: ${startup.metrics.customers}`)
-  console.log(`  Health: ${startup.health}`)
+  console.log(`${startup.name}: $${startup.metrics.mrr} MRR`)
 }
 ```
 
-### Deployments
-
-Deploy code and configuration changes:
+### 2. Deploy and Manage
 
 ```typescript
-// Deploy new code
-const deployment = await studio.deploy('my-startup', {
-  code: workerCode,
-  message: 'Add API v2 endpoints'
+// Deploy updates to any startup
+await studio.deploy('saas-product', {
+  code: updatedWorkerCode,
+  message: 'Add user dashboard'
 })
 
-console.log(`Deployment ${deployment.id}: ${deployment.status}`)
-
-// Deploy with environment changes
-await studio.deploy('my-startup', {
-  env: {
-    FEATURE_FLAG: 'enabled',
-    API_VERSION: 'v2'
-  },
-  message: 'Enable new feature'
+// Configure with shared services
+await studio.configure('saas-product', {
+  domain: 'app.saasproduct.com',
+  services: [
+    { name: 'AI', service: 'llm.do' },
+    { name: 'PAYMENTS', service: 'payments.do' }
+  ]
 })
 
 // Set secrets securely
-await studio.setSecret('my-startup', 'STRIPE_KEY', 'sk_live_...')
-
-// Rollback if needed
-await studio.rollback('my-startup', previousDeploymentId)
+await studio.setSecret('saas-product', 'STRIPE_KEY', 'sk_live_...')
 ```
 
-### Health Monitoring
-
-Monitor the health of all your startups:
+### 3. Monitor Everything
 
 ```typescript
+// Portfolio-wide health check
 const health = await studio.health()
+console.log(`Portfolio status: ${health.overall}`)
 
-// Overall status
-console.log(`Portfolio health: ${health.overall}`)
-
-// Per-startup health
-for (const startup of health.startups) {
-  console.log(`${startup.name}:`)
-  console.log(`  Status: ${startup.status}`)
-  console.log(`  Uptime: ${startup.uptime}%`)
-  console.log(`  Latency: p50=${startup.latency.p50}ms, p99=${startup.latency.p99}ms`)
-  console.log(`  Error rate: ${startup.errorRate}%`)
-}
-
-// Active incidents
+// Catch issues before customers do
 for (const incident of health.incidents) {
   console.log(`[${incident.severity}] ${incident.title}`)
 }
-```
 
-### Analytics
-
-View revenue, traffic, and performance:
-
-```typescript
-// Portfolio analytics
+// Analytics across all ventures
 const analytics = await studio.analytics({ period: 'month' })
-
-console.log(`Revenue: $${analytics.revenue.total} (${analytics.revenue.growth > 0 ? '+' : ''}${analytics.revenue.growth}%)`)
-console.log(`Traffic: ${analytics.traffic.requests} requests`)
-console.log(`Performance: ${analytics.performance.avgLatency}ms avg, ${analytics.performance.uptime}% uptime`)
-
-// Per-startup analytics
-const startupAnalytics = await studio.analytics({
-  startupId: 'my-startup',
-  period: 'week'
-})
+console.log(`Total revenue: $${analytics.revenue.total}`)
+console.log(`Growth: ${analytics.revenue.growth}%`)
 ```
 
-### Logs & Debugging
+## The Difference Is Clear
 
-Access logs for debugging:
+**Without startups.studio:**
+- Separate infrastructure for each venture
+- Dozens of dashboards to check daily
+- Inconsistent deployment processes
+- No portfolio-wide visibility
+- Weeks lost to repeated setup
+
+**With startups.studio:**
+- One codebase, infinite ventures
+- Single dashboard for everything
+- Deploy any startup in seconds
+- Real-time portfolio health
+- Launch new ideas in hours
+
+## Built for Serial Builders
 
 ```typescript
-// Get recent logs
-const logs = await studio.logs('my-startup', {
-  level: 'error',
-  limit: 100
-})
+// Pause a venture during pivot
+await studio.pause('experiment-1')
 
-for (const log of logs) {
-  console.log(`[${log.level}] ${log.message}`)
-}
+// Resume when ready
+await studio.resume('experiment-1')
 
-// Stream live logs
-for await (const log of studio.tailLogs('my-startup')) {
+// Stream logs for debugging
+for await (const log of studio.tailLogs('saas-product')) {
   console.log(`[${log.timestamp}] ${log.message}`)
 }
+
+// Rollback instantly if something breaks
+await studio.rollback('saas-product', previousDeploymentId)
+
+// Invite collaborators to specific startups
+await studio.invite('saas-product', 'cofounder@email.com', 'admin')
+
+// Transfer ownership when you exit
+await studio.transfer('acquired-startup', 'new-owner-id')
 ```
 
-### Configuration
+## Your Portfolio Deserves Better
 
-Update startup settings:
+You've built multiple successful ventures. You understand leverage.
 
-```typescript
-await studio.configure('my-startup', {
-  // Custom domain
-  domain: 'app.mycompany.com',
+**Stop rebuilding infrastructure. Start scaling your studio.**
 
-  // Environment variables
-  env: {
-    NODE_ENV: 'production',
-    LOG_LEVEL: 'info'
-  },
-
-  // Service bindings
-  services: [
-    { name: 'AI', service: 'llm', config: { model: 'claude-3-opus' } },
-    { name: 'PAYMENTS', service: 'payments' }
-  ],
-
-  // Auto-scaling
-  scaling: {
-    minInstances: 2,
-    maxInstances: 10,
-    targetCPU: 70
-  },
-
-  // Alerts
-  alerting: [
-    {
-      name: 'High Error Rate',
-      condition: 'error_rate',
-      threshold: 5,
-      channels: ['email', 'slack']
-    }
-  ]
-})
-```
-
-### Team Collaboration
-
-Manage access to your startups:
-
-```typescript
-// Invite a collaborator
-await studio.invite('my-startup', 'alice@company.com', 'developer')
-
-// Transfer ownership
-await studio.transfer('my-startup', 'new-owner-id')
-```
-
-### Lifecycle Management
-
-Control startup status:
-
-```typescript
-// Pause a startup (maintenance mode)
-await studio.pause('my-startup')
-
-// Resume
-await studio.resume('my-startup')
-
-// Archive (soft delete)
-await studio.archive('old-startup')
-```
-
-## API Reference
-
-### Portfolio & Startups
-
-| Method | Description |
-|--------|-------------|
-| `portfolio()` | Get portfolio overview |
-| `startup(id)` | Get startup details |
-| `activity(options)` | Get recent activity |
-
-### Deployments
-
-| Method | Description |
-|--------|-------------|
-| `deploy(id, config)` | Deploy updates |
-| `deployment(id)` | Get deployment status |
-| `deployments(id, options)` | List deployments |
-| `rollback(id, deploymentId)` | Rollback to previous |
-
-### Monitoring
-
-| Method | Description |
-|--------|-------------|
-| `health()` | Portfolio health report |
-| `startupHealth(id)` | Startup health details |
-| `analytics(options)` | Analytics summary |
-| `logs(id, options)` | Get logs |
-| `tailLogs(id, options)` | Stream live logs |
-
-### Configuration
-
-| Method | Description |
-|--------|-------------|
-| `configure(id, config)` | Update configuration |
-| `setSecret(id, name, value)` | Set secret |
-
-### Lifecycle
-
-| Method | Description |
-|--------|-------------|
-| `pause(id)` | Pause startup |
-| `resume(id)` | Resume startup |
-| `archive(id)` | Archive startup |
-| `transfer(id, newOwner)` | Transfer ownership |
-| `invite(id, email, role)` | Invite collaborator |
-
-## Configuration
-
-```typescript
-import { Studio } from 'startups.studio'
-
-const client = Studio({
-  apiKey: process.env.DO_API_KEY,
-  timeout: 60000,
-})
+```bash
+npm install startups.studio
 ```
 
 ## Part of the Startup Journey
@@ -291,9 +154,19 @@ const client = Studio({
 startups.studio is the management layer in the workers.do Autonomous Startup platform:
 
 1. **[startups.new](https://startups.new)** - Launch your Autonomous Startup
-2. **[startups.studio](https://startups.studio)** - Build and manage your startup (you are here)
+2. **[startups.studio](https://startups.studio)** - Build and manage your portfolio (you are here)
 3. **[startup.games](https://startup.games)** - Learn and practice startup skills
 
-## License
+## Authentication
 
-MIT
+```bash
+export DO_API_KEY=your_api_key
+# or
+export ORG_AI_API_KEY=your_api_key
+```
+
+[Get started at startups.studio](https://startups.studio)
+
+---
+
+MIT License

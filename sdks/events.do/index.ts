@@ -13,7 +13,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from '@dotdo/rpc-client'
+import { createClient, type ClientOptions } from 'rpc.do'
 
 // Types
 export interface Event {
@@ -61,4 +61,4 @@ export const events: EventsClient = Events({
   apiKey: typeof process !== 'undefined' ? process.env?.EVENTS_API_KEY : undefined,
 })
 
-export type { ClientOptions } from '@dotdo/rpc-client'
+export type { ClientOptions } from 'rpc.do'

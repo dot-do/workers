@@ -7,11 +7,36 @@
   "exports": {
     ".": "./index.ts"
   },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://workflows.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
   "dependencies": {
-    "@dotdo/rpc-client": "workspace:*"
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
   },
-  "keywords": ["workflows", "orchestration", "durable", "sdk", "workers.do"]
+  "keywords": [
+    "workflows",
+    "orchestration",
+    "durable",
+    "sdk",
+    "workers.do",
+    "cloudflare",
+    "workers",
+    "automation",
+    "pipeline",
+    "state-machine",
+    "triggers",
+    "steps"
+  ]
 }

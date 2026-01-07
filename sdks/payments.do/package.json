@@ -7,8 +7,20 @@
   "exports": {
     ".": "./index.ts"
   },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://payments.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
   "dependencies": {
-    "@dotdo/rpc-client": "workspace:*"
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
@@ -16,9 +28,18 @@
   "keywords": [
     "payments",
     "stripe",
+    "stripe-connect",
     "billing",
     "subscriptions",
+    "metered-billing",
+    "usage-billing",
+    "marketplace",
+    "payouts",
+    "transfers",
+    "invoices",
+    "charges",
     "sdk",
-    "workers.do"
+    "workers.do",
+    "cloudflare-workers"
   ]
 }

@@ -1,11 +1,12 @@
 {
   "name": "rpc.do",
   "version": "0.0.1",
-  "description": "Base CapnWeb RPC client for .do SDKs",
+  "description": "Base CapnWeb RPC client for .do SDKs with tagged template SQL support",
   "type": "module",
   "main": "index.ts",
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./sql-proxy": "./sql-proxy.ts"
   },
   "author": ".do",
   "license": "MIT",
@@ -23,10 +24,20 @@
     "capnweb",
     "workers.do",
     "cloudflare",
-    "sdk"
+    "sdk",
+    "sql",
+    "tagged-template"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "@dotdo/types": "workspace:*"
+  },
+  "peerDependencies": {
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*"
+  },
   "devDependencies": {
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*",
     "typescript": "^5.0.0"
   }
 }

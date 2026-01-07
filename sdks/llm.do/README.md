@@ -1,74 +1,135 @@
 # llm.do
 
-AI Gateway SDK - Multi-model LLM access with metering, billing, and analytics.
-
-## Installation
+**Use any AI model. Pay one bill. Sleep at night.**
 
 ```bash
 npm install llm.do
 ```
 
-## Quick Start
+---
+
+## AI Is Eating Your Budget (And Your Time)
+
+You want to build with AI. You know it's the future.
+
+But every provider has different APIs. Different rate limits. Different pricing. Different quirks.
+
+So now you're:
+- Juggling API keys for OpenAI, Anthropic, Google, and whoever's hot this week
+- Getting surprise bills because you couldn't track usage in real-time
+- Hitting rate limits right when your demo goes viral
+- Writing adapter code instead of product code
+- Explaining to your CFO why AI costs tripled last month
+
+**You started a startup. Not an AI infrastructure company.**
+
+## What If Every AI Model Was One API Call Away?
 
 ```typescript
 import { llm } from 'llm.do'
 
-// Simple completion
 const response = await llm.complete({
   model: 'claude-3-opus',
-  prompt: 'Write a haiku about programming'
+  prompt: 'Write a haiku about shipping fast'
 })
 
-console.log(response.content)
-console.log(`Tokens used: ${response.usage.totalTokens}`)
+// Switch models with one line
+const gptResponse = await llm.complete({
+  model: 'gpt-4-turbo',
+  prompt: 'Write a haiku about shipping fast'
+})
+
+// Same API. Same billing. Same peace of mind.
 ```
 
-## Features
+**llm.do** is your AI gateway:
+- **One API** for Claude, GPT-4, Gemini, and open-source models
+- **One bill** with real-time usage tracking
+- **One integration** that never changes, no matter what models come next
+- **Automatic retries** when providers have issues
+- **Built-in rate limiting** so you never get cut off
 
-- **Multi-model** - Claude, GPT-4, Gemini, open source models
-- **Usage metering** - Per-token billing integrated with Stripe
-- **BYOK** - Bring your own API keys
-- **Streaming** - Real-time streaming responses
-- **Type-safe** - Full TypeScript support
+## Get Started in 3 Steps
 
-## Usage
+### 1. Install
 
-### Chat Completions
+```bash
+npm install llm.do
+```
+
+### 2. Call Any Model
 
 ```typescript
 import { llm } from 'llm.do'
 
-const response = await llm.chat([
-  { role: 'system', content: 'You are a helpful assistant.' },
-  { role: 'user', content: 'Hello!' }
-], {
-  model: 'gpt-4',
-  temperature: 0.7
+// Simple prompt
+const result = await llm.complete({
+  model: 'claude-3-opus',
+  prompt: 'Explain quantum computing to a 5-year-old'
 })
+
+// Chat messages
+const chat = await llm.chat([
+  { role: 'system', content: 'You are a helpful startup advisor.' },
+  { role: 'user', content: 'How do I find product-market fit?' }
+], { model: 'gpt-4' })
 ```
 
-### Streaming
+### 3. Know Exactly What You're Spending
 
 ```typescript
-import { llm } from 'llm.do'
+const usage = await llm.usage('my-org', {
+  start: new Date('2024-01-01'),
+  end: new Date('2024-01-31')
+})
 
+console.log(`Total tokens: ${usage.totalTokens}`)
+console.log(`Total cost: $${usage.totalCost}`)
+console.log(`By model:`, usage.byModel)
+// { 'claude-3-opus': { tokens: 50000, cost: 2.50 }, ... }
+```
+
+## The Difference Is Night and Day
+
+**Without llm.do:**
+- Different SDK for every provider
+- Surprise $10K bills at month end
+- Rate limited during your biggest demo
+- Rewriting code every time you switch models
+- No idea which model is actually cost-effective
+
+**With llm.do:**
+- One SDK, every model
+- Real-time cost tracking with alerts
+- Automatic failover when providers hiccup
+- Switch models in one line of code
+- Analytics showing cost per feature, per user, per anything
+
+## Built for Production
+
+```typescript
+import { llm, LLM } from 'llm.do'
+
+// Stream responses for real-time UX
 const stream = await llm.stream({
   model: 'claude-3-sonnet',
-  prompt: 'Write a story...',
+  prompt: 'Write me a business plan...',
   stream: true
 })
 
 for await (const chunk of stream) {
   process.stdout.write(chunk)
 }
-```
 
-### Custom Configuration
+// BYOK - Use your own API keys when you need to
+const response = await llm.complete({
+  model: 'gpt-4',
+  prompt: '...',
+  apiKey: customerOwnKey // Their key, their limits, your platform
+})
 
-```typescript
-import { createLLM } from 'llm.do'
-
-const myLLM = createLLM({
+// Custom configuration for enterprise needs
+const myLLM = LLM({
   apiKey: 'your-api-key',
   timeout: 60000,
   retry: {
@@ -77,95 +138,28 @@ const myLLM = createLLM({
     backoff: 'exponential'
   }
 })
-```
 
-### Check Usage
-
-```typescript
-import { llm } from 'llm.do'
-
-const usage = await llm.usage('customer-123', {
-  start: new Date('2024-01-01'),
-  end: new Date('2024-01-31')
-})
-
-console.log(`Total tokens: ${usage.totalTokens}`)
-console.log(`Total cost: $${usage.totalCost}`)
-```
-
-### List Available Models
-
-```typescript
-import { llm } from 'llm.do'
-
+// See what models are available
 const models = await llm.models()
-// ['claude-3-opus', 'claude-3-sonnet', 'gpt-4', 'gpt-4-turbo', ...]
+// ['claude-3-opus', 'claude-3-sonnet', 'gpt-4', 'gpt-4-turbo', 'gemini-pro', ...]
 ```
 
-## Authentication
+## Your AI Strategy, Simplified
 
-Set your API key via environment variable:
+New models launch every week. Pricing changes constantly. Providers have outages.
+
+**You shouldn't have to rewrite your app every time the AI landscape shifts.**
+
+With llm.do, you're model-agnostic by default. When the next breakthrough model drops, you're one config change away from using it. When a provider has issues, we route around them automatically.
+
+**Focus on building your product. We'll handle the AI plumbing.**
 
 ```bash
-export LLM_API_KEY=your-api-key
+npm install llm.do
 ```
 
-Or pass it directly:
+[Start building at llm.do](https://llm.do)
 
-```typescript
-import { createLLM } from 'llm.do'
-const llm = createLLM({ apiKey: 'your-api-key' })
-```
+---
 
-## BYOK (Bring Your Own Key)
-
-Use your own provider API keys (stored securely in id.org.ai Vault):
-
-```typescript
-import { llm } from 'llm.do'
-
-// Use customer's own OpenAI key
-const response = await llm.complete({
-  model: 'gpt-4',
-  prompt: '...',
-  apiKey: 'customer-openai-key' // Retrieved from Vault
-})
-```
-
-## Transport
-
-The SDK uses HTTP REST by default. For real-time applications, use WebSocket (CapnWeb):
-
-```typescript
-import { createLLM } from 'llm.do'
-
-const llm = createLLM({
-  transport: 'websocket' // CapnWeb protocol
-})
-```
-
-## Error Handling
-
-```typescript
-import { llm } from 'llm.do'
-import { RPCError } from '@dotdo/rpc-client'
-
-try {
-  await llm.complete({ model: 'invalid', prompt: 'test' })
-} catch (error) {
-  if (error instanceof RPCError) {
-    console.error(`RPC Error ${error.code}: ${error.message}`)
-  }
-}
-```
-
-## Related
-
-- [workers.do](https://workers.do) - The platform for Autonomous Startups
-- [payments.do](https://payments.do) - Stripe Connect integration
-- [id.org.ai](https://id.org.ai) - Auth for AI and Humans
-- [services.do](https://services.do) - AI Services Marketplace
-
-## License
-
-MIT
+MIT License

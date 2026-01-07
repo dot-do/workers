@@ -261,3 +261,21 @@ export function createAutoClient<T extends object>(
   const endpoint = `https://${packageName}`
   return createClient<T>(endpoint, options)
 }
+
+// =============================================================================
+// SQL Proxy exports
+// =============================================================================
+
+export {
+  createSqlProxy,
+  createSqlHandler,
+  withSqlProxy,
+} from './sql-proxy.js'
+
+export type {
+  SerializableSqlQuery,
+  SqlResult,
+  SqlClientProxy,
+  SqlTransformOptions,
+  ParsedSqlTemplate,
+} from './sql-proxy.js'

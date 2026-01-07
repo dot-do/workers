@@ -7,14 +7,21 @@
   "exports": {
     ".": "./index.ts"
   },
+  "author": ".do",
+  "license": "MIT",
   "homepage": "https://startup.games",
   "repository": {
     "type": "git",
-    "url": "https://github.com/drivly/workers.do",
+    "url": "https://github.com/dot-do/workers",
     "directory": "sdks/startup.games"
   },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
   "dependencies": {
-    "@dotdo/rpc-client": "workspace:*"
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
@@ -26,6 +33,13 @@
     "simulation",
     "business",
     "gamification",
-    "workers.do"
+    "business-model",
+    "saas",
+    "marketplace",
+    "leaderboard",
+    "achievements",
+    "startup-simulator",
+    "workers.do",
+    "autonomous-startup"
   ]
 }

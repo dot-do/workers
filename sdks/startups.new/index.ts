@@ -1,9 +1,9 @@
 /**
  * startups.new SDK
  *
- * Launch Autonomous Startups instantly - Business-as-Code creation.
+ * Launch Autonomous Startups instantly - Startup-as-Code creation.
  *
- * Like docs.new creates a document, startups.new creates a business.
+ * Like docs.new creates a document, startups.new creates a startup—born digital, not transformed.
  *
  * @example
  * ```typescript
@@ -23,7 +23,7 @@
  * ```
  */
 
-import { createClient, getDefaultApiKeySync, type ClientOptions } from '@dotdo/rpc-client'
+import { createClient, getDefaultApiKeySync, type ClientOptions } from 'rpc.do'
 
 // =============================================================================
 // Types

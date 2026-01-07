@@ -18,7 +18,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from '@dotdo/rpc-client'
+import { createClient, type ClientOptions } from 'rpc.do'
 
 // Types
 export interface CompletionOptions {
@@ -125,4 +125,4 @@ export const llm: LLMClient = LLM({
 export const createLLM = LLM
 
 // Re-export types
-export type { ClientOptions } from '@dotdo/rpc-client'
+export type { ClientOptions } from 'rpc.do'

@@ -2,7 +2,7 @@
  * startups.studio SDK
  *
  * Build and manage your Autonomous Startup portfolio.
- * The venture studio for Business-as-Code.
+ * The venture studio for Startup-as-Code.
  *
  * @example
  * ```typescript
@@ -22,7 +22,7 @@
  * ```
  */
 
-import { createClient, getDefaultApiKeySync, type ClientOptions } from '@dotdo/rpc-client'
+import { createClient, getDefaultApiKeySync, type ClientOptions } from 'rpc.do'
 
 // =============================================================================
 // Types

@@ -17,7 +17,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from '@dotdo/rpc-client'
+import { createClient, type ClientOptions } from 'rpc.do'
 
 // Types
 export interface Organization {
@@ -96,4 +96,4 @@ export const org: OrgClient = createOrg({
   apiKey: typeof process !== 'undefined' ? process.env?.ORG_API_KEY : undefined,
 })
 
-export type { ClientOptions } from '@dotdo/rpc-client'
+export type { ClientOptions } from 'rpc.do'

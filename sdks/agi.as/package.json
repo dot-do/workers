@@ -1,0 +1,41 @@
+{
+  "name": "agi.as",
+  "version": "0.0.1",
+  "description": "What do you want AGI to be for you?",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://agi.as",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "agi",
+    "ai",
+    "personas",
+    "ai-roles",
+    "ai-assistant",
+    "developer",
+    "ceo",
+    "cto",
+    "autonomous",
+    "sdk",
+    "workers.do"
+  ]
+}

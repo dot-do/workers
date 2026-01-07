@@ -1,31 +1,45 @@
 {
   "name": "startups.new",
   "version": "0.0.1",
-  "description": "Launch Autonomous Startups instantly - Business-as-Code creation",
+  "description": "Launch Autonomous Startups instantly - Startup-as-Code creation",
   "type": "module",
   "main": "index.ts",
   "exports": {
     ".": "./index.ts"
   },
+  "author": ".do",
+  "license": "MIT",
   "homepage": "https://startups.new",
   "repository": {
     "type": "git",
-    "url": "https://github.com/drivly/workers.do",
+    "url": "https://github.com/dot-do/workers",
     "directory": "sdks/startups.new"
   },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
   "dependencies": {
-    "@dotdo/rpc-client": "workspace:*"
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
   },
   "keywords": [
     "startup",
+    "startups",
     "launch",
     "create",
     "business",
     "autonomous",
     "ai",
-    "workers.do"
+    "saas",
+    "marketplace",
+    "api",
+    "startup-as-code",
+    "cloudflare-workers",
+    "workers.do",
+    "dotdo"
   ]
 }

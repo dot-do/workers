@@ -1,20 +1,27 @@
 {
   "name": "startups.studio",
   "version": "0.0.1",
-  "description": "Build and manage your Autonomous Startup portfolio - the venture studio for Business-as-Code",
+  "description": "Build and manage your Autonomous Startup portfolio - the venture studio for Startup-as-Code",
   "type": "module",
   "main": "index.ts",
   "exports": {
     ".": "./index.ts"
   },
+  "author": ".do",
+  "license": "MIT",
   "homepage": "https://startups.studio",
   "repository": {
     "type": "git",
-    "url": "https://github.com/drivly/workers.do",
+    "url": "https://github.com/dot-do/workers",
     "directory": "sdks/startups.studio"
   },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
   "dependencies": {
-    "@dotdo/rpc-client": "workspace:*"
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
@@ -26,6 +33,11 @@
     "portfolio",
     "management",
     "business",
+    "autonomous-startup",
+    "startup-as-code",
+    "deploy",
+    "cloudflare-workers",
+    "serverless",
     "workers.do"
   ]
 }

@@ -1,0 +1,37 @@
+{
+  "name": "assistant.as",
+  "version": "0.0.1",
+  "description": "What do you want your assistant to be?",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://assistant.as",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "assistant",
+    "ai-assistant",
+    "personal-assistant",
+    "assistant-builder",
+    "customization",
+    "sdk",
+    "workers.do"
+  ]
+}

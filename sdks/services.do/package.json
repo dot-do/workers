@@ -7,8 +7,20 @@
   "exports": {
     ".": "./index.ts"
   },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://services.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
   "dependencies": {
-    "@dotdo/rpc-client": "workspace:*"
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
@@ -19,6 +31,11 @@
     "ai",
     "saas",
     "sdk",
-    "workers.do"
+    "workers.do",
+    "ai-services",
+    "service-marketplace",
+    "cloudflare-workers",
+    "serverless",
+    "api"
   ]
 }

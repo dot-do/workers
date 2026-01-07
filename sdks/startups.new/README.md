@@ -1,218 +1,205 @@
 # startups.new
 
-> Launch Autonomous Startups instantly - Business-as-Code creation
-
-Part of the [workers.do](https://workers.do) Autonomous Startup platform.
-
-## Overview
-
-Like `docs.new` creates a document, `startups.new` creates a business.
-
-Launch a fully-functional Autonomous Startup with AI capabilities, payments, authentication, and analytics - all from a single API call or natural language prompt.
-
-## Installation
+**From idea to live startup in minutes, not months.**
 
 ```bash
 npm install startups.new
 ```
 
-## Quick Start
+---
+
+## You Have an Idea. It's Dying in Your Head.
+
+Every day you don't launch, someone else might. Every week of "planning," your window shrinks.
+
+But launching a startup traditionally means:
+- Weeks setting up infrastructure before writing a line of product code
+- Analysis paralysis choosing between 47 frameworks and 200 SaaS tools
+- Building features nobody asked for because you haven't talked to customers
+- Months to first revenue while your savings (and motivation) drain away
+
+**What if you could skip all that and just... launch?**
+
+## Like docs.new, But for Startups
 
 ```typescript
-import { launch, create } from 'startups.new'
+import { launch } from 'startups.new'
 
-// Launch from a template
-const startup = await launch.launch({
+const startup = await launch({
   name: 'acme-ai',
   template: 'saas',
   domain: 'acme.hq.com.ai'
 })
 
-console.log(startup.urls.app)  // https://acme.hq.com.ai
-console.log(startup.urls.api)  // https://api.acme.hq.com.ai
-console.log(startup.urls.docs) // https://docs.acme.hq.com.ai
-
-// Or just describe what you want
-const generated = await create('A SaaS that helps developers write better docs')
-console.log(generated.startup.domain)
-console.log(generated.code.worker) // Generated MDX worker code
+console.log(startup.urls.app)  // https://acme.hq.com.ai - Live. Now.
 ```
 
-## Features
+**startups.new** is instant startup creation:
+- AI, payments, auth, analytics - all pre-wired and ready
+- Free domains included (*.hq.com.ai, *.app.net.ai, *.hq.sb)
+- Describe your idea in plain English, get a running business
+- Start talking to customers today, not "after we finish the MVP"
 
-### Template-Based Launch
+## Launch Your Startup in 3 Steps
 
-Start from proven templates:
+### 1. Describe or Pick
 
 ```typescript
-const startup = await launch.launch({
-  name: 'my-saas',
+import { create, launch } from 'startups.new'
+
+// Option A: Just describe it
+const startup = await create(`
+  A tool that helps developers write better documentation
+  with a free tier for open source projects
+`)
+
+// Option B: Start from a template
+const startup = await launch({
+  name: 'docmaster',
+  template: 'saas',
+  domain: 'docmaster.hq.com.ai'
+})
+```
+
+### 2. Configure Your Business Model
+
+```typescript
+const startup = await launch({
+  name: 'docmaster',
   template: 'saas',
   model: {
     type: 'subscription',
     pricing: [
-      { name: 'Free', price: 0, features: ['5 projects', 'Community support'] },
+      { name: 'Free', price: 0, features: ['3 projects', 'Community support'] },
       { name: 'Pro', price: 29, interval: 'month', features: ['Unlimited projects', 'Priority support'] },
-      { name: 'Enterprise', price: 299, interval: 'month', features: ['Custom integrations', 'SLA'] }
+      { name: 'Team', price: 99, interval: 'month', features: ['Team collaboration', 'Analytics'] }
     ]
   }
 })
 ```
 
-Available templates:
+### 3. You're Live
 
-| Template | Description | Included Services |
-|----------|-------------|-------------------|
-| `saas` | Subscription SaaS business | Auth, Payments, Analytics |
+```typescript
+console.log(startup.urls.app)       // https://docmaster.hq.com.ai
+console.log(startup.urls.api)       // https://api.docmaster.hq.com.ai
+console.log(startup.urls.docs)      // https://docs.docmaster.hq.com.ai
+console.log(startup.urls.dashboard) // https://dashboard.docmaster.hq.com.ai
+
+// Start getting customers. Today.
+```
+
+## The Before and After
+
+**Without startups.new:**
+- 3 months to launch
+- $10K+ on tools and infrastructure
+- 10,000 decisions before your first customer
+- Building what you *think* people want
+- Exhausted before you even begin
+
+**With startups.new:**
+- Live in minutes
+- Free tier gets you started
+- One decision: what problem are you solving?
+- Building based on real customer feedback
+- Energy focused on your vision, not your stack
+
+## Everything You Need, Nothing You Don't
+
+### Pick Your Starting Point
+
+| Template | Description | What's Included |
+|----------|-------------|-----------------|
+| `saas` | Subscription SaaS | Auth, Payments, Analytics |
 | `marketplace` | Two-sided marketplace | Auth, Payments (Connect), Search |
 | `api` | API-as-a-product | Auth, Usage billing, Docs |
-| `agency` | Service agency with clients | Auth, Payments, Workflows |
+| `agency` | Service agency | Auth, Payments, Workflows |
 | `ecommerce` | Online store | Payments, Inventory, Analytics |
-| `media` | Content/media business | Auth, Subscriptions, CDN |
-| `blank` | Empty starting point | None (add what you need) |
+| `blank` | Your vision, your way | Add only what you need |
 
-### AI-Powered Creation
-
-Describe your business idea in natural language:
+### AI Generates Everything
 
 ```typescript
 import { create } from 'startups.new'
 
 const result = await create(`
-  A developer tool that automatically generates API documentation
-  from code comments. Should have a free tier for open source projects
-  and paid plans for private repos.
+  A platform where indie hackers can find co-founders
+  based on complementary skills and timezone overlap.
+  Should have a freemium model.
 `)
 
 // AI generates:
-// - Startup configuration
-// - MDX worker code
-// - Database schema
-// - Pricing tiers
-// - README
-
-console.log(result.startup)     // Created startup
-console.log(result.code.worker) // Generated code
-console.log(result.suggestions) // AI recommendations
+console.log(result.startup)      // Live startup
+console.log(result.code.worker)  // Full source code
+console.log(result.code.schema)  // Database schema
+console.log(result.suggestions)  // "Consider adding: video intros, skill verification..."
 ```
 
-### Service Configuration
+### Free Domains Included
 
-Enable platform services at launch:
+No domain shopping. No DNS configuration. Just launch.
 
 ```typescript
-const startup = await launch.launch({
-  name: 'my-app',
-  template: 'saas',
-  services: [
-    { service: 'llm', config: { defaultModel: 'claude-3-opus' } },
-    { service: 'payments', config: { currency: 'usd' } },
-    { service: 'auth', config: { providers: ['google', 'github'] } },
-    { service: 'analytics' },
-    { service: 'search', config: { type: 'vector' } }
-  ]
-})
+// Pick any free subdomain
+await launch({ name: 'acme', domain: 'acme.hq.com.ai' })
+await launch({ name: 'acme', domain: 'acme.app.net.ai' })
+await launch({ name: 'acme', domain: 'acme.hq.sb' })
+
+// Or bring your own domain when you're ready
+await launch({ name: 'acme', domain: 'acme.com' })
 ```
 
-### Domain Options
-
-**Free tier domains:**
-- `*.hq.com.ai` - AI Headquarters
-- `*.app.net.ai` - AI Applications
-- `*.api.net.ai` - AI APIs
-- `*.hq.sb` - StartupBuilder
-- `*.io.sb` - StartupBuilder IO
+### Clone What Works
 
 ```typescript
-// Free subdomain
-const startup = await launch.launch({
-  name: 'acme',
-  domain: 'acme.hq.com.ai'
-})
-
-// Or bring your own domain
-const startup = await launch.launch({
-  name: 'acme',
-  domain: 'acme.com' // Configure DNS separately
-})
-```
-
-### Clone & Fork
-
-Clone existing startups:
-
-```typescript
-// Clone your own startup
-const clone = await launch.clone({
-  source: 'my-startup-id',
-  name: 'my-startup-v2',
-  includeData: false
-})
-
-// Fork a public template
+// Found a template you love? Fork it.
 const fork = await launch.clone({
   source: 'https://template.startups.new/saas-starter',
   name: 'my-saas'
 })
-```
 
-## API Reference
-
-### `launch.launch(config)`
-
-Create a new startup from configuration.
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `name` | `string` | Startup name/slug |
-| `template` | `string` | Template ID |
-| `domain` | `string` | Custom domain or subdomain |
-| `model` | `object` | Business model config |
-| `services` | `array` | Services to enable |
-
-### `launch.create(prompt)`
-
-Create a startup from natural language description.
-
-### `launch.templates()`
-
-List available templates.
-
-### `launch.clone(config)`
-
-Clone an existing startup.
-
-### `launch.status(startupId)`
-
-Check creation progress.
-
-### `launch.list(options)`
-
-List your startups.
-
-### `launch.validate({ name, domain })`
-
-Check name/domain availability.
-
-## Configuration
-
-```typescript
-import { StartupsNew } from 'startups.new'
-
-const client = StartupsNew({
-  apiKey: process.env.DO_API_KEY,
-  timeout: 120000, // Startup creation can take time
+// Iterate on your own startup
+const v2 = await launch.clone({
+  source: 'my-startup-id',
+  name: 'my-startup-v2',
+  includeData: false
 })
 ```
+
+## Stop Planning. Start Building.
+
+The best time to launch was 6 months ago. The second best time is right now.
+
+Your idea deserves to exist in the world, not just in your head. Your future customers are waiting for you to solve their problem. Your competitors are launching while you're still deciding on a tech stack.
+
+**Skip the setup. Ship the product. Start today.**
+
+```bash
+npm install startups.new
+```
+
+```typescript
+import { create } from 'startups.new'
+
+// This is it. This is the moment.
+const startup = await create('Your idea here')
+
+console.log(startup.urls.app) // You're live.
+```
+
+[Launch your startup at startups.new](https://startups.new)
+
+---
 
 ## Part of the Startup Journey
 
 startups.new is the creation step in the workers.do Autonomous Startup platform:
 
-1. **[startups.new](https://startups.new)** - Launch your Autonomous Startup (you are here)
-2. **[startups.studio](https://startups.studio)** - Build and manage your startup
-3. **[startup.games](https://startup.games)** - Learn and practice startup skills
+1. **[startups.new](https://startups.new)** - Launch your startup (you are here)
+2. **[startups.studio](https://startups.studio)** - Build and iterate
+3. **[startup.games](https://startup.games)** - Learn and practice
 
-## License
+---
 
-MIT
+MIT License

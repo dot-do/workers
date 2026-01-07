@@ -18,6 +18,8 @@
     "url": "https://github.com/dot-do/workers/issues"
   },
   "dependencies": {
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*",
     "rpc.do": "workspace:*"
   },
   "devDependencies": {

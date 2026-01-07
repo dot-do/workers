@@ -7,18 +7,41 @@
   "exports": {
     ".": "./index.ts"
   },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://org.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
   "dependencies": {
-    "@dotdo/rpc-client": "workspace:*"
+    "capnweb": "^0.2.0",
+    "rpc.do": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
   },
   "keywords": [
     "auth",
+    "authentication",
     "sso",
+    "single-sign-on",
     "identity",
     "workos",
+    "enterprise",
+    "saml",
+    "oidc",
+    "oauth",
+    "vault",
+    "secrets",
+    "users",
+    "organizations",
     "sdk",
-    "workers.do"
+    "workers.do",
+    "ai",
+    "agents"
   ]
 }

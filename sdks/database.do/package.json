@@ -1,0 +1,38 @@
+{
+  "name": "database.do",
+  "version": "0.0.1",
+  "description": "What do you want your database to .do for you?",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://database.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*",
+    "ai-database": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "database",
+    "ai-database",
+    "natural-language",
+    "schema-first",
+    "promise-pipelining",
+    "sdk",
+    "workers.do"
+  ]
+}

@@ -16,7 +16,7 @@
  * ```
  */
 
-import { createClient, type ClientOptions } from '@dotdo/rpc-client'
+import { createClient, type ClientOptions } from 'rpc.do'
 
 // Types
 export interface Customer {
@@ -116,4 +116,4 @@ export const payments: PaymentsClient = createPayments({
   apiKey: typeof process !== 'undefined' ? process.env?.PAYMENTS_API_KEY : undefined,
 })
 
-export type { ClientOptions } from '@dotdo/rpc-client'
+export type { ClientOptions } from 'rpc.do'

@@ -1,0 +1,37 @@
+{
+  "name": "database.as",
+  "version": "0.0.1",
+  "description": "What do you want your database to be?",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://database.as",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "capnweb": "^0.2.0",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*",
+    "ai-database": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "database",
+    "schema",
+    "schema-builder",
+    "data-modeling",
+    "sdk",
+    "workers.do"
+  ]
+}

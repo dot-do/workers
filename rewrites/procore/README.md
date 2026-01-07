@@ -351,6 +351,25 @@ await procore`RFI this`            // Works offline
 
 No cache config. No sync buttons. Just works.
 
+## The Cheat Sheet
+
+Everything you need, voice-natural:
+
+| What you want | What you say |
+|---------------|--------------|
+| Create RFI | `RFI this` |
+| Add punch item | `punch the ceiling` |
+| Daily log | `log today` |
+| Check schedule | `can we pour Friday?` |
+| Find drawings | `show me B-7` |
+| Budget status | `how's the budget?` |
+| Submittal status | `where's my storefront?` |
+| Team contacts | `who's the steel guy?` |
+| Close out room | `close out 203` |
+| Change order | `CO for the lobby upgrade` |
+
+Context comes from your location and your project. Not config objects.
+
 ## AI Construction Intelligence
 
 AI that speaks construction, not software:

@@ -88,9 +88,7 @@ await tom`review ${brief}`
 import clio from 'clio.do/rpc'
 ```
 
-## Just Talk
-
-Everything complex happens automatically. You just say what you need.
+## Before & After
 
 ### Matters
 
@@ -338,28 +336,13 @@ await clio`I'm Jane, $350/hour, California bar`
 // → Creates your profile. Ready to practice.
 ```
 
-## The Vision
+## Why
 
-Legal technology should democratize access to justice, not create another profit center extracting rent from lawyers.
+Your billable hour shouldn't be spent fighting with software.
 
-Every solo practitioner deserves the same tools as Big Law. Every legal aid organization should have professional practice management. Every small firm should be able to compete on service, not software budgets.
+Every solo deserves Big Law tools. Every legal aid org deserves professional practice management. Every small firm should compete on service, not software budgets.
 
-**clio.do** is practice management that works for you:
-
-- **Your data** - Client matters belong to you, not a SaaS vendor
-- **Your workflow** - Customize everything, integrate anything
-- **Your economics** - Stop paying per-seat taxes on your practice
-- **Your AI** - Time capture, research, and billing that actually helps
-
-The billable hour shouldn't be spent fighting with software.
-
-## What's Working
-
-Everything a practice needs: matters, contacts, time, billing, trust, documents, calendar.
-
-AI handles: time capture, reconstruction, billing review.
-
-Coming soon: client portal, conflict checking, court rules, e-filing, legal research integrations.
+**Your data. Your workflow. Your economics. Your AI.**
 
 ## Open Source
 

@@ -6,65 +6,30 @@ Veeva built a $50B+ empire on pharma's regulatory burden. 21 CFR Part 11 complia
 
 **veeva.do** is the open-source alternative. Deploy your own compliant life sciences platform. AI-native from day one. Audit-ready out of the box.
 
-## AI-Native API
+## The API
 
 ```typescript
 import { veeva } from 'veeva.do'
 
-// This is the entire API
-await veeva`new protocol for Study 123`          // Creates, routes, tracks
-await veeva`approve the amendment`.sign()         // Signs with Part 11 compliance
-await veeva`what's blocking the NDA submission?`  // AI figures it out
-
-// Compliance complexity is hidden
-await veeva`Phase 3 deviation in patient 042`     // CAPA workflow starts automatically
-await veeva`CMC question from FDA - draft response` // Pulls stability data, drafts, routes
-
-// Parallel review - still natural
-await veeva`get sign-off on Protocol v3`.from('IRB', 'medical monitor', 'sponsor')
-```
-
-### Queries
-
-```typescript
-// Say what you need. VQL is generated automatically.
-await veeva`approved stability protocols from 2024`
-await veeva`documents for NDA-123456`
-await veeva`what did we submit in the last sequence?`
-
-// For power users, raw VQL still works
-await veeva.vql`SELECT * FROM documents WHERE study = ${studyId}`
-```
-
-### Submissions
-
-```typescript
-// Build a submission by describing what you need
-await veeva`start NDA submission for Compound X`
-await veeva`add the Phase 3 efficacy data to Module 2.7`
-await veeva`what's missing for a complete eCTD?`
-
-// Review and submit
-await veeva`is this submission ready?`
+await veeva`new protocol for Study 123`
+await veeva`approve the amendment`.sign()
+await veeva`what's blocking the NDA submission?`
 await veeva`submit to FDA`.sign()
 ```
 
-## The Philosophy
+That's it. No document IDs. No lifecycle states. No workflow configuration.
 
-**Natural language IS the API.**
+The AI infers intent. Compliance is automatic. Audit trails are automatic.
 
-If you can say it in a meeting, you can say it to veeva.do:
+## The Test
+
+**If you can say it in a meeting, you can say it to veeva.do:**
 
 ```typescript
-// Things regulatory affairs managers actually say:
 await veeva`we need a safety report for the DSMB tomorrow`
 await veeva`FDA wants clarity on the stability data`
 await veeva`the amendment needs IRB sign-off before Monday`
 await veeva`what's the status on our BLA?`
-await veeva`pull everything we submitted for the Type A meeting`
-
-// Compliance is automatic. Audit trails are automatic.
-// 21 CFR Part 11 is automatic. You just work.
 ```
 
 ## Veeva vs veeva.do
@@ -110,10 +75,12 @@ await veeva`any overdue CAPAs?`
 21 CFR Part 11 is **automatic**. You just work.
 
 ```typescript
-await veeva`approve the protocol`.sign()  // Part 11 compliant
-await veeva`show me the audit trail`       // Every action logged
-await veeva`generate validation package`   // IQ/OQ/PQ ready
+await veeva`approve the protocol`.sign()
+await veeva`show me the audit trail`
+await veeva`generate validation package`
 ```
+
+Every `.sign()` is Part 11 compliant. Every action is audit-trailed. IQ/OQ/PQ documentation is generated.
 
 ## Why Open Source?
 

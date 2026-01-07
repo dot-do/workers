@@ -1,0 +1,46 @@
+{
+  "name": "cli.do",
+  "version": "0.0.1",
+  "description": "CLI SDK - Build beautiful command-line interfaces for .do services",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./commander": "./commander.ts",
+    "./ink": "./ink.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://cli.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "dependencies": {
+    "capnweb": "^0.2.0",
+    "commander": "^12.0.0",
+    "ink": "^5.0.0",
+    "ink-spinner": "^5.0.0",
+    "ink-table": "^3.1.0",
+    "ink-text-input": "^6.0.0",
+    "ink-select-input": "^6.0.0",
+    "org.ai": "workspace:*",
+    "react": "^18.0.0",
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "@types/react": "^18.0.0",
+    "dotdo": "workspace:*",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "cli",
+    "command-line",
+    "terminal",
+    "ink",
+    "commander",
+    "sdk",
+    "workers.do"
+  ]
+}

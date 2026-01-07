@@ -36,7 +36,9 @@
     "org.ai": "workspace:*"
   },
   "devDependencies": {
+    "@dotdo/types": "workspace:*",
     "capnweb": "^0.2.0",
+    "dotdo": "workspace:*",
     "org.ai": "workspace:*",
     "typescript": "^5.0.0"
   }

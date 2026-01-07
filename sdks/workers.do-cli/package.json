@@ -21,14 +21,18 @@
   },
   "dependencies": {
     "capnweb": "^0.2.0",
-    "org.ai": "workspace:*",
+    "cli.do": "workspace:*",
     "commander": "^12.0.0",
+    "mcp.do": "workspace:*",
+    "org.ai": "workspace:*",
     "rpc.do": "workspace:*"
   },
   "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "@types/node": "^20.0.0",
+    "dotdo": "workspace:*",
     "tsup": "^8.5.1",
-    "typescript": "^5.0.0",
-    "@types/node": "^20.0.0"
+    "typescript": "^5.0.0"
   },
   "keywords": [
     "cloudflare",

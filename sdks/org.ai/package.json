@@ -22,6 +22,8 @@
     "rpc.do": "workspace:*"
   },
   "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "dotdo": "workspace:*",
     "typescript": "^5.0.0"
   },
   "keywords": [

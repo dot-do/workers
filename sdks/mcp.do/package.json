@@ -1,26 +1,25 @@
 {
-  "name": "page.as",
+  "name": "mcp.do",
   "version": "0.0.1",
-  "description": "Create and manage web pages",
+  "description": "MCP SDK - Model Context Protocol support for AI tool integration",
   "type": "module",
   "main": "index.ts",
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./server": "./server.ts",
+    "./client": "./client.ts",
+    "./stdio": "./stdio.ts"
   },
   "author": ".do",
   "license": "MIT",
-  "homepage": "https://page.as",
+  "homepage": "https://mcp.do",
   "repository": {
     "type": "git",
     "url": "https://github.com/dot-do/workers"
   },
-  "bugs": {
-    "url": "https://github.com/dot-do/workers/issues"
-  },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "capnweb": "^0.2.0",
-    "cli.do": "workspace:*",
-    "mcp.do": "workspace:*",
     "org.ai": "workspace:*",
     "rpc.do": "workspace:*"
   },
@@ -30,11 +29,14 @@
     "typescript": "^5.0.0"
   },
   "keywords": [
-    "page",
-    "website",
-    "landing-page",
-    "builder",
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "tools",
+    "stdio",
     "sdk",
-    "workers.do"
+    "workers.do",
+    "claude",
+    "anthropic"
   ]
 }

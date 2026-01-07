@@ -16,6 +16,8 @@
   },
   "dependencies": {
     "capnweb": "^0.2.0",
+    "cli.do": "workspace:*",
+    "mcp.do": "workspace:*",
     "org.ai": "workspace:*",
     "rpc.do": "workspace:*"
   },
@@ -26,5 +28,10 @@
     "sync",
     "sdk",
     "workers.do"
-  ]
+  ],
+  "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "dotdo": "workspace:*",
+    "typescript": "^5.0.0"
+  }
 }

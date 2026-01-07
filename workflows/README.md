@@ -1,222 +1,206 @@
 # workflows.do
 
-> Processes that run themselves.
+You have a vision for your startup. You should be focused on strategy, customers, and growth - not babysitting every process.
 
 ```typescript
-import { dev } from 'workflows.do'
+import { on } from 'workflows.do'
 
-dev`add real-time notifications`
-// brainstorm → plan → implement → review → ship
-```
-
-Workflows orchestrate agents, humans, and teams through multi-step processes. Define once, run forever.
-
-## Built-in Workflows
-
-| Workflow | Phases | Description |
-|----------|--------|-------------|
-| **dev** | brainstorm → plan → implement → review | Full development cycle |
-| **review** | analyze → review → feedback | Multi-agent PR review |
-| **marketing** | draft → edit → approve → publish | Content and campaigns |
-| **sales** | qualify → demo → propose → close | Deal progression |
-| **incident** | alert → triage → fix → postmortem | Production issues |
-
-## The Dev Workflow
-
-The complete development workflow:
-
-```typescript
-import { dev } from 'workflows.do'
-
-dev`build user authentication`
-```
-
-What happens:
-1. **Brainstorm** — Human defines requirements (via Slack/chat)
-2. **Plan** — Priya creates issues with specs
-3. **Implement** — Ralph builds each issue
-4. **Review** — Priya, Tom, Quinn review in parallel
-5. **Approve** — Human signs off
-6. **Ship** — Merged and deployed
-
-One line of code. Full development cycle.
-
-## Workflow Definition
-
-```typescript
-import { Workflow } from 'workflows.do'
-import { priya, ralph, tom, quinn } from 'agents.do'
-import { pdm } from 'humans.do'
-
-export const dev = Workflow({
-  name: 'Development',
-
-  phases: {
-    brainstorm: {
-      assignee: pdm,
-      then: 'plan',
-    },
-
-    plan: {
-      assignee: priya,
-      then: 'implement',
-    },
-
-    implement: {
-      assignee: ralph,
-      then: 'review',
-    },
-
-    review: {
-      assignee: [priya, tom, quinn],  // Parallel
-      then: ({ approved }) => approved ? 'ship' : 'fix',
-    },
-
-    fix: {
-      assignee: ralph,
-      then: 'review',  // Loop back
-    },
-
-    ship: {
-      assignee: ralph,
-      then: null,  // Done
-    },
-  },
+on.Feature.requested(async feature => {
+  await plan(feature)      // Priya specs it out
+  await implement(feature) // Ralph builds it
+  await review(feature)    // Tom & Quinn review
+  await ship(feature)      // Deployed
 })
 ```
+
+Define how your business runs. Then let it run.
+
+## Your Business, Defined
+
+Every startup runs on repeatable processes. Workflows let you define them once:
+
+```typescript
+on.Customer.signedUp(customer => {
+  welcome(customer)
+  setupAccount(customer)
+  scheduleOnboarding(customer)
+})
+
+on.Deal.qualified(deal => {
+  demo(deal)
+  propose(deal)
+  negotiate(deal)
+  close(deal)
+})
+
+on.Incident.detected(incident => {
+  alert(incident)
+  triage(incident)
+  fix(incident)
+  postmortem(incident)
+})
+```
+
+You define what happens. The system makes it happen.
+
+## The Pattern
+
+```typescript
+on.Noun.verb(async (data) => {
+  // Your process here
+})
+```
+
+That's it. When something happens, your workflow runs.
+
+## Development Workflow
+
+Here's how features get built:
+
+```typescript
+import { on, Workflow } from 'workflows.do'
+import { priya, ralph, tom, quinn } from 'agents.do'
+
+export const dev = Workflow({
+  on: 'Feature.requested',
+
+  plan: {
+    agent: priya,
+    output: 'spec + issues'
+  },
+
+  implement: {
+    agent: ralph,
+    output: 'PR ready for review'
+  },
+
+  review: {
+    agents: [priya, tom, quinn],
+    approval: 'any 2 of 3',
+    output: 'approved PR'
+  },
+
+  ship: {
+    agent: ralph,
+    output: 'deployed to production'
+  }
+})
+```
+
+Ralph implements. Priya, Tom, and Quinn review. You approve when it matters.
 
 ## Human Checkpoints
 
-Pause for human approval:
+Stay in control of what matters:
 
 ```typescript
-phases: {
-  review: {
-    assignee: [tom, rae, quinn],
-    checkpoint: true,  // Pause here
-    then: 'ship',
-  },
-}
-```
-
-The workflow pauses until a human approves. Then continues automatically.
-
-## Conditional Flow
-
-Branch based on results:
-
-```typescript
-phases: {
-  review: {
-    assignee: engineering,
-    then: ({ result }) => {
-      if (result.approved) return 'ship'
-      if (result.needsWork) return 'fix'
-      if (result.blocked) return 'escalate'
-    },
-  },
-}
-```
-
-## Parallel Phases
-
-Multiple agents work simultaneously:
-
-```typescript
-phases: {
-  review: {
-    assignee: [tom, rae, quinn],
-    parallel: true,
-    then: 'approve',
-  },
-}
-```
-
-All three review at once. Results merge.
-
-## Custom Workflows
-
-Create workflows for your business:
-
-```typescript
-import { Workflow } from 'workflows.do'
-import { sales, legal, founder } from 'humans.do'
-
-const dealFlow = Workflow({
-  name: 'Enterprise Deal',
-
-  phases: {
-    qualify: { assignee: sales, then: 'demo' },
-    demo: { assignee: sales, then: 'propose' },
-    propose: { assignee: sales, then: 'legal' },
-    legal: { assignee: legal, then: 'approve', checkpoint: true },
-    approve: { assignee: founder, then: 'close', checkpoint: true },
-    close: { assignee: sales, then: null },
-  },
-})
-
-dealFlow`Acme Corp wants enterprise pricing`
-```
-
-## Event-Driven
-
-Workflows respond to events:
-
-```typescript
-import { Workflow } from 'workflows.do'
-
-const onboarding = Workflow($ => {
-  $.on.Customer.signedUp(async (customer) => {
-    await $.do('welcome', customer)
-    await $.do('setupAccount', customer)
-    await $.do('scheduleOnboarding', customer)
-  })
-
-  $.every.day.at9am(async () => {
-    await $.do('checkStuckOnboarding')
-  })
+on.Contract.drafted(async contract => {
+  await legalReview(contract)
+  await checkpoint('founder')  // You approve
+  await send(contract)
 })
 ```
 
-Built on [ai-workflows](https://npmjs.com/ai-workflows).
+The process pauses. You review. One click to continue.
 
-## Workflow Status
+## Smart Routing
 
-Track where things are:
-
-```typescript
-const status = await devLoop.status('feature-123')
-// {
-//   phase: 'review',
-//   assignee: ['tom', 'rae', 'quinn'],
-//   started: '2024-01-15T10:00:00Z',
-//   history: [...]
-// }
-```
-
-## For Founders
-
-Your business is a set of workflows:
-
-- How features get built (`dev`)
-- How code gets reviewed (`review`)
-- How content gets published (`marketing`)
-- How deals get closed (`sales`)
-- How incidents get handled (`incident`)
-
-Define them once. They run forever. Your business operates itself.
+Workflows adapt based on results:
 
 ```typescript
-import { dev, marketing, sales } from 'workflows.do'
+on.PR.opened(async pr => {
+  const review = await codeReview(pr)
 
-// Your business, automated
-dev`build the next feature`
-marketing`write the weekly newsletter`
-sales`follow up with enterprise leads`
+  if (review.approved) {
+    await merge(pr)
+  } else if (review.needsChanges) {
+    await requestChanges(pr)
+  } else {
+    await escalate(pr)
+  }
+})
 ```
 
-This is [Business-as-Code](https://agi.do/business-as-code).
+## Parallel Work
+
+Multiple agents work at once:
+
+```typescript
+on.Launch.planned(async launch => {
+  await parallel(
+    writeAnnouncement(launch),
+    prepareDemo(launch),
+    notifyPress(launch),
+    updateDocs(launch)
+  )
+
+  await checkpoint('founder')
+  await publish(launch)
+})
+```
+
+## Schedules
+
+Some things happen on a cadence:
+
+```typescript
+every.monday.at9am(async () => {
+  await weeklyDigest()
+})
+
+every.day.at6pm(async () => {
+  await checkStaleDeals()
+})
+
+every.hour(async () => {
+  await monitorHealth()
+})
+```
+
+## Built-in Workflows
+
+Start with these, customize as you grow:
+
+| Workflow | What it does |
+|----------|--------------|
+| `dev` | Feature requested through shipped |
+| `review` | PR opened through merged |
+| `marketing` | Content drafted through published |
+| `sales` | Lead qualified through closed |
+| `incident` | Alert through postmortem |
+| `onboarding` | Signup through activated |
+
+```typescript
+import { dev, sales, marketing } from 'workflows.do'
+
+// These already work
+dev`add stripe integration`
+sales`follow up with Acme Corp`
+marketing`write the launch announcement`
+```
+
+## Your Startup, Automated
+
+You define the process:
+
+```typescript
+// How features get built
+on.Feature.requested(feature => dev(feature))
+
+// How deals progress
+on.Lead.qualified(lead => sales(lead))
+
+// How content ships
+on.Content.drafted(content => marketing(content))
+
+// How incidents resolve
+on.Alert.fired(alert => incident(alert))
+```
+
+Then focus on what only you can do: vision, strategy, and the decisions that matter.
+
+Your startup runs itself. You run your startup.
 
 ---
 
-[workflows.do](https://workflows.do) · [agents.do](https://agents.do) · [roles.do](https://roles.do) · [teams.do](https://teams.do) · [humans.do](https://humans.do)
+[workflows.do](https://workflows.do) - [agents.do](https://agents.do) - [humans.do](https://humans.do)

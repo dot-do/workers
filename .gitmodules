@@ -1,3 +1,6 @@
 [submodule "packages/do"]
 	path = packages/do
 	url = https://github.com/dot-do/do.git
+[submodule "primitives"]
+	path = primitives
+	url = https://github.com/dot-org-ai/primitives.org.ai

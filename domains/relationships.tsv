@@ -1,0 +1,307 @@
+source	predicate	target	type	reverse	description
+# Predicate Reference (camelCase with reverses):
+# Taxonomic: isA/hasInstance, instanceOf/hasInstances, subtypeOf/hasSubtype, typeOf/hasType
+# Compositional: partOf/hasPart, memberOf/hasMember, belongsTo/owns
+# Dependency: uses/usedBy, requires/requiredBy, enables/enabledBy, dependsOn/dependedOnBy
+# Structural: extends/extendedBy, implements/implementedBy, inheritsFrom/inheritedBy
+# Integration: wraps/wrappedBy, integrates/integratedBy, connectsTo/connectedFrom
+# Semantic: synonymOf/synonymOf, relatedTo/relatedTo, antonymOf/antonymOf
+# Capability: provides/providedBy, exposes/exposedBy
+# Branding: brandedAs/hasBranding, aliasOf/hasAlias
+# Deployment: deployedTo/hosts, runsOn/runs
+#
+# === AGENT RELATIONSHIPS ===
+# All named agents are instances of agents.do and implement agent.as
+tom.do	instanceOf	agents.do	taxonomic	hasInstances	Tom is an agent
+tom.do	implements	agent.as	structural	implementedBy	Tom implements agent interface
+tom.do	hasRole	engineering	capability	roleOf	Tom has engineering role
+tom.do	partOf	engineering.teams.do	compositional	hasPart	Tom is on engineering team
+tom.do	relatedTo	ralph.do	semantic	relatedTo	Tom works with Ralph
+tom.do	relatedTo	priya.do	semantic	relatedTo	Tom works with Priya
+priya.do	instanceOf	agents.do	taxonomic	hasInstances	Priya is an agent
+priya.do	implements	agent.as	structural	implementedBy	Priya implements agent interface
+priya.do	hasRole	product	capability	roleOf	Priya has product role
+priya.do	relatedTo	tom.do	semantic	relatedTo	Priya works with Tom
+priya.do	relatedTo	quinn.do	semantic	relatedTo	Priya works with Quinn
+ralph.do	instanceOf	agents.do	taxonomic	hasInstances	Ralph is an agent
+ralph.do	implements	agent.as	structural	implementedBy	Ralph implements agent interface
+ralph.do	hasRole	engineering	capability	roleOf	Ralph has engineering role
+ralph.do	relatedTo	tom.do	semantic	relatedTo	Ralph works with Tom
+quinn.do	instanceOf	agents.do	taxonomic	hasInstances	Quinn is an agent
+quinn.do	implements	agent.as	structural	implementedBy	Quinn implements agent interface
+quinn.do	hasRole	qa	capability	roleOf	Quinn has QA role
+mark.do	instanceOf	agents.do	taxonomic	hasInstances	Mark is an agent
+mark.do	implements	agent.as	structural	implementedBy	Mark implements agent interface
+mark.do	hasRole	marketing	capability	roleOf	Mark has marketing role
+sally.do	instanceOf	agents.do	taxonomic	hasInstances	Sally is an agent
+sally.do	implements	agent.as	structural	implementedBy	Sally implements agent interface
+sally.do	hasRole	sales	capability	roleOf	Sally has sales role
+rae.do	instanceOf	agents.do	taxonomic	hasInstances	Rae is an agent
+rae.do	implements	agent.as	structural	implementedBy	Rae implements agent interface
+rae.do	hasRole	frontend	capability	roleOf	Rae has frontend role
+nathan.do	instanceOf	agents.do	taxonomic	hasInstances	Nathan is an agent
+nathan.do	implements	agent.as	structural	implementedBy	Nathan implements agent interface
+nathan.do	hasRole	founder	capability	roleOf	Nathan has founder role
+#
+# === ROLE RELATIONSHIPS ===
+# Roles extend base role and are part of organizational structure
+cfo.do	subtypeOf	executive	taxonomic	hasSubtype	CFO is executive
+cfo.do	instanceOf	roles.do	taxonomic	hasInstances	CFO is a role
+cfo.do	extends	exec.do	structural	extendedBy	CFO extends executive role
+cmo.do	subtypeOf	executive	taxonomic	hasSubtype	CMO is executive
+cmo.do	instanceOf	roles.do	taxonomic	hasInstances	CMO is a role
+cmo.do	extends	exec.do	structural	extendedBy	CMO extends executive role
+coo.do	subtypeOf	executive	taxonomic	hasSubtype	COO is executive
+coo.do	instanceOf	roles.do	taxonomic	hasInstances	COO is a role
+coo.do	extends	exec.do	structural	extendedBy	COO extends executive role
+cpo.do	subtypeOf	executive	taxonomic	hasSubtype	CPO is executive
+cpo.do	instanceOf	roles.do	taxonomic	hasInstances	CPO is a role
+cpo.do	extends	exec.do	structural	extendedBy	CPO extends executive role
+cro.do	subtypeOf	executive	taxonomic	hasSubtype	CRO is executive
+cro.do	instanceOf	roles.do	taxonomic	hasInstances	CRO is a role
+cro.do	extends	exec.do	structural	extendedBy	CRO extends executive role
+cto.do	subtypeOf	executive	taxonomic	hasSubtype	CTO is executive
+cto.do	instanceOf	roles.do	taxonomic	hasInstances	CTO is a role
+cto.do	extends	exec.do	structural	extendedBy	CTO extends executive role
+swe.do	subtypeOf	individual_contributor	taxonomic	hasSubtype	SWE is IC
+swe.do	instanceOf	roles.do	taxonomic	hasInstances	SWE is a role
+swe.do	relatedTo	engineers.do	semantic	relatedTo	SWE related to engineers
+bdr.do	subtypeOf	sales	taxonomic	hasSubtype	BDR is sales role
+bdr.do	instanceOf	roles.do	taxonomic	hasInstances	BDR is a role
+sdr.do	subtypeOf	sales	taxonomic	hasSubtype	SDR is sales role
+sdr.do	instanceOf	roles.do	taxonomic	hasInstances	SDR is a role
+pdm.do	subtypeOf	management	taxonomic	hasSubtype	PDM is management
+pdm.do	instanceOf	roles.do	taxonomic	hasInstances	PDM is a role
+#
+# === PRIMITIVE RELATIONSHIPS ===
+# Core platform primitives and their dependencies
+agents.do	isA	primitive	taxonomic	hasInstance	Agents is a primitive
+agents.do	partOf	platform.do	compositional	hasPart	Agents is part of platform
+agents.do	uses	llm.do	dependency	usedBy	Agents uses LLM
+agents.do	uses	functions.do	dependency	usedBy	Agents uses functions
+agents.do	implements	agent.as	structural	implementedBy	Agents implements agent interface
+humans.do	isA	primitive	taxonomic	hasInstance	Humans is a primitive
+humans.do	partOf	platform.do	compositional	hasPart	Humans is part of platform
+humans.do	relatedTo	agents.do	semantic	relatedTo	Humans work with agents
+teams.do	isA	primitive	taxonomic	hasInstance	Teams is a primitive
+teams.do	partOf	platform.do	compositional	hasPart	Teams is part of platform
+teams.do	uses	agents.do	dependency	usedBy	Teams uses agents
+teams.do	uses	humans.do	dependency	usedBy	Teams uses humans
+teams.do	uses	roles.do	dependency	usedBy	Teams uses roles
+functions.do	isA	primitive	taxonomic	hasInstance	Functions is a primitive
+functions.do	partOf	platform.do	compositional	hasPart	Functions is part of platform
+functions.do	implements	functions.as	structural	implementedBy	Functions implements interface
+events.do	isA	primitive	taxonomic	hasInstance	Events is a primitive
+events.do	partOf	platform.do	compositional	hasPart	Events is part of platform
+events.do	enables	triggers.do	dependency	enabledBy	Events enables triggers
+workflows.do	isA	primitive	taxonomic	hasInstance	Workflows is a primitive
+workflows.do	partOf	platform.do	compositional	hasPart	Workflows is part of platform
+workflows.do	uses	functions.do	dependency	usedBy	Workflows uses functions
+workflows.do	uses	events.do	dependency	usedBy	Workflows uses events
+workflows.do	uses	triggers.do	dependency	usedBy	Workflows uses triggers
+workflows.do	implements	workflows.as	structural	implementedBy	Workflows implements interface
+triggers.do	isA	primitive	taxonomic	hasInstance	Triggers is a primitive
+triggers.do	partOf	platform.do	compositional	hasPart	Triggers is part of platform
+triggers.do	uses	events.do	dependency	usedBy	Triggers uses events
+webhooks.do	isA	primitive	taxonomic	hasInstance	Webhooks is a primitive
+webhooks.do	partOf	platform.do	compositional	hasPart	Webhooks is part of platform
+webhooks.do	implements	webhooks.as	structural	implementedBy	Webhooks implements interface
+rpc.do	isA	primitive	taxonomic	hasInstance	RPC is a primitive
+rpc.do	partOf	platform.do	compositional	hasPart	RPC is part of platform
+rpc.do	enables	apis.do	dependency	enabledBy	RPC enables APIs
+workers.do	isA	primitive	taxonomic	hasInstance	Workers is a primitive
+workers.do	partOf	platform.do	compositional	hasPart	Workers is part of platform
+workers.do	uses	functions.do	dependency	usedBy	Workers uses functions
+oauth.do	isA	primitive	taxonomic	hasInstance	OAuth is a primitive
+oauth.do	partOf	platform.do	compositional	hasPart	OAuth is part of platform
+oauth.do	enables	keys.do	dependency	enabledBy	OAuth enables keys
+#
+# === SYNONYMS ===
+ctx.do	synonymOf	context.do	semantic	synonymOf	ctx is shorthand for context
+mgmt.do	synonymOf	management.do	semantic	synonymOf	mgmt is shorthand for management
+dash.do	synonymOf	dashboard.do	semantic	synonymOf	dash is shorthand for dashboard
+#
+# === BUSINESS-AS-CODE RELATIONSHIPS ===
+# Financial platform service dependencies
+payments.do	isA	service	taxonomic	hasInstance	Payments is a service
+payments.do	partOf	business	compositional	hasPart	Payments is part of business layer
+payments.do	uses	stripe.do	dependency	usedBy	Payments uses Stripe internally
+payments.do	provides	charges	capability	providedBy	Payments provides charging
+payments.do	provides	subscriptions	capability	providedBy	Payments provides subscriptions
+payments.do	provides	invoices	capability	providedBy	Payments provides invoicing
+accounting.do	isA	service	taxonomic	hasInstance	Accounting is a service
+accounting.do	partOf	business	compositional	hasPart	Accounting is part of business layer
+accounting.do	requires	payments.do	dependency	requiredBy	Accounting requires payments data
+accounting.do	uses	llm.do	dependency	usedBy	Accounting uses LLM for automation
+accounting.do	provides	journal_entries	capability	providedBy	Accounting provides journal entries
+accounting.do	provides	financial_reports	capability	providedBy	Accounting provides reports
+treasury.do	isA	service	taxonomic	hasInstance	Treasury is a service
+treasury.do	partOf	business	compositional	hasPart	Treasury is part of business layer
+treasury.do	uses	accounts.do	dependency	usedBy	Treasury uses bank accounts
+treasury.do	uses	payments.do	dependency	usedBy	Treasury uses payments
+treasury.do	provides	money_movement	capability	providedBy	Treasury provides money movement
+accounts.do	isA	service	taxonomic	hasInstance	Accounts is a service
+accounts.do	partOf	business	compositional	hasPart	Accounts is part of business layer
+accounts.do	uses	stripe.do	dependency	usedBy	Accounts uses Stripe Treasury
+accounts.do	provides	bank_accounts	capability	providedBy	Accounts provides bank accounts
+cards.do	isA	service	taxonomic	hasInstance	Cards is a service
+cards.do	partOf	business	compositional	hasPart	Cards is part of business layer
+cards.do	partOf	payments.do	compositional	hasPart	Cards is part of payments
+cards.do	uses	stripe.do	dependency	usedBy	Cards uses Stripe Issuing
+cards.do	provides	virtual_cards	capability	providedBy	Cards provides virtual cards
+cards.do	provides	physical_cards	capability	providedBy	Cards provides physical cards
+virtual.cards.do	subtypeOf	cards.do	taxonomic	hasSubtype	Virtual cards extends cards
+physical.cards.do	subtypeOf	cards.do	taxonomic	hasSubtype	Physical cards extends cards
+bank.accounts.do	subtypeOf	accounts.do	taxonomic	hasSubtype	Bank accounts extends accounts
+incorporate.do	isA	service	taxonomic	hasInstance	Incorporate is a service
+incorporate.do	partOf	business	compositional	hasPart	Incorporate is part of business layer
+incorporate.do	provides	entity_formation	capability	providedBy	Incorporate provides formation
+soc2.do	isA	service	taxonomic	hasInstance	SOC2 is a service
+soc2.do	partOf	business	compositional	hasPart	SOC2 is part of business layer
+soc2.do	uses	payments.do	dependency	usedBy	SOC2 uses payments evidence
+soc2.do	uses	oauth.do	dependency	usedBy	SOC2 uses auth evidence
+soc2.do	provides	compliance	capability	providedBy	SOC2 provides compliance
+calls.do	isA	service	taxonomic	hasInstance	Calls is a service
+calls.do	partOf	communications	compositional	hasPart	Calls is communications
+calls.do	provides	voice_calls	capability	providedBy	Calls provides voice
+texts.do	isA	service	taxonomic	hasInstance	Texts is a service
+texts.do	partOf	communications	compositional	hasPart	Texts is communications
+texts.do	provides	sms	capability	providedBy	Texts provides SMS
+emails.do	isA	service	taxonomic	hasInstance	Emails is a service
+emails.do	partOf	communications	compositional	hasPart	Emails is communications
+emails.do	provides	email	capability	providedBy	Emails provides email
+#
+# === AI SERVICE RELATIONSHIPS ===
+llm.do	isA	service	taxonomic	hasInstance	LLM is a service
+llm.do	partOf	ai	compositional	hasPart	LLM is part of AI layer
+llm.do	wraps	Anthropic API	integration	wrappedBy	LLM wraps Anthropic
+llm.do	wraps	OpenAI API	integration	wrappedBy	LLM wraps OpenAI
+llm.do	wraps	Google AI API	integration	wrappedBy	LLM wraps Google AI
+llm.do	provides	completion	capability	providedBy	LLM provides completion
+llm.do	provides	streaming	capability	providedBy	LLM provides streaming
+embeddings.do	isA	service	taxonomic	hasInstance	Embeddings is a service
+embeddings.do	partOf	ai	compositional	hasPart	Embeddings is part of AI layer
+embeddings.do	uses	llm.do	dependency	usedBy	Embeddings may use LLM
+embeddings.do	provides	vector_embeddings	capability	providedBy	Embeddings provides vectors
+vectors.do	isA	service	taxonomic	hasInstance	Vectors is a service
+vectors.do	partOf	ai	compositional	hasPart	Vectors is part of AI layer
+vectors.do	uses	embeddings.do	dependency	usedBy	Vectors uses embeddings
+vectors.do	provides	similarity_search	capability	providedBy	Vectors provides search
+models.do	isA	service	taxonomic	hasInstance	Models is a service
+models.do	partOf	ai	compositional	hasPart	Models is part of AI layer
+models.do	provides	model_registry	capability	providedBy	Models provides registry
+evals.do	isA	service	taxonomic	hasInstance	Evals is a service
+evals.do	partOf	ai	compositional	hasPart	Evals is part of AI layer
+evals.do	uses	llm.do	dependency	usedBy	Evals uses LLM
+evals.do	provides	evaluation	capability	providedBy	Evals provides evaluation
+#
+# === DATABASE INTEGRATION RELATIONSHIPS ===
+postgres.do	isA	integration	taxonomic	hasInstance	Postgres is an integration
+postgres.do	wraps	PostgreSQL	integration	wrappedBy	Postgres wraps PostgreSQL
+postgres.do	implements	database.as	structural	implementedBy	Postgres implements database
+mongo.do	isA	integration	taxonomic	hasInstance	Mongo is an integration
+mongo.do	wraps	MongoDB	integration	wrappedBy	Mongo wraps MongoDB
+mongo.do	implements	database.as	structural	implementedBy	Mongo implements database
+redis.do	isA	integration	taxonomic	hasInstance	Redis is an integration
+redis.do	wraps	Redis	integration	wrappedBy	Redis wraps Redis
+redis.do	provides	caching	capability	providedBy	Redis provides caching
+sqlite.do	isA	integration	taxonomic	hasInstance	SQLite is an integration
+sqlite.do	wraps	SQLite	integration	wrappedBy	SQLite wraps SQLite
+sqlite.do	implements	database.as	structural	implementedBy	SQLite implements database
+supabase.do	isA	integration	taxonomic	hasInstance	Supabase is an integration
+supabase.do	wraps	Supabase	integration	wrappedBy	Supabase wraps Supabase
+supabase.do	implements	database.as	structural	implementedBy	Supabase implements database
+turso.do	isA	integration	taxonomic	hasInstance	Turso is an integration
+turso.do	wraps	Turso	integration	wrappedBy	Turso wraps Turso
+turso.do	implements	database.as	structural	implementedBy	Turso implements database
+neon.do	isA	integration	taxonomic	hasInstance	Neon is an integration
+neon.do	wraps	Neon	integration	wrappedBy	Neon wraps Neon
+neon.do	implements	database.as	structural	implementedBy	Neon implements database
+clickhouse.do	isA	integration	taxonomic	hasInstance	ClickHouse is an integration
+clickhouse.do	wraps	ClickHouse	integration	wrappedBy	ClickHouse wraps ClickHouse
+clickhouse.do	implements	database.as	structural	implementedBy	ClickHouse implements database
+kafka.do	isA	integration	taxonomic	hasInstance	Kafka is an integration
+kafka.do	wraps	Apache Kafka	integration	wrappedBy	Kafka wraps Kafka
+kafka.do	provides	streaming	capability	providedBy	Kafka provides streaming
+nats.do	isA	integration	taxonomic	hasInstance	NATS is an integration
+nats.do	wraps	NATS	integration	wrappedBy	NATS wraps NATS
+nats.do	provides	messaging	capability	providedBy	NATS provides messaging
+#
+# === PLATFORM INTEGRATION RELATIONSHIPS ===
+cloudflare.do	isA	integration	taxonomic	hasInstance	Cloudflare is an integration
+cloudflare.do	wraps	Cloudflare API	integration	wrappedBy	Cloudflare wraps Cloudflare
+cloudflare.do	provides	edge_compute	capability	providedBy	Cloudflare provides edge
+cloudflare.do	provides	dns	capability	providedBy	Cloudflare provides DNS
+cloudflare.do	provides	cdn	capability	providedBy	Cloudflare provides CDN
+vercel.do	isA	integration	taxonomic	hasInstance	Vercel is an integration
+vercel.do	wraps	Vercel API	integration	wrappedBy	Vercel wraps Vercel
+vercel.do	provides	frontend_deploy	capability	providedBy	Vercel provides frontend
+gcp.do	isA	integration	taxonomic	hasInstance	GCP is an integration
+gcp.do	wraps	Google Cloud API	integration	wrappedBy	GCP wraps Google Cloud
+gcp.do	provides	cloud_services	capability	providedBy	GCP provides cloud
+stripe.do	isA	integration	taxonomic	hasInstance	Stripe is an integration
+stripe.do	wraps	Stripe API	integration	wrappedBy	Stripe wraps Stripe
+stripe.do	provides	payments	capability	providedBy	Stripe provides payments
+stripe.do	provides	treasury	capability	providedBy	Stripe provides treasury
+stripe.do	provides	issuing	capability	providedBy	Stripe provides issuing
+stripe.do	provides	connect	capability	providedBy	Stripe provides connect
+slack.do	isA	integration	taxonomic	hasInstance	Slack is an integration
+slack.do	wraps	Slack API	integration	wrappedBy	Slack wraps Slack
+slack.do	provides	messaging	capability	providedBy	Slack provides messaging
+#
+# === BRANDED SUBDOMAIN RELATIONSHIPS ===
+# Pattern: {provider}.{primitive}.do for third-party integrations of YOUR primitives
+microsoft.teams.do	brandedAs	teams	branding	hasBranding	MS Teams is branded subdomain of teams
+microsoft.teams.do	integrates	Microsoft Teams	integration	integratedBy	MS Teams integrates with Microsoft
+microsoft.excel.do	brandedAs	excel	branding	hasBranding	MS Excel is branded subdomain
+microsoft.excel.do	integrates	Microsoft Excel	integration	integratedBy	MS Excel integrates with Microsoft
+microsoft.word.do	brandedAs	word	branding	hasBranding	MS Word is branded subdomain
+microsoft.word.do	integrates	Microsoft Word	integration	integratedBy	MS Word integrates with Microsoft
+google.sheets.do	brandedAs	sheets	branding	hasBranding	Google Sheets is branded subdomain
+google.sheets.do	integrates	Google Sheets	integration	integratedBy	Google Sheets integrates with Google
+google.docs.do	brandedAs	docs	branding	hasBranding	Google Docs is branded subdomain
+google.docs.do	integrates	Google Docs	integration	integratedBy	Google Docs integrates with Google
+atlassian.jira.do	brandedAs	issues	branding	hasBranding	Jira is branded subdomain of issues
+atlassian.jira.do	integrates	Jira	integration	integratedBy	Jira integrates with Atlassian
+github.issues.do	brandedAs	issues	branding	hasBranding	GitHub Issues is branded subdomain
+github.issues.do	integrates	GitHub Issues	integration	integratedBy	GitHub Issues integrates with GitHub
+linear.issues.do	brandedAs	issues	branding	hasBranding	Linear is branded subdomain of issues
+linear.issues.do	integrates	Linear	integration	integratedBy	Linear integrates with Linear
+#
+# === DEFINITION (.as) RELATIONSHIPS ===
+# .as domains define interfaces that .do domains implement
+agent.as	isA	definition	taxonomic	hasInstance	agent.as is a definition
+agent.as	defines	Agent	capability	definedBy	agent.as defines Agent type
+database.as	isA	definition	taxonomic	hasInstance	database.as is a definition
+database.as	defines	Database	capability	definedBy	database.as defines Database interface
+functions.as	isA	definition	taxonomic	hasInstance	functions.as is a definition
+functions.as	defines	Function	capability	definedBy	functions.as defines Function interface
+workflows.as	isA	definition	taxonomic	hasInstance	workflows.as is a definition
+workflows.as	defines	Workflow	capability	definedBy	workflows.as defines Workflow interface
+services.as	isA	definition	taxonomic	hasInstance	services.as is a definition
+services.as	defines	Service	capability	definedBy	services.as defines Service interface
+webhooks.as	isA	definition	taxonomic	hasInstance	webhooks.as is a definition
+webhooks.as	defines	Webhook	capability	definedBy	webhooks.as defines Webhook interface
+queue.as	isA	definition	taxonomic	hasInstance	queue.as is a definition
+queue.as	defines	Queue	capability	definedBy	queue.as defines Queue interface
+task.as	isA	definition	taxonomic	hasInstance	task.as is a definition
+task.as	defines	Task	capability	definedBy	task.as defines Task interface
+startups.as	isA	definition	taxonomic	hasInstance	startups.as is a definition
+startups.as	defines	Startup	capability	definedBy	startups.as defines Startup schema
+#
+# === CONTENT RELATIONSHIPS ===
+mdx.do	isA	service	taxonomic	hasInstance	MDX is a service
+mdx.do	partOf	content	compositional	hasPart	MDX is part of content
+mdx.do	implements	mdx.as	structural	implementedBy	MDX implements mdx.as
+images.do	isA	service	taxonomic	hasInstance	Images is a service
+images.do	partOf	content	compositional	hasPart	Images is part of content
+images.do	uses	llm.do	dependency	usedBy	Images uses LLM for generation
+videos.do	isA	service	taxonomic	hasInstance	Videos is a service
+videos.do	partOf	content	compositional	hasPart	Videos is part of content
+videos.do	implements	videos.as	structural	implementedBy	Videos implements videos.as
+blogs.do	isA	service	taxonomic	hasInstance	Blogs is a service
+blogs.do	partOf	content	compositional	hasPart	Blogs is part of content
+blogs.do	implements	blogs.as	structural	implementedBy	Blogs implements blogs.as
+documentation.do	isA	service	taxonomic	hasInstance	Documentation is a service
+documentation.do	partOf	content	compositional	hasPart	Docs is part of content
+documentation.do	uses	mdx.do	dependency	usedBy	Docs uses MDX

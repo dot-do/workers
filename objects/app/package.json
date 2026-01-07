@@ -1,0 +1,24 @@
+{
+  "name": "@dotdo/app",
+  "version": "0.0.1",
+  "description": "App management Durable Object - user profiles, preferences, feature flags, and multi-tenant state",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./schema": "./schema.ts"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "dotdo": "workspace:*",
+    "drizzle-orm": "^0.36.0"
+  },
+  "peerDependencies": {
+    "hono": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "hono": { "optional": true }
+  }
+}

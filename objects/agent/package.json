@@ -1,0 +1,41 @@
+{
+  "name": "@dotdo/agent",
+  "version": "0.0.1",
+  "description": "Persistent AI agents with memory, goals, and learning - Durable Objects for intelligent autonomous systems",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./memory": "./memory.ts",
+    "./goals": "./goals.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://agent.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "dotdo": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.4"
+  },
+  "keywords": [
+    "agent",
+    "ai-agent",
+    "autonomous-agent",
+    "durable-object",
+    "memory",
+    "persistent-agent",
+    "goal-tracking",
+    "cloudflare-workers",
+    "workers.do"
+  ]
+}

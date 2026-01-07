@@ -1,0 +1,32 @@
+{
+  "name": "@dotdo/human",
+  "version": "0.0.1",
+  "description": "Human-in-the-loop Durable Object - Seamlessly integrate human judgment into AI workflows",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types.ts"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "dotdo": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.4"
+  },
+  "keywords": [
+    "human-in-the-loop",
+    "HITL",
+    "approval-workflow",
+    "human-oversight",
+    "AI-safety",
+    "durable-object",
+    "cloudflare-workers"
+  ]
+}

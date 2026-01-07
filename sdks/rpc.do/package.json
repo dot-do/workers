@@ -1,0 +1,32 @@
+{
+  "name": "rpc.do",
+  "version": "0.0.1",
+  "description": "Base CapnWeb RPC client for .do SDKs",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://rpc.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "keywords": [
+    "rpc",
+    "client",
+    "capnweb",
+    "workers.do",
+    "cloudflare",
+    "sdk"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

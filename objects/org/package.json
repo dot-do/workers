@@ -1,0 +1,48 @@
+{
+  "name": "@dotdo/org",
+  "version": "0.0.1",
+  "description": "Durable Object for organization state - members, roles, SSO, billing, audit logs",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./tiny": "./tiny.ts",
+    "./schema": "./schema.ts"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@dotdo/do-core": "workspace:*",
+    "dotdo": "workspace:*",
+    "drizzle-orm": "^0.36.0"
+  },
+  "peerDependencies": {
+    "hono": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "hono": { "optional": true }
+  },
+  "keywords": [
+    "organization",
+    "multi-tenant",
+    "saas",
+    "members",
+    "roles",
+    "sso",
+    "saml",
+    "billing",
+    "subscriptions",
+    "audit",
+    "durable-object",
+    "cloudflare",
+    "workers.do"
+  ],
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://org.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "@dotdo/function",
+  "version": "0.0.1",
+  "description": "Serverless Function Durable Object - Add state, versioning, and observability to your functions",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./tiny": "./tiny.ts",
+    "./rpc": "./rpc.ts"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "dotdo": "workspace:*",
+    "drizzle-orm": "^0.36.0",
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://function.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "keywords": [
+    "function",
+    "serverless",
+    "durable-object",
+    "versioning",
+    "rate-limiting",
+    "cold-start",
+    "observability",
+    "workers.do",
+    "cloudflare"
+  ]
+}

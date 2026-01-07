@@ -1,0 +1,44 @@
+{
+  "name": "@dotdo/workflow",
+  "version": "0.0.1",
+  "description": "Durable workflow orchestration - Multi-step workflows with state persistence, retry handling, and replay",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./tiny": "./tiny.ts"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "dotdo": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "^0.36.0"
+  },
+  "peerDependenciesMeta": {
+    "drizzle-orm": { "optional": true }
+  },
+  "keywords": [
+    "workflow",
+    "orchestration",
+    "durable",
+    "cloudflare",
+    "workers",
+    "durable-objects",
+    "state-machine"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dotdo/workers",
+    "directory": "objects/workflow"
+  },
+  "license": "MIT"
+}

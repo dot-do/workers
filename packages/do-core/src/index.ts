@@ -62,3 +62,9 @@ export * from './projections.js'
 
 // Re-export MRL (Matryoshka Representation Learning) utilities
 export * from './mrl.js'
+
+// Re-export Cold Vector Search (R2 Parquet partition search)
+export * from './cold-vector-search.js'
+
+// Re-export Two-Phase Search (MRL hot/cold vector search)
+export * from './two-phase-search.js'

@@ -201,23 +201,25 @@ Everything you need to run a startup:
 | **Domains** | [builder.domains](https://builder.domains) | Free domains for builders |
 
 ```typescript
-import { db } from 'database.do'
-import { fn } from 'functions.do'
-import { on } from 'triggers.do'
+import { ai, code, agent, human } from 'functions.do'
+import { DB } from 'database.do'
+import { on, every } from 'triggers.do'
 import { search } from 'searches.do'
 
 // Four function types
-const code = fn.code(async (x) => x * 2)           // CodeFunction
-const ai = fn.ai`summarize ${article}`              // GenerativeFunction
-const agent = fn.agent(priya)                       // AgenticFunction
-const human = fn.human(pdm)                         // HumanFunction
+const double = code((x: number) => x * 2)          // CodeFunction
+const summary = ai`summarize ${article}`            // GenerativeFunction
+const plan = agent(priya)`roadmap for ${feature}`  // AgenticFunction
+const approval = human(pdm)`approve ${spec}`       // HumanFunction
 
-// Event-driven
+// Event-driven triggers
 on.User.signup(user => welcome(user))
 on.Payment.received(payment => fulfill(payment))
+every.Monday.at9am(() => sendWeeklyReport())
 
-// Semantic search
-const results = await search`customers interested in ${topic}`
+// AI-native database
+const db = DB({ Lead, Contact, Deal })
+const hot = await db.Lead`ready to close this week`
 ```
 
 ## Quick Start

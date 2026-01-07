@@ -1,0 +1,47 @@
+{
+  "name": "create-do",
+  "version": "0.0.1",
+  "description": "Create a new .do service - Durable Object powered edge services",
+  "type": "module",
+  "bin": {
+    "create-do": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "cloudflare",
+    "durable-objects",
+    "workers",
+    "edge",
+    "create",
+    "cli",
+    "scaffold"
+  ],
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "prompts": "^2.4.2",
+    "picocolors": "^1.1.1",
+    "fs-extra": "^11.2.0"
+  }
+}

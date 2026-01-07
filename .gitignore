@@ -36,3 +36,8 @@ pnpm-debug.log*
 
 # OS
 Thumbs.db
+
+# Claude Code local files (prevent ralph loops in submodules from loading)
+**/.claude/.ralph-loop.local.md
+**/.ralph-loop.local.md
+**/.claude/*.local.md

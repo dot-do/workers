@@ -1,0 +1,87 @@
+{
+  "name": "fsx.do",
+  "version": "0.0.1",
+  "description": "Filesystem on Cloudflare Durable Objects - A virtual filesystem for the edge",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "fsx": "./dist/cli/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./do": {
+      "types": "./dist/durable-object/index.d.ts",
+      "import": "./dist/durable-object/index.js"
+    },
+    "./mcp": {
+      "types": "./dist/mcp/index.d.ts",
+      "import": "./dist/mcp/index.js"
+    },
+    "./storage": {
+      "types": "./dist/storage/index.d.ts",
+      "import": "./dist/storage/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "lint": "eslint src test --ext .ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "filesystem",
+    "fs",
+    "cloudflare",
+    "durable-objects",
+    "edge",
+    "mcp",
+    "ai",
+    "virtual-filesystem",
+    "r2",
+    "storage"
+  ],
+  "author": "dot-do",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/fsx"
+  },
+  "homepage": "https://github.com/dot-do/fsx#readme",
+  "bugs": {
+    "url": "https://github.com/dot-do/fsx/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "@types/node": "^22.10.2",
+    "cac": "^6.7.14",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.99.0"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.1.0",
+    "@opentui/react": "^0.1.0",
+    "miniflare": "^3.20241106.0",
+    "react": "^18.2.0"
+  }
+}

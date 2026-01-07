@@ -10,6 +10,7 @@
     "packages/*"
   ],
   "scripts": {
+    "changeset": "changeset",
     "build": "npm run build --workspaces",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -27,7 +28,8 @@
     "check-versions": "tsx scripts/get-npm-versions.ts",
     "check-domains": "tsx scripts/check-domains.ts",
     "test:e2e": "vitest run --config tests/vitest.config.ts",
-    "prerelease": "pnpm check-domains && pnpm check-versions"
+    "prerelease": "pnpm check-domains && pnpm check-versions",
+    "lint:packages": "tsx scripts/lint-package-json.ts"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0",

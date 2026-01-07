@@ -1,0 +1,39 @@
+{
+  "name": "@dotdo/react",
+  "version": "0.0.1",
+  "description": "React compatibility layer using hono/jsx/dom for dramatic bundle size reduction",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./compat": "./src/index.ts",
+    "./dom": "./src/dom.ts",
+    "./dom/client": "./src/dom.ts",
+    "./jsx-runtime": "./src/jsx-runtime.ts",
+    "./jsx-dev-runtime": "./src/jsx-dev-runtime.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "hono": "^4.7.0"
+  },
+  "devDependencies": {
+    "happy-dom": "^15.0.0",
+    "vitest": "^3.0.0"
+  },
+  "keywords": [
+    "react",
+    "hono",
+    "jsx",
+    "compatibility",
+    "cloudflare",
+    "workers"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "author": ""
+}

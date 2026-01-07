@@ -15,7 +15,7 @@
     "react-router": "^7.0.0",
     "fumadocs-core": "^14.0.0",
     "fumadocs-ui": "^14.0.0",
-    "mdxui": "workspace:*"
+    "mdxui": "^0.1.0"
   },
   "devDependencies": {
     "vite": "^6.0.0",

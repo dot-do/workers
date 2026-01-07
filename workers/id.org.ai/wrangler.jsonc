@@ -1,0 +1,47 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "id-org-ai",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-12-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Routes
+  "routes": [
+    { "pattern": "id.org.ai", "custom_domain": true },
+    { "pattern": "auth.org.ai", "custom_domain": true }
+  ],
+
+  // Durable Objects
+  "durable_objects": {
+    "bindings": [
+      { "name": "OAUTH", "class_name": "OAuthDO" }
+    ]
+  },
+
+  "migrations": [
+    { "tag": "v1", "new_classes": ["OAuthDO"] }
+  ],
+
+  // D1 Database for auth data
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "id-org-ai",
+      "database_id": "placeholder"
+    }
+  ],
+
+  // KV for session cache
+  "kv_namespaces": [
+    {
+      "binding": "SESSIONS",
+      "id": "placeholder"
+    }
+  ]
+
+  // Environment variables (set via wrangler secret)
+  // WORKOS_API_KEY - WorkOS API key
+  // WORKOS_CLIENT_ID - WorkOS AuthKit client ID
+  // AUTH_SECRET - Secret for signing tokens
+  // JWKS_SECRET - Secret for JWT signing keys
+}

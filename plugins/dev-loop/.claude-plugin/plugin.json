@@ -1,0 +1,9 @@
+{
+  "name": "dev-loop",
+  "description": "Development lifecycle outer loop: brainstorm → TDD planning → ralph implementation → review → feedback loop until approved",
+  "version": "1.0.0",
+  "author": {
+    "name": "workers.do",
+    "email": "support@workers.do"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "oauth-do",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-12-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Routes
+  "routes": [
+    { "pattern": "oauth.do", "custom_domain": true }
+  ],
+
+  // Durable Objects
+  "durable_objects": {
+    "bindings": [
+      { "name": "OAUTH_PROVIDER", "class_name": "OAuthProviderDO" }
+    ]
+  },
+
+  "migrations": [
+    { "tag": "v1", "new_classes": ["OAuthProviderDO"] }
+  ],
+
+  // D1 Database for OAuth data (clients, users, tokens)
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "oauth-do",
+      "database_id": "placeholder"
+    }
+  ],
+
+  // KV for token cache
+  "kv_namespaces": [
+    {
+      "binding": "TOKENS",
+      "id": "placeholder"
+    }
+  ]
+
+  // Environment variables (set via wrangler secret)
+  // AUTH_SECRET - Secret for signing tokens
+  // JWKS_SECRET - Secret for JWT signing keys
+}

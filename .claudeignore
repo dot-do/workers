@@ -1,0 +1,12 @@
+# Prevent ralph loops in submodules from being loaded
+rewrites/**/.claude/.ralph-loop.local.md
+rewrites/**/.ralph-loop.local.md
+packages/**/.claude/.ralph-loop.local.md
+packages/**/.ralph-loop.local.md
+primitives/**/.claude/.ralph-loop.local.md
+primitives/**/.ralph-loop.local.md
+
+# Also ignore any local claude files in submodules
+rewrites/**/.claude/*.local.md
+packages/**/.claude/*.local.md
+primitives/**/.claude/*.local.md

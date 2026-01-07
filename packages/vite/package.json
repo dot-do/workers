@@ -1,0 +1,28 @@
+{
+  "name": "@dotdo/vite",
+  "version": "0.0.1",
+  "description": "Vite plugin for workers.do with auto-detection and React aliasing",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "vite": "^6.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0"
+  },
+  "keywords": [
+    "vite",
+    "vite-plugin",
+    "cloudflare",
+    "workers",
+    "react",
+    "hono"
+  ],
+  "license": "MIT"
+}

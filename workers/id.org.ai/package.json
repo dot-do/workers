@@ -1,0 +1,44 @@
+{
+  "name": "@dotdo/id.org.ai",
+  "version": "0.1.0",
+  "description": "Auth for AI and Humans - OAuth 2.1 Provider powered by WorkOS AuthKit",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@dotdo/auth": "workspace:*",
+    "@workos-inc/node": "^7.0.0",
+    "better-auth": "^1.0.0",
+    "@better-auth/oauth-provider": "^1.0.0",
+    "drizzle-orm": "^0.36.0",
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "wrangler": "^3.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.4"
+  },
+  "keywords": [
+    "auth",
+    "oauth",
+    "oauth2",
+    "oidc",
+    "identity",
+    "sso",
+    "workos",
+    "authkit",
+    "workers.do"
+  ]
+}

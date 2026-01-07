@@ -1,0 +1,43 @@
+{
+  "name": "eval.do",
+  "version": "0.0.1",
+  "description": "Secure Code Execution SDK - Sandboxed eval for AI agents and user code",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://eval.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "capnweb": "^0.2.0",
+    "cli.do": "workspace:*",
+    "mcp.do": "workspace:*",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "dotdo": "workspace:*",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "eval",
+    "sandbox",
+    "code-execution",
+    "secure",
+    "ai-agents",
+    "workers.do",
+    "cloudflare-workers",
+    "isolated",
+    "runtime"
+  ]
+}

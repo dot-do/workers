@@ -100,10 +100,16 @@ This is [CapnWeb](https://github.com/cloudflare/capnweb) pipelining—record-rep
 Complex processes run themselves:
 
 ```typescript
-import { dev } from 'workflows.do'
+import { dev, marketing } from 'workflows.do'
 
-dev`add user notifications`
+const feature = await dev`add user notifications`
 // brainstorm → plan → implement → review → ship
+
+// Ship the whole roadmap
+for (const item of roadmap) {
+  const shipped = await dev`build ${item}`
+  await marketing`announce ${shipped}`
+}
 ```
 
 One line. Full development cycle.

@@ -1,12 +1,14 @@
 # workers.do
 
-> The complete platform for building, deploying, and scaling Cloudflare Workers
+> The platform for building Autonomous Startups with Business-as-Code
 
-workers.do is a comprehensive monorepo providing everything needed to build production-grade applications on Cloudflare's edge platform. From zero-config CLI deployment to multi-tenant architectures running entirely on the free tier, workers.do abstracts away complexity while preserving full power and flexibility.
+workers.do is the complete platform for building **Autonomous Startups** - businesses that run on AI with human oversight. Define your entire business logic, services, and operations as code, and let AI agents deliver them as software.
 
 ## Vision
 
-**Write objects, return data, let the platform handle the rest.**
+**Build businesses, not just applications.**
+
+**Write objects, return data, let AI deliver services.**
 
 **Or just ask - and workers DO.**
 
@@ -14,6 +16,45 @@ The name carries a triple meaning:
 1. **workers.do** - Cloudflare Workers on .do domains
 2. **workers DO** - Workers that can DO anything via integrated AI agents
 3. **Digital Workers** - The primitives.org.ai interface bridging autonomous agents and humans-in-the-loop
+
+### The Autonomous Startup Stack
+
+workers.do provides everything needed to run an AI-powered business:
+
+| Layer | Service | What It Does |
+|-------|---------|--------------|
+| **Domains** | builder.domains | Free domains for AI agents and builders |
+| **Identity** | id.org.ai (WorkOS) | Auth for AI and Humans - SSO, Directory Sync, secure secrets |
+| **Payments** | Stripe Connect | Billing, subscriptions, marketplace payouts |
+| **AI** | llm.do | LLM gateway with metering, billing, and analytics |
+| **Infrastructure** | Cloudflare | Workers, DOs, D1, R2, KV, Queues |
+| **Analytics** | Dashboard | Full business intelligence and observability |
+
+```typescript
+// An Autonomous Startup in a single MDX file
+---
+name: my-saas
+services:
+  - LLM      # AI capabilities via llm.do
+  - STRIPE   # Payments via payments.do
+  - WORKOS   # Identity via WorkOS
+---
+
+# My AI-Powered SaaS
+
+export default {
+  // AI generates content, charges customers, delivers value
+  generate: async (prompt, user) => {
+    const result = await env.LLM.complete(prompt)      // AI does the work
+    await env.STRIPE.usage.record(user, result.tokens) // Platform bills for usage
+    return result                                       // Customer gets value
+  }
+}
+```
+
+**Business-as-Code** - Your entire business defined in code
+**AI-delivered Services-as-Software** - AI agents deliver services humans used to provide
+**Autonomous Startups** - Businesses that run themselves with human oversight
 
 Every `dotdo` instance has an AI agent built in. Ask it anything via API, CLI, MCP, RPC, SDK, or any transport:
 
@@ -104,6 +145,113 @@ workers.do sites list         # Multi-tenant management
 workers.do analytics query    # R2 SQL analytics
 ```
 
+## Platform Services
+
+### builder.domains - Free Domains for Builders
+
+Every Autonomous Startup needs a home. builder.domains provides free domains:
+
+**Free Tier:**
+- `*.hq.com.ai` - AI Headquarters
+- `*.app.net.ai` - AI Applications
+- `*.api.net.ai` - AI APIs
+- `*.hq.sb` - StartupBuilder Headquarters
+- `*.io.sb` - StartupBuilder IO
+- `*.llc.st` - LLC domains
+
+**Paid Tier:**
+- Premium base domains (custom TLDs)
+- Premium individual domains
+- High-volume domain allocation
+- Custom DNS and routing
+
+```typescript
+// Claim a free domain
+await env.DOMAINS.claim('my-startup.hq.com.ai')
+
+// Configure routing
+await env.DOMAINS.route('my-startup.hq.com.ai', {
+  worker: 'my-worker',
+  paths: {
+    '/api': 'api-worker',
+    '/app': 'app-worker'
+  }
+})
+```
+
+### payments.do - Stripe Connect Integration
+
+Every workers.do deployment gets integrated payments through our Stripe Connect platform:
+
+```typescript
+// Charge customers
+await env.STRIPE.charges.create({ amount: 2000, currency: 'usd' })
+
+// Create subscriptions
+await env.STRIPE.subscriptions.create({ customer, price })
+
+// Record usage for metered billing
+await env.STRIPE.usage.record(customerId, { quantity: tokens })
+
+// Marketplace payouts (services.do)
+await env.STRIPE.transfers.create({ amount, destination: sellerAccount })
+```
+
+**services.do** enables marketplace functionality - sell services, receive payouts, all handled by the platform.
+
+### id.org.ai - Auth for AI and Humans
+
+Every workers.do deployment includes enterprise-grade identity via id.org.ai (powered by WorkOS):
+
+- **SSO** - SAML, OIDC for enterprise customers
+- **Directory Sync** - Okta, Azure AD, Google Workspace
+- **Admin Portal** - Self-service IT admin interface
+- **Organizations** - Multi-tenant user management
+- **Vault** - Secure secret storage for customer API keys
+
+```typescript
+// Customers get enterprise SSO without building it
+const authUrl = await env.ORG.sso.getAuthorizationUrl({
+  organization: customer.orgId,
+  redirectUri: 'https://my-app.workers.do/callback'
+})
+
+// Securely store org-level secrets (API keys, credentials)
+await env.ORG.vault.store(orgId, 'OPENAI_KEY', apiKey)
+
+// Manage org users
+const users = await env.ORG.users.list(orgId)
+```
+
+### llm.do - AI Gateway with Billing
+
+Unified LLM access with built-in metering and billing:
+
+```typescript
+// Simple completion - automatically metered and billed
+const response = await env.LLM.complete({
+  model: 'claude-3-opus',
+  prompt: 'Generate a marketing email...'
+})
+
+// Streaming with usage tracking
+const stream = await env.LLM.stream({
+  model: 'gpt-4',
+  messages: [{ role: 'user', content: '...' }]
+})
+
+// Customer brings their own key (stored in WorkOS Vault or Workers secrets)
+await env.LLM.complete({ prompt, apiKey: customer.ownKey })
+```
+
+Features:
+- **Multi-model** - Claude, GPT-4, Gemini, open source models
+- **Usage metering** - Per-token billing integrated with Stripe
+- **Analytics** - Model performance, costs, latency in dashboard
+- **BYOK** - Customers can use their own API keys
+- **Caching** - AI Gateway caching for cost optimization
+- **Rate limiting** - Per-customer limits and quotas
+
 ## Architecture
 
 ```
@@ -115,10 +263,11 @@ apps/                  # Full applications (Vite + React Router + shadcn)
 
 workers/               # Cloudflare Workers
   workers/             # workers.do - the umbrella worker/package
+  llm/                 # llm.do - AI gateway with billing (env.LLM)
+  stripe/              # payments.do - Stripe Connect platform (env.STRIPE)
+  workos/              # WorkOS SDK - enterprise identity (env.WORKOS)
   cloudflare/          # Cloudflare SDK as RPC
   jose/                # JWT operations as RPC
-  stripe/              # Stripe SDK as RPC
-  workos/              # WorkOS SDK as RPC
   esbuild/             # esbuild-wasm as RPC
   mdx/                 # MDX compiler as RPC
 
@@ -187,11 +336,12 @@ workers.do deploy
 
 ## Design Principles
 
-1. **Objects over frameworks** - Return data, not responses
-2. **Convention over configuration** - Sensible defaults, zero boilerplate
-3. **Tree-shakable everything** - Pay only for what you use
-4. **Free tier first** - Maximize Cloudflare's free offerings
-5. **Multi-transport by default** - REST, RPC, WebSocket, MCP from one definition
+1. **Business platform, not just infrastructure** - Identity, payments, AI, analytics built in
+2. **Objects over frameworks** - Return data, not responses
+3. **Convention over configuration** - Sensible defaults, zero boilerplate
+4. **Tree-shakable everything** - Pay only for what you use
+5. **Free tier first** - Maximize Cloudflare's free offerings
+6. **Multi-transport by default** - REST, RPC, WebSocket, MCP from one definition
 
 ## Documentation
 

@@ -1,0 +1,17 @@
+{
+  "name": "@dotdo/worker-llm",
+  "version": "0.0.1",
+  "description": "LLM Gateway with billing and analytics (llm.do)",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/rpc": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "wrangler": "^3.0.0"
+  }
+}

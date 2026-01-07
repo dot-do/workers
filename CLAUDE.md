@@ -4,11 +4,14 @@ This file provides context and guidance for AI assistants working on the workers
 
 ## Project Overview
 
-workers.do is a monorepo for building on Cloudflare Workers. It provides:
-- Multi-transport RPC (REST, Workers RPC, CapnWeb, MCP)
-- Tree-shakable packages (`dotdo`, `dotdo/tiny`, `dotdo/rpc`)
-- Free-tier optimization via Snippets and Static Assets
-- MDX-as-Worker pattern for combined code/docs/config
+workers.do is the platform for building **Autonomous Startups** - businesses that run on AI with human oversight. It provides:
+
+- **Business-as-Code** - Define entire businesses in code (MDX workers)
+- **AI-delivered Services-as-Software** - AI agents deliver services humans used to provide
+- **Platform services** - Identity (WorkOS), Payments (Stripe), AI (llm.do) built in
+- **Multi-transport RPC** - REST, Workers RPC, CapnWeb, MCP from one definition
+- **Tree-shakable packages** - `dotdo`, `dotdo/tiny`, `dotdo/rpc`, `dotdo/auth`
+- **Free-tier optimization** - Snippets and Static Assets for 100k+ sites
 
 ## Repository Structure
 
@@ -47,9 +50,51 @@ The system handles serialization to JSON, HTML, WebSocket, etc.
 ### 2. Convention Over Configuration
 
 Use conventional binding names:
+- `this.env.DOMAINS` - Free domains for builders (builder.domains)
+- `this.env.ORG` - Auth for AI and Humans (id.org.ai / WorkOS) - org-level identity, secrets, users
+- `this.env.LLM` - AI gateway with billing (llm.do)
+- `this.env.STRIPE` - Stripe Connect platform (payments.do)
 - `this.env.JOSE` - JWT operations
-- `this.env.STRIPE` - Stripe SDK
 - `this.env.CLOUDFLARE` - Cloudflare API
+
+### Platform Services
+
+**builder.domains** (workers/domains) - Free Domains:
+```typescript
+// Claim free domains: *.hq.com.ai, *.app.net.ai, *.api.net.ai, *.hq.sb, *.io.sb, *.llc.st
+await env.DOMAINS.claim('my-startup.hq.com.ai')
+await env.DOMAINS.route('my-startup.hq.com.ai', { worker: 'my-worker' })
+// Paid tier: premium domains, custom TLDs, high-volume
+```
+
+**llm.do** (workers/llm) - AI Gateway:
+```typescript
+// Metered and billed automatically
+await env.LLM.complete({ model: 'claude-3-opus', prompt })
+await env.LLM.stream({ model: 'gpt-4', messages })
+// Customer BYOK (stored in WorkOS Vault or Workers secrets)
+await env.LLM.complete({ prompt, apiKey: customer.ownKey })
+```
+
+**payments.do** (workers/stripe) - Stripe Connect:
+```typescript
+// Platform billing
+await env.STRIPE.charges.create({ amount, currency })
+await env.STRIPE.subscriptions.create({ customer, price })
+await env.STRIPE.usage.record(customerId, { quantity: tokens })
+// Marketplace payouts
+await env.STRIPE.transfers.create({ amount, destination })
+```
+
+**id.org.ai** (workers/workos) - Auth for AI and Humans:
+```typescript
+// Enterprise SSO out-of-the-box
+await env.ORG.sso.getAuthorizationUrl({ organization })
+// Org-level secret storage (API keys, credentials)
+await env.ORG.vault.store(orgId, 'API_KEY', key)
+// Org user management
+await env.ORG.users.list(orgId)
+```
 
 ### 3. Tree-Shakable Everything
 
@@ -247,9 +292,17 @@ Both should work identically.
 
 ## Future Exploration (TODOs)
 
-1. **hono/jsx + hono/jsx/dom** - Lighter alternative to React for apps
-2. **Auto-detection builds** - vite.config.ts vs next.config.ts
-3. **OpenNext simplification** - Embedded with opinionated defaults
+### Platform Services (Priority)
+1. **builder.domains** - Free domains for builders (workers/domains)
+2. **id.org.ai** - Auth for AI and Humans (workers/workos)
+3. **llm.do** - AI gateway with metering, billing, analytics (workers/llm)
+4. **payments.do** - Stripe Connect platform integration (workers/stripe)
+5. **services.do** - Marketplace for AI-delivered services
+
+### Infrastructure
+5. **hono/jsx + hono/jsx/dom** - Lighter alternative to React for apps
+6. **Auto-detection builds** - vite.config.ts vs next.config.ts
+7. **OpenNext simplification** - Embedded with opinionated defaults
 
 ## Contact
 

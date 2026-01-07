@@ -1,31 +1,85 @@
 # n8n.do
 
-n8n on Cloudflare - Fair-code workflow automation with code flexibility.
+n8n on Cloudflare - Workflow automation without Kubernetes.
 
-## The Problem
+## The Hero
 
-Modern applications need workflow automation:
-- Connect disparate systems and APIs
-- Handle complex business logic with branching
-- Process data transformations at scale
-- Trigger workflows from webhooks, schedules, or events
+You're a startup founder. You need n8n's power - webhooks triggering workflows, data flowing between systems, complex branching logic. But:
 
-Traditional solutions require:
-- Self-hosting infrastructure
-- Managing node process memory
-- Scaling worker pools manually
-- Complex credential management
+- **Self-hosted n8n** means YOUR servers, YOUR problems, YOUR 3am pages
+- **n8n Cloud** starts at $20/month, scales to $200+ as you grow
+- **Zapier** costs $600+/month for real usage
+- **Make.com** nickel-and-dimes every operation
+
+You can't afford ops. You can't afford Kubernetes. You need **workflow automation that just works**.
 
 ## The Vision
 
-Drop-in n8n replacement running entirely on Cloudflare.
+```typescript
+import { n8n } from '@dotdo/n8n'
+
+n8n`when webhook received, fetch contacts from CRM, route B2B to airtable, B2C to hubspot`
+n8n`every day at 9am, sync salesforce opportunities to slack #deals`
+n8n`on new github issue, classify with AI, assign to appropriate team`
+```
+
+Natural language. Tagged templates. Workflows as sentences.
+
+No YAML. No visual editor required. No infrastructure to manage.
+
+## Promise Pipelining
+
+Chain workflows without `Promise.all`. One network round trip:
+
+```typescript
+const synced = await n8n`fetch all postgres tables`
+  .map(table => n8n`transform ${table} to analytics schema`)
+  .map(transformed => n8n`load ${transformed} to bigquery`)
+// One network round trip!
+```
+
+ETL pipelines in three lines. The system handles parallelization, retries, and state.
+
+```typescript
+const notified = await n8n`get all overdue invoices from stripe`
+  .map(invoice => n8n`send reminder email for ${invoice}`)
+  .map(sent => n8n`log ${sent} to analytics`)
+  .map(logged => n8n`update CRM for ${logged}`)
+```
+
+## Agent Integration
+
+Let Ralph build your workflows:
+
+```typescript
+import { ralph } from 'agents.do'
+
+ralph`create a workflow that processes new orders`
+// Ralph analyzes your systems, generates the workflow, tests it
+
+ralph`when a github PR is merged, update linear ticket and notify slack`
+// Natural language -> running workflow
+```
+
+Or have Priya design the automation strategy:
+
+```typescript
+import { priya } from 'agents.do'
+
+priya`design automation strategy for customer onboarding`
+// Priya creates a plan, Ralph implements each workflow
+  .map(workflow => ralph`implement ${workflow}`)
+```
+
+## When You Need Control
+
+For complex logic, use the structured API:
 
 ```typescript
 import { N8n } from '@dotdo/n8n'
 
 const n8n = new N8n({ id: 'my-workflows' })
 
-// Define a workflow with nodes
 export const syncContacts = n8n.createWorkflow(
   { id: 'sync-contacts', trigger: { type: 'webhook' } },
   async ({ trigger, nodes }) => {
@@ -64,22 +118,7 @@ export const syncContacts = n8n.createWorkflow(
     return { synced: transformed.length }
   }
 )
-
-// Execute workflow via webhook
-await n8n.trigger('sync-contacts', { apiKey: 'xxx' })
 ```
-
-No infrastructure to manage. No worker pools to scale. Just workflows that work.
-
-## Features
-
-- **Visual Workflow Editor** - Browser-based node graph editor
-- **400+ Integrations** - Pre-built nodes for popular services
-- **Code Nodes** - JavaScript and Python for custom logic
-- **Webhook Triggers** - HTTP endpoints that start workflows
-- **Sub-workflows** - Compose workflows from other workflows
-- **Credentials Management** - Secure encrypted credential storage
-- **MCP Tools** - AI-native workflow creation and execution via fsx.do and gitx.do
 
 ## Architecture
 
@@ -114,73 +153,63 @@ npm install @dotdo/n8n
 
 ## Quick Start
 
-### Define Workflows
+### Natural Language Workflows
 
 ```typescript
-import { N8n } from '@dotdo/n8n'
+import { n8n } from '@dotdo/n8n'
 
-const n8n = new N8n({ id: 'my-app' })
+// Simple webhook response
+n8n`when webhook /hello is called, respond with "Hello World"`
 
-// Simple webhook workflow
-const helloWorkflow = n8n.createWorkflow(
-  { id: 'hello', trigger: { type: 'webhook' } },
-  async ({ trigger }) => {
-    return { message: `Hello ${trigger.data.name}!` }
-  }
-)
+// Data sync
+n8n`every hour, sync shopify orders to google sheets`
 
-// Multi-node workflow
-const processOrder = n8n.createWorkflow(
-  { id: 'process-order', trigger: { type: 'webhook' } },
-  async ({ trigger, nodes }) => {
-    // Fetch order details
-    const order = await nodes.httpRequest({
-      url: `https://api.store.com/orders/${trigger.data.orderId}`,
-      method: 'GET'
-    })
+// Conditional routing
+n8n`on new zendesk ticket, if priority is high route to slack #urgent, else email support team`
 
-    // Validate with code
-    const validated = await nodes.code({
-      language: 'javascript',
-      code: `
-        if (!$json.items || $json.items.length === 0) {
-          throw new Error('Empty order')
-        }
-        return { ...$json, validated: true }
-      `,
-      items: [order]
-    })
-
-    // Branch based on total
-    const [highValue, standard] = await nodes.switch({
-      rules: [
-        { output: 0, condition: '{{ $json.total > 1000 }}' },
-        { output: 1, condition: 'true' }
-      ],
-      items: validated
-    })
-
-    // Different processing paths
-    if (highValue.length > 0) {
-      await nodes.slack.message({
-        channel: '#vip-orders',
-        text: `High value order: $${highValue[0].total}`
-      })
-    }
-
-    await nodes.email.send({
-      to: order.customer.email,
-      subject: 'Order Confirmed',
-      template: 'order-confirmation',
-      data: validated[0]
-    })
-
-    return { processed: true }
-  }
-)
+// AI-powered processing
+n8n`when email received, classify intent with AI, route to appropriate workflow`
 ```
 
-### Node Types
+### Trigger Types
+
+```typescript
+// Webhook trigger
+n8n`when webhook /orders is called, process the order`
+
+// Cron trigger
+n8n`every day at 9am, generate daily report`
+n8n`every monday at 8am, send weekly summary`
+
+// Event trigger
+n8n`on stripe payment_succeeded, update customer status`
+n8n`on github push to main, deploy to production`
+
+// Interval trigger
+n8n`every 5 minutes, check for new leads`
+```
+
+### Complex Pipelines
+
+```typescript
+// Multi-stage data processing
+const processed = await n8n`fetch new signups from database`
+  .map(user => n8n`enrich ${user} with clearbit data`)
+  .map(enriched => n8n`score ${enriched} for sales qualification`)
+  .map(scored => scored.score > 80
+    ? n8n`route ${scored} to sales team`
+    : n8n`add ${scored} to nurture campaign`)
+
+// Fan-out notifications
+const notified = await n8n`get all users affected by outage`
+  .map(user => [
+    n8n`send email to ${user}`,
+    n8n`send sms to ${user}`,
+    n8n`update status page for ${user}`
+  ])
+```
+
+### Node Types (Structured API)
 
 ```typescript
 // HTTP Request
@@ -230,42 +259,6 @@ const branches = await nodes.switch({
   ],
   items: data
 })
-
-// Merge nodes
-const merged = await nodes.merge({
-  mode: 'combine',  // combine | append | wait
-  inputs: [branch1, branch2]
-})
-
-// Split in batches
-const batches = await nodes.splitInBatches({
-  batchSize: 100,
-  items: largeDataset
-})
-
-// Wait
-await nodes.wait({
-  duration: '5m'  // 5 minutes
-})
-```
-
-### Trigger Types
-
-```typescript
-// Webhook trigger
-{ trigger: { type: 'webhook' } }
-
-// Cron trigger
-{ trigger: { type: 'cron', expression: '0 9 * * *' } }  // Daily at 9am
-
-// Event trigger
-{ trigger: { type: 'event', event: 'order/created' } }
-
-// Manual trigger
-{ trigger: { type: 'manual' } }
-
-// Interval trigger
-{ trigger: { type: 'interval', every: '5m' } }  // Every 5 minutes
 ```
 
 ### Credentials Management
@@ -279,12 +272,13 @@ const n8n = new N8n({ id: 'my-app' })
 await n8n.credentials.create({
   name: 'My Slack',
   type: 'slack',
-  data: {
-    accessToken: 'xoxb-...'
-  }
+  data: { accessToken: 'xoxb-...' }
 })
 
 // Use in workflows
+n8n`send message to slack #general using My Slack credential`
+
+// Or in structured API
 const slackWorkflow = n8n.createWorkflow(
   { id: 'notify-slack', trigger: { type: 'webhook' } },
   async ({ trigger, nodes }) => {
@@ -295,50 +289,12 @@ const slackWorkflow = n8n.createWorkflow(
     })
   }
 )
-
-// List credentials
-const creds = await n8n.credentials.list()
-
-// Delete credentials
-await n8n.credentials.delete('My Slack')
-```
-
-### Sub-workflows
-
-```typescript
-const validateOrder = n8n.createWorkflow(
-  { id: 'validate-order', trigger: { type: 'workflow' } },
-  async ({ trigger }) => {
-    // Validation logic
-    return { valid: true, order: trigger.data }
-  }
-)
-
-const processOrder = n8n.createWorkflow(
-  { id: 'process-order', trigger: { type: 'webhook' } },
-  async ({ trigger, nodes }) => {
-    // Call sub-workflow
-    const validated = await nodes.executeWorkflow({
-      workflowId: 'validate-order',
-      data: trigger.data
-    })
-
-    if (!validated.valid) {
-      throw new Error('Invalid order')
-    }
-
-    // Continue processing...
-    return { processed: true }
-  }
-)
 ```
 
 ### MCP Tools Integration
 
 ```typescript
 import { n8nTools, invokeTool } from '@dotdo/n8n/mcp'
-import { fsx } from 'fsx.do'
-import { gitx } from 'gitx.do'
 
 // List available workflow tools
 console.log(n8nTools.map(t => t.name))
@@ -354,15 +310,48 @@ const result = await invokeTool('workflow_execute', {
 await invokeTool('workflow_create', {
   natural: 'When a new row is added to Google Sheets, create a task in Asana'
 })
+```
 
-// Read workflow definitions from filesystem
-const workflowFile = await fsx.read('/workflows/sync.json')
+## Deployment
 
-// Version control workflows with gitx
-await gitx.commit({
-  message: 'Add contact sync workflow',
-  files: ['/workflows/sync.json']
-})
+### wrangler.toml
+
+```toml
+name = "n8n-workflows"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[[durable_objects.bindings]]
+name = "WORKFLOW_DO"
+class_name = "WorkflowDO"
+
+[[durable_objects.bindings]]
+name = "EXECUTION_DO"
+class_name = "ExecutionDO"
+
+[[durable_objects.bindings]]
+name = "CREDENTIAL_DO"
+class_name = "CredentialDO"
+
+[[durable_objects.migrations]]
+tag = "v1"
+new_classes = ["WorkflowDO", "ExecutionDO", "CredentialDO"]
+
+[[queues.producers]]
+queue = "workflow-execution"
+binding = "WORKFLOW_QUEUE"
+
+[[queues.consumers]]
+queue = "workflow-execution"
+
+[vars]
+ENVIRONMENT = "production"
+```
+
+### Deploy
+
+```bash
+npx wrangler deploy
 ```
 
 ### Serve with Hono
@@ -384,6 +373,10 @@ export default app
 ## Error Handling
 
 ```typescript
+// Natural language with retry
+n8n`when webhook fails, retry 3 times with exponential backoff`
+
+// Structured API
 n8n.createWorkflow(
   {
     id: 'error-handling',
@@ -398,7 +391,6 @@ n8n.createWorkflow(
     try {
       await nodes.httpRequest({ url: 'https://unreliable-api.com' })
     } catch (error) {
-      // Error workflow
       await nodes.executeWorkflow({
         workflowId: 'error-handler',
         data: { error: error.message, workflow: 'error-handling' }
@@ -420,7 +412,7 @@ const executions = await n8n.executions.list({
 
 // Get execution details
 const execution = await n8n.executions.get(executionId)
-console.log(execution.data)  // All node outputs
+console.log(execution.data)      // All node outputs
 console.log(execution.duration)
 console.log(execution.status)
 
@@ -428,9 +420,20 @@ console.log(execution.status)
 await n8n.executions.retry(executionId)
 ```
 
+## Why Cloudflare?
+
+| Feature | Self-Hosted n8n | n8n.do |
+|---------|-----------------|--------|
+| Infrastructure | Your servers | Zero |
+| Cold starts | Node.js startup | None (DO stays warm) |
+| Execution limits | Memory-bound | Unlimited duration |
+| Scaling | Manual worker pools | Automatic |
+| Credentials | Your encryption | Built-in vault |
+| Global latency | Single region | Edge everywhere |
+
 ## The Rewrites Ecosystem
 
-n8n.do is part of the rewrites family - reimplementations of popular infrastructure on Cloudflare:
+n8n.do is part of the rewrites family - popular infrastructure reimplemented on Cloudflare:
 
 | Rewrite | Original | Purpose |
 |---------|----------|---------|
@@ -439,22 +442,8 @@ n8n.do is part of the rewrites family - reimplementations of popular infrastruct
 | [supabase.do](https://supabase.do) | Supabase | Postgres/BaaS for AI |
 | [inngest.do](https://inngest.do) | Inngest | Durable workflows for AI |
 | **n8n.do** | n8n | Visual automation for AI |
-| kafka.do | Kafka | Event streaming for AI |
-| nats.do | NATS | Messaging for AI |
-
-Each rewrite follows the same pattern:
-- Durable Objects for state
-- SQLite for persistence
-- Cloudflare Queues for messaging
-- Compatible API with the original
-
-## Why Cloudflare?
-
-1. **Global Edge** - Workflows run close to users
-2. **No Cold Starts** - Durable Objects stay warm
-3. **Unlimited Duration** - No execution timeouts
-4. **Built-in Queues** - Reliable node execution
-5. **Single-Threaded DO** - No race conditions in workflow state
+| [kafka.do](https://kafka.do) | Kafka | Event streaming for AI |
+| [nats.do](https://nats.do) | NATS | Messaging for AI |
 
 ## Related Domains
 

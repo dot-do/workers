@@ -1,31 +1,93 @@
 # make.do
 
-Make.com (Integromat) on Cloudflare - Visual scenario builder with advanced data routing.
+Make.com reimagined for the AI era. Natural language automation with promise pipelining.
 
 ## The Problem
 
-Modern automation needs visual workflow design:
-- Connect apps without code
-- Transform and route data between services
-- Handle complex branching and error flows
-- Schedule and trigger on webhooks
+**For automation architects who've outgrown Make.com's pricing** - processing millions of operations at $10k+/month while watching every webhook cost you money.
 
-Traditional solutions require:
-- Proprietary cloud platforms
-- Per-operation pricing at scale
-- Limited customization options
-- No self-hosting capability
+The stakes are real:
+- **Per-operation fees compound** - 10M ops/month at $0.001 = $10,000
+- **Vendor lock-in** - Your scenarios are trapped in their proprietary format
+- **Data leaving your infrastructure** - Every operation routes through their cloud
+- **Limited by their imagination** - No AI-native operations, no code when you need it
+
+Traditional automation platforms were built for a world without AI. They charge per click while AI agents need to orchestrate millions.
 
 ## The Vision
 
-Drop-in Make.com alternative running entirely on Cloudflare.
+Automation that speaks your language. Literally.
+
+```typescript
+import { make } from '@dotdo/make'
+
+make`when webhook /leads: validate, enrich from clearbit, route to salesforce or hubspot`
+make`every hour: check inventory, alert slack if low stock`
+make`process uploaded CSV: parse, validate, insert to database`
+```
+
+No drag-and-drop. No per-operation costs. Just describe what you want.
+
+### Promise Pipelining
+
+Chain operations without `Promise.all`. One network round trip:
+
+```typescript
+const processed = await make`watch /inbox`
+  .map(file => make`classify ${file}`)
+  .map(classified => make`route ${classified} to handler`)
+// Single network round trip - CapnWeb pipelining!
+
+const enriched = await make`fetch new leads from webhook`
+  .map(lead => make`enrich ${lead} with clearbit`)
+  .map(enriched => [
+    make`create ${enriched} in salesforce`,
+    make`notify slack about ${enriched}`
+  ])
+```
+
+### AI-Native from the Ground Up
+
+Every scenario understands AI. Every module can think:
+
+```typescript
+make`when email arrives: classify intent, draft response, route to agent or human`
+
+make`every day at 9am:
+  summarize yesterday's sales,
+  identify trends,
+  draft report for team`
+
+make`when order placed:
+  analyze for fraud risk,
+  if suspicious alert security else process normally`
+```
+
+Built-in LLM operations - no "AI block" add-on. No extra per-token fees on top of your provider costs.
+
+### Agent Integration
+
+Let agents build your automations:
+
+```typescript
+import { ralph } from 'agents.do'
+
+ralph`build a scenario that syncs Stripe invoices to Airtable`
+ralph`create a webhook that enriches leads and routes to salesforce`
+ralph`automate our onboarding emails based on user behavior`
+```
+
+Priya plans the automation. Ralph builds it. Quinn tests it. The whole team, automated.
+
+## When You Need Control
+
+For complex scenarios, drop down to the structured API:
 
 ```typescript
 import { Make } from '@dotdo/make'
 
 const make = new Make({ id: 'my-automation' })
 
-// Define a scenario with modules
 export const leadCapture = make.createScenario({
   id: 'lead-capture',
   trigger: { type: 'webhook', path: '/leads' },
@@ -66,22 +128,23 @@ export const leadCapture = make.createScenario({
   ]
 })
 
-// Execute a scenario
 await make.run('lead-capture', { email: 'ceo@bigcorp.com' })
 ```
 
-No vendor lock-in. No per-operation costs. Just scenarios that work.
+Full type safety. Full control. Same runtime.
 
 ## Features
 
-- **Visual Canvas** - Drag-and-drop scenario builder (coming soon)
+- **Natural Language** - Describe scenarios in plain English
+- **Promise Pipelining** - Chain operations with `.map()`, single round trip
+- **AI-Native** - LLM operations are first-class citizens
+- **Agent Integration** - Let AI agents build your automations
+- **Visual Canvas** - Drag-and-drop builder (coming soon)
 - **Module Types** - Triggers, actions, aggregators, iterators, routers, filters
 - **Data Mapping** - JSONPath and Mustache-style variable interpolation
-- **Error Handling** - Error routes, retries, break/continue error handlers
-- **Scheduling** - Cron schedules, interval triggers, webhooks
-- **TypeScript First** - Full type safety for scenario definitions
+- **Error Handling** - Error routes, retries, break/continue handlers
 - **Edge Native** - Runs on Cloudflare's global network
-- **AI Native** - MCP tools via fsx.do and gitx.do for AI orchestration
+- **Zero Per-Op Costs** - Flat rate, unlimited operations
 
 ## Architecture
 
@@ -123,74 +186,45 @@ npm install @dotdo/make
 
 ## Quick Start
 
-### Define Scenarios
+### Natural Language Scenarios
 
 ```typescript
-import { Make } from '@dotdo/make'
+import { make } from '@dotdo/make'
 
-const make = new Make({ id: 'my-app' })
+// Simple webhook handler
+make`when /orders webhook: validate, save to database, send confirmation email`
 
-// Simple scenario
-const simpleSync = make.createScenario({
-  id: 'simple-sync',
-  trigger: { type: 'webhook', path: '/sync' },
-  modules: [
-    {
-      id: 'fetch',
-      type: 'http',
-      action: 'GET',
-      url: '{{trigger.url}}'
-    },
-    {
-      id: 'transform',
-      type: 'transformer',
-      mapping: { name: '{{fetch.data.name | uppercase}}' }
-    },
-    {
-      id: 'save',
-      type: 'fsx',
-      action: 'writeFile',
-      path: '/data/{{transform.name}}.json',
-      content: '{{transform | json}}'
-    }
-  ]
-})
+// Scheduled jobs
+make`every monday at 9am: generate weekly report, send to #team-updates`
 
-// Complex scenario with routing
-const multiPathWorkflow = make.createScenario({
-  id: 'multi-path',
-  trigger: { type: 'cron', schedule: '0 9 * * *' },
-  modules: [
-    {
-      id: 'list-files',
-      type: 'fsx',
-      action: 'readdir',
-      path: '/inbox'
-    },
-    {
-      id: 'iterate',
-      type: 'iterator',
-      source: '{{list-files.files}}'
-    },
-    {
-      id: 'classify',
-      type: 'llm',
-      action: 'classify',
-      prompt: 'Classify this document: {{iterate.item.content}}',
-      categories: ['invoice', 'contract', 'other']
-    },
-    {
-      id: 'route',
-      type: 'router',
-      routes: [
-        { condition: '{{classify.category}} == "invoice"', target: 'process-invoice' },
-        { condition: '{{classify.category}} == "contract"', target: 'process-contract' },
-        { condition: 'true', target: 'archive' }
-      ]
-    },
-    // ... route handlers
-  ]
-})
+// File processing
+make`when file uploaded to /inbox:
+  extract text with OCR,
+  classify document type,
+  route to appropriate folder`
+
+// Multi-step with AI
+make`when support ticket created:
+  analyze sentiment and urgency,
+  if urgent escalate to human else draft AI response,
+  log to analytics`
+```
+
+### Promise Pipelining in Action
+
+```typescript
+// Process a batch of leads with enrichment and routing
+const results = await make`fetch leads from /api/leads`
+  .map(lead => make`enrich ${lead} from clearbit`)
+  .map(enriched => make`score ${enriched} for sales readiness`)
+  .map(scored => scored.score > 80
+    ? make`create opportunity in salesforce for ${scored}`
+    : make`add ${scored} to nurture campaign`)
+
+// Parallel processing with aggregation
+const reports = await make`list all departments`
+  .map(dept => make`generate monthly report for ${dept}`)
+  .map(report => make`send ${report} to department head`)
 ```
 
 ### Module Types
@@ -274,22 +308,6 @@ make.createScenario({
 })
 ```
 
-### Scheduling
-
-```typescript
-// Cron schedule
-{ type: 'cron', schedule: '0 9 * * MON-FRI' }  // 9am weekdays
-
-// Interval
-{ type: 'interval', every: '15m' }
-
-// Webhook
-{ type: 'webhook', path: '/my-trigger' }
-
-// Email
-{ type: 'email', mailbox: 'orders@make.do' }
-```
-
 ### Serve with Hono
 
 ```typescript
@@ -300,7 +318,7 @@ const app = new Hono()
 
 app.all('/api/make/*', serve({
   client: make,
-  scenarios: [leadCapture, simpleSync]
+  scenarios: [leadCapture, orderProcessing]
 }))
 
 export default app
@@ -308,7 +326,7 @@ export default app
 
 ## MCP Integration
 
-make.do is AI-native with built-in MCP tool support:
+make.do exposes all operations as MCP tools for AI orchestration:
 
 ```typescript
 // Use fsx.do for filesystem operations

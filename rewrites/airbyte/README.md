@@ -1,24 +1,82 @@
 # airbyte.do
 
-Airbyte on Cloudflare - ELT data integration with 300+ connectors, running entirely on Durable Objects.
+Data integration that speaks your language.
 
-## The Problem
+## The Hero
 
-Modern businesses need to move data between systems:
-- Extract from APIs, databases, files, and SaaS apps
-- Load into data warehouses and lakes
-- Transform for analytics and AI
-- Keep data in sync continuously
+**For data engineers tired of babysitting Kubernetes just to move data.**
 
-Traditional solutions require:
-- Managing orchestration infrastructure (Kubernetes, Docker)
-- Self-hosting connector runtimes
-- Complex deployment pipelines
-- Significant operational overhead
+You know the drill: 3-node K8s cluster, 2 hours to deploy a connector, $500/month in compute, and a DevOps team on speed dial. All because you need to sync Salesforce to Snowflake.
 
-## The Vision
+What if you could just... ask?
 
-Drop-in Airbyte replacement running entirely on Cloudflare.
+```typescript
+import { airbyte } from '@dotdo/airbyte'
+
+airbyte`sync GitHub commits to Snowflake hourly`
+airbyte`extract Stripe payments since January into BigQuery`
+airbyte`why is the Salesforce sync failing?`
+```
+
+No Kubernetes. No Docker. No YAML. Just data pipelines that work.
+
+## Promise Pipelining
+
+Chain operations without waiting. One network round trip.
+
+```typescript
+const synced = await airbyte`discover all postgres tables`
+  .map(table => airbyte`sync ${table} to bigquery incrementally`)
+  .map(sync => airbyte`verify ${sync} completed successfully`)
+// One network round trip!
+```
+
+Build complex pipelines that feel like talking to a teammate:
+
+```typescript
+const pipeline = await airbyte`list all stripe payment sources`
+  .map(source => airbyte`sync ${source} to snowflake with deduplication`)
+  .map(sync => airbyte`add transformation: convert cents to dollars for ${sync}`)
+  .map(result => airbyte`notify #data-team when ${result} completes`)
+```
+
+## Agent Integration
+
+airbyte.do integrates seamlessly with the workers.do agent ecosystem:
+
+```typescript
+import { tom, priya } from 'agents.do'
+
+// Tom sets up the infrastructure
+tom`set up a pipeline from Salesforce to Snowflake, syncing hourly`
+
+// Priya monitors and troubleshoots
+priya`why did the nightly sync fail? fix it and set up alerting`
+
+// Chain agents and tools
+const ready = await priya`design a data pipeline for customer analytics`
+  .map(spec => tom`implement ${spec} using airbyte.do`)
+  .map(pipeline => airbyte`validate and deploy ${pipeline}`)
+```
+
+## The Transformation
+
+| Before (Self-Hosted Airbyte) | After (airbyte.do) |
+|------------------------------|-------------------|
+| 3-node Kubernetes cluster | Zero infrastructure |
+| 2 hours to deploy a connector | `airbyte\`add stripe source\`` |
+| $500+/month compute costs | Pay per sync |
+| DevOps team required | Natural language |
+| YAML configuration files | Tagged template literals |
+| Docker image management | Managed connectors |
+| Manual scaling | Edge-native auto-scale |
+| Self-managed updates | Always current |
+| Debug Kubernetes pods | `airbyte\`why did it fail?\`` |
+| Monitoring stack setup | Built-in observability |
+
+## When You Need Control
+
+For programmatic access and fine-grained configuration:
 
 ```typescript
 import { Airbyte } from '@dotdo/airbyte'
@@ -65,11 +123,9 @@ const connection = await airbyte.connections.create({
 await airbyte.connections.sync(connection.id)
 ```
 
-No Kubernetes. No Docker. Just data pipelines that work.
-
 ## Features
 
-- **300+ Connectors** - Sources and destinations via MCP tools (fsx.do, gitx.do)
+- **300+ Connectors** - Sources and destinations via MCP tools
 - **Incremental Sync** - Only sync changed data with cursor-based tracking
 - **Schema Discovery** - Automatically detect and map source schemas
 - **CDC Support** - Change Data Capture for database sources
@@ -102,7 +158,7 @@ No Kubernetes. No Docker. Just data pipelines that work.
            +-------------------+                  +-------------------+
 ```
 
-**Key insight**: Durable Objects provide single-threaded, strongly consistent state. Each connection gets its own ConnectionDO for orchestration, and each sync job gets a SyncDO for execution tracking. MCP tools (fsx.do, gitx.do) provide the AI-native connector runtime.
+**Key insight**: Durable Objects provide single-threaded, strongly consistent state. Each connection gets its own ConnectionDO for orchestration, and each sync job gets a SyncDO for execution tracking.
 
 ## Installation
 
@@ -111,6 +167,24 @@ npm install @dotdo/airbyte
 ```
 
 ## Quick Start
+
+### Natural Language First
+
+```typescript
+import { airbyte } from '@dotdo/airbyte'
+
+// Discover what's available
+await airbyte`what sources can you connect to?`
+
+// Set up a pipeline in one line
+await airbyte`sync all tables from postgres://prod.db.com to bigquery, hourly`
+
+// Monitor your pipelines
+await airbyte`show me all failed syncs from the last 24 hours`
+
+// Troubleshoot issues
+await airbyte`the stripe sync is slow, diagnose and optimize it`
+```
 
 ### Define Sources
 
@@ -129,7 +203,7 @@ const postgres = await airbyte.sources.create({
     database: 'production',
     username: 'airbyte',
     password: env.POSTGRES_PASSWORD,
-    replication_method: { method: 'CDC' }  // Change Data Capture
+    replication_method: { method: 'CDC' }
   }
 })
 
@@ -209,7 +283,7 @@ const pipeline = await airbyte.connections.create({
     { name: 'orders', syncMode: 'incremental', cursorField: 'created_at' },
     { name: 'products', syncMode: 'full_refresh' }
   ],
-  schedule: { cron: '0 * * * *' },  // Hourly
+  schedule: { cron: '0 * * * *' },
   normalization: 'basic'
 })
 
@@ -218,12 +292,6 @@ await airbyte.connections.sync(pipeline.id)
 
 // Check sync status
 const status = await airbyte.connections.status(pipeline.id)
-console.log(status)
-// {
-//   state: 'running',
-//   progress: { users: 1234, orders: 5678, products: 100 },
-//   started_at: '2024-01-15T10:00:00Z'
-// }
 ```
 
 ### Schema Discovery
@@ -231,23 +299,9 @@ console.log(status)
 ```typescript
 // Discover available streams from a source
 const schema = await airbyte.sources.discover(postgres.id)
-console.log(schema)
-// {
-//   streams: [
-//     {
-//       name: 'users',
-//       jsonSchema: { type: 'object', properties: { ... } },
-//       supportedSyncModes: ['full_refresh', 'incremental'],
-//       sourceDefinedCursor: true,
-//       defaultCursorField: ['updated_at']
-//     },
-//     ...
-//   ]
-// }
 
 // Test source connectivity
 const check = await airbyte.sources.check(postgres.id)
-console.log(check)
 // { status: 'succeeded', message: 'Successfully connected to database' }
 ```
 
@@ -267,30 +321,11 @@ console.log(check)
 { name: 'users', syncMode: 'incremental', cursorField: 'updated_at', primaryKey: [['id']] }
 ```
 
-## AI-Native Integration
-
-Airbyte.do integrates with MCP tools for AI-native data operations:
-
-```typescript
-import { airbyte } from '@dotdo/airbyte'
-import { fsx } from 'fsx.do'
-import { gitx } from 'gitx.do'
-
-// AI agent can query connector catalogs
-const sources = await airbyte.catalog.sources.list()
-const destinations = await airbyte.catalog.destinations.list()
-
-// AI agent can create pipelines via natural language
-tom`Set up a pipeline from Salesforce to Snowflake, syncing accounts and opportunities hourly`
-
-// AI agent can monitor and troubleshoot
-priya`Why did the postgres-to-bigquery sync fail last night?`
-```
-
 ## MCP Tools
 
+Register as MCP tools for AI agents:
+
 ```typescript
-// Register as MCP tools for AI agents
 export const mcpTools = {
   'airbyte.sources.create': airbyte.sources.create,
   'airbyte.sources.discover': airbyte.sources.discover,
@@ -324,6 +359,7 @@ Each rewrite follows the same pattern:
 - SQLite for persistence
 - Cloudflare Queues for messaging
 - Compatible API with the original
+- Natural language interface via tagged templates
 
 ## Why Cloudflare?
 

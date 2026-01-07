@@ -1,37 +1,110 @@
 # fivetran.do
 
-Fivetran on Cloudflare - Automated data movement with zero maintenance.
+Data pipelines that speak human. Stop configuring. Start commanding.
 
-## The Problem
+## The Hero
 
-Modern data teams need reliable data pipelines:
-- Connect to hundreds of data sources
-- Keep data synchronized automatically
-- Handle schema changes gracefully
-- Manage sync scheduling and retries
-- Monitor pipeline health
+Your data team is drowning. You're paying Fivetran $50k+/year for something that should be simple. Every new connector takes 3-5 days of back-and-forth with support. Something breaks at 2am and you're debugging a black box. You're locked into their ecosystem with no exit strategy.
 
-Traditional solutions require:
-- Managing complex ETL infrastructure
-- Building custom connectors for each source
-- Handling rate limits and API changes
-- Maintaining schema evolution logic
-- Operating distributed orchestration systems
+You just want to say: *"sync Salesforce to our warehouse every 15 minutes"* and have it work.
 
 ## The Vision
 
-Drop-in Fivetran replacement running entirely on Cloudflare.
+Data pipelines you can talk to.
+
+```typescript
+import { fivetran } from '@dotdo/fivetran'
+
+fivetran`sync salesforce every 15 minutes to d1`
+fivetran`connect stripe payments to data lake`
+fivetran`what's broken?`  // Returns status of failing connectors
+fivetran`fix the broken connectors`  // AI handles it
+```
+
+Not configuration files. Not 47 dropdown menus. Just say what you want.
+
+## Promise Pipelining
+
+Chain operations with zero round-trip latency.
+
+```typescript
+const synced = await fivetran`list all connectors`
+  .map(connector => fivetran`sync ${connector}`)
+  .map(result => fivetran`verify ${result}`)
+// One network round trip!
+
+// Parallel syncs with verification
+const verified = await fivetran`find stale connectors`
+  .map(connector => fivetran`refresh ${connector}`)
+  .filter(result => result.status === 'healthy')
+  .map(result => fivetran`log ${result} to audit trail`)
+```
+
+CapnWeb pipelining means your data flows as fast as your thoughts.
+
+## Agent Integration
+
+Let your AI team handle data infrastructure.
+
+```typescript
+import { tom, ralph, priya } from 'agents.do'
+
+// Tom sets up the data infrastructure
+tom`set up automated sync from Salesforce to our warehouse`
+
+// Ralph builds pipelines for new features
+ralph`create a pipeline to sync Stripe subscriptions for the billing dashboard`
+
+// Priya monitors data quality
+priya`check if our customer data is current and flag any sync issues`
+
+// Chain of command
+const pipeline = await priya`plan the data architecture for Q1`
+  .map(spec => tom`implement ${spec}`)
+  .map(impl => ralph`test ${impl}`)
+  .map(tested => priya`verify ${tested} meets requirements`)
+```
+
+## The Stakes
+
+| Pain Point | Fivetran | fivetran.do |
+|------------|----------|-------------|
+| **Monthly Cost** | $5,000-50,000+/mo | $50-500/mo (90% less) |
+| **New Connector Lead Time** | 3-5 business days | Instant - just ask |
+| **Schema Changes** | Manual migration dance | AI handles it automatically |
+| **Debugging** | Black box logs | Natural language: "why did Salesforce sync fail?" |
+| **Vendor Lock-in** | Proprietary everything | Open, portable, yours |
+| **Scaling** | Per-row pricing anxiety | Flat rate, sync freely |
+
+**The math**: A Series A startup paying Fivetran $4,000/month saves $43,200/year switching to fivetran.do. That's a full-time data engineer you don't need to hire.
+
+## Quick Start
+
+```bash
+npm install @dotdo/fivetran
+```
+
+```typescript
+import { fivetran } from '@dotdo/fivetran'
+
+// Natural language setup
+await fivetran`connect to my salesforce org using ${env.SALESFORCE_CREDENTIALS}`
+await fivetran`sync accounts, contacts, and opportunities to d1 every hour`
+await fivetran`notify me on slack when sync fails`
+
+// That's it. You're done.
+```
+
+## When You Need Control
+
+The structured API is always there when you need precision.
 
 ```typescript
 import { Fivetran } from '@dotdo/fivetran'
 
-const fivetran = new Fivetran({
-  id: 'my-data-platform',
-  // MCP tools for AI-native operations
-  tools: ['fsx.do', 'gitx.do']
-})
+const fivetran = new Fivetran({ id: 'my-data-platform' })
 
-// Define a connector
+// Define a connector with explicit configuration
 const salesforce = fivetran.createConnector({
   id: 'salesforce-prod',
   source: {
@@ -57,17 +130,15 @@ const status = await salesforce.status()
 // { lastSync: '2024-01-15T10:30:00Z', status: 'healthy', rowsSynced: 15420 }
 ```
 
-No ETL infrastructure to manage. No connectors to maintain. Just data that flows.
-
 ## Features
 
 - **500+ Pre-built Connectors** - Salesforce, HubSpot, Stripe, databases, APIs
-- **Automated Schema Migrations** - Handle source changes without breaking pipelines
+- **Natural Language Control** - Tagged templates for intuitive pipeline management
+- **Promise Pipelining** - Chain operations with single round-trip via CapnWeb
+- **Automated Schema Migrations** - AI handles source changes without breaking pipelines
 - **Incremental Updates** - Sync only what changed, efficiently
-- **Data Transformations** - Transform data in-flight with SQL or TypeScript
-- **Sync Scheduling** - Cron, interval, or event-driven triggers
-- **Usage-based Billing** - Pay for rows synced, not infrastructure
 - **AI-Native** - MCP tools for autonomous data operations
+- **Self-Healing** - Automatic retry, backfill, and error resolution
 
 ## Architecture
 
@@ -89,134 +160,52 @@ No ETL infrastructure to manage. No connectors to maintain. Just data that flows
               +---------------+---------------+
               |               |               |
     +------------------+ +------------------+ +------------------+
-    |     D1/R2        | | Cloudflare Queues| |   fsx.do/gitx.do |
-    |  (data storage)  | | (sync jobs)      | |   (MCP tools)    |
+    |     D1/R2        | | Cloudflare Queues| |   MCP Tools      |
+    |  (data storage)  | | (sync jobs)      | | (AI operations)  |
     +------------------+ +------------------+ +------------------+
 ```
 
-**Key insight**: Durable Objects provide reliable connector state and sync coordination. Each connector gets its own DO for isolation. Queues handle job scheduling. MCP tools enable AI-driven operations.
+**Key insight**: Durable Objects provide reliable connector state and sync coordination. Each connector gets its own DO for isolation. Queues handle job scheduling. AI interprets your intent and executes.
 
-## Installation
+## Connector Types
 
-```bash
-npm install @dotdo/fivetran
-```
-
-## Quick Start
-
-### Define Connectors
+### Sources
 
 ```typescript
-import { Fivetran } from '@dotdo/fivetran'
+// Databases
+fivetran`sync postgres tables users, orders, products to warehouse`
+fivetran`connect mysql with logical replication for real-time sync`
+fivetran`stream mongodb collections to data lake`
 
-const fivetran = new Fivetran({ id: 'analytics' })
+// SaaS
+fivetran`pull salesforce data every 15 minutes`
+fivetran`sync hubspot contacts and deals hourly`
+fivetran`connect stripe for payment analytics`
 
-// Database connector
-const postgres = fivetran.createConnector({
-  id: 'postgres-prod',
-  source: {
-    type: 'postgres',
-    connectionString: env.POSTGRES_URL,
-    tables: ['users', 'orders', 'products'],
-    replication: 'logical'  // CDC support
-  },
-  destination: {
-    type: 'd1',
-    database: env.ANALYTICS_DB
-  },
-  sync: {
-    schedule: 'every 5 minutes',
-    mode: 'incremental'
-  }
-})
-
-// SaaS connector
-const stripe = fivetran.createConnector({
-  id: 'stripe-payments',
-  source: {
-    type: 'stripe',
-    apiKey: env.STRIPE_API_KEY,
-    objects: ['customers', 'subscriptions', 'invoices', 'charges']
-  },
-  destination: {
-    type: 'r2',
-    bucket: env.DATA_LAKE,
-    format: 'parquet'
-  },
-  sync: {
-    schedule: 'every 1 hour',
-    mode: 'incremental',
-    lookback: '7 days'
-  }
-})
+// APIs
+fivetran`fetch data from ${apiEndpoint} daily`
+fivetran`sync graphql schema from ${endpoint}`
 ```
 
-### Connector Types
+### Destinations
 
 ```typescript
-// Database sources
-{ type: 'postgres', connectionString, tables, replication }
-{ type: 'mysql', connectionString, tables }
-{ type: 'mongodb', connectionString, collections }
-{ type: 'snowflake', account, warehouse, database }
+// Cloudflare-native
+fivetran`send all data to d1 database analytics`
+fivetran`archive to r2 in parquet format`
 
-// SaaS sources
-{ type: 'salesforce', credentials, objects }
-{ type: 'hubspot', apiKey, objects }
-{ type: 'stripe', apiKey, objects }
-{ type: 'shopify', shopDomain, accessToken }
-
-// API sources
-{ type: 'rest', baseUrl, endpoints, auth }
-{ type: 'graphql', endpoint, queries, auth }
-
-// File sources
-{ type: 's3', bucket, prefix, format }
-{ type: 'gcs', bucket, prefix, format }
-{ type: 'fsx', path, pattern }  // fsx.do integration
+// External warehouses
+fivetran`sync to snowflake account ${account}`
+fivetran`export to bigquery project ${project}`
 ```
 
-### Destination Types
+## Transformations
 
 ```typescript
-// Cloudflare destinations
-{ type: 'd1', database }
-{ type: 'r2', bucket, format: 'parquet' | 'json' | 'csv' }
+// SQL transforms (natural language)
+fivetran`sync users but lowercase all emails and filter inactive`
 
-// External destinations
-{ type: 'postgres', connectionString }
-{ type: 'snowflake', account, warehouse, database }
-{ type: 'bigquery', project, dataset }
-```
-
-### Sync Configuration
-
-```typescript
-fivetran.createConnector({
-  // ...source and destination
-  sync: {
-    // Schedule options
-    schedule: 'every 5 minutes',  // or 'every 1 hour', 'daily at 9am'
-    cron: '0 */6 * * *',          // or cron expression
-
-    // Sync modes
-    mode: 'full' | 'incremental',
-
-    // Incremental options
-    cursor: 'updated_at',         // Cursor field
-    lookback: '24 hours',         // Safety overlap
-
-    // Retry options
-    retries: 3,
-    backoff: 'exponential'
-  }
-})
-```
-
-### Transformations
-
-```typescript
-// SQL transformation
+// Or explicit SQL
 const connector = fivetran.createConnector({
   // ...
   transform: {
@@ -225,14 +214,14 @@ const connector = fivetran.createConnector({
       SELECT
         id,
         LOWER(email) as email,
-        created_at,
-        CASE WHEN status = 'active' THEN true ELSE false END as is_active
+        created_at
       FROM {{ source }}
+      WHERE status = 'active'
     `
   }
 })
 
-// TypeScript transformation
+// TypeScript transforms
 const connector = fivetran.createConnector({
   // ...
   transform: {
@@ -246,112 +235,62 @@ const connector = fivetran.createConnector({
 })
 ```
 
-### Monitoring and Webhooks
+## Monitoring
 
 ```typescript
-// Get connector status
-const status = await connector.status()
-// {
-//   id: 'salesforce-prod',
-//   status: 'healthy',
-//   lastSync: '2024-01-15T10:30:00Z',
-//   nextSync: '2024-01-15T10:45:00Z',
-//   stats: {
-//     rowsSynced: 15420,
-//     bytesTransferred: 2_340_000,
-//     duration: 45_000
-//   }
-// }
+// Natural language monitoring
+fivetran`what's the status of all connectors?`
+fivetran`which syncs failed in the last 24 hours?`
+fivetran`how many rows did we sync last week?`
 
-// Webhook notifications
+// Programmatic
 fivetran.onSyncComplete(async (event) => {
   console.log(`Sync completed: ${event.connectorId}`)
   console.log(`Rows synced: ${event.stats.rowsSynced}`)
 })
 
 fivetran.onSyncError(async (event) => {
-  await slack.notify(`Sync failed: ${event.error}`)
+  // AI can automatically diagnose and fix
+  await fivetran`diagnose and fix ${event.error}`
 })
 ```
 
-### Schema Management
+## AI Self-Healing
+
+When things break, fivetran.do fixes itself.
 
 ```typescript
-// Auto-detect schema changes
-const connector = fivetran.createConnector({
-  // ...
-  schema: {
-    autoMigrate: true,              // Auto-apply DDL changes
-    allowBreaking: false,           // Block column drops
-    trackHistory: true,             // Schema change history
-    notify: ['data-team@example.com']
+// Traditional approach: wake up at 2am, debug for hours
+// fivetran.do approach:
+
+fivetran.onSyncError(async (error) => {
+  // AI diagnoses the issue
+  const diagnosis = await fivetran`why did ${error.connector} fail?`
+
+  // AI fixes it if possible
+  const fix = await fivetran`fix ${diagnosis}`
+
+  // If AI can't fix, escalate to human with full context
+  if (!fix.resolved) {
+    await slack.notify({
+      channel: '#data-team',
+      message: `Sync issue needs human attention: ${diagnosis.summary}`,
+      context: diagnosis.fullContext
+    })
   }
 })
-
-// Manual schema operations
-await connector.schema.evolve({
-  addColumn: { name: 'region', type: 'string' }
-})
-
-await connector.schema.history()
-// [{ change: 'add_column', column: 'region', timestamp: '...' }]
 ```
 
-## MCP Tools Integration
+## Cost Comparison
 
-Fivetran.do is AI-native with MCP tool support:
+| Usage Level | Fivetran Pricing | fivetran.do | Savings |
+|-------------|------------------|-------------|---------|
+| Startup (10 connectors) | $1,200/mo | $75/mo | $13,500/yr |
+| Growth (50 connectors) | $5,000/mo | $250/mo | $57,000/yr |
+| Scale (200 connectors) | $25,000/mo | $1,000/mo | $288,000/yr |
+| Enterprise (500+) | $50,000+/mo | $2,500/mo | $570,000+/yr |
 
-```typescript
-import { Fivetran } from '@dotdo/fivetran'
-import { fsx } from 'fsx.do'
-import { gitx } from 'gitx.do'
-
-const fivetran = new Fivetran({
-  id: 'ai-data-platform',
-  tools: { fsx, gitx }
-})
-
-// AI agent can:
-// - Read source files with fsx.do
-// - Track schema changes with gitx.do
-// - Explore data transformations
-// - Debug sync issues
-```
-
-## API Reference
-
-### Fivetran Class
-
-```typescript
-new Fivetran(options: FivetranOptions)
-
-interface FivetranOptions {
-  id: string
-  tools?: { fsx?: FSx, gitx?: GitX }
-}
-```
-
-### Connector Methods
-
-```typescript
-connector.sync()           // Trigger immediate sync
-connector.pause()          // Pause scheduled syncs
-connector.resume()         // Resume syncs
-connector.status()         // Get current status
-connector.history()        // Get sync history
-connector.schema.evolve()  // Apply schema changes
-connector.schema.history() // Get schema change history
-connector.delete()         // Remove connector
-```
-
-### Events
-
-```typescript
-fivetran.onSyncStart(handler)
-fivetran.onSyncComplete(handler)
-fivetran.onSyncError(handler)
-fivetran.onSchemaChange(handler)
-```
+**Why the difference?** Fivetran charges per Monthly Active Row (MAR) with aggressive tier pricing. fivetran.do runs on Cloudflare's efficient infrastructure with usage-based pricing that scales linearly.
 
 ## The Rewrites Ecosystem
 
@@ -362,16 +301,40 @@ fivetran.do is part of the rewrites family - reimplementations of popular infras
 | [fsx.do](https://fsx.do) | fs (Node.js) | Filesystem for AI |
 | [gitx.do](https://gitx.do) | git | Version control for AI |
 | [supabase.do](https://supabase.do) | Supabase | Postgres/BaaS for AI |
-| [inngest.do](https://inngest.do) | Inngest | Workflows/Jobs for AI |
+| [airbyte.do](https://airbyte.do) | Airbyte | Data integration for AI |
 | **fivetran.do** | Fivetran | Data pipelines for AI |
-| kafka.do | Kafka | Event streaming for AI |
-| nats.do | NATS | Messaging for AI |
+| [kafka.do](https://kafka.do) | Kafka | Event streaming for AI |
 
 Each rewrite follows the same pattern:
+- Natural language first (tagged templates)
+- Promise pipelining for efficient chains
 - Durable Objects for state
-- SQLite for persistence
-- Cloudflare Queues for messaging
-- Compatible API with the original
+- Compatible structured API when you need it
+
+## The workers.do Platform
+
+fivetran.do is a core service of [workers.do](https://workers.do) - the platform for building Autonomous Startups.
+
+```typescript
+import { priya, ralph, tom, mark } from 'agents.do'
+import { fivetran } from '@dotdo/fivetran'
+
+// AI agents that handle your entire data infrastructure
+const dataTeam = {
+  architect: tom,    // Designs data pipelines
+  builder: ralph,    // Implements connectors
+  product: priya,    // Defines data requirements
+  analytics: mark,   // Creates reports
+}
+
+// Natural language orchestration
+await tom`design a data pipeline for our new analytics dashboard`
+  .map(design => ralph`implement ${design} with fivetran`)
+  .map(pipeline => priya`verify ${pipeline} meets product requirements`)
+  .map(verified => mark`create executive dashboard from ${verified}`)
+```
+
+Both kinds of workers. Working for you.
 
 ## Why Cloudflare?
 
@@ -380,13 +343,14 @@ Each rewrite follows the same pattern:
 3. **Unlimited Duration** - Long-running syncs supported
 4. **Built-in Queues** - Reliable job scheduling
 5. **D1 + R2** - Native destinations for data lake
+6. **AI-Native** - Natural language control with LLM integration
 
 ## Related Domains
 
 - **etl.do** - Extract, transform, load pipelines
 - **pipelines.do** - Data pipeline orchestration
 - **sync.do** - Real-time data synchronization
-- **transform.do** - Data transformations
+- **airbyte.do** - Open-source data integration
 
 ## License
 

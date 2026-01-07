@@ -1,24 +1,108 @@
 # temporal.do
 
-Temporal on Cloudflare - Durable execution for microservices orchestration without managing infrastructure.
+Durable workflows for startup founders. No servers. No Cassandra. Just code.
 
 ## The Problem
 
-Modern applications need durable workflow orchestration:
-- Coordinate distributed systems reliably
-- Handle long-running business processes
-- Manage failures and retries automatically
-- Maintain visibility into execution state
+You're building a startup. You need durable workflows:
+- Send a welcome email, wait 7 days, send a follow-up
+- Process an order with payment, inventory, and shipping
+- Onboard a customer with approval gates and retries
 
-Traditional solutions require:
+Traditional Temporal requires:
 - Running Temporal server clusters
-- Managing persistence backends (Cassandra/MySQL/PostgreSQL)
+- Managing Cassandra or MySQL persistence
 - Operating Elasticsearch for visibility
-- Complex multi-service deployments
+- Complex networking and service mesh
+- **47 hours to production** (and a DevOps engineer you don't have)
+
+**Every hour debugging infrastructure is an hour not building your product.**
+**Every $500/month on servers is runway burned.**
 
 ## The Vision
 
-Drop-in Temporal replacement running entirely on Cloudflare.
+Durable workflows in 47 seconds.
+
+```typescript
+import { temporal } from '@dotdo/temporal'
+
+temporal`process order ${order} with payment and shipping`
+temporal`onboard ${user.email} with welcome email, wait 7 days, then follow up`
+temporal`run daily at 9am: generate sales report`
+```
+
+Natural language. Tagged templates. Workflows as conversations.
+
+## Promise Pipelining
+
+Chain workflows without `Promise.all`. One network round trip:
+
+```typescript
+const result = await temporal`validate order ${order}`
+  .map(validated => temporal`charge ${validated.payment}`)
+  .map(charged => temporal`ship ${charged.items}`)
+  .map(shipped => temporal`email tracking to ${order.customer}`)
+// One network round trip!
+```
+
+Compose complex business processes:
+
+```typescript
+const onboarding = await temporal`create account for ${email}`
+  .map(account => temporal`send welcome email to ${account.email}`)
+  .map(() => temporal`wait 7 days`)
+  .map(() => temporal`send follow-up to ${email}`)
+  .map(() => temporal`check if ${email} completed onboarding`)
+  .map(status => status.completed
+    ? temporal`mark ${email} as active`
+    : temporal`escalate ${email} to sales`)
+```
+
+## Agent Integration
+
+Ask Ralph to build your workflows:
+
+```typescript
+import { ralph, tom, priya } from 'agents.do'
+
+ralph`implement an order processing workflow with retries and compensation`
+tom`review the workflow for failure handling edge cases`
+priya`add monitoring for workflow SLA violations`
+```
+
+Workflows can invoke agents:
+
+```typescript
+const support = await temporal`customer ${customer.id} submitted ticket ${ticket}`
+  .map(ticket => priya`triage support ticket: ${ticket.description}`)
+  .map(priority => priority === 'urgent'
+    ? temporal`page on-call with ${ticket}`
+    : temporal`queue ${ticket} for next business day`)
+```
+
+## The Transformation
+
+| Before (Traditional) | After (temporal.do) |
+|---------------------|---------------------|
+| 47 hours to production | 47 seconds |
+| $500/month infrastructure | $0 (included) |
+| 3 services to manage | 0 services |
+| Cassandra expertise required | Just TypeScript |
+| DevOps team needed | Solo founder ready |
+
+```bash
+# Before
+docker-compose up temporal cassandra elasticsearch
+# 47 hours of configuration, debugging, and prayer
+
+# After
+npm install @dotdo/temporal
+# Ship your product
+```
+
+## For Temporal Users (Familiar API)
+
+Already know Temporal? Use the structured API:
 
 ```typescript
 import { Temporal } from '@dotdo/temporal'
@@ -64,11 +148,12 @@ No servers to manage. No databases to operate. Just durable workflows that work.
 
 ## Features
 
-- **Workflows as Code** - Define business logic in TypeScript with full type safety
-- **Activity Execution** - Automatic retries with exponential backoff and configurable policies
-- **Signals and Queries** - Real-time workflow interaction and state inspection
+- **Natural Language Workflows** - Define business logic in plain English
+- **Promise Pipelining** - Chain workflows with `.map()` in one round trip
+- **Activity Execution** - Automatic retries with exponential backoff
+- **Signals and Queries** - Real-time workflow interaction
 - **Child Workflows** - Compose workflows hierarchically
-- **Timers and Scheduling** - Sleep, cron schedules, and delayed execution
+- **Timers and Scheduling** - Sleep, cron schedules, delayed execution
 - **Event History Replay** - Deterministic replay for failure recovery
 - **TypeScript First** - Full type safety matching Temporal SDK patterns
 - **Edge Native** - Runs on Cloudflare's global network
@@ -110,6 +195,28 @@ npm install @dotdo/temporal
 ```
 
 ## Quick Start
+
+### Tagged Template Style (Recommended)
+
+```typescript
+import { temporal } from '@dotdo/temporal'
+
+// Simple workflow
+await temporal`send welcome email to ${user.email}`
+
+// With timing
+await temporal`wait 7 days then send follow-up to ${user.email}`
+
+// With conditions
+await temporal`
+  if ${user.plan} is premium
+  then schedule onboarding call
+  else send self-service guide
+`
+
+// Scheduled
+await temporal`run daily at 9am: generate sales report and email to ${team}`
+```
 
 ### Define Activities
 

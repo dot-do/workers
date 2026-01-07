@@ -6,6 +6,116 @@ Veeva built a $50B+ empire on pharma's regulatory burden. 21 CFR Part 11 complia
 
 **veeva.do** is the open-source alternative. Deploy your own compliant life sciences platform. AI-native from day one. Audit-ready out of the box.
 
+## AI-Native API
+
+```typescript
+import { veeva, vault, tom, priya, quinn, ada } from 'veeva.do'
+
+// Natural language Vault queries
+const pending = await veeva`documents pending QA review`
+const trials = await veeva`active Phase 3 trials for ${compound}`
+const deviations = await veeva`protocol deviations in ${study} last 30 days`
+
+// Promise pipelining for regulatory workflows - one network round trip
+const submitted = await vault.documents.create({
+  name: 'Protocol Amendment 3',
+  type: 'Clinical Protocol',
+  study: studyId,
+  file: protocolPdf,
+})
+  .map(doc => tom`review for 21 CFR Part 11 compliance`)
+  .map(doc => priya`check regulatory alignment`)
+  .map(doc => quinn`verify test coverage`)
+  .map(doc => vault`route for e-signature`)
+
+// VQL with AI interpretation
+const results = await veeva`
+  SELECT name, version, lifecycle_status
+  FROM documents
+  WHERE lifecycle_status = 'approved'
+  AND study = '${studyId}'
+`.map(docs => ada`summarize regulatory status`)
+
+// Clinical workflow with parallel review
+const safetyReport = await veeva`find overdue safety reports for ${study}`
+  .map(report => veeva`generate CIOMS narrative for ${report}`)
+  .map(narrative => [priya, tom, quinn].map(r => r`review ${narrative}`))
+  .map(approved => vault`submit to regulatory authority`)
+```
+
+### VQL (Vault Query Language)
+
+Native VQL support for complex document queries:
+
+```typescript
+import { vql } from 'veeva.do'
+
+// Type-safe VQL queries
+const approved = await vql`
+  SELECT id, name, version, created_date
+  FROM documents
+  WHERE lifecycle_status = 'approved'
+  AND study__v = '${studyId}'
+  ORDER BY created_date DESC
+  LIMIT 50
+`
+
+// Cross-object queries
+const submissionDocs = await vql`
+  SELECT d.name, d.version, s.sequence_number
+  FROM documents d
+  JOIN submission_documents sd ON d.id = sd.document_id
+  JOIN submissions s ON sd.submission_id = s.id
+  WHERE s.application_number = '${ndaNumber}'
+`
+
+// AI-enhanced VQL with natural language fallback
+const results = await veeva`
+  find all stability protocols approved in 2024
+  for products in ${therapeuticArea}
+`
+// Translates to VQL, executes, returns structured results
+```
+
+### Binders
+
+Document collections with lifecycle management:
+
+```typescript
+import { vault } from 'veeva.do'
+
+// Create regulatory binder
+const binder = await vault.binders.create({
+  name: 'NDA-123456 Submission Package',
+  type: 'regulatory_submission',
+  template: 'ectd_v4',
+  study: studyId,
+})
+
+// Add documents to binder sections
+await binder
+  .section('m2.5', 'Clinical Overview')
+  .add('DOC-001', 'DOC-002', 'DOC-003')
+
+await binder
+  .section('m2.7.4', 'Summary of Clinical Safety')
+  .add(await veeva`safety documents for ${studyId}`)
+
+// Binder workflows with pipelining
+const published = await binder
+  .map(b => tom`review completeness`)
+  .map(b => priya`verify CTD structure`)
+  .map(b => vault`publish as ${binder.name} v1.0`)
+
+// Query binder contents
+const contents = await vql`
+  SELECT section, document_name, status
+  FROM binder_contents
+  WHERE binder_id = '${binder.id}'
+  ORDER BY section
+`
+```
+
 ## The workers.do Way
 
 You're a clinical operations lead who needs to move fast but can't afford compliance mistakes. Every day you juggle trial data, regulatory submissions, and medical affairs - while Veeva charges you per seat to access your own data.
@@ -13,33 +123,28 @@ You're a clinical operations lead who needs to move fast but can't afford compli
 **workers.do** gives you AI agents that speak life sciences:
 
 ```typescript
-import { veeva, mark } from 'workers.do'
+import { veeva, vault, priya, tom, quinn, ada } from 'veeva.do'
 
 // Natural language for clinical operations
-const trials = await veeva`find active Phase 3 trials for ${compound}`
-const deviations = await veeva`list protocol deviations in ${study} last 30 days`
-const submissions = await veeva`show pending eCTD documents for ${nda}`
+const trials = await veeva`active Phase 3 trials for ${compound}`
+const pending = await vault`documents pending QA review`
+const submissions = await veeva`pending eCTD documents for ${nda}`
+
+// AI agents that understand 21 CFR Part 11
+await priya`review FDA feedback on ${submission} and prioritize responses`
+await tom`audit trail analysis for ${document} - flag compliance gaps`
+await quinn`verify validation status of ${system}`
 ```
 
 Promise pipelining for complex workflows - one network round trip:
 
 ```typescript
 // Trial monitoring to regulatory submission
-const submitted = await veeva`find overdue safety reports for ${study}`
-  .map(report => veeva`generate narrative for ${report}`)
+const submitted = await veeva`overdue safety reports for ${study}`
+  .map(report => veeva`generate CIOMS narrative for ${report}`)
+  .map(narrative => [tom, priya].map(r => r`review ${narrative}`))
   .map(narrative => veeva`attach to eCTD section 2.7.4`)
-  .map(section => mark`notify regulatory team about ${section}`)
-```
-
-AI agents that understand 21 CFR Part 11:
-
-```typescript
-import { priya, ralph, tom } from 'agents.do'
-
-// Regulatory intelligence
-await priya`review FDA feedback on ${submission} and prioritize responses`
-await ralph`cross-reference ${protocol} amendments with IRB approvals`
-await tom`audit trail analysis for ${document} - flag any compliance gaps`
+  .map(section => ada`notify regulatory team about ${section}`)
 ```
 
 ## The Problem
@@ -92,31 +197,30 @@ npm run deploy
 
 ### Veeva CRM Compatible
 
-Full medical affairs and commercial CRM:
+Full medical affairs and commercial CRM with natural language:
 
 ```typescript
-import { crm } from 'veeva.do'
+import { crm, ada, tom, mark } from 'veeva.do'
 
-// Medical Affairs - HCP Engagement
-await crm.calls.create({
+// Natural language HCP engagement
+const hcps = await crm`oncologists in ${territory} interested in immunotherapy`
+const kols = await crm`key opinion leaders for ${therapeuticArea}`
+
+// MSL call with AI follow-up
+const call = await crm.calls.create({
   account: 'DR-0012345',
-  type: 'Medical Science Liaison',
+  type: 'MSL',
   products: ['PRODUCT-A'],
-  keyMessages: ['KM-001', 'KM-002'],
-  samples: [], // MSLs don't sample
-  outcome: 'Requested clinical data',
-  followUp: 'Send Phase 3 results',
+  outcome: 'Requested Phase 3 data',
 })
+  .map(call => ada`draft follow-up email with clinical data`)
+  .map(email => tom`review for compliance`)
+  .map(email => mark`schedule send for ${call.account}`)
 
-// Commercial - Sales Call
-await crm.calls.create({
-  account: 'HCP-0067890',
-  type: 'Sales Rep',
-  products: ['PRODUCT-B'],
-  keyMessages: ['KM-003'],
-  samples: [{ product: 'PRODUCT-B', quantity: 5, lot: 'LOT-2025-001' }],
-  signatures: [{ type: 'sample_receipt', captured: true }],
-})
+// Territory insights with pipelining
+const insights = await crm`accounts in ${territory}`
+  .map(accounts => ada`analyze engagement patterns`)
+  .map(patterns => ada`recommend call priorities for next week`)
 ```
 
 ### Account Management
@@ -247,34 +351,32 @@ Document management with 21 CFR Part 11 compliance built in:
 ### Document Lifecycle
 
 ```typescript
-import { vault } from 'veeva.do'
+import { vault, tom, priya, quinn } from 'veeva.do'
 
-// Upload a new document
-const doc = await vault.documents.create({
+// Full document lifecycle with pipelining
+const approved = await vault.documents.create({
   name: 'Protocol Amendment 3',
   type: 'Clinical Protocol',
-  lifecycle: 'clinical_document',
-  properties: {
-    study: 'STUDY-001',
-    phase: 'Phase 3',
-    therapeutic_area: 'Oncology',
-  },
+  study: 'STUDY-001',
+  phase: 'Phase 3',
   file: protocolPdf,
 })
+  .map(doc => tom`review for regulatory compliance`)
+  .map(doc => priya`verify alignment with study objectives`)
+  .map(doc => quinn`check formatting and cross-references`)
+  .map(doc => vault.workflow('review_and_approve', {
+    reviewers: [tom, priya],
+    approvers: [cmo],
+    dueDate: '2025-02-15',
+  }))
+  .map(doc => vault.sign({
+    meaning: 'I approve this document for use in clinical trials',
+  }))
 
-// Route for review
-await doc.startWorkflow('review_and_approve', {
-  reviewers: ['user-001', 'user-002'],
-  approvers: ['user-003'],
-  dueDate: '2025-02-15',
-})
-
-// Electronic signature (21 CFR Part 11)
-await doc.sign({
-  user: 'user-003',
-  meaning: 'I approve this document for use in clinical trials',
-  credentials: { username: 'jsmith', password: '***' }, // Re-authentication
-})
+// Natural language document queries
+const protocols = await vault`active protocols for ${study}`
+const pending = await vault`documents awaiting my signature`
+const expired = await vault`documents expiring in the next 30 days`
 ```
 
 ### Audit Trail
@@ -298,57 +400,67 @@ const history = await vault.audit.query({
 
 ### Regulatory Submissions
 
-eCTD-ready document management:
+eCTD-ready document management with pipelining:
 
 ```typescript
-// Build submission
-const submission = await vault.submissions.create({
+import { vault, priya, tom, ada } from 'veeva.do'
+
+// Build and validate submission in one pipeline
+const submitted = await vault.submissions.create({
   type: 'NDA',
   application: 'NDA-123456',
   sequence: '0001',
   region: 'US',
 })
+  .map(sub => vault`add CTD section 2.5 documents for ${sub}`)
+  .map(sub => vault`add CTD section 2.7.4 documents for ${sub}`)
+  .map(sub => tom`validate eCTD structure`)
+  .map(sub => priya`verify regulatory requirements`)
+  .map(sub => vault.compile({ format: 'eCTD 4.0' }))
 
-// Add documents to CTD structure
-await submission.addDocument({
-  document: 'DOC-001',
-  ctdSection: 'm2-25', // 2.5 Clinical Overview
-  operation: 'new',
-})
+// Natural language submission queries
+const gaps = await vault`missing documents for NDA-123456 by CTD section`
+const timeline = await vault`submission timeline risks for ${nda}`
 
-// Generate eCTD package
-const ectd = await submission.compile({
-  format: 'eCTD 4.0',
-  validate: true,
-})
+// AI-assisted submission planning
+const plan = await priya`
+  We're planning to submit ${nda} in Q3 2025.
+  Identify missing documents, needed updates, and timeline risks.
+`.map(analysis => ada`generate project timeline with milestones`)
 ```
 
 ### Quality Management
 
-CAPA, deviations, change control:
+CAPA, deviations, change control with AI-assisted root cause analysis:
 
 ```typescript
-// Create deviation
-const deviation = await vault.quality.deviation({
+import { vault, quinn, tom, ada } from 'veeva.do'
+
+// Deviation with AI-assisted investigation
+const resolved = await vault.quality.deviation({
   type: 'Manufacturing',
   description: 'Batch temperature exceeded limit by 2C for 15 minutes',
   batch: 'BATCH-2025-001',
-  impact: 'potential',
-  rootCause: 'pending',
 })
+  .map(dev => quinn`investigate root cause`)
+  .map(dev => ada`analyze similar historical deviations`)
+  .map(dev => tom`recommend corrective actions`)
+  .map(dev => vault.quality.capa({
+    deviation: dev.id,
+    correctiveActions: dev.recommendations.corrective,
+    preventiveActions: dev.recommendations.preventive,
+  }))
 
-// Escalate to CAPA if needed
-if (deviation.requiresCapa) {
-  await vault.quality.capa({
-    deviation: deviation.id,
-    correctiveActions: [
-      { action: 'Calibrate temperature sensor', owner: 'user-001', due: '2025-02-01' },
-    ],
-    preventiveActions: [
-      { action: 'Add redundant sensor', owner: 'user-002', due: '2025-03-01' },
-    ],
-  })
-}
+// Natural language quality queries
+const open = await vault`open deviations for ${facility}`
+const trending = await vault`deviation trends by category last 6 months`
+const overdue = await vault`overdue CAPA actions`
+
+// Proactive quality monitoring
+await quinn`
+  monitor batch records for ${productLine}
+  flag any patterns that might indicate quality issues
+`.map(alerts => ada`prioritize by risk level`)
 ```
 
 ## 21 CFR Part 11 Compliance
@@ -428,83 +540,55 @@ const validation = await vault.validation.generate({
 
 ## AI-Native
 
-### AI for Medical Affairs
+AI agents that understand life sciences, 21 CFR Part 11, and regulatory workflows:
 
 ```typescript
-import { ada } from 'veeva.do/agents'
+import { veeva, vault, crm, ada, priya, tom, quinn, ralph } from 'veeva.do'
 
-// Medical information requests
-await ada`
-  Dr. Chen asked about PRODUCT-A efficacy in elderly patients.
-  Search our medical information database and draft a response
-  citing relevant clinical trial data.
-`
-// Ada searches approved content, drafts response with citations,
-// routes to Medical Information for review before sending
+// Medical Affairs - Information requests with compliance review
+const response = await ada`
+  Dr. Chen asked about ${product} efficacy in elderly patients
+`.map(draft => tom`review for off-label compliance`)
+  .map(response => crm`log medical inquiry response to ${hcp}`)
+
+// Clinical Operations - Deviation detection and resolution
+const deviations = await ralph`
+  review clinical database for ${study}
+  identify protocol deviations in last 30 days
+`.map(findings => quinn`assess impact and severity`)
+  .map(assessed => vault`create deviation records`)
+
+// Regulatory Affairs - Submission with parallel review
+const submitted = await priya`
+  FDA sent CMC questions for ${nda}
+  draft responses based on stability data
+`.map(draft => [tom, quinn].map(r => r`review ${draft}`))
+  .map(response => vault`attach to submission ${nda}`)
+
+// Document comparison with AI interpretation
+const changes = await vault`compare ${protocol} v3.0 with v2.0`
+  .map(diff => priya`flag changes requiring IRB notification`)
+  .map(flags => ada`draft re-consent notifications if needed`)
 
 // Literature surveillance
 await ada`
-  Monitor PubMed for new publications mentioning PRODUCT-A or
-  our mechanism of action. Flag anything relevant to our
-  competitive positioning or safety profile.
-`
+  monitor PubMed for publications about ${product}
+  flag competitive or safety implications
+`.map(alerts => priya`assess regulatory impact`)
 ```
 
-### AI for Clinical Operations
+### MCP Tools
+
+AI assistants interact directly through the Model Context Protocol:
 
 ```typescript
-import { ralph } from 'agents.do'
-import { vault } from 'veeva.do'
-
-// Protocol deviation detection
-await ralph`
-  Review the clinical database for Study STUDY-001.
-  Identify any potential protocol deviations in the last 30 days.
-  Cross-reference with site monitoring visit reports.
-`
-
-// Document comparison
-await ralph`
-  Compare Protocol v3.0 with v2.0.
-  Summarize all changes and flag any that might require
-  IRB notification or patient re-consent.
-`
+// Every operation is an MCP tool
+veeva`documents pending review`       // Natural language query
+vault.documents.create(doc)           // Structured creation
+crm.calls.create(call)                // CRM operations
+vault.quality.deviation(data)         // Quality management
+vault.submissions.compile(sub)        // Regulatory submissions
 ```
-
-### AI for Regulatory Affairs
-
-```typescript
-import { priya } from 'agents.do'
-
-// Submission planning
-await priya`
-  We're planning to submit NDA-123456 in Q3 2025.
-  Based on our current document inventory, identify:
-  1. Missing documents by CTD section
-  2. Documents needing updates
-  3. Timeline risks
-`
-
-// Health authority query response
-await priya`
-  FDA sent questions about our CMC section.
-  Draft responses based on our stability data and
-  manufacturing records. Flag any gaps.
-`
-```
-
-### MCP Tools for Every Module
-
-```typescript
-// Auto-generated MCP tools
-veeva.crm.calls.create(data)      // Log a call
-veeva.crm.accounts.search(query)  // Find HCPs/HCOs
-veeva.vault.documents.upload(doc) // Upload document
-veeva.vault.workflows.start(flow) // Start review
-veeva.quality.deviations.create() // Report deviation
-```
-
-AI assistants can directly interact with your life sciences platform through the Model Context Protocol.
 
 ## Architecture
 

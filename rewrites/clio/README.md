@@ -35,6 +35,64 @@ Billable hour leakage            AI reconstructs missed time
 API access costs extra           Full API included
 ```
 
+## AI-Native API
+
+```typescript
+import { clio, tom, priya, ralph } from 'clio.do'
+
+// Natural language legal queries
+const matters = await clio`open matters for client Smith`
+const unbilled = await clio`unbilled time entries this week`
+const overdue = await clio`invoices past due more than 30 days`
+
+// Promise pipelining for billing workflow
+const invoiced = await clio`all open matters needing invoices`
+  .map(m => clio`generate invoice for ${m}`)
+  .map(inv => priya`review billing for appropriateness`)
+  .map(inv => tom`check for block billing issues`)
+  .map(inv => clio`send to client`)
+
+// Legal research with AI
+const research = await tom`
+  Research California case law on:
+  - ${legalIssue}
+  Return citations and summaries
+`.map(findings => clio`attach to matter ${matterId}`)
+
+// End-of-day time reconstruction
+const timeEntries = await ralph`
+  Review my activity today and reconstruct billable time from:
+  - Emails sent and received
+  - Documents edited
+  - Calendar events
+  - Court filings
+`.map(entries => clio`create time entries ${entries}`)
+  .map(() => priya`review for billing accuracy`)
+
+// Client intake pipeline
+const newMatter = await clio`new client intake for ${clientName}`
+  .map(intake => tom`run conflicts check against ${intake}`)
+  .map(cleared => priya`prepare engagement letter`)
+  .map(letter => clio`send for e-signature`)
+```
+
+### Tree-Shakable Imports
+
+```typescript
+// Full featured - all AI capabilities
+import { clio, tom, priya, ralph, quinn } from 'clio.do'
+
+// Lightweight - just the client, no AI agents
+import { clio } from 'clio.do/client'
+
+// RPC only - for Workers service bindings
+import { createClioRpc } from 'clio.do/rpc'
+const clio = createClioRpc(env.CLIO)
+
+// Types only - for external integrations
+import type { Matter, TimeEntry, Invoice } from 'clio.do/types'
+```
+
 ## One-Click Deploy
 
 ```bash
@@ -375,124 +433,126 @@ await clio.tasks.create({
 
 ## AI-Native Practice Management
 
-### AI Legal Assistant
+### Pipelined Litigation Workflow
 
 ```typescript
-import { tom } from 'agents.do'
+import { clio, tom, priya, ralph, quinn, mark } from 'clio.do'
 
-// Research assistant
-await tom`
+// Discovery to trial preparation - one pipeline
+const trialReady = await clio`discovery responses for ${matter}`
+  .map(responses => tom`
+    Review discovery responses, identify:
+    - Incomplete or evasive answers
+    - Potential privilege issues
+    - Follow-up questions needed
+  `)
+  .map(issues => tom`draft meet and confer letter for ${issues}`)
+  .map(letter => priya`review for professional tone`)
+  .map(letter => clio`file to matter and send to opposing counsel`)
+
+// Legal research pipeline
+const research = await tom`
   Research California case law on:
   - Rear-end collision presumption of negligence
   - Soft tissue injury damages in LA County
   - Recent verdicts for similar cases
+`.map(findings => quinn`verify all citations are current`)
+  .map(verified => clio`attach research memo to ${matter}`)
 
-  Summarize findings for Smith v. Johnson matter.
-`
-
-// Document review
-await tom`
-  Review the discovery responses in MAT-001.
-  Identify:
-  1. Incomplete or evasive answers
-  2. Potential privilege issues
-  3. Follow-up questions needed
-
-  Draft a meet and confer letter.
-`
+// Deposition preparation pipeline
+const depPrep = await clio`all documents for witness ${witness}`
+  .map(docs => tom`identify key exhibits for deposition`)
+  .map(exhibits => priya`prepare examination outline`)
+  .map(outline => clio`create deposition prep binder`)
 ```
 
 ### AI Time Reconstruction
 
 ```typescript
-import { ralph } from 'agents.do'
+import { clio, ralph, priya } from 'clio.do'
 
-// End of day time capture
-await ralph`
-  Review my activity today and identify billable time I may have missed:
-
-  - Emails sent (check for matter-related correspondence)
-  - Documents edited (check for client work)
-  - Calendar events (meetings and calls)
+// End of day - reconstructs billable time automatically
+const captured = await ralph`
+  Review my activity today and reconstruct billable time:
+  - Emails sent and received
+  - Documents edited (version history)
+  - Calendar events and calls
   - Court filings submitted
+`.map(entries => clio`create draft time entries`)
+  .map(drafts => priya`review for billing accuracy and block billing`)
 
-  Present as time entries for my review.
-`
-
-// Ralph analyzes and returns:
-// "Based on your activity, I found potential billable time:
-//
-// 1. Smith v. Johnson (MAT-001)
-//    - 0.3h - Email to opposing counsel re: discovery deadline
-//    - 0.5h - Revised settlement demand letter (3 versions saved)
-//    - 0.2h - Client email responding to questions
-//
-// 2. Garcia Estate (MAT-003)
-//    - 1.0h - Probate petition draft (document history shows editing)
-//
-// Shall I create these time entries for your review?"
+// Weekly time audit pipeline
+const weeklyAudit = await clio`all time entries this week`
+  .map(entries => priya`
+    Audit for:
+    - Block billing violations
+    - Vague descriptions ("review file", "correspondence")
+    - Potential write-downs
+    - Duplicate entries
+  `)
+  .map(issues => clio`flag entries needing attorney review`)
 ```
 
-### AI Billing Review
+### AI Billing Workflow
 
 ```typescript
-import { priya } from 'agents.do'
+import { clio, tom, priya, mark } from 'clio.do'
 
-// Pre-bill review
-await priya`
-  Review the draft invoice for Smith v. Johnson:
+// Full billing pipeline - from unbilled time to paid invoice
+const collected = await clio`unbilled time for ${matter}`
+  .map(time => clio`generate draft invoice`)
+  .map(draft => priya`
+    Review invoice for:
+    - Client-appropriate descriptions
+    - Block billing separation
+    - Appropriate write-downs
+  `)
+  .map(reviewed => tom`check for ethical billing issues`)
+  .map(approved => mark`
+    Write billing narrative:
+    - Work performed this period
+    - Key accomplishments
+    - Upcoming milestones
+  `)
+  .map(final => clio`send invoice to client`)
+  .map(sent => clio`track until payment received`)
 
-  1. Check for block billing that should be separated
-  2. Identify vague descriptions ("review file", "correspondence")
-  3. Flag potential write-down candidates
-  4. Ensure descriptions are client-appropriate
-  5. Check for duplicate entries
-
-  Provide specific recommendations.
-`
-
-// Invoice narrative generation
-await priya`
-  Generate a billing narrative summary for the Smith v. Johnson invoice:
-
-  - Summarize work performed this month
-  - Highlight key accomplishments
-  - Note upcoming milestones
-  - Professional tone suitable for client
-
-  Format for inclusion with invoice.
-`
+// Trust accounting pipeline
+const trustTransfer = await clio`earned fees for ${matter}`
+  .map(earned => priya`verify fees earned per engagement letter`)
+  .map(verified => clio`transfer from trust to operating`)
+  .map(transfer => clio`send trust account statement to client`)
 ```
 
 ### AI Client Communication
 
 ```typescript
-import { mark } from 'agents.do'
+import { clio, mark, priya } from 'clio.do'
 
-// Client update
-await mark`
-  Draft a status update email for the Smith v. Johnson matter:
+// Client update pipeline
+const clientUpdate = await clio`recent activity on ${matter}`
+  .map(activity => mark`
+    Draft status update email:
+    - Recent progress
+    - Next steps
+    - Timeline expectations
+    Tone: Reassuring, accessible to non-lawyers
+  `)
+  .map(draft => priya`review for accuracy and professionalism`)
+  .map(approved => clio`send to client`)
 
-  - Summarize recent activity (discovery completed)
-  - Explain next steps (mediation scheduled)
-  - Set expectations (timeline, process)
-  - Offer to schedule a call
-
-  Tone: Reassuring but professional
-  Reading level: Accessible to non-lawyers
-`
-
-// Intake questionnaire
-await mark`
-  Based on the initial consultation notes for a new PI matter:
-
-  1. Generate intake questionnaire for client
-  2. List documents to request
-  3. Draft engagement letter
-  4. Create conflict check memo
-
-  Ensure compliance with California Rules of Professional Conduct.
-`
+// New client intake pipeline
+const intake = await clio`consultation notes for ${prospect}`
+  .map(notes => tom`run conflicts check against all matters`)
+  .map(cleared => mark`
+    Prepare intake package:
+    - Engagement letter
+    - Client questionnaire
+    - Document request list
+    - Fee agreement
+  `)
+  .map(pkg => priya`review for California RPC compliance`)
+  .map(compliant => clio`send for e-signature`)
 ```
 
 ## Comparison: Clio vs clio.do

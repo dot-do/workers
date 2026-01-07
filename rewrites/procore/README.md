@@ -10,36 +10,92 @@ Procore built a $12B+ company managing construction chaos - RFIs, submittals, dr
 
 You're a superintendent standing in a muddy trailer at 6 AM, trying to figure out why steel delivery is late and whether you can pour concrete tomorrow. Your field crew needs answers, not software licenses.
 
-**workers.do** gives you AI that speaks construction:
+**workers.do** gives you AI that speaks construction.
+
+## AI-Native API
 
 ```typescript
-import { procore, mark } from 'workers.do'
+import { procore, ada, ralph } from 'procore.do'
 
-// Natural language for the jobsite
-const rfis = await procore`create RFI for ${issue} on ${project}`
-const submittals = await procore`show pending submittals blocking steel erection`
-const schedule = await procore`what activities are impacted if concrete slips 2 days`
+// Natural language construction queries
+const rfis = await procore`open RFIs for Building A`
+const punchlist = await procore`incomplete punch items by trade`
+const impact = await procore`what activities are impacted if concrete slips 2 days`
 ```
 
-Promise pipelining for field-to-office workflows - one network round trip:
+### Promise Pipelining for Field Workflows
+
+One network round trip from photo to resolution:
 
 ```typescript
-// RFI through resolution
-const resolved = await procore`photograph ${issue} at grid B-7`
-  .map(photo => procore`create RFI with ${photo} for structural engineer`)
-  .map(rfi => procore`track response and update drawing markup`)
-  .map(resolution => mark`notify foreman about ${resolution}`)
+// Field issue → RFI → Engineer response → Drawing update → Schedule impact
+const resolved = await procore`photograph structural issue at grid B-7`
+  .map(photos => procore`create RFI with ${photos}`)
+  .map(rfi => ada`analyze engineer response when received`)
+  .map(spec => procore`update drawing markup`)
+  .map(markup => priya`calculate schedule impact`)
 ```
 
-AI agents that understand construction:
+### Daily Log with AI
 
 ```typescript
-import { priya, ralph, tom } from 'agents.do'
+const log = await procore`create daily log for ${date}`
+  .then(log => ada`flag safety concerns from ${log}`)
+  .then(concerns => procore`notify superintendent if critical`)
+```
 
-// Project intelligence
+### AI Agents That Understand Construction
+
+```typescript
+import { priya, ralph, tom, ada, quinn } from 'agents.do'
+
+// Project intelligence - each agent has construction expertise
 await priya`analyze punch list and prioritize by trade for ${project}`
 await ralph`compare change order ${pco} against original bid quantities`
 await tom`review ${drawing} rev 3 against rev 2 - flag coordination issues`
+await ada`extract quantities from architectural floor plans`
+await quinn`verify all RFI responses are incorporated into drawings`
+```
+
+### Tree-Shakable Imports
+
+```typescript
+// Full package - all features
+import { procore } from 'procore.do'
+
+// Tiny - minimal core for field devices
+import { procore } from 'procore.do/tiny'
+
+// RPC only - expects service binding
+import { procore } from 'procore.do/rpc'
+
+// With offline sync
+import { procore, sync } from 'procore.do/offline'
+
+// Agent-specific packages
+import { ada } from 'ada.do'  // Construction AI specialist
+```
+
+### MCP Tools for Voice-Activated Field Work
+
+Every feature exposes MCP tools for AI assistants:
+
+```typescript
+// Voice-activated daily logging (works offline)
+"Hey Ada, log my daily report. We had 8 electricians on site,
+worked on rough-in for floors 2 and 3, passed the underground inspection."
+
+// Photo-to-punch-item pipeline
+"Create a punch item for this photo - ceiling tile is damaged in room 305"
+// → Uploads photo → Creates punch item → Assigns to trade → Notifies super
+
+// Quick lookups from the field
+"What's the status of the storefront submittal?"
+"Who's the contact for the steel subcontractor?"
+"When is the concrete pour scheduled?"
+
+// Safety alerts
+"Ada, review today's work permits and flag any conflicts"
 ```
 
 ## The Problem
@@ -109,80 +165,63 @@ const project = await procore.projects.create({
 
 ### RFIs (Requests for Information)
 
-The lifeblood of construction communication:
+The lifeblood of construction communication - now with AI-native workflows:
 
 ```typescript
-// Create RFI
+// Natural language RFI creation
+const rfi = await procore`create RFI for bolt spec at grid B-7 referencing S-201 and S-501`
+
+// Or full pipeline from field observation to resolution
+const resolved = await procore`photograph connection at grid B-7`
+  .map(photo => procore`create RFI: bolt spec unclear in ${photo}`)
+  .map(rfi => procore`route to Structural Engineer of Record`)
+  .map(response => procore`incorporate into ASI and close`)
+
+// AI-assisted RFI drafting
+const rfi = await ada`
+  Draft RFI: Drawing S-201 shows W12x26 beam at grid B-7.
+  Connection detail 4/S-501 doesn't specify bolt size.
+  Reference our structural specs and similar past projects.
+`.then(draft => procore`create RFI from ${draft}`)
+
+// Programmatic access when needed
 const rfi = await procore.rfis.create({
   project: 'DMC-2025',
-  number: 'RFI-047',
   subject: 'Structural steel connection detail at grid B-7',
-  question: `
-    Drawing S-201 shows W12x26 beam connecting to W14x30 column at grid B-7.
-    Connection detail 4/S-501 shows bolted connection but doesn't specify bolt size.
-    Please confirm bolt specification.
-  `,
   referenceDrawings: ['S-201', 'S-501'],
   assignedTo: 'Structural Engineer of Record',
-  dueDate: '2025-02-15',
-  costImpact: 'TBD',
-  scheduleImpact: 'Potentially 3 days if steel fabrication is delayed',
-})
-
-// Track response
-await rfi.respond({
-  response: 'Use 3/4" A325 bolts. See attached revised detail.',
-  attachments: ['connection-detail-rev1.pdf'],
-  respondedBy: 'John Smith, PE',
-})
-
-// Close with final action
-await rfi.close({
-  closedBy: 'user-003',
-  resolution: 'Incorporated into ASI-023',
 })
 ```
 
 ### Submittals
 
-Track every material and shop drawing:
+Track every material and shop drawing with AI-assisted review:
 
 ```typescript
-// Create submittal
+// Natural language submittal queries
+const pending = await procore`pending submittals blocking steel erection`
+const overdue = await procore`submittals past due date this week`
+
+// Full submittal workflow with AI review
+const approved = await procore`receive storefront shop drawings from ABC Glazing`
+  .map(drawings => ada`review against spec 08 41 13 and flag conflicts`)
+  .map(review => procore`route to architect with ${review.notes}`)
+  .map(response => procore`process architect comments`)
+  .map(final => procore`distribute approved submittal to field`)
+
+// AI catches coordination issues before architect review
+const reviewed = await ada`
+  Review submittal SUB-103 aluminum storefront framing.
+  Check frame depth against ceiling soffit in reflected ceiling plan.
+  Verify hardware spec matches door schedule.
+`.then(analysis => procore`attach AI review to submittal`)
+
+// Programmatic access when needed
 const submittal = await procore.submittals.create({
   project: 'DMC-2025',
-  number: 'SUB-103',
   specSection: '08 41 13',
   description: 'Aluminum Storefront Framing - Building A Main Entrance',
-  type: 'Shop Drawings',
   subcontractor: 'ABC Glazing Co',
-  items: [
-    { description: 'Frame elevation', quantity: 3, pages: 'A1-A3' },
-    { description: 'Section details', quantity: 4, pages: 'D1-D4' },
-    { description: 'Hardware schedule', quantity: 1, pages: 'H1' },
-  ],
-  required: {
-    specCompliance: true,
-    productData: true,
-    samples: false,
-  },
-})
-
-// Route for review
-await submittal.route({
-  workflow: [
-    { reviewer: 'Project Engineer', action: 'review' },
-    { reviewer: 'Architect', action: 'review' },
-    { reviewer: 'Project Manager', action: 'approve' },
-  ],
-})
-
-// Architect reviews
-await submittal.review({
-  reviewer: 'architect@firm.com',
-  status: 'Revise and Resubmit',
-  comments: 'Frame depth conflicts with ceiling soffit. See attached markup.',
-  markup: 'submittal-markup.pdf',
 })
 ```
 
@@ -441,9 +480,9 @@ await procore.offline.conflictStrategy({
 })
 ```
 
-## AI-Native
+## AI Construction Intelligence
 
-### AI That Reads Drawings
+### Ada: The Construction AI Specialist
 
 ```typescript
 import { ada } from 'procore.do/agents'
@@ -466,91 +505,86 @@ await ada`
 `
 ```
 
-### AI RFI Management
+### Intelligent RFI Pipeline
 
 ```typescript
-import { ralph } from 'agents.do'
+import { ada, ralph, priya } from 'procore.do'
 
-// Draft RFI response
-await ralph`
+// AI-powered RFI lifecycle with pipelining
+const analysis = await procore`get all RFIs for Downtown Medical Center`
+  .map(rfis => ada`analyze patterns - which disciplines generate most RFIs?`)
+  .map(patterns => priya`recommend process improvements based on ${patterns}`)
+  .map(recommendations => procore`create action items from ${recommendations}`)
+
+// Draft responses with historical context
+const response = await ada`
   RFI-047 asks about bolt specification at grid B-7.
-  Search our structural specifications and similar past projects.
-  Draft a response for the structural engineer to review.
-`
-
-// Identify RFI patterns
-await ralph`
-  Analyze all RFIs on the Downtown Medical Center project.
-  What design disciplines are generating the most RFIs?
-  Are there systemic coordination issues we should address?
-`
+  Search structural specs and similar past projects.
+`.then(research => ralph`draft response using ${research}`)
+  .then(draft => procore`attach draft to RFI for engineer review`)
 ```
 
 ### AI Schedule Analysis
 
 ```typescript
-import { tom } from 'agents.do'
+import { tom, priya } from 'procore.do'
 
-// Schedule risk analysis
-await tom`
-  Review the DMC-2025 master schedule.
-  Identify activities on critical path with high risk:
-  - Long lead items not yet ordered
-  - Activities dependent on pending submittals
-  - Weather-sensitive work in historically rainy periods
-  Create a risk register with mitigation recommendations.
-`
+// Schedule risk analysis with pipelining
+const risks = await procore`get critical path activities for DMC-2025`
+  .map(activities => tom`identify high-risk activities: long lead, pending submittals, weather`)
+  .map(risks => priya`prioritize risks and recommend mitigations`)
+  .map(register => procore`create risk register with ${register}`)
 
-// Delay analysis
-await tom`
-  Steel erection is 5 days behind schedule.
-  Analyze downstream impacts.
-  What activities can we re-sequence to minimize delay?
-  What overtime would be required to recover?
-`
+// Delay impact analysis pipeline
+const recovery = await procore`steel erection is 5 days behind`
+  .map(delay => tom`analyze downstream impacts on ${delay}`)
+  .map(impacts => tom`identify re-sequencing options`)
+  .map(options => priya`calculate overtime cost vs schedule benefit`)
+  .map(analysis => procore`present recovery options to PM`)
 ```
 
 ### AI Cost Forecasting
 
 ```typescript
-import { priya } from 'agents.do'
+import { priya, ada } from 'procore.do'
 
-// Predict final cost
-await priya`
-  Based on DMC-2025 cost data:
-  - Historical burn rate by cost code
-  - Pending change orders
-  - Market conditions for remaining trades
-  Forecast the most likely final cost with confidence interval.
-`
+// Cost forecast pipeline
+const forecast = await procore`get DMC-2025 cost data with burn rates`
+  .map(data => ada`analyze historical trends and pending changes`)
+  .map(analysis => priya`forecast final cost with confidence interval`)
+  .map(forecast => procore`update project dashboard with ${forecast}`)
 
-// Change order analysis
-await priya`
-  PCO-017 is for lobby terrazzo upgrade.
-  Review the subcontractor's quote against:
-  - RS Means data
-  - Similar work on past projects
-  - Current material pricing
-  Is this quote reasonable?
-`
+// Change order validation pipeline
+const validation = await procore`get PCO-017 lobby terrazzo quote`
+  .map(quote => ada`compare against RS Means and past projects`)
+  .map(analysis => priya`assess reasonableness: ${analysis}`)
+  .map(assessment => assessment.reasonable
+    ? procore`approve PCO-017`
+    : procore`flag PCO-017 for negotiation with notes: ${assessment.issues}`)
 ```
 
-### MCP Tools for Field Workers
+### MCP Tool Registry
 
-Every feature exposes MCP tools for AI assistants:
+All construction operations are exposed as MCP tools:
 
 ```typescript
-// Voice-activated field operations
-"Hey Ada, log my daily report. We had 8 electricians on site,
-worked on rough-in for floors 2 and 3, passed the underground inspection."
+// Available MCP tools for AI assistants
+const tools = {
+  // Document management
+  'procore.rfis.create': { params: ['subject', 'drawings', 'assignee'] },
+  'procore.rfis.query': { params: ['project', 'status', 'discipline'] },
+  'procore.submittals.route': { params: ['submittal', 'workflow'] },
 
-// Photo documentation
-"Create a punch item for this photo - ceiling tile is damaged in room 305"
+  // Field operations
+  'procore.dailyLog.create': { params: ['date', 'weather', 'workforce', 'work'] },
+  'procore.punch.create': { params: ['location', 'items', 'photos'] },
+  'procore.photos.upload': { params: ['location', 'description', 'tags'] },
 
-// Quick lookups
-"What's the status of the storefront submittal?"
-"Who's the contact for the steel subcontractor?"
-"When is the concrete pour scheduled?"
+  // Analysis
+  'procore.drawings.analyze': { params: ['drawing', 'extract', 'detectConflicts'] },
+  'procore.schedule.impact': { params: ['activity', 'delay'] },
+  'procore.budget.forecast': { params: ['project', 'asOfDate'] },
+}
 ```
 
 ## Architecture

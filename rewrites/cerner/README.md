@@ -6,6 +6,37 @@ Oracle paid $28.3 billion for Cerner. Now Oracle Health charges hospitals millio
 
 **cerner.do** is the open-source alternative. HIPAA-compliant. FHIR R4 native. Deploys in minutes, not months. AI that reduces clinician burden instead of adding to it.
 
+## AI-Native API
+
+```typescript
+import { cerner } from 'cerner.do'           // Full SDK
+import { cerner } from 'cerner.do/tiny'      // Minimal client
+import { cerner } from 'cerner.do/fhir'      // FHIR-only operations
+```
+
+Natural language for clinical workflows:
+
+```typescript
+import { cerner, ada, ralph, priya } from 'cerner.do'
+
+// Natural language queries
+const diabetics = await cerner`patients with diabetes and A1C > 7`
+const gaps = await cerner`care gaps for patient ${patientId}`
+const overdue = await cerner`patients overdue for colonoscopy screening`
+
+// Promise pipelining (one network round trip)
+const outreach = await cerner`find diabetic patients needing A1C check`
+  .map(p => ada`identify care gaps for ${p}`)
+  .map(gaps => ralph`create intervention plan`)
+  .map(plan => cerner`send MyChart message`)
+
+// AI-assisted clinical workflows
+const encounter = await cerner`start visit for ${patient}`
+  .map(visit => ada`generate SOAP note from ambient recording`)
+  .map(note => priya`review for quality measures`)
+  .map(note => cerner`finalize and sign`)
+```
+
 ## The Problem
 
 Oracle Health (Cerner) dominates healthcare IT alongside Epic:
@@ -99,14 +130,15 @@ export default Cerner({
 Complete patient records with FHIR compliance:
 
 ```typescript
-import { ehr } from 'cerner.do'
+import { cerner } from 'cerner.do'
 
-// Create patient (FHIR Patient resource)
-const patient = await ehr.patients.create({
-  name: {
-    given: ['Maria', 'Elena'],
-    family: 'Rodriguez',
-  },
+// Natural language patient lookup
+const maria = await cerner`find patient Maria Rodriguez DOB 1978-09-22`
+const diabetics = await cerner`all patients with Type 2 diabetes in Austin TX`
+
+// Or use the structured API for precise FHIR Patient resources
+const patient = await cerner.patients.create({
+  name: { given: ['Maria', 'Elena'], family: 'Rodriguez' },
   birthDate: '1978-09-22',
   gender: 'female',
   identifiers: [
@@ -122,13 +154,8 @@ const patient = await ehr.patients.create({
     city: 'Austin',
     state: 'TX',
     postalCode: '78701',
-    country: 'US',
   }],
-  maritalStatus: 'married',
-  communication: [{
-    language: 'es',
-    preferred: true,
-  }],
+  communication: [{ language: 'es', preferred: true }],
 })
 ```
 
@@ -137,31 +164,25 @@ const patient = await ehr.patients.create({
 Track patient visits across care settings:
 
 ```typescript
-// Create encounter
-const encounter = await ehr.encounters.create({
+import { cerner, ada } from 'cerner.do'
+
+// Natural language encounter flow with AI documentation
+const visit = await cerner`start wellness visit for ${patient.id} with Dr. Smith`
+  .map(enc => ada`generate SOAP note from ambient recording`)
+  .map(note => cerner`finalize encounter with discharge to home`)
+
+// Or structured API for precise control
+const encounter = await cerner.encounters.create({
   patient: patient.id,
   type: 'outpatient',
   class: 'ambulatory',
   status: 'in-progress',
   serviceProvider: 'Family Medicine Clinic',
-  participant: [{
-    individual: 'DR-001',
-    type: 'primary-performer',
-  }],
-  period: {
-    start: new Date(),
-  },
-  reasonCode: [{
-    code: 'Z00.00',
-    display: 'General adult medical examination',
-  }],
+  participant: [{ individual: 'DR-001', type: 'primary-performer' }],
+  reasonCode: [{ code: 'Z00.00', display: 'General adult medical examination' }],
 })
 
-// Discharge
-await ehr.encounters.discharge(encounter.id, {
-  dischargeDisposition: 'home',
-  period: { end: new Date() },
-})
+await cerner.encounters.discharge(encounter.id, { dischargeDisposition: 'home' })
 ```
 
 ### Clinical Documentation
@@ -169,8 +190,10 @@ await ehr.encounters.discharge(encounter.id, {
 SOAP notes, progress notes, procedure notes - all standard formats:
 
 ```typescript
+import { cerner } from 'cerner.do'
+
 // Clinical note with ambient AI assistance
-await ehr.notes.create({
+await cerner.notes.create({
   patient: patient.id,
   encounter: encounter.id,
   type: 'progress-note',
@@ -223,68 +246,39 @@ await ehr.notes.create({
 Medications, labs, imaging, procedures, referrals:
 
 ```typescript
-// Medication order
-await ehr.orders.create({
+import { cerner, ada, ralph } from 'cerner.do'
+
+// Natural language ordering with AI assistance
+await cerner`order lisinopril 10mg daily for ${patient.id} for hypertension`
+await cerner`order A1c and lipid panel for ${patient.id}, fasting required`
+await cerner`refer ${patient.id} to endocrinology for diabetes management`
+
+// AI-driven order recommendations with pipelining
+const orders = await ada`review ${patient.id} chart and recommend preventive care orders`
+  .map(recs => ralph`generate FHIR order resources`)
+  .map(orders => cerner`submit orders pending clinician approval`)
+
+// Structured API for precise order entry
+await cerner.orders.create({
   patient: patient.id,
-  encounter: encounter.id,
   type: 'medication',
   orderer: 'DR-001',
-  medication: {
-    code: '314076',
-    system: 'RxNorm',
-    display: 'Lisinopril 10 MG Oral Tablet',
-  },
-  dosage: {
-    route: 'oral',
-    frequency: 'daily',
-    duration: { value: 90, unit: 'days' },
-    quantity: 90,
-    refills: 3,
-  },
+  medication: { code: '314076', system: 'RxNorm', display: 'Lisinopril 10 MG Oral Tablet' },
+  dosage: { route: 'oral', frequency: 'daily', duration: { value: 90, unit: 'days' }, refills: 3 },
   indication: 'Essential hypertension',
 })
 
-// Lab order
-await ehr.orders.create({
+await cerner.orders.create({
   patient: patient.id,
   type: 'lab',
   orderer: 'DR-001',
   tests: [
     { code: '4548-4', display: 'Hemoglobin A1c' },
     { code: '2093-3', display: 'Total Cholesterol' },
-    { code: '2085-9', display: 'HDL Cholesterol' },
     { code: '2089-1', display: 'LDL Cholesterol' },
-    { code: '2571-8', display: 'Triglycerides' },
   ],
   priority: 'routine',
   fasting: true,
-  indication: 'Diabetes screening, hyperlipidemia screening',
-})
-
-// Imaging order
-await ehr.orders.create({
-  patient: patient.id,
-  type: 'imaging',
-  orderer: 'DR-001',
-  study: {
-    modality: 'XR',
-    bodyPart: 'Chest',
-    views: ['PA'],
-  },
-  priority: 'routine',
-  indication: 'Pre-operative clearance',
-  transportMode: 'ambulatory',
-})
-
-// Referral
-await ehr.orders.create({
-  patient: patient.id,
-  type: 'referral',
-  orderer: 'DR-001',
-  specialty: 'Endocrinology',
-  reason: 'Diabetes management, family history evaluation',
-  urgency: 'routine',
-  notes: 'New diagnosis prediabetes, FHx strong for T2DM',
 })
 ```
 
@@ -294,7 +288,7 @@ Lab values, imaging reports, pathology - with critical value alerts:
 
 ```typescript
 // Lab result
-await ehr.results.create({
+await cerner.results.create({
   order: 'ORD-001',
   patient: patient.id,
   type: 'lab',
@@ -346,7 +340,7 @@ Active diagnoses using ICD-10 and SNOMED:
 
 ```typescript
 // Add to problem list
-await ehr.problems.create({
+await cerner.problems.create({
   patient: patient.id,
   condition: {
     code: 'E11.9',
@@ -369,7 +363,7 @@ await ehr.problems.create({
 Drug allergies, food allergies, environmental - with severity tracking:
 
 ```typescript
-await ehr.allergies.create({
+await cerner.allergies.create({
   patient: patient.id,
   type: 'allergy',
   category: 'medication',
@@ -398,7 +392,7 @@ Full immunization records with forecasting:
 
 ```typescript
 // Record immunization
-await ehr.immunizations.create({
+await cerner.immunizations.create({
   patient: patient.id,
   vaccine: {
     code: '141',
@@ -415,7 +409,7 @@ await ehr.immunizations.create({
 })
 
 // Get immunization forecast
-const forecast = await ehr.immunizations.forecast(patient.id)
+const forecast = await cerner.immunizations.forecast(patient.id)
 // Returns due/overdue vaccines based on CDC schedule
 ```
 
@@ -424,8 +418,15 @@ const forecast = await ehr.immunizations.forecast(patient.id)
 Appointments, resources, waitlists:
 
 ```typescript
-// Schedule appointment
-await ehr.scheduling.book({
+import { cerner } from 'cerner.do'
+
+// Natural language scheduling
+await cerner`schedule ${patient.id} for diabetes follow-up with Dr. Smith next week`
+await cerner`find next available afternoon slot for ${patient.id} with endocrinology`
+const slots = await cerner`available 20-minute slots for Dr. Smith in April`
+
+// Structured API for precise booking
+await cerner.scheduling.book({
   patient: patient.id,
   provider: 'DR-001',
   type: 'follow-up',
@@ -433,19 +434,7 @@ await ehr.scheduling.book({
   duration: 20,
   slot: '2025-04-15T14:00:00',
   reason: 'Diabetes follow-up, review A1c',
-  notes: 'Patient prefers afternoon appointments',
   reminders: ['email', 'sms'],
-})
-
-// Find available slots
-const slots = await ehr.scheduling.availability({
-  provider: 'DR-001',
-  dateRange: {
-    start: '2025-04-01',
-    end: '2025-04-30',
-  },
-  duration: 20,
-  appointmentType: 'follow-up',
 })
 ```
 
@@ -454,26 +443,22 @@ const slots = await ehr.scheduling.availability({
 Built on open standards from the ground up:
 
 ```typescript
-// Every resource is FHIR R4 compliant
-const patient = await ehr.fhir.read('Patient', 'patient-123')
-// Returns: FHIR R4 Patient resource
+import { cerner } from 'cerner.do/fhir'  // FHIR-only import
 
-// FHIR search parameters work natively
-const conditions = await ehr.fhir.search('Condition', {
-  patient: 'patient-123',
-  'clinical-status': 'active',
-  category: 'problem-list-item',
-})
+// Natural language FHIR queries
+const conditions = await cerner`active problem list for ${patientId}`
+const meds = await cerner`current medications for ${patientId}`
 
-// Relationship queries
-const everything = await ehr.fhir.patientEverything('patient-123', {
+// Structured FHIR API
+const patient = await cerner.fhir.read('Patient', 'patient-123')
+const everything = await cerner.fhir.patientEverything('patient-123', {
   start: '2024-01-01',
   end: '2025-12-31',
   _type: 'Condition,MedicationRequest,Observation',
 })
 
 // Bulk FHIR export (for population health, analytics)
-const exportJob = await ehr.fhir.bulkExport({
+const exportJob = await cerner.fhir.bulkExport({
   type: 'group',
   groupId: 'diabetic-patients',
   since: '2024-01-01',
@@ -500,7 +485,7 @@ Third-party apps integrate seamlessly:
 
 ```typescript
 // Register SMART app
-await ehr.smartApps.register({
+await cerner.smartApps.register({
   name: 'Diabetes Management App',
   launchUrl: 'https://diabetes-app.com/launch',
   redirectUri: 'https://diabetes-app.com/callback',
@@ -523,7 +508,7 @@ Clinical decision support at the point of care:
 
 ```typescript
 // Register CDS service
-await ehr.cds.register({
+await cerner.cds.register({
   id: 'drug-interaction-check',
   hook: 'medication-prescribe',
   title: 'Drug-Drug Interaction Check',
@@ -550,7 +535,7 @@ No more typing during patient visits:
 import { scribe } from 'cerner.do/agents'
 
 // Configure ambient documentation
-await ehr.ambient.configure({
+await cerner.ambient.configure({
   consent: 'required', // Patient must consent each visit
   recording: {
     audio: true,
@@ -568,7 +553,7 @@ await ehr.ambient.configure({
 // AI generates structured clinical note
 
 // Clinician reviews and signs
-await ehr.notes.review({
+await cerner.notes.review({
   draftId: 'DRAFT-001',
   action: 'approve', // or 'edit', 'reject'
   clinician: 'DR-001',
@@ -611,25 +596,19 @@ await ada`
 End the fax-and-wait nightmare:
 
 ```typescript
-import { ralph } from 'agents.do'
+import { cerner, ralph, ada } from 'cerner.do'
 
-// Generate prior auth with clinical documentation
-await ralph`
-  Generate prior authorization for:
-  - Patient: Maria Rodriguez (MRN-789456)
-  - Medication: Ozempic 0.5mg weekly
-  - Insurance: United Healthcare
+// Full prior auth workflow with pipelining (one network round trip)
+const approval = await cerner`get ${patient.id} chart for Ozempic prior auth`
+  .map(chart => ada`extract clinical justification for GLP-1 therapy`)
+  .map(justification => ralph`generate prior auth submission for UHC`)
+  .map(submission => cerner`submit electronically and track status`)
 
-  Include:
-  1. Diagnosis (prediabetes with risk factors)
-  2. Lab values (A1c history showing progression)
-  3. Failed lifestyle intervention documentation
-  4. BMI history and cardiovascular risk factors
-  5. Provider attestation
-`
+// Natural language prior auth
+await cerner`submit prior auth for Ozempic for ${patient.id} to United Healthcare`
 
-// Submit electronically via payer API
-await ehr.priorAuth.submit({
+// Structured API for precise control
+await cerner.priorAuth.submit({
   request: 'PA-001',
   payer: 'uhc',
   method: 'electronic',
@@ -637,8 +616,7 @@ await ehr.priorAuth.submit({
   attachments: ['clinical-notes', 'lab-results'],
 })
 
-// Real-time status tracking
-const status = await ehr.priorAuth.status('PA-001')
+const status = await cerner.priorAuth.status('PA-001')
 ```
 
 ### Patient Communication
@@ -646,24 +624,20 @@ const status = await ehr.priorAuth.status('PA-001')
 AI-powered, clinician-supervised:
 
 ```typescript
-import { mark } from 'agents.do'
+import { cerner, mark, priya } from 'cerner.do'
 
-// Generate patient-friendly result explanation
-await mark`
-  Patient's A1c came back at 6.2% (prediabetes range).
-  Write a patient portal message explaining:
-  - What this means in plain language
-  - Why lifestyle changes are important now
-  - What specific steps they can take
-  - When to follow up
+// Full communication workflow with pipelining
+const sent = await cerner`get A1c result for ${patient.id}`
+  .map(result => mark`explain ${result} in Spanish at 6th grade reading level`)
+  .map(message => priya`review for clinical accuracy`)
+  .map(reviewed => cerner`send via MyChart pending clinician approval`)
 
-  Reading level: 6th grade
-  Language preference: Spanish (translate)
-  Tone: Supportive and actionable
-`
+// Natural language patient messaging
+await cerner`send ${patient.id} their lab results with lifestyle recommendations`
+await cerner`remind ${patient.id} about upcoming A1c screening in Spanish`
 
-// Clinician reviews before sending
-await ehr.messages.sendWithReview({
+// Structured API for precise control
+await cerner.messages.sendWithReview({
   patient: patient.id,
   draft: 'Generated message...',
   reviewer: 'DR-001',
@@ -677,35 +651,29 @@ await ehr.messages.sendWithReview({
 Identify gaps in care at scale:
 
 ```typescript
-import { priya } from 'agents.do'
+import { cerner, ada, ralph, priya, mark } from 'cerner.do'
 
-// Care gap analysis
-await priya`
-  Identify patients in our diabetic registry with:
-  1. No A1c in past 6 months
-  2. No eye exam in past year
-  3. No foot exam documented
-  4. No nephropathy screening
+// Care gap analysis with full pipelining (one network round trip)
+const campaign = await cerner`diabetic patients with care gaps`
+  .map(patients => ada`identify specific gaps for each patient`)
+  .map(gaps => priya`prioritize by risk and urgency`)
+  .map(prioritized => ralph`generate personalized order sets`)
+  .map(orders => mark`draft patient outreach messages`)
+  .map(outreach => cerner`schedule campaign execution`)
 
-  For each gap, generate:
-  - Outreach message (patient-specific)
-  - Order set (appropriate to gap)
-  - Scheduling priority
-`
+// Natural language population queries
+const atRisk = await cerner`patients with A1c > 9 and no visit in 6 months`
+const overdue = await cerner`patients overdue for colonoscopy by HEDIS criteria`
+const uncontrolled = await cerner`hypertensive patients with BP > 140/90 on last 3 visits`
 
-// Automated outreach campaign
-await ehr.outreach.campaign({
+// Structured campaign API
+await cerner.outreach.campaign({
   name: 'Diabetic Care Gaps Q1',
   cohort: 'diabetic-registry',
   gaps: ['a1c', 'eye-exam', 'foot-exam'],
   channels: ['patient-portal', 'sms'],
-  scheduling: {
-    enabled: true,
-    appointmentType: 'chronic-care-visit',
-  },
-  tracking: {
-    measures: ['HEDIS', 'MIPS'],
-  },
+  scheduling: { enabled: true, appointmentType: 'chronic-care-visit' },
+  tracking: { measures: ['HEDIS', 'MIPS'] },
 })
 ```
 
@@ -762,7 +730,7 @@ HealthSystemDO (config, users, roles, facilities)
 
 ```typescript
 // Per-patient encryption with HSM-backed key management
-await ehr.security.configure({
+await cerner.security.configure({
   encryption: {
     algorithm: 'AES-256-GCM',
     keyManagement: 'per-patient', // Each patient has unique DEK
@@ -829,7 +797,7 @@ export default PatientPortal({
 
 ```typescript
 // Connect to labs, imaging, pharmacies
-await ehr.integrations.configure({
+await cerner.integrations.configure({
   lab: {
     vendor: 'quest-diagnostics',
     interface: 'hl7v2', // or 'fhir'
@@ -859,7 +827,7 @@ await ehr.integrations.configure({
 
 ```typescript
 // De-identified data for research
-await ehr.analytics.export({
+await cerner.analytics.export({
   cohort: 'diabetes-study',
   deidentification: 'safe-harbor', // or 'expert-determination'
   format: 'parquet',
@@ -868,7 +836,7 @@ await ehr.analytics.export({
 })
 
 // Real-time quality measures
-const hedis = await ehr.quality.measures({
+const hedis = await cerner.quality.measures({
   measureSet: 'HEDIS-2025',
   measures: ['CDC', 'BCS', 'COL'], // Diabetes, Breast Cancer, Colorectal
   population: 'all-attributed',
@@ -904,7 +872,7 @@ export default Cerner({
 cerner.do is designed for HIPAA compliance:
 
 ```typescript
-await ehr.compliance.hipaa({
+await cerner.compliance.hipaa({
   // Administrative safeguards
   policies: {
     accessControl: 'role-based',
@@ -950,7 +918,7 @@ await ehr.compliance.hipaa({
 Information blocking prevention built in:
 
 ```typescript
-await ehr.compliance.curesAct({
+await cerner.compliance.curesAct({
   informationBlocking: 'prohibited',
   patientAccess: {
     electronicFormat: true,      // EHI available electronically

@@ -4,29 +4,34 @@
 
 You're a startup founder. You just made your first hires. Payroll software wants $40/employee/month - that's $9,600/year for a 20-person team. To do math. And send ACH transfers. Your payroll cost shouldn't scale with your headcount.
 
-## The workers.do Way
+## AI-Native API
 
 ```typescript
-import { gusto, penny } from 'gusto.do'
+import { gusto, penny, employee, payroll } from 'gusto.do'
 
-// Natural language payroll operations
-const payroll = await gusto`run payroll for ${period}`
-const taxes = await gusto`calculate Q1 tax liability`
-const raise = await penny`give ${employee} a raise to ${amount}`
+// Natural language payroll
+const sarah = await employee`add Sarah Chen, $120k semi-monthly, CA single filer`
+const delinquent = await gusto`employees missing W-4 updates`
 
-// Promise pipelining for compensation changes
-const processed = await penny`promote ${employee} to ${newRole}`
-  .map(emp => gusto`update salary to ${newSalary}`)
-  .map(emp => gusto`recalculate tax withholdings`)
-  .map(emp => penny`notify ${emp} of compensation change`)
+// Promise pipelining for payroll
+const processed = await payroll`calculate for Jan 15`
+  .map(run => penny`review for anomalies`)
+  .map(reviewed => gusto`show detailed breakdown`)
+  .map(breakdown => payroll`submit for payment`)
 
-// AI-assisted benefits enrollment
-const enrolled = await penny`help ${employee} pick health insurance`
-  .map(selection => gusto`enroll ${employee} in ${selection}`)
-  .map(enrollment => gusto`update payroll deductions`)
+// Benefits enrollment with AI
+const enrolled = await gusto`set up benefits: Gold PPO, 401k 4% match, HSA`
+  .map(plans => employee`enroll ${sarah} in Gold PPO, 401k 10%`)
+  .map(enrolled => penny`explain coverage to employee`)
+
+// Compensation changes in one chain
+const promoted = await penny`promote Sarah to Senior Engineer`
+  .map(emp => employee`update salary to $145k`)
+  .map(emp => gusto`recalculate withholdings`)
+  .map(emp => penny`send compensation change letter`)
 ```
 
-One API call. Natural language. AI handles the complexity.
+One API call. Natural language. AI handles the complexity. Record-replay pipelining.
 
 ## The Problem
 
@@ -75,29 +80,22 @@ npx create-dotdo gusto
 Your payroll infrastructure is live. Add your first employee:
 
 ```typescript
-import { payroll } from 'gusto.do'
+import { employee, penny } from 'gusto.do'
 
-await payroll.employees.add({
-  name: 'Sarah Chen',
-  email: 'sarah@startup.com',
-  ssn: '***-**-1234',           // Encrypted at rest
-  salary: 120000,
-  frequency: 'semi-monthly',
-  federalFilingStatus: 'single',
-  stateFilingStatus: 'CA-single',
-  w4: {
-    step2: false,
-    step3: 0,
-    step4a: 0,
-    step4b: 0,
-    step4c: 0
-  },
-  bankAccount: {
-    routingNumber: '******456',
-    accountNumber: '******7890',
-    accountType: 'checking'
-  }
-})
+// Natural language employee onboarding
+const sarah = await employee`add Sarah Chen, $120k semi-monthly, CA single filer`
+await employee`${sarah} direct deposit to Chase checking ending 7890`
+
+// Penny handles the complexity
+await penny`onboard Sarah with standard W-4 defaults`
+// "I've set up Sarah Chen with:
+//  - Salary: $120,000/year ($5,000/pay period)
+//  - Pay schedule: Semi-monthly (1st and 15th)
+//  - Tax filing: Single, CA resident
+//  - W-4: Standard withholding (no adjustments)
+//  - Direct deposit: Chase checking ***7890
+//
+//  Ready to include in next payroll?"
 ```
 
 ## Features
@@ -107,40 +105,24 @@ await payroll.employees.add({
 The heart of the system. Accurate, auditable, transparent.
 
 ```typescript
-// Calculate a pay period
-const payrun = await payroll.calculate({
-  payPeriod: '2025-01-01/2025-01-15',
-  employees: ['sarah-chen', 'alex-kim', 'jamie-wong']
-})
+import { payroll, penny, gusto } from 'gusto.do'
 
-// See exactly what happened
-payrun.employees[0]
-// {
-//   employee: 'sarah-chen',
-//   grossPay: 5000.00,
-//   federalWithholding: 847.00,
-//   socialSecurity: 310.00,
-//   medicare: 72.50,
-//   stateWithholding: 264.00,
-//   localWithholding: 0,
-//   preTaxDeductions: {
-//     health: 250.00,
-//     hsa: 100.00,
-//     401k: 500.00
-//   },
-//   postTaxDeductions: {
-//     roth401k: 0,
-//     other: 0
-//   },
-//   netPay: 2656.50,
-//   employerCosts: {
-//     socialSecurity: 310.00,
-//     medicare: 72.50,
-//     futa: 30.00,
-//     suta: 125.00,
-//     healthContribution: 500.00
-//   }
-// }
+// Natural language payroll run
+const jan15 = await payroll`calculate for January 15th`
+// Returns full breakdown for all employees
+
+// AI review catches anomalies
+await penny`review ${jan15} for anomalies`
+// "Payroll looks good. One note: Sarah's overtime pushed her into
+//  a higher federal bracket this period. Want me to explain?"
+
+// Get detailed breakdown
+await gusto`show ${jan15} breakdown for Sarah`
+// "Sarah Chen - January 15, 2025:
+//  Gross: $5,000 | Taxes: $1,548.50 | Deductions: $850 | Net: $2,601.50"
+
+// Submit when ready
+await payroll`submit ${jan15} for payment`
 ```
 
 ### Tax Calculation Engine
@@ -148,38 +130,25 @@ payrun.employees[0]
 Up-to-date federal, state, and local tax tables.
 
 ```typescript
-// Tax tables are automatically updated
-const taxInfo = await payroll.taxes.info('2025')
-// {
-//   federal: {
-//     incomeBrackets: [...],
-//     socialSecurityRate: 6.2,
-//     socialSecurityWageBase: 176100,
-//     medicareRate: 1.45,
-//     additionalMedicareThreshold: 200000
-//   },
-//   states: {
-//     CA: { brackets: [...], sdi: 1.1, maxSdi: 1378.48 },
-//     NY: { brackets: [...] },
-//     // All 50 states + DC
-//   },
-//   local: {
-//     NYC: { rate: 3.876 },
-//     // Major localities
-//   }
-// }
+import { gusto, penny, taxes } from 'gusto.do'
 
-// Calculate withholding for any scenario
-const withholding = await payroll.taxes.calculate({
-  grossPay: 5000,
-  payFrequency: 'semi-monthly',
-  filingStatus: 'single',
-  state: 'CA',
-  locality: null,
-  w4: { step2: false, step3: 0, step4a: 0, step4b: 0, step4c: 0 },
-  ytdGross: 60000
-})
-// Shows exactly how each tax was calculated
+// Natural language tax queries
+await gusto`what's our Q1 tax liability?`
+// "Q1 2025 Tax Liability: $45,230
+//  Federal: $28,400 | CA State: $12,830 | FICA: $4,000"
+
+// AI explains complex scenarios
+await penny`explain Sarah's tax withholding`
+// "Sarah's federal withholding ($847/period) is based on:
+//  - $120k annual salary → 22% marginal bracket
+//  - Single filer, standard W-4
+//  - No additional withholding requested
+//  She'll owe approximately $800 at tax time. Want me to adjust?"
+
+// Pipelined tax projections
+const projection = await taxes`project year-end for all employees`
+  .map(proj => penny`flag anyone who'll owe more than $1000`)
+  .map(flagged => gusto`suggest W-4 adjustments`)
 ```
 
 ### Payment Processing
@@ -187,22 +156,20 @@ const withholding = await payroll.taxes.calculate({
 Send money via ACH. Track every transaction.
 
 ```typescript
-// Initiate payroll payments
-await payroll.pay({
-  payrun: 'payrun-2025-01-15',
-  payDate: '2025-01-15'
-})
+import { payroll, penny, payments } from 'gusto.do'
 
-// This:
-// 1. Validates all bank accounts
-// 2. Creates ACH batch file
-// 3. Submits to your bank API
-// 4. Records all transactions
-// 5. Sends pay stubs to employees
+// Submit payroll for payment
+const paid = await payroll`submit January 15th for payment`
+// Validates accounts → Creates ACH batch → Submits to bank → Records transactions
 
-// Track payment status
-const status = await payroll.payments.status('payrun-2025-01-15')
-// { submitted: true, settled: false, estimatedSettlement: '2025-01-17' }
+// Natural language status checks
+await payments`status for January 15th payroll`
+// "Submitted Jan 14 at 4:30pm. Settlement expected Jan 17."
+
+// Pipelined payment with notifications
+await payroll`submit ${jan15}`
+  .map(paid => penny`send pay stubs to all employees`)
+  .map(sent => penny`notify finance team of settlement date`)
 ```
 
 ### Tax Filing
@@ -210,31 +177,25 @@ const status = await payroll.payments.status('payrun-2025-01-15')
 Generate and track tax filings.
 
 ```typescript
-// Quarterly 941 filing
-const form941 = await payroll.taxes.generate941({
-  quarter: '2025-Q1',
-  ein: '12-3456789'
-})
-// Returns completed Form 941 data
+import { taxes, penny, gusto } from 'gusto.do'
 
-// State filings
-const stateFilings = await payroll.taxes.generateStateFilings({
-  quarter: '2025-Q1',
-  states: ['CA', 'NY', 'WA']
-})
+// Natural language tax filings
+await taxes`generate Q1 941`
+await taxes`prepare state filings for CA, NY, WA`
+await taxes`generate 2024 W-2s for all employees`
 
-// Annual W-2s
-const w2s = await payroll.taxes.generateW2s({
-  year: '2024'
-})
+// AI-assisted filing review
+const q1 = await taxes`prepare all Q1 filings`
+  .map(filings => penny`review for accuracy`)
+  .map(reviewed => taxes`submit to agencies`)
+  .map(submitted => penny`notify finance of confirmation numbers`)
 
-// Track filing deadlines
-const deadlines = await payroll.taxes.deadlines()
-// [
-//   { form: '941', due: '2025-04-30', status: 'pending' },
-//   { form: 'CA DE 9', due: '2025-04-30', status: 'pending' },
-//   { form: 'W-2', due: '2025-01-31', status: 'filed' }
-// ]
+// Deadline tracking with AI
+await gusto`what tax deadlines are coming up?`
+// "Upcoming deadlines:
+//  - Form 941 Q1: Due April 30 (pending)
+//  - CA DE 9: Due April 30 (pending)
+//  - All W-2s: Filed January 28 ✓"
 ```
 
 ### Benefits Administration
@@ -242,45 +203,23 @@ const deadlines = await payroll.taxes.deadlines()
 Health insurance, 401k, HSA - all in one place.
 
 ```typescript
-// Set up benefit plans
-await payroll.benefits.createPlan({
-  type: 'health',
-  name: 'Gold PPO',
-  provider: 'Aetna',
-  tiers: [
-    { name: 'Employee Only', employeeCost: 250, employerCost: 500 },
-    { name: 'Employee + Spouse', employeeCost: 450, employerCost: 800 },
-    { name: 'Family', employeeCost: 650, employerCost: 1100 }
-  ],
-  eligibility: { waitingPeriod: 30, hoursPerWeek: 30 }
-})
+import { benefits, employee, penny } from 'gusto.do'
 
-await payroll.benefits.createPlan({
-  type: '401k',
-  name: 'Company 401k',
-  provider: 'Vanguard',
-  employeeContributionLimit: 23000,  // 2024 limit
-  employerMatch: {
-    formula: '100% up to 4%',
-    vestingSchedule: 'immediate'
-  }
-})
+// Natural language benefits setup
+await benefits`create Gold PPO: $250/employee, $450/family, 30-day waiting period`
+await benefits`create 401k: Vanguard, 100% match up to 4%, immediate vesting`
+await benefits`create HSA: Lively, $500 employer contribution`
 
-await payroll.benefits.createPlan({
-  type: 'hsa',
-  name: 'Health Savings Account',
-  provider: 'Lively',
-  employeeLimit: 4150,              // 2024 single limit
-  familyLimit: 8300,
-  employerContribution: 500
-})
+// AI-guided enrollment
+const enrolled = await penny`help Sarah pick her benefits`
+  .map(choices => employee`enroll Sarah in ${choices}`)
+  .map(enrolled => penny`explain her coverage and payroll impact`)
 
-// Employee enrollment
-await payroll.benefits.enroll('sarah-chen', {
-  health: { plan: 'gold-ppo', tier: 'employee-only' },
-  '401k': { contribution: 10 },      // 10% of salary
-  hsa: { contribution: 100 }         // $100/month
-})
+// Bulk enrollment with AI review
+await benefits`open enrollment for January`
+  .map(window => penny`remind all employees to enroll`)
+  .map(enrolled => penny`flag anyone who missed enrollment`)
+  .map(flagged => penny`send final reminders`)
 ```
 
 ### Contractor Payments
@@ -288,26 +227,19 @@ await payroll.benefits.enroll('sarah-chen', {
 Not just employees. Contractors too.
 
 ```typescript
-await payroll.contractors.add({
-  name: 'Design Studio LLC',
-  email: 'billing@designstudio.com',
-  type: 'business',                  // or 'individual'
-  ein: '98-7654321',                 // or SSN for individuals
-  bankAccount: { ... }
-})
+import { contractor, payments, taxes } from 'gusto.do'
 
-// Pay contractors
-await payroll.contractors.pay({
-  contractor: 'design-studio-llc',
-  amount: 5000,
-  description: 'Website redesign - Phase 1',
-  payDate: '2025-01-20'
-})
+// Natural language contractor management
+const studio = await contractor`add Design Studio LLC, EIN 98-7654321`
+await contractor`${studio} direct deposit to Mercury checking ending 4567`
 
-// Generate 1099s
-const form1099s = await payroll.taxes.generate1099s({
-  year: '2024'
-})
+// Pay contractors naturally
+await payments`pay Design Studio $5000 for website redesign Phase 1`
+
+// 1099 generation with AI review
+await taxes`generate 2024 1099s`
+  .map(forms => penny`review for accuracy and missing info`)
+  .map(reviewed => taxes`file with IRS`)
 ```
 
 ### Time Tracking Integration
@@ -315,23 +247,18 @@ const form1099s = await payroll.taxes.generate1099s({
 For hourly employees.
 
 ```typescript
-// Import hours from your time tracking system
-await payroll.time.import({
-  source: 'csv',
-  data: `
-    employee,date,hours,type
-    jamie-wong,2025-01-13,8,regular
-    jamie-wong,2025-01-14,10,regular
-    jamie-wong,2025-01-14,2,overtime
-  `
-})
+import { time, payroll, penny } from 'gusto.do'
 
-// Or connect to time tracking providers
-await payroll.integrations.connect('clockify', {
-  apiKey: process.env.CLOCKIFY_API_KEY
-})
+// Natural language time entry
+await time`Jamie worked 8 hours Monday, 10 hours + 2 OT Tuesday`
 
-// Hours sync automatically before payroll
+// Sync from external systems
+await time`sync hours from Clockify`
+
+// AI-reviewed payroll with time data
+await payroll`calculate for January 15th`
+  .map(run => penny`verify overtime calculations for hourly employees`)
+  .map(verified => penny`flag any unusual patterns`)
 ```
 
 ## AI Payroll Assistant
@@ -339,106 +266,70 @@ await payroll.integrations.connect('clockify', {
 **Penny** handles the complexity so you don't have to.
 
 ```typescript
-import { penny } from 'gusto.do/agents'
+import { penny, payroll, employee } from 'gusto.do'
 
-// Natural language payroll
-await penny`Run payroll for January 15th`
+// Full payroll workflow with AI
+await penny`run payroll for January 15th`
 // "I've calculated payroll for 12 employees:
 //  - Total gross: $72,500
 //  - Total taxes: $18,240
 //  - Total deductions: $8,420
 //  - Total net: $45,840
 //
-//  Ready to submit for payment on January 15th?
+//  Ready to submit for payment?
 //  [Approve] [Review Details] [Make Changes]"
 
-await penny`Sarah is getting a raise to $130k starting February 1st`
-// "I've updated Sarah Chen's salary to $130,000 annually, effective February 1st.
-//  This will change her semi-monthly gross from $5,000 to $5,416.67.
-//  Federal withholding will increase by approximately $95/pay period.
+// Compensation changes with automatic recalculation
+await penny`give Sarah a raise to $130k starting February 1st`
+// "Done! Sarah's new semi-monthly gross: $5,416.67
+//  Federal withholding increases ~$95/period.
 //  Want me to recalculate her YTD tax projections?"
 
-await penny`What's our total payroll cost this year?`
-// "2025 Year-to-Date Payroll Summary:
-//  - Gross wages: $312,500
-//  - Employer taxes: $28,125
-//  - Benefits costs: $45,000
-//  - Total employer cost: $385,625
-//
-//  You're on track for approximately $925,000 total payroll cost in 2025.
-//  This is 12% higher than 2024, primarily due to 3 new hires."
+// Intelligent cost analysis
+await penny`what's our total payroll cost this year?`
+// "2025 YTD: $385,625 (gross + taxes + benefits)
+//  Projected annual: $925,000 (+12% vs 2024, 3 new hires)"
 ```
 
 ### AI Tax Assistant
 
 ```typescript
-await penny`Are we ready for Q1 tax filing?`
-// "Q1 2025 Tax Filing Status:
-//
-// READY TO FILE:
-// - Form 941 (Federal): All data complete
-// - CA DE 9/DE 9C: All data complete
-// - WA Quarterly Report: All data complete
-//
-// ACTION NEEDED:
-// - 2 employees are missing updated W-4s for 2025
-//   - Alex Kim (last updated 2023)
-//   - Jamie Wong (last updated 2022)
-//
-// DEADLINES:
-// - All Q1 filings due April 30, 2025
-//
-// Want me to send W-4 update reminders to Alex and Jamie?"
+import { penny, taxes } from 'gusto.do'
 
-await penny`Explain Sarah's last paycheck`
-// "Sarah Chen's January 15, 2025 Paycheck:
-//
-// GROSS PAY: $5,000.00
-//
-// TAXES (32% of gross):
-// - Federal income tax: $847.00 (based on $120k annual, single, W-4 defaults)
-// - Social Security: $310.00 (6.2% of gross)
-// - Medicare: $72.50 (1.45% of gross)
-// - CA state tax: $264.00 (based on CA tax brackets)
-// - CA SDI: $55.00 (1.1% of gross)
-//
-// PRE-TAX DEDUCTIONS: $850.00
-// - Health insurance: $250.00 (Gold PPO, employee-only)
-// - HSA: $100.00
-// - 401k: $500.00 (10% contribution)
-//
-// NET PAY: $2,601.50
-//
-// This is deposited to her Chase checking account ending in 7890."
+// Filing readiness check with AI
+await penny`are we ready for Q1 tax filing?`
+// "Ready: Form 941, CA DE 9, WA Quarterly
+//  Action needed: Alex and Jamie missing 2025 W-4 updates
+//  Deadline: April 30. Want me to send reminders?"
+
+// Paycheck explanations for employees
+await penny`explain Sarah's last paycheck`
+// "Sarah's Jan 15 paycheck:
+//  Gross $5,000 → Taxes $1,548.50 → Deductions $850 → Net $2,601.50
+//  Deposited to Chase ***7890"
+
+// Proactive tax optimization
+await taxes`analyze withholdings for all employees`
+  .map(analysis => penny`recommend adjustments to minimize year-end surprises`)
 ```
 
 ### AI Benefits Advisor
 
 ```typescript
-await penny`Help Jamie choose health insurance`
-// "Hi Jamie! I can help you compare our health plans.
-//
-// Based on your profile (single, 28 years old, no dependents):
-//
-// GOLD PPO ($250/month)
-// - Low deductible ($500), low out-of-pocket max ($3,000)
-// - See any doctor without referral
-// - Best if you expect to use healthcare frequently
-//
-// SILVER HMO ($150/month)
-// - Medium deductible ($1,500), medium out-of-pocket max ($5,000)
-// - Need referrals for specialists
-// - Best if you're generally healthy but want solid coverage
-//
-// BRONZE HDHP ($75/month)
-// - High deductible ($3,000), but can pair with HSA
-// - Company contributes $500/year to your HSA
-// - Best if you're very healthy and want to save for future medical costs
-//
-// Based on your low healthcare usage last year, BRONZE HDHP + HSA
-// would save you $2,100/year compared to Gold, while building tax-free savings.
-//
-// Want to explore any plan in detail?"
+import { penny, benefits, employee } from 'gusto.do'
+
+// Personalized benefits guidance
+await penny`help Jamie choose health insurance`
+// "Based on your profile (single, 28, low healthcare usage):
+//  Bronze HDHP + HSA saves $2,100/year vs Gold, builds tax-free savings.
+//  Want details on any plan?"
+
+// Full enrollment workflow
+const jamie = await employee`get Jamie Wong`
+await penny`guide ${jamie} through benefits enrollment`
+  .map(choices => employee`enroll ${jamie} in ${choices}`)
+  .map(enrolled => penny`send confirmation with coverage summary`)
+  .map(confirmed => penny`schedule 30-day check-in`)
 ```
 
 ## Compliance Engine
@@ -446,49 +337,26 @@ await penny`Help Jamie choose health insurance`
 Payroll compliance is complex. gusto.do tracks it for you.
 
 ```typescript
-// Check compliance status
-const compliance = await payroll.compliance.status()
-// {
-//   overall: 'attention-needed',
-//   items: [
-//     { type: 'filing', item: 'Form 941 Q4 2024', status: 'due', deadline: '2025-01-31' },
-//     { type: 'form', item: 'W-4 updates', status: 'missing', employees: ['alex-kim'] },
-//     { type: 'minimum-wage', item: 'CA minimum wage increase', status: 'action-needed',
-//       description: 'CA minimum wage increased to $16.50 on Jan 1. 2 employees affected.' }
-//   ]
-// }
+import { compliance, penny, gusto } from 'gusto.do'
 
-// Get notified of regulatory changes
-await payroll.compliance.subscribe({
-  notify: ['email', 'slack'],
-  types: ['tax-rate-change', 'minimum-wage', 'new-form', 'deadline']
-})
-```
+// Natural language compliance checks
+await compliance`what needs attention?`
+// "Action needed:
+//  - Form 941 Q4 due Jan 31
+//  - Alex Kim missing W-4 update
+//  - CA minimum wage increase affects 2 hourly employees"
 
-### New Hire Reporting
+// AI-managed compliance with notifications
+await penny`set up compliance alerts for Slack and email`
+await penny`notify me of tax rate changes and deadlines`
 
-```typescript
-// Automatically report new hires (required in most states)
-await payroll.compliance.newHireReport({
-  employee: 'sarah-chen',
-  state: 'CA'
-})
-// Files with CA EDD within 20 days (as required)
-```
+// New hire reporting (required in most states)
+await compliance`report Sarah Chen as new hire in CA`
+// Files with CA EDD within 20 days as required
 
-### Workers' Comp
-
-```typescript
-// Track workers' comp classification
-await payroll.workersComp.setClass('sarah-chen', {
-  code: '8810',                      // Clerical
-  rate: 0.15                         // Per $100 payroll
-})
-
-// Calculate premium
-const wcPremium = await payroll.workersComp.calculatePremium({
-  quarter: '2025-Q1'
-})
+// Workers' comp management
+await compliance`classify Sarah as clerical (8810)`
+await gusto`what's our Q1 workers comp premium?`
 ```
 
 ## Architecture
@@ -537,47 +405,17 @@ const logs = await payroll.audit.logs({
 
 ## Integrations
 
-### Banking
-
 ```typescript
-// Connect to your bank for ACH
-await payroll.banking.connect('mercury', {
-  apiKey: process.env.MERCURY_API_KEY
-})
+import { gusto, penny } from 'gusto.do'
 
-// Or use traditional banks via Plaid
-await payroll.banking.connect('plaid', {
-  clientId: process.env.PLAID_CLIENT_ID,
-  secret: process.env.PLAID_SECRET
-})
-```
+// Natural language integrations
+await gusto`connect to Mercury for ACH payments`
+await gusto`sync with QuickBooks for journal entries`
+await gusto`connect to bamboohr.do for employee data`
 
-### Accounting
-
-```typescript
-// Sync to QuickBooks
-await payroll.integrations.connect('quickbooks', {
-  // OAuth flow
-})
-
-// Automatic journal entries after each payroll
-// - Wages expense
-// - Tax liabilities
-// - Benefits expense
-```
-
-### HR Systems
-
-```typescript
-// Sync with bamboohr.do
-await payroll.integrations.connect('bamboohr.do', {
-  // Seamless - same platform
-})
-
-// Or other HR systems
-await payroll.integrations.connect('bamboohr', {
-  apiKey: process.env.BAMBOOHR_API_KEY
-})
+// AI-managed sync
+await penny`after each payroll, sync to QuickBooks and notify finance`
+await penny`when new employees are added in BambooHR, set them up in payroll`
 ```
 
 ## Pricing
@@ -627,9 +465,26 @@ Payroll is math. Taxes are rules. Benefits are configuration.
 
 None of this requires $40 per employee per month. None of this requires vendor lock-in. None of this should be opaque.
 
-gusto.do opens the black box. You can see exactly how every dollar is calculated. You can run it on your infrastructure. You can integrate with anything.
+**gusto.do** opens the black box. You see exactly how every dollar is calculated. You run it on your infrastructure. You integrate with anything.
 
-For companies that want simplicity and don't mind paying for it, traditional payroll providers are fine. For companies that want control and transparency, gusto.do provides the tools.
+## Get Started
+
+Your payroll infrastructure in 60 seconds:
+
+```bash
+npx create-dotdo gusto
+```
+
+Then add your first employee:
+
+```typescript
+import { employee, penny, payroll } from 'gusto.do'
+
+const sarah = await employee`add Sarah Chen, $120k semi-monthly, CA`
+await penny`run payroll for the 15th`
+```
+
+That's it. Penny handles the rest.
 
 ## Contributing
 
@@ -650,4 +505,10 @@ MIT - Use it, fork it, build on it.
 
 ---
 
-**Your payroll. Your infrastructure. Your control.**
+**Stop paying $40/employee. Start running your own payroll.**
+
+```typescript
+import { penny } from 'gusto.do'
+
+await penny`set up my company's payroll`
+```

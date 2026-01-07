@@ -6,6 +6,42 @@ Toast built a $14B company by giving away POS hardware and charging 2.99% + $0.1
 
 **toast.do** is the open-source alternative. Run your own POS. Choose your own payment processor. AI that actually runs your restaurant.
 
+## AI-Native API
+
+```typescript
+import { toast, ada } from 'toast.do'
+
+// Natural language POS
+const order = await toast`
+  Ring up table T12:
+  - 2x Ribeye (Medium Rare)
+  - 1x Calamari
+`
+
+// Promise pipelining for service - one network round trip
+const served = await order
+  .map(o => toast`fire appetizers, 12 min estimate`)
+  .map(ready => toast`notify server when ready`)
+  .map(served => toast`fire mains when guest ready`)
+
+// AI forecasting with chained prep
+const forecast = await ada`
+  Forecast covers tomorrow considering:
+  - ${historicalData}
+  - weather: ${weather}
+  - local events: ${events}
+`.map(f => toast`set prep levels to ${f.recommended}`)
+```
+
+### Tree-Shakable Imports
+
+```typescript
+import { toast } from 'toast.do'           // Full client
+import { toast } from 'toast.do/tiny'      // Minimal, no deps
+import { toast } from 'toast.do/rpc'       // Service binding only
+import { ada } from 'toast.do/agents'      // Restaurant AI agent
+```
+
 ## The workers.do Way
 
 You're a restaurant owner who pours your heart into every plate. But 3% of every sale goes to your POS company - that's $30K a year on a million in sales. That's a line cook's salary. That's your kid's college fund.
@@ -13,12 +49,12 @@ You're a restaurant owner who pours your heart into every plate. But 3% of every
 **workers.do** gives you AI that runs front and back of house:
 
 ```typescript
-import { toast, mark } from 'workers.do'
+import { toast, ada, mark } from 'toast.do'
 
 // Natural language for the dinner rush
 const covers = await toast`show tonight's reservations`
 const prep = await toast`what should we 86 based on inventory`
-const labor = await toast`are we overstaffed for projected covers`
+const labor = await ada`are we overstaffed for ${covers} projected covers`
 ```
 
 Promise pipelining for service workflows - one network round trip:
@@ -84,59 +120,46 @@ Your own restaurant management platform. Running on your hardware. With your pay
 Fast, intuitive, built for the rush:
 
 ```typescript
+import { toast } from 'toast.do'
+
+// Natural language order entry
+const order = await toast`
+  Table T12, 4 guests:
+  - 1x Crispy Calamari, extra sauce
+  - 1x Burrata
+  - 2x Ribeye Steak, medium rare
+`
+
+// Course firing with natural language
+await toast`fire apps for ${order}`
+// ...guests finish apps...
+await toast`fire mains for ${order}`
+
+// Or use promise pipelining for the full service flow
+const served = await toast`seat party of 4 at T12`
+  .map(table => toast`take drink order: 2 martinis, 2 waters`)
+  .map(drinks => toast`ring up ${order}`)
+  .map(o => toast`fire apps, notify when ready`)
+  .map(ready => toast`fire mains when guest signals`)
+```
+
+For programmatic access, the structured API is also available:
+
+```typescript
 import { pos } from 'toast.do'
 
-// Configure your menu
-await pos.menu.create({
-  categories: [
-    {
-      name: 'Appetizers',
-      items: [
-        {
-          name: 'Crispy Calamari',
-          price: 14.95,
-          modifiers: ['Extra Sauce +$1', 'Spicy', 'Gluten-Free'],
-          kitchen: 'fry-station',
-        },
-        {
-          name: 'Burrata',
-          price: 16.95,
-          modifiers: ['Add Prosciutto +$5'],
-          kitchen: 'cold-station',
-        },
-      ],
-    },
-    {
-      name: 'Entrees',
-      items: [
-        {
-          name: 'Ribeye Steak',
-          price: 42.95,
-          modifiers: ['Rare', 'Medium Rare', 'Medium', 'Medium Well', 'Well Done'],
-          kitchen: 'grill-station',
-          coursing: 'main',
-        },
-      ],
-    },
-  ],
-})
-
-// Ring up an order
+// Ring up an order programmatically
 const order = await pos.orders.create({
   table: 'T12',
-  server: 'user-001',
   guests: 4,
   items: [
     { item: 'Crispy Calamari', modifiers: ['Extra Sauce'], quantity: 1 },
-    { item: 'Burrata', quantity: 1 },
     { item: 'Ribeye Steak', modifiers: ['Medium Rare'], quantity: 2 },
   ],
 })
 
-// Fire courses
-await order.fire('appetizers') // Sends to kitchen
-// ...guests finish apps...
-await order.fire('mains')      // Fire entrees
+await order.fire('appetizers')
+await order.fire('mains')
 ```
 
 ### Kitchen Display System
@@ -171,31 +194,66 @@ await pos.kitchen.complete({
 // Routes to expo for final plate-up
 ```
 
+### Reservations
+
+Natural language reservation management:
+
+```typescript
+import { toast, ada } from 'toast.do'
+
+// Take a reservation
+const reso = await toast`
+  Book Saturday 7pm, party of 6:
+  - Name: Johnson
+  - Phone: 555-0123
+  - Notes: Anniversary dinner, quiet table
+`
+
+// AI manages the book intelligently
+const tonight = await ada`
+  Tonight's reservations with:
+  - Current waitlist
+  - Available walk-in slots
+  - VIP guests to recognize
+`
+
+// Automated confirmation flow
+const confirmed = await reso
+  .map(r => toast`send confirmation text to ${r.phone}`)
+  .map(sent => toast`add reminder for day-before callback`)
+  .map(reminder => toast`update covers forecast`)
+
+// Walk-in management
+await toast`add walk-in party of 2, quote 25 minute wait`
+  .map(wait => toast`text ${phone} when table ready`)
+```
+
 ### Online Ordering
 
 Direct orders, no third-party fees:
 
 ```typescript
-// Configure online ordering
-await pos.online.configure({
-  enabled: true,
-  url: 'order.yourrestaurant.com',
-  modes: ['pickup', 'delivery', 'curbside'],
-  delivery: {
-    radius: 5, // miles
-    fee: 4.99,
-    minimum: 25,
-    estimatedTime: '30-45 min',
-  },
-  pickup: {
-    estimatedTime: '15-20 min',
-  },
-})
+import { toast } from 'toast.do'
 
-// Orders flow directly to KDS
+// Natural language online order
+const online = await toast`
+  Online order for pickup:
+  - 2x Margherita Pizza
+  - 1x Caesar Salad
+  - Customer: ${customer}
+  - Ready in 20 min
+`
+
+// Promise pipelining for delivery
+const delivered = await toast`new delivery order from ${customer}`
+  .map(order => toast`fire to kitchen, 25 min estimate`)
+  .map(ready => toast`assign driver ${nearestDriver}`)
+  .map(out => toast`notify customer: out for delivery`)
+  .map(delivered => toast`send feedback request`)
+
+// Your customer, your data
 // No 30% DoorDash fee
 // No Uber Eats commission
-// Your customer, your data
 ```
 
 ### Tableside Ordering
@@ -259,43 +317,40 @@ await pos.payments.split({
 Scheduling that doesn't suck:
 
 ```typescript
-// Define roles and pay rates
-await pos.staff.roles({
-  roles: [
-    { name: 'Server', payType: 'tipped', baseRate: 2.13, minWage: true },
-    { name: 'Bartender', payType: 'tipped', baseRate: 2.13, minWage: true },
-    { name: 'Line Cook', payType: 'hourly', rate: 18.50 },
-    { name: 'Prep Cook', payType: 'hourly', rate: 15.00 },
-    { name: 'Manager', payType: 'salary', annual: 55000 },
-  ],
-})
+import { toast, ralph } from 'toast.do'
 
-// Create schedule
-await pos.schedule.create({
-  week: '2025-01-20',
-  shifts: [
-    { staff: 'john', role: 'Server', start: '11:00', end: '16:00', day: 'monday' },
-    { staff: 'jane', role: 'Server', start: '16:00', end: '23:00', day: 'monday' },
-    { staff: 'mike', role: 'Line Cook', start: '10:00', end: '18:00', day: 'monday' },
-    // ... rest of week
-  ],
-})
+// AI-powered scheduling
+const schedule = await ralph`
+  Create next week's schedule:
+  - Stay within 28% labor target
+  - Honor time-off requests
+  - Match staffing to projected ${covers}
+  - Balance shifts fairly
+`
 
-// Time clock
+// Natural language shift management
+await toast`John clocked in as Server`
+await toast`John clocked out`
+await toast`swap John and Jane shifts on Saturday`
+
+// AI handles tip distribution
+await toast`distribute tonight's tips using FOH pool rules`
+
+// Quick queries
+const overtime = await toast`who's approaching overtime this week`
+const coverage = await toast`do we have enough coverage for Saturday's event`
+```
+
+For programmatic access:
+
+```typescript
+import { pos } from 'toast.do'
+
 await pos.timecard.clockIn({ staff: 'john', role: 'Server' })
-await pos.timecard.clockOut({ staff: 'john' })
-
-// Tip distribution
 await pos.tips.distribute({
   date: '2025-01-20',
-  pool: 'foh', // Front of house pool
+  pool: 'foh',
   total: 2847.50,
-  distribution: {
-    servers: 65,   // 65% to servers
-    bartenders: 20, // 20% to bartenders
-    bussers: 10,   // 10% to bussers
-    hosts: 5,      // 5% to hosts
-  },
 })
 ```
 
@@ -304,40 +359,30 @@ await pos.tips.distribute({
 Know what you have, order what you need:
 
 ```typescript
-// Track inventory
-await pos.inventory.configure({
-  items: [
-    {
-      name: 'Ribeye Steak (16oz)',
-      unit: 'each',
-      parLevel: 30,
-      reorderPoint: 15,
-      costPerUnit: 18.50,
-      vendor: 'Premium Meats Inc',
-    },
-    {
-      name: 'Calamari (case)',
-      unit: 'case',
-      parLevel: 5,
-      reorderPoint: 2,
-      costPerUnit: 85.00,
-      vendor: 'Sysco',
-    },
-  ],
-  menuItemMapping: {
-    'Ribeye Steak': [{ inventory: 'Ribeye Steak (16oz)', quantity: 1 }],
-    'Crispy Calamari': [{ inventory: 'Calamari (case)', quantity: 0.1 }],
-  },
-})
+import { toast, ada } from 'toast.do'
 
-// Auto-deduct on sale
-// When Ribeye sells, inventory decrements
+// Natural language inventory queries
+const low = await toast`what items are below par level`
+const ribeye = await toast`how many ribeyes do we have`
+const cost = await toast`what's our food cost percentage this week`
 
-// Generate purchase orders
-const po = await pos.inventory.generatePO({
-  vendor: 'Premium Meats Inc',
-  items: await pos.inventory.belowPar('Premium Meats Inc'),
-})
+// AI-powered ordering
+const po = await ada`
+  Generate purchase order based on:
+  - Items below par: ${low}
+  - Projected covers: ${forecast}
+  - Current vendor pricing
+`.map(po => toast`send PO to ${po.vendor}`)
+
+// Quick 86 management
+await toast`86 the halibut, sold out`
+await toast`un-86 calamari, delivery arrived`
+
+// Promise pipeline for receiving
+const received = await toast`receiving delivery from Sysco`
+  .map(d => toast`count and verify items against PO`)
+  .map(counted => toast`update inventory levels`)
+  .map(updated => toast`flag any discrepancies for manager`)
 ```
 
 ### Reporting
@@ -345,36 +390,31 @@ const po = await pos.inventory.generatePO({
 Real-time business intelligence:
 
 ```typescript
-// Sales report
-const daily = await pos.reports.daily('2025-01-20')
-// {
-//   grossSales: 8456.75,
-//   discounts: 245.00,
-//   comps: 87.50,
-//   netSales: 8124.25,
-//   taxes: 650.00,
-//   tips: 1624.85,
-//   payments: {
-//     card: 7850.25,
-//     cash: 274.00,
-//   },
-//   covers: 187,
-//   averageCheck: 43.45,
-//   laborCost: 1245.00,
-//   laborPercent: 15.3,
-// }
+import { toast, ada } from 'toast.do'
 
-// Product mix
-const productMix = await pos.reports.productMix({
-  period: 'last7days',
-  groupBy: 'category',
-})
+// Natural language reporting
+const daily = await toast`how did we do today`
+const week = await toast`sales comparison vs last week`
+const labor = await toast`labor cost percentage for the month`
 
-// Server performance
-const serverStats = await pos.reports.serverPerformance({
-  period: 'last30days',
-  metrics: ['sales', 'averageCheck', 'turntableTime', 'tipPercent'],
-})
+// AI insights
+const insights = await ada`
+  Analyze this week's performance:
+  - What's trending up?
+  - What's concerning?
+  - Recommendations for next week?
+`
+
+// Quick owner queries
+await toast`who was our top server this week`
+await toast`which menu items are underperforming`
+await toast`are we hitting our food cost targets`
+
+// Promise pipeline for end-of-day
+const closeout = await toast`run end of day closeout`
+  .map(report => toast`reconcile cash drawers`)
+  .map(cash => toast`email daily summary to owners`)
+  .map(sent => toast`prep system for tomorrow`)
 ```
 
 ## AI-Native

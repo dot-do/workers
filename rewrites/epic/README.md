@@ -6,6 +6,45 @@ Epic Systems dominates healthcare IT with 38% market share and a private campus 
 
 **epic.do** is the open-source alternative. HIPAA-compliant from day one. FHIR-native. AI that actually helps clinicians instead of creating documentation burden.
 
+## AI-Native API
+
+Natural language meets healthcare. No query builders. Just ask.
+
+```typescript
+import { epic, ada, ralph } from 'epic.do'
+
+// Natural language FHIR queries
+const diabetics = await epic`patients with diabetes`
+const labs = await epic`A1C results over 7 for ${patientId}`
+const overdue = await epic`patients missing annual wellness visit`
+
+// Promise pipelining - one network round trip
+const cdsAlerts = await epic`patients on warfarin`
+  .map(p => epic`active medications for ${p}`)
+  .map(meds => ada`check drug interactions`)
+  .map(alerts => epic`create CDS alert if critical`)
+
+// SMART on FHIR launch with AI assistance
+const context = await epic.smartLaunch(token)
+  .then(ctx => ada`summarize patient ${ctx.patient}`)
+  .then(summary => ralph`suggest orders based on ${summary}`)
+
+// Population health in one line
+const gapList = await epic`diabetics with A1C not checked in 6 months`
+  .map(p => epic`schedule lab draw for ${p}`)
+  .map(appt => mark`send reminder for ${appt}`)
+```
+
+### Tree-Shakable Imports
+
+```typescript
+import { epic } from 'epic.do'           // Full featured
+import { epic } from 'epic.do/fhir'      // FHIR queries only
+import { epic } from 'epic.do/smart'     // SMART on FHIR
+import { epic } from 'epic.do/agents'    // Clinical AI agents
+import { epic } from 'epic.do/tiny'      // Minimal, no AI
+```
+
 ## The Problem
 
 Epic (the company) prints money while healthcare burns:
@@ -396,217 +435,183 @@ This is where epic.do transforms clinical workflows.
 No more typing during patient visits:
 
 ```typescript
-import { scribe } from 'epic.do/agents'
+import { scribe, ada } from 'epic.do/agents'
 
-// Configure ambient documentation
-await ehr.ambient.configure({
-  consent: 'required', // Patient must consent
-  recording: {
-    audio: true,
-    transcription: 'real-time',
-    storage: 'encrypted-ephemeral', // Deleted after note generation
-  },
-  output: {
-    format: 'soap',
-    requireReview: true, // Clinician must approve
-  },
-})
+// Ambient documentation - just start the visit
+const visit = await scribe`start ambient documentation for ${patient}`
+  .then(audio => scribe`transcribe and generate SOAP note`)
+  .then(draft => ada`verify clinical accuracy and coding`)
+  .then(note => epic`save as draft for clinician review`)
 
-// During visit, audio is transcribed
-// AI generates clinical note
+// Clinician reviews with AI assistance
+await epic`show pending notes for Dr. Smith`
+  .map(note => ada`highlight key findings in ${note}`)
 
-// Clinician reviews and approves
-await ehr.notes.review({
-  draftId: 'DRAFT-001',
-  action: 'approve', // or 'edit', 'reject'
-  clinician: 'DR-001',
-  attestation: 'I reviewed this AI-generated note and confirm its accuracy',
-})
+// One-click approve or edit
+await epic`approve note DRAFT-001 with attestation`
 ```
 
 ### Clinical Decision Support
 
-AI that helps clinicians catch things:
+AI pipelining catches dangerous interactions before they happen:
 
 ```typescript
-import { ada } from 'epic.do/agents'
+import { epic, ada } from 'epic.do'
 
-// Drug-drug interaction checking
-await ada`
-  Patient is on warfarin and we're considering adding amiodarone.
-  What are the interaction concerns and dose adjustments needed?
-`
-// Ada: "CRITICAL: Amiodarone inhibits warfarin metabolism via CYP2C9.
-//       Expected warfarin dose reduction: 30-50%
-//       Recommendation: Reduce warfarin dose by 30% and check INR in 1 week.
-//       Monitor for signs of bleeding."
+// Drug interaction checking - pipelined
+const safetyCheck = await epic`patient ${patientId} current medications`
+  .then(meds => ada`check ${meds} for interactions with amiodarone`)
+  .then(alerts => alerts.critical ? epic`block order with warning` : epic`allow order`)
 
-// Diagnostic assistance
-await ada`
-  62yo male with:
-  - 2 weeks progressive dyspnea on exertion
-  - Bilateral lower extremity edema
-  - BNP 890 pg/mL (normal <100)
-  - CXR showing cardiomegaly
+// Diagnostic workup - AI-assisted differential
+const workup = await epic`vitals and labs for ${patientId}`
+  .then(data => ada`differential diagnosis for ${data}`)
+  .then(ddx => ada`recommended workup for ${ddx}`)
+  .then(orders => epic`create order set from ${orders}`)
 
-  What's the differential and recommended workup?
-`
+// Real-time alerts during prescribing
+await epic`prescribe warfarin for ${patientId}`
+  .map(order => ada`check contraindications`)
+  .map(safety => safety.ok ? order : epic`require override for ${safety.reason}`)
 ```
 
 ### Prior Authorization Automation
 
-End the fax-and-wait nightmare:
+End the fax-and-wait nightmare - one pipeline does it all:
 
 ```typescript
-import { ralph } from 'agents.do'
+import { epic, ralph } from 'epic.do'
 
-// Auto-generate prior auth
-await ralph`
-  Generate prior authorization for:
-  - Patient: Sarah Johnson (MRN-001234)
-  - Medication: Ozempic 0.5mg pen
-  - Indication: Type 2 diabetes, failed metformin
-  - Insurance: Blue Cross Blue Shield
+// Prior auth - fully automated pipeline
+const priorAuth = await epic`order Ozempic for ${patientId}`
+  .then(order => epic`check if prior auth required for ${order}`)
+  .then(required => required
+    ? epic`gather clinical evidence for ${order}`
+        .then(evidence => ralph`write prior auth letter from ${evidence}`)
+        .then(letter => epic`submit prior auth to ${payer}`)
+    : order)
 
-  Include:
-  1. Clinical documentation supporting medical necessity
-  2. Lab values (A1c history)
-  3. Prior medication trial and failure
-  4. BMI and weight history
-`
+// Track all pending authorizations
+const pending = await epic`prior auths pending for Dr. Smith`
+  .map(pa => epic`check status of ${pa}`)
+  .map(status => status.denied ? ralph`write appeal for ${status}` : status)
 
-// Submit electronically
-await ehr.priorAuth.submit({
-  request: 'PA-001',
-  payer: 'bcbs',
-  method: 'electronic', // via payer API
-  urgency: 'routine',
-})
-
-// Track status
-const status = await ehr.priorAuth.status('PA-001')
-// { status: 'approved', approvedDate: '2025-01-20', validThrough: '2026-01-20' }
+// AI handles appeals automatically
+await epic`denied prior auths this week`
+  .map(denial => ralph`analyze denial reason and write appeal`)
+  .map(appeal => epic`submit appeal for ${appeal}`)
 ```
 
 ### Patient Communication
 
-AI-powered, clinician-supervised:
+AI drafts, clinician approves, patient understands:
 
 ```typescript
-import { mark } from 'agents.do'
+import { epic, mark } from 'epic.do'
 
-// Generate patient-friendly explanation
-await mark`
-  The patient's TSH came back at 5.8 (normal 0.4-4.0).
-  Write a MyChart message explaining:
-  - What this means in plain language
-  - Why we want to repeat the test in 6 weeks
-  - Symptoms to watch for
-  - That this is usually not urgent
+// Lab result notification - pipelined with review
+await epic`abnormal labs for ${patientId} today`
+  .map(lab => mark`explain ${lab} in plain language at 8th grade level`)
+  .map(message => epic`queue message for clinician review`)
+  .map(queued => epic`send when approved`)
 
-  Reading level: 8th grade
-  Tone: Reassuring but informative
-`
+// Bulk patient outreach
+await epic`patients due for colonoscopy screening`
+  .map(p => mark`personalized screening reminder for ${p}`)
+  .map(msg => epic`send via patient's preferred channel`)
 
-// Clinician reviews before sending
-await ehr.messages.sendWithReview({
-  patient: patient.id,
-  draft: 'Generated message...',
-  reviewer: 'DR-001',
-  type: 'lab-result',
-})
+// Intelligent triage of patient messages
+await epic`unread patient messages for Dr. Smith`
+  .map(msg => ada`triage urgency of ${msg}`)
+  .map(triaged => triaged.urgent
+    ? epic`alert Dr. Smith immediately`
+    : epic`queue for routine review`)
 ```
 
 ### Population Health
 
-Identify gaps in care at scale:
+Care gaps identified and closed - all in one pipeline:
 
 ```typescript
-import { priya } from 'agents.do'
+import { epic, priya, mark } from 'epic.do'
 
-// Care gap analysis
-await priya`
-  Identify patients in our panel with:
-  1. Diabetes (A1c not checked in >6 months)
-  2. Age >50, never had colonoscopy
-  3. Women 40-75, mammogram overdue
+// Care gap analysis with automatic outreach
+await epic`diabetics with A1c not checked in 6 months`
+  .map(p => mark`personalized A1c reminder for ${p}`)
+  .map(msg => epic`send and schedule lab for ${msg.patient}`)
 
-  For each, generate outreach message and
-  create scheduling task.
-`
+// Multi-condition gap closure
+await priya`identify all care gaps in our panel`
+  .then(gaps => gaps.map(gap =>
+    epic`patients with ${gap}`
+      .map(p => mark`outreach for ${gap} to ${p}`)
+      .map(msg => epic`send via best channel for ${p}`)))
 
-// Bulk outreach
-await ehr.outreach.campaign({
-  name: 'Diabetic A1c Recall',
-  patients: gapList,
-  message: {
-    template: 'diabetes-a1c-recall',
-    channels: ['patient-portal', 'sms'],
-  },
-  scheduling: {
-    enabled: true,
-    appointmentType: 'lab-draw',
-  },
-})
+// Quality metrics dashboard
+const metrics = await epic`HEDIS measures for our practice`
+  .then(measures => priya`identify lowest performing measures`)
+  .then(low => priya`recommend interventions for ${low}`)
+  .then(plan => epic`create quality improvement tasks from ${plan}`)
 ```
 
 ## FHIR-Native
 
-Built on open standards:
+Natural language with FHIR underneath:
 
 ```typescript
-// Every resource is FHIR R4 compliant
-const patient = await ehr.fhir.read('Patient', 'patient-123')
+import { epic } from 'epic.do/fhir'
+
+// Natural language queries return FHIR R4 resources
+const patient = await epic`patient Sarah Johnson MRN-001234`
 // Returns: FHIR R4 Patient resource
 
-// Search using FHIR syntax
-const conditions = await ehr.fhir.search('Condition', {
-  patient: 'patient-123',
-  'clinical-status': 'active',
-})
+// Complex queries without learning FHIR syntax
+const conditions = await epic`active conditions for ${patient}`
+const meds = await epic`current medications including OTC for ${patient}`
+const labs = await epic`labs from last 30 days for ${patient}`
 
-// SMART on FHIR apps work out of the box
-await ehr.smartApps.register({
-  name: 'Growth Charts',
-  launchUrl: 'https://growthcharts.app/launch',
-  redirectUri: 'https://growthcharts.app/callback',
-  scopes: ['patient/*.read', 'launch'],
-})
+// Pipelined clinical summary
+const summary = await epic`patient ${patientId}`
+  .then(p => Promise.all([
+    epic`active problems for ${p}`,
+    epic`current medications for ${p}`,
+    epic`allergies for ${p}`,
+    epic`recent labs for ${p}`,
+  ]))
+  .then(([problems, meds, allergies, labs]) =>
+    ada`clinical summary from ${problems}, ${meds}, ${allergies}, ${labs}`)
 
-// Bulk FHIR export (for population health)
-const exportJob = await ehr.fhir.bulkExport({
-  type: 'system', // or 'group', 'patient'
-  since: '2024-01-01',
-  types: ['Patient', 'Condition', 'Observation'],
-  format: 'ndjson',
-})
+// SMART on FHIR launch - AI handles context
+const app = await epic.smartLaunch(launchToken)
+  .then(ctx => epic`inject ${ctx} into growth-charts.app`)
+
+// Bulk FHIR export with natural language filters
+const exportJob = await epic`export all diabetic patients since 2024`
 ```
 
 ### Patient Access
 
-Patients own their data:
+Patients own their data. Natural language access:
 
 ```typescript
-// Patient can export everything
-const myData = await ehr.patient.export({
-  format: 'fhir-bundle', // or 'c-cda', 'pdf'
-  include: 'all',
-})
+import { epic } from 'epic.do/patient'
 
-// Share with another provider
-await ehr.patient.share({
-  recipient: 'another-healthcare-org',
-  data: ['medications', 'allergies', 'problems', 'immunizations'],
-  duration: '30 days',
-  purpose: 'continuity-of-care',
-})
+// Patient can ask for their data naturally
+const myData = await epic`export all my health records as PDF`
+const labs = await epic`my lab results from 2024`
+const meds = await epic`what medications am I taking`
 
-// Connect to Apple Health, Google Fit, etc.
-await ehr.patient.connect({
-  app: 'apple-health',
-  dataTypes: ['vitals', 'activity', 'labs'],
-  direction: 'bidirectional',
-})
+// Share with another provider - plain language
+await epic`share my records with Dr. Smith at Stanford for 30 days`
+await epic`send my immunizations to my kids school`
+
+// Connect wearables
+await epic`sync my Apple Watch health data`
+await epic`import my Fitbit sleep data`
+
+// Patient-controlled AI insights
+const insights = await epic`summarize my health trends this year`
+  .then(summary => ada`what should I discuss at my next visit`)
 ```
 
 ## Architecture

@@ -34,6 +34,48 @@ Months to implement             Deploy in hours
 Proprietary everything          Open source, MIT licensed
 ```
 
+## AI-Native API
+
+Natural language meets healthcare. Promise pipelining meets revenue cycle.
+
+```typescript
+import { athena, ada, scribe, appeals } from 'athena.do'
+
+// Natural language queries
+const patients = await athena`diabetic patients needing follow-up`
+const claims = await athena`denied claims from last 30 days`
+
+// Promise pipelining for revenue cycle
+const resolved = await athena`denied claims over $1000`
+  .map(claim => appeals`analyze denial reason for ${claim}`)
+  .map(analysis => appeals`draft appeal letter if winnable`)
+  .map(appeal => athena`submit appeal with documentation`)
+
+// Ambient documentation
+const note = await scribe`encounter-${encounterId}`
+  .then(note => ada`suggest CPT codes from ${note}`)
+  .then(codes => athena`submit charges with ${codes}`)
+```
+
+### Tree-Shakable Imports
+
+```typescript
+// Full featured
+import { athena, rcm, pm, scribe, ada } from 'athena.do'
+
+// Lightweight - just practice management
+import { pm } from 'athena.do/pm'
+
+// Revenue cycle only
+import { rcm, appeals } from 'athena.do/rcm'
+
+// AI agents only
+import { scribe, ada } from 'athena.do/agents'
+
+// Tiny runtime for edge
+import { athena } from 'athena.do/tiny'
+```
+
 ## One-Click Deploy
 
 ```bash
@@ -298,33 +340,56 @@ await pm.orders.prescription({
 
 This is where athena.do changes the game. AI-native billing that fights for every dollar.
 
+### The Complete Revenue Pipeline
+
+One pipeline. Encounter to cash.
+
+```typescript
+import { athena, ada, appeals, scribe } from 'athena.do'
+
+// Full revenue cycle in one pipeline
+const revenue = await scribe`encounter-${encounterId}`
+  .then(note => ada`code ${note} with E/M and procedures`)
+  .then(codes => athena`create claim from ${codes}`)
+  .then(claim => athena`scrub and submit ${claim}`)
+  .then(result => result.denied
+    ? appeals`analyze and appeal ${result}`
+    : result)
+
+// Batch denial recovery
+const recovered = await athena`all denied claims this month`
+  .map(claim => appeals`analyze denial for ${claim}`)
+  .filter(analysis => analysis.winnable)
+  .map(winnable => appeals`draft appeal for ${winnable}`)
+  .map(appeal => athena`submit ${appeal} with documentation`)
+```
+
 ### Charge Capture
 
 Never miss a billable service:
 
 ```typescript
-import { rcm } from 'athena.do'
+import { ada } from 'athena.do/agents'
 
-// Auto-capture charges from encounter
+// AI-native charge capture
+const charges = await ada`
+  review encounter ${encounter.id}
+  suggest CPT codes with confidence scores
+  flag any missed charges
+`
+
+// Or the traditional API
+import { rcm } from 'athena.do/rcm'
+
 const charges = await rcm.charges.capture({
   encounter: encounter.id,
-  autoCode: true, // AI suggests codes based on documentation
+  autoCode: true,
 })
+// Returns: [{ cpt: '99395', confidence: 0.98 }, ...]
 
-// Returns suggested charges with confidence scores:
-// [
-//   { cpt: '99395', description: 'Preventive visit 40-64', confidence: 0.98 },
-//   { cpt: '83036', description: 'Hemoglobin A1c', confidence: 0.99 },
-//   { cpt: '80061', description: 'Lipid panel', confidence: 0.99 },
-//   { cpt: '99214', description: 'E/M moderate complexity', confidence: 0.72 },
-// ]
-
-// Coder reviews and approves
 await rcm.charges.approve({
   encounter: encounter.id,
   charges: charges.filter(c => c.confidence > 0.9),
-  reviewed: true,
-  coder: 'CODER-001',
 })
 ```
 
@@ -333,30 +398,20 @@ await rcm.charges.approve({
 Clean claims, first time:
 
 ```typescript
-// Generate claim
-const claim = await rcm.claims.create({
-  encounter: encounter.id,
-  charges: approvedCharges,
-  diagnoses: encounter.diagnoses,
-})
+import { athena } from 'athena.do'
 
-// AI scrubs the claim before submission
-const scrubResult = await rcm.claims.scrub(claim.id)
-// {
-//   status: 'clean',
-//   warnings: [],
-//   suggestions: [
-//     { type: 'modifier', message: 'Consider modifier 25 for E/M with preventive' }
-//   ],
-//   denialRisk: 0.08
-// }
+// Natural language claim generation
+const claim = await athena`
+  create claim for encounter ${encounter.id}
+  scrub for errors before submission
+`
 
-// Submit claim
-await rcm.claims.submit({
-  claim: claim.id,
-  clearinghouse: 'availity',
-  method: 'electronic',
-})
+// Pipeline: create -> scrub -> submit
+const submitted = await athena`claim for ${encounter.id}`
+  .then(claim => athena`scrub ${claim}`)
+  .then(scrubbed => scrubbed.clean
+    ? athena`submit ${scrubbed} to availity`
+    : athena`fix ${scrubbed.errors} and resubmit`)
 ```
 
 ### Denial Management
@@ -364,31 +419,23 @@ await rcm.claims.submit({
 AI that fights denials:
 
 ```typescript
-// Track claim status
-const status = await rcm.claims.status(claim.id)
-// { status: 'denied', reason: 'Medical necessity not established', code: 'CO-50' }
+import { appeals } from 'athena.do'
 
-// AI analyzes denial and recommends action
-const analysis = await rcm.denials.analyze(claim.id)
-// {
-//   rootCause: 'Missing documentation of prior treatment failure',
-//   recommendation: 'appeal',
-//   successProbability: 0.78,
-//   requiredDocumentation: ['Treatment history', 'Lab results'],
-//   appealDeadline: '2025-03-15'
-// }
+// Analyze and appeal in one call
+const result = await appeals`
+  analyze denial on claim ${claim.id}
+  draft appeal letter if winnable
+  attach supporting documentation
+`
 
-// Generate appeal
-const appeal = await rcm.denials.appeal({
-  claim: claim.id,
-  reason: analysis.recommendation,
-  supportingDocs: ['treatment-history.pdf', 'lab-results.pdf'],
-  letterType: 'medical-necessity',
-})
-
-// AI-drafted appeal letter
-console.log(appeal.letter)
-// "Dear Medical Director, we are appealing the denial of claim #12345..."
+// Batch denial recovery pipeline
+const recovered = await athena`denied claims over $500`
+  .map(claim => appeals`analyze ${claim}`)
+  .map(analysis => analysis.successProbability > 0.6
+    ? appeals`draft appeal for ${analysis}`
+    : analysis)
+  .filter(a => a.letter)
+  .map(appeal => athena`submit appeal ${appeal}`)
 ```
 
 ### Prior Authorization
@@ -396,35 +443,28 @@ console.log(appeal.letter)
 Automated PA that doesn't waste 34 hours/week:
 
 ```typescript
-// Check if PA required
-const paCheck = await rcm.priorAuth.required({
-  patient: patient.id,
-  service: {
-    code: '27447',
-    description: 'Total knee arthroplasty',
-  },
-  insurance: patient.insurance.primary,
-})
-// { required: true, turnaround: '5-7 business days' }
+import { athena } from 'athena.do'
 
-// Submit PA with AI-generated clinical summary
-const pa = await rcm.priorAuth.submit({
-  patient: patient.id,
-  service: paCheck.service,
-  provider: 'DR-001',
-  clinicalInfo: {
-    diagnosis: 'M17.11 - Primary osteoarthritis, right knee',
-    failedTreatments: ['Physical therapy x 12 weeks', 'NSAIDs', 'Corticosteroid injection'],
-    functionalLimitation: 'Unable to walk >100 feet, stairs impossible',
-    imagingFindings: 'Bone-on-bone medial compartment, varus deformity 8 degrees',
-  },
-  attachments: ['xray-knee.pdf', 'pt-notes.pdf'],
-  autoGenerateLetter: true, // AI writes the medical necessity letter
-})
+// Natural language PA submission
+const pa = await athena`
+  submit prior auth for ${patient.id}
+  procedure: total knee arthroplasty
+  include failed treatments and imaging
+`
 
-// Track PA status
-await rcm.priorAuth.track(pa.id)
-// Notifies when approved/denied, auto-appeals if denied
+// PA pipeline with auto-appeal
+const approved = await athena`check PA required for ${procedure}`
+  .then(check => check.required
+    ? athena`submit PA with clinical summary`
+    : { approved: true })
+  .then(result => result.denied
+    ? appeals`appeal PA denial for ${result}`
+    : result)
+
+// Batch PA submissions
+const pending = await athena`procedures needing prior auth`
+  .map(proc => athena`submit PA for ${proc}`)
+  .map(pa => athena`track ${pa} until resolution`)
 ```
 
 ### Payment Posting
@@ -432,26 +472,18 @@ await rcm.priorAuth.track(pa.id)
 Automated ERA/EOB processing:
 
 ```typescript
-// Receive ERA (Electronic Remittance Advice)
-const era = await rcm.payments.processERA({
-  file: eraFile,
-  autoPost: true,
-})
+import { athena, appeals } from 'athena.do'
 
-// ERA parsed and payments posted automatically:
-// {
-//   claims: 47,
-//   totalPaid: 12847.50,
-//   adjustments: 2340.00,
-//   patientResponsibility: 1250.00,
-//   denials: 3
-// }
+// Process ERA with auto-handling
+const posted = await athena`process ERA ${eraFile}`
+  .then(era => athena`post payments from ${era}`)
+  .then(posted => athena`generate statements for patient balances`)
+  .then(statements => athena`send via patient preference`)
 
-// Patient statements generated automatically
-await rcm.statements.generate({
-  patients: era.patientResponsibility.map(p => p.patientId),
-  method: 'electronic', // or 'paper'
-})
+// Auto-work denials from ERA
+const resolved = await athena`denials from ERA ${eraFile}`
+  .map(denial => appeals`analyze and appeal if winnable`)
+  .filter(result => result.appealed)
 ```
 
 ## API Compatibility
@@ -545,31 +577,16 @@ const doc = await documents.upload({
 End documentation burden:
 
 ```typescript
-import { scribe } from 'athena.do/agents'
+import { scribe, ada } from 'athena.do/agents'
 
-// Configure ambient documentation
-await pm.ambient.configure({
-  consent: 'required',
-  recording: {
-    audio: true,
-    transcription: 'real-time',
-    storage: 'encrypted-ephemeral',
-  },
-  output: {
-    format: 'soap',
-    icdSuggestions: true,
-    cptSuggestions: true,
-    requireReview: true,
-  },
-})
+// Full encounter pipeline: listen -> document -> code -> charge
+const charges = await scribe`encounter-${encounterId}`
+  .then(note => ada`code ${note} with rationale`)
+  .then(codes => athena`create charges from ${codes}`)
 
-// Visit happens, audio transcribed, note generated
-// Provider reviews and attests
-await pm.encounters.attest({
-  encounter: encounter.id,
-  provider: 'DR-001',
-  attestation: 'I have reviewed this AI-generated note and confirm its accuracy',
-})
+// Or just the note
+const note = await scribe`encounter-${encounterId}`
+// Returns: SOAP note ready for attestation
 ```
 
 ### Intelligent Coding
@@ -579,18 +596,18 @@ AI coding assistant:
 ```typescript
 import { ada } from 'athena.do/agents'
 
-// Suggest codes from documentation
-await ada`
-  Review this encounter note and suggest appropriate:
-  1. E/M level with supporting documentation
-  2. ICD-10 diagnoses in order of specificity
-  3. Any applicable modifiers
-  4. Potential missed charges
-
-  Note: ${encounterNote}
+// Natural language coding
+const codes = await ada`
+  review ${encounterNote}
+  suggest E/M level with documentation support
+  list ICD-10 in specificity order
+  flag missed charges
 `
 
-// Ada responds with coded suggestions and rationale
+// Pipeline: note -> codes -> claim
+const claim = await ada`code ${note}`
+  .then(codes => athena`create claim from ${codes}`)
+  .then(claim => athena`scrub and submit ${claim}`)
 ```
 
 ### Patient Communication
@@ -598,28 +615,16 @@ await ada`
 AI-powered, human-supervised:
 
 ```typescript
-import { mark } from 'agents.do'
+import { mark } from 'athena.do/agents'
 
-// Generate patient message
-await mark`
-  The patient's A1c came back at 7.8% (was 7.2% last time).
-  Write a portal message explaining:
-  - What this means in plain language
-  - That we'd like to adjust their medication
-  - They should schedule a follow-up
-  - Diet and exercise reminders
-
-  Tone: Encouraging but direct
-  Reading level: 8th grade
+// Generate and send patient message
+const sent = await mark`
+  A1c result: 7.8% (was 7.2%)
+  write portal message at 8th grade level
+  tone: encouraging but direct
 `
-
-// Staff reviews before sending
-await pm.messages.sendWithReview({
-  patient: patient.id,
-  draft: generatedMessage,
-  reviewer: 'MA-001',
-  type: 'lab-result',
-})
+  .then(draft => athena`queue for staff review`)
+  .then(approved => athena`send to ${patient.id}`)
 ```
 
 ### Recall Management
@@ -627,34 +632,19 @@ await pm.messages.sendWithReview({
 Proactive patient outreach:
 
 ```typescript
-import { priya } from 'agents.do'
+import { athena, mark } from 'athena.do'
 
-// Identify care gaps
-await priya`
-  Find patients who:
-  1. Have diabetes but no A1c in 6+ months
-  2. Are due for annual wellness visit
-  3. Have open referrals not scheduled
-  4. Missed appointments without reschedule
+// Find and reach care gaps in one pipeline
+const outreach = await athena`diabetic patients without A1c in 6 months`
+  .map(patient => mark`write recall message for ${patient}`)
+  .map(message => athena`send via patient preference`)
 
-  For each, generate appropriate outreach.
+// Or query-driven campaigns
+const campaigns = await athena`
+  find patients with care gaps
+  group by condition
+  generate outreach campaigns
 `
-
-// Automated campaigns
-await pm.outreach.campaign({
-  name: 'Diabetic Recall Q1 2025',
-  patients: diabeticCareGaps,
-  messages: [
-    { day: 0, channel: 'sms', template: 'a1c-reminder-text' },
-    { day: 3, channel: 'email', template: 'a1c-reminder-email' },
-    { day: 7, channel: 'phone', template: 'a1c-reminder-call' },
-  ],
-  scheduling: {
-    enabled: true,
-    appointmentType: 'diabetes-followup',
-  },
-})
-```
 
 ## Architecture
 

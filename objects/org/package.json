@@ -13,7 +13,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@dotdo/do-core": "workspace:*",
+    "@dotdo/do": "workspace:*",
     "dotdo": "workspace:*",
     "drizzle-orm": "^0.36.0"
   },

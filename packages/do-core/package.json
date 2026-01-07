@@ -1,7 +1,6 @@
 {
-  "name": "@dotdo/do-core",
+  "name": "@dotdo/do",
   "version": "0.0.1",
-  "private": true,
   "description": "Slim Durable Object core - minimal DO interface with state, alarms, and WebSocket hibernation",
   "type": "module",
   "main": "./dist/index.js",

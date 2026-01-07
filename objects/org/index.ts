@@ -27,7 +27,7 @@
  * ```
  */
 
-import { DOCore as DO, type DOEnv } from '@dotdo/do-core'
+import { DOCore as DO, type DOEnv } from '@dotdo/do'
 import { drizzle, type DrizzleD1Database } from 'drizzle-orm/d1'
 import { eq, and, desc, like, isNull, sql } from 'drizzle-orm'
 import * as schema from './schema'

@@ -409,7 +409,7 @@ export type ThingsMixinClass<TBase extends Constructor<ThingsMixinBase>> =
  *
  * @example
  * ```typescript
- * import { ThingsBase } from '@dotdo/do-core'
+ * import { ThingsBase } from '@dotdo/do'
  *
  * class MyDO extends ThingsBase {
  *   async fetch(request: Request) {

@@ -1,5 +1,5 @@
 /**
- * @dotdo/do-core - Slim Durable Object Core
+ * @dotdo/do - Slim Durable Object Core
  *
  * A minimal Durable Object implementation providing:
  * - Minimal DO interface contract (fetch, constructor)

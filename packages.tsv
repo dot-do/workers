@@ -1,0 +1,109 @@
+name	version	description
+@dotdo/agent	0.0.1	Persistent AI agents with memory, goals, and learning - Durable Objects for intelligent autonomous systems
+@dotdo/agents	0.0.1	Autonomous agents worker for agents.do
+@dotdo/app	0.0.1	App management Durable Object - user profiles, preferences, feature flags, and multi-tenant state
+@dotdo/auth	0.0.1	Authentication for workers.do - RBAC and Better Auth plugins
+@dotdo/build	0.0.1	ESBuild WASM worker for TypeScript compilation in Cloudflare Workers
+@dotdo/business	0.0.1	Business entity management Durable Object - the single source of truth for your startup
+@dotdo/cloudflare	0.0.1	Cloudflare SDK exposed as multi-transport RPC worker
+@dotdo/db	0.0.1	Database Worker (database.do) - ai-database RPC implementation
+@dotdo/deployer	0.0.1	Deployer Worker (deployer.do) - Cloudflare Workers deployment management
+@dotdo/deployment	0.0.1	Deployment history tracking and rollback support for Cloudflare Workers
+@dotdo/do	0.0.1	Slim Durable Object core - minimal DO interface with state, alarms, and WebSocket hibernation
+@dotdo/domains	0.0.1	Domains Worker (builder.domains) - Free domain management for builders
+@dotdo/drizzle	0.0.1	Drizzle ORM schema management and migrations for Cloudflare Workers Durable Objects
+@dotdo/esbuild	0.0.1	esbuild-wasm exposed as multi-transport RPC worker
+@dotdo/evals	0.0.1	Evals Worker (evals.do) - AI evaluations and benchmarks
+@dotdo/function	0.0.1	Serverless Function Durable Object - Add state, versioning, and observability to your functions
+@dotdo/functions	0.0.1	Functions Worker (functions.do) - ai-functions RPC implementation
+@dotdo/health	0.0.1	Health check utilities for Cloudflare Workers - liveness, readiness, and dependency health probes
+@dotdo/human	0.0.1	Human-in-the-loop Durable Object - Seamlessly integrate human judgment into AI workflows
+@dotdo/humans	0.0.1	Humans Worker (humans.do) - human-in-the-loop RPC implementation
+@dotdo/jose	0.0.1	jose JWT library exposed as multi-transport RPC worker
+@dotdo/llm	0.0.1	LLM Gateway with billing and analytics (llm.do)
+@dotdo/mdx	0.0.1	MDX compiler exposed as multi-transport RPC worker
+@dotdo/oauth	0.0.1	OAuth 2.0/OIDC Durable Object with WorkOS AuthKit integration
+@dotdo/oauth.do	0.1.0	OAuth 2.1 Provider Durable Object - Reusable OAuth authorization server
+@dotdo/objects	0.0.1	The building blocks of autonomous startups - all Durable Objects in one package
+@dotdo/observability	0.0.1	Observability utilities for Cloudflare Workers - metrics, tracing, and lifecycle hooks
+@dotdo/org	0.0.1	Durable Object for organization state - members, roles, SSO, billing, audit logs
+@dotdo/react	0.0.1	React compatibility layer using hono/jsx/dom for dramatic bundle size reduction
+@dotdo/router	0.0.1	Router Worker - Hostname-based routing for multi-tenant deployments
+@dotdo/rpc	0.1.0	Universal RPC wrapper - wrap any npm package as a multi-transport worker (REST, Workers RPC, CapnWeb, MCP)
+@dotdo/security	0.0.1	Security utilities for @dotdo/workers - SQL injection prevention, input sanitization
+@dotdo/sessions	0.0.1	Session management for Cloudflare Workers with Durable Objects and KV storage
+@dotdo/shutdown	0.0.1	Graceful shutdown utilities for Cloudflare Workers - request draining, cleanup hooks, and timeout handling
+@dotdo/site	0.0.1	Site management Durable Object - ship beautiful websites with zero infrastructure
+@dotdo/snippets	0.0.1	Cloudflare Snippets collection - free tier workers (<5ms CPU, <32KB, no bindings)
+@dotdo/startup	0.0.1	Startup lifecycle management Durable Object - your startup, defined in code
+@dotdo/stripe	0.0.1	Stripe Connect Platform Worker (payments.do) - Stripe service as Durable Object
+@dotdo/types	0.0.1	TypeScript type definitions for workers.do platform
+@dotdo/utils	0.0.1	Test utilities and helpers for @dotdo/workers packages
+@dotdo/vite	0.0.1	Vite plugin for workers.do with auto-detection and React aliasing
+@dotdo/workflow	0.0.1	Durable workflow orchestration - Multi-step workflows with state persistence, retry handling, and replay
+@dotdo/workflows	0.0.1	Workflows Worker (workflows.do) - ai-workflows RPC implementation
+@dotdo/workos	0.0.1	id.org.ai - Auth for AI and Humans with WorkOS integration
+actions.do	0.0.1	Unified Action Registry - Define once, execute anywhere for AI and humans
+agent.as	0.0.1	What do you want your agent to be?
+agents.do	0.0.1	What do you want agents to .do for you?
+agi.as	0.0.1	What do you want AGI to be for you?
+agi.do	0.0.1	What do you want AGI to .do for you?
+analytics.do	0.0.1	AI-Powered Analytics SDK - Analytics that tell you what to do next
+apps.as	0.0.1	Deploy and manage applications
+assistant.as	0.0.1	What do you want your assistant to be?
+assistants.do	0.0.1	What do you want assistants to .do for you?
+benchmarks.do	0.0.1	Benchmarks SDK - Compare AI performance on standard tasks
+brands.as	0.0.1	Create and manage brand assets
+builder.domains	0.0.1	Free Domains for Builders - Claim and manage domains for AI projects
+cli.do	0.0.1	CLI SDK - Build beautiful command-line interfaces for .do services
+database.as	0.0.1	What do you want your database to be?
+database.do	0.0.1	What do you want your database to .do for you?
+datasets.do	0.0.1	Datasets SDK - Manage training and evaluation datasets
+directories.as	0.0.1	Create and manage directories and listings
+dotdo	0.0.1	An agentic database that can DO anything - Base Durable Object with Drizzle, Better Auth, and AI agent
+edge-api	0.0.1	HATEOAS API framework - explorable APIs with links, actions, data, and user objects
+esm.do	0.0.1	Living ESM module system for AI agents - types, modules, tests, and scripts in one place
+eval.do	0.0.1	Secure Code Execution SDK - Sandboxed eval for AI agents and user code
+evals.do	0.0.1	Evals SDK - Evaluate AI outputs systematically
+events.do	0.0.1	Event-Driven Architecture SDK - Publish, subscribe, and replay events
+experiments.do	0.0.1	Experiments SDK - A/B testing and feature experiments
+forms.as	0.0.1	Create and manage forms
+functions.do	0.1.1	Serverless Functions SDK - Define and invoke functions
+goals.do	0.0.1	Goals SDK - Goal tracking with automatic progress
+id.org.ai	0.1.0	Auth for AI and Humans - OAuth 2.1 Provider powered by WorkOS AuthKit
+integrations.do	0.0.1	Integrations SDK - Connect any service in minutes
+kpis.do	0.0.1	KPIs SDK - Key Performance Indicators that update themselves
+llm.do	0.0.1	AI Gateway SDK - Multi-model LLM access with metering and billing
+marketplace.as	0.0.1	Build and manage marketplaces
+mcp.do	0.0.1	MCP SDK - Model Context Protocol support for AI tool integration
+mdx.as	0.0.1	Create interactive content with MDX
+mdxui	0.0.1	React component library for enhanced MDX rendering - interactive code playgrounds, live examples, and rich documentation experiences
+models.do	0.0.1	Models SDK - LLM model catalog with pricing and performance data
+nouns.do	0.0.1	Nouns SDK - Define your business entities and their relationships
+oauth.do	0.2.0	OAuth authentication SDK and CLI for .do Platform
+okrs.do	0.0.1	OKRs SDK - Objectives and Key Results with automatic scoring
+org.ai	0.1.0	Auth for AI and Humans - SSO, Vault, Users, Organizations (id.org.ai)
+page.as	0.0.1	Create and manage web pages
+payments.do	0.0.1	Stripe Connect Platform SDK - Billing, subscriptions, marketplace payouts
+plans.do	0.0.1	Plans SDK - Strategic planning and roadmapping
+projects.do	0.0.1	Projects SDK - Project management for autonomous teams
+resources.do	0.0.1	Resources SDK - Manage and allocate resources intelligently
+rpc.do	0.1.5	Base CapnWeb RPC client for .do SDKs with unified Fn<Out,In,Opts> tagged template support
+sdk.as	0.0.1	Generate and manage SDKs
+searches.do	0.0.1	AI-Powered Search SDK - Find anything, instantly
+services.as	0.0.1	Services-as-Software SDK - AI agents delivering services humans used to
+services.do	0.0.1	AI Services Marketplace SDK - Discover, deploy, and sell AI services
+startup.games	0.0.1	Gamified entrepreneurship - test business models, compete, and learn startup skills
+startups.as	0.0.1	Define and launch startups as code
+startups.do	0.0.1	Autonomous Startups SDK - Build businesses that run on AI with human oversight
+startups.new	0.0.1	Launch Autonomous Startups instantly - Startup-as-Code creation
+startups.studio	0.1.5	Build and manage your Autonomous Startup portfolio - the venture studio for Startup-as-Code
+tasks.do	0.0.1	Tasks SDK - Intelligent task management for AI and humans
+triggers.do	0.0.1	Triggers SDK - Event-driven automation made simple
+verbs.do	0.0.1	Verbs SDK - Define actions your AI can take
+videos.as	0.0.1	Create, host, and manage videos
+waitlist.as	0.0.1	Manage waitlists and early access
+wiki.as	0.0.1	Create and manage wikis and documentation
+workers.do	0.0.1	The complete platform for building on Cloudflare Workers - CLI and SDK
+workflows.as	0.0.1	What do you want your workflow to be?
+workflows.do	0.0.1	Durable Workflows SDK - Define and run multi-step workflows

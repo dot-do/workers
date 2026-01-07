@@ -1,366 +1,366 @@
 domain	name	tld	package	category	subcategory	type	noun	nounPlural	verb	verbGerund	adjective	description	tagline	status	priority	tier
 # Agents - Named AI Workers (~85 domains)
-ada.do	ada	.do	ada.do	agents	engineering	agent	Ada	-	code	coding	adaptive	AI coding assistant inspired by Ada Lovelace	Code with Ada	planned	P2	free
-amit.do	amit	.do	amit.do	agents	engineering	agent	Amit	-	architect	architecting	analytical	Systems architecture specialist	-	planned	P3	free
-amy.do	amy	.do	amy.do	agents	support	agent	Amy	-	assist	assisting	helpful	Customer support specialist	-	planned	P3	free
-andrew.do	andrew	.do	andrew.do	agents	engineering	agent	Andrew	-	develop	developing	diligent	Full-stack developer agent	-	planned	P3	free
-ann.do	ann	.do	ann.do	agents	analytics	agent	Ann	-	analyze	analyzing	analytical	Data analytics specialist	-	planned	P3	free
-archie.do	archie	.do	archie.do	agents	devops	agent	Archie	-	archive	archiving	organized	Archive and backup specialist	-	planned	P3	free
-ari.do	ari	.do	ari.do	agents	research	agent	Ari	-	research	researching	curious	Research and discovery agent	-	planned	P3	free
-arya.do	arya	.do	arya.do	agents	security	agent	Arya	-	secure	securing	vigilant	Security and compliance agent	-	planned	P3	free
-bailey.do	bailey	.do	bailey.do	agents	operations	agent	Bailey	-	operate	operating	reliable	Operations management agent	-	planned	P3	free
-beau.do	beau	.do	beau.do	agents	design	agent	Beau	-	design	designing	aesthetic	UI/UX design specialist	-	planned	P3	free
-blake.do	blake	.do	blake.do	agents	engineering	agent	Blake	-	build	building	creative	Creative engineering agent	-	planned	P3	free
-bob.do	bob	.do	bob.do	agents	engineering	agent	Bob	-	build	building	practical	Pragmatic builder agent	-	planned	P3	free
-bryant.do	bryant	.do	bryant.do	agents	sales	agent	Bryant	-	pitch	pitching	persuasive	Sales pitch specialist	-	planned	P3	free
-cara.do	cara	.do	cara.do	agents	customer	agent	Cara	-	care	caring	empathetic	Customer care specialist	-	planned	P3	free
-casey.do	casey	.do	casey.do	agents	engineering	agent	Casey	-	code	coding	versatile	Versatile coding agent	-	planned	P3	free
-clara.do	clara	.do	clara.do	agents	documentation	agent	Clara	-	clarify	clarifying	clear	Documentation clarity specialist	-	planned	P3	free
-cody.do	cody	.do	cody.do	agents	engineering	agent	Cody	-	code	coding	focused	Focused coding agent	-	planned	P3	free
-cole.do	cole	.do	cole.do	agents	data	agent	Cole	-	collect	collecting	thorough	Data collection specialist	-	planned	P3	free
-dana.do	dana	.do	dana.do	agents	analytics	agent	Dana	-	analyze	analyzing	data-driven	Data analysis agent	-	planned	P3	free
-dara.do	dara	.do	dara.do	agents	data	agent	Dara	-	derive	deriving	insightful	Data insights specialist	-	planned	P3	free
-deb.do	deb	.do	deb.do	agents	debugging	agent	Deb	-	debug	debugging	meticulous	Debugging specialist	-	planned	P3	free
-devin.do	devin	.do	devin.do	agents	engineering	agent	Devin	-	develop	developing	autonomous	Autonomous development agent	-	planned	P3	free
-devon.do	devon	.do	devon.do	agents	devops	agent	Devon	-	deploy	deploying	reliable	DevOps specialist	-	planned	P3	free
-drew.do	drew	.do	drew.do	agents	design	agent	Drew	-	draw	drawing	creative	Visual design agent	-	planned	P3	free
-eli.do	eli	.do	eli.do	agents	engineering	agent	Eli	-	engineer	engineering	elegant	Elegant solutions architect	-	planned	P3	free
-ella.do	ella	.do	ella.do	agents	writing	agent	Ella	-	write	writing	eloquent	Technical writing specialist	-	planned	P3	free
-emma.do	emma	.do	emma.do	agents	email	agent	Emma	-	email	emailing	professional	Email communication specialist	-	planned	P3	free
-evie.do	evie	.do	evie.do	agents	events	agent	Evie	-	orchestrate	orchestrating	organized	Event orchestration agent	-	planned	P3	free
-finn.do	finn	.do	finn.do	agents	finance	agent	Finn	-	finance	financing	precise	Financial analysis agent	-	planned	P3	free
-fran.do	fran	.do	fran.do	agents	frontend	agent	Fran	-	render	rendering	polished	Frontend specialist	-	planned	P3	free
-gene.do	gene	.do	gene.do	agents	generation	agent	Gene	-	generate	generating	generative	Content generation agent	-	planned	P3	free
-gio.do	gio	.do	gio.do	agents	graphics	agent	Gio	-	illustrate	illustrating	visual	Graphics and illustration agent	-	planned	P3	free
-gloria.do	gloria	.do	gloria.do	agents	growth	agent	Gloria	-	grow	growing	strategic	Growth strategy agent	-	planned	P3	free
-grace.do	grace	.do	grace.do	agents	engineering	agent	Grace	-	compute	computing	elegant	Elegant computing agent	-	planned	P3	free
-grant.do	grant	.do	grant.do	agents	grants	agent	Grant	-	fund	funding	resourceful	Grant writing specialist	-	planned	P3	free
-hal.do	hal	.do	hal.do	agents	assistant	agent	Hal	-	assist	assisting	helpful	General assistant agent	-	planned	P3	free
-hazel.do	hazel	.do	hazel.do	agents	hr	agent	Hazel	-	hire	hiring	discerning	HR and hiring specialist	-	planned	P3	free
-henry.do	henry	.do	henry.do	agents	help	agent	Henry	-	help	helping	supportive	Help desk agent	-	planned	P3	free
-ivy.do	ivy	.do	ivy.do	agents	integration	agent	Ivy	-	integrate	integrating	connective	Integration specialist	-	planned	P3	free
-jack.do	jack	.do	jack.do	agents	engineering	agent	Jack	-	build	building	versatile	Jack-of-all-trades engineer	-	planned	P3	free
-jay.do	jay	.do	jay.do	agents	javascript	agent	Jay	-	script	scripting	dynamic	JavaScript specialist	-	planned	P3	free
-joe.do	joe	.do	joe.do	agents	engineering	agent	Joe	-	develop	developing	reliable	Reliable development agent	-	planned	P3	free
-jon.do	jon	.do	jon.do	agents	engineering	agent	Jon	-	build	building	steady	Steady builder agent	-	planned	P3	free
-jules.do	jules	.do	jules.do	agents	jupyter	agent	Jules	-	notebook	notebooking	analytical	Jupyter notebook specialist	-	planned	P3	free
-jun.do	jun	.do	jun.do	agents	engineering	agent	Jun	-	develop	developing	junior	Junior development agent	-	planned	P3	free
-kat.do	kat	.do	kat.do	agents	testing	agent	Kat	-	test	testing	thorough	Test automation specialist	-	planned	P3	free
-kate.do	kate	.do	kate.do	agents	knowledge	agent	Kate	-	know	knowing	knowledgeable	Knowledge base agent	-	planned	P3	free
-koa.do	koa	.do	koa.do	agents	backend	agent	Koa	-	serve	serving	performant	Backend API specialist	-	planned	P3	free
-larry.do	larry	.do	larry.do	agents	legal	agent	Larry	-	litigate	litigating	precise	Legal document specialist	-	planned	P3	free
-lei.do	lei	.do	lei.do	agents	compliance	agent	Lei	-	comply	complying	regulatory	Compliance specialist	-	planned	P3	free
-lena.do	lena	.do	lena.do	agents	learning	agent	Lena	-	learn	learning	adaptive	Machine learning agent	-	planned	P3	free
-leo.do	leo	.do	leo.do	agents	leadership	agent	Leo	-	lead	leading	decisive	Leadership and strategy agent	-	planned	P3	free
-lexi.do	lexi	.do	lexi.do	agents	lexical	agent	Lexi	-	parse	parsing	linguistic	NLP and language specialist	-	planned	P3	free
-lia.do	lia	.do	lia.do	agents	liaison	agent	Lia	-	liaise	liaising	diplomatic	Cross-team liaison agent	-	planned	P3	free
-liv.do	liv	.do	liv.do	agents	live	agent	Liv	-	stream	streaming	real-time	Live streaming specialist	-	planned	P3	free
-lou.do	lou	.do	lou.do	agents	logistics	agent	Lou	-	ship	shipping	efficient	Logistics and shipping agent	-	planned	P3	free
-luz.do	luz	.do	luz.do	agents	localization	agent	Luz	-	localize	localizing	multilingual	Localization specialist	-	planned	P3	free
-mark.do	mark	.do	mark.do	agents	marketing	agent	Mark	-	market	marketing	creative	Marketing copy and content	Marketing that resonates	implemented	P1	free
-mary.do	mary	.do	mary.do	agents	management	agent	Mary	-	manage	managing	organized	Project management agent	-	planned	P3	free
-maya.do	maya	.do	maya.do	agents	modeling	agent	Maya	-	model	modeling	dimensional	3D modeling specialist	-	planned	P3	free
-mel.do	mel	.do	mel.do	agents	ml	agent	Mel	-	train	training	intelligent	ML training specialist	-	planned	P3	free
-mia.do	mia	.do	mia.do	agents	metrics	agent	Mia	-	measure	measuring	quantitative	Metrics and KPI agent	-	planned	P3	free
-miles.do	miles	.do	miles.do	agents	mobile	agent	Miles	-	mobilize	mobilizing	responsive	Mobile development agent	-	planned	P3	free
-nat.do	nat	.do	nat.do	agents	networking	agent	Nat	-	connect	connecting	networked	Networking specialist	-	planned	P3	free
-nathan.do	nathan	.do	nathan.do	agents	engineering	agent	Nathan	-	architect	architecting	visionary	Platform architect	-	implemented	P1	free
-ned.do	ned	.do	ned.do	agents	node	agent	Ned	-	serve	serving	server-side	Node.js specialist	-	planned	P3	free
-nia.do	nia	.do	nia.do	agents	nlp	agent	Nia	-	understand	understanding	semantic	NLP understanding agent	-	planned	P3	free
-nina.do	nina	.do	nina.do	agents	notifications	agent	Nina	-	notify	notifying	timely	Notification specialist	-	planned	P3	free
-noa.do	noa	.do	noa.do	agents	nocode	agent	Noa	-	build	building	accessible	No-code builder agent	-	planned	P3	free
-noah.do	noah	.do	noah.do	agents	engineering	agent	Noah	-	navigate	navigating	systematic	Systematic engineering agent	-	planned	P3	free
-nolan.do	nolan	.do	nolan.do	agents	optimization	agent	Nolan	-	optimize	optimizing	efficient	Performance optimization agent	-	planned	P3	free
-oliver.do	oliver	.do	oliver.do	agents	operations	agent	Oliver	-	operate	operating	operational	Operations specialist	-	planned	P3	free
-oscar.do	oscar	.do	oscar.do	agents	observability	agent	Oscar	-	observe	observing	watchful	Observability specialist	-	planned	P3	free
-otis.do	otis	.do	otis.do	agents	automation	agent	Otis	-	automate	automating	efficient	Automation specialist	-	planned	P3	free
-owen.do	owen	.do	owen.do	agents	ownership	agent	Owen	-	own	owning	responsible	Product ownership agent	-	planned	P3	free
-pam.do	pam	.do	pam.do	agents	pm	agent	Pam	-	plan	planning	strategic	Project manager agent	-	planned	P3	free
-peg.do	peg	.do	peg.do	agents	parsing	agent	Peg	-	parse	parsing	precise	Parser specialist	-	planned	P3	free
-penny.do	penny	.do	penny.do	agents	payments	agent	Penny	-	pay	paying	financial	Payments specialist	-	planned	P3	free
-perry.do	perry	.do	perry.do	agents	performance	agent	Perry	-	perform	performing	performant	Performance specialist	-	planned	P3	free
-priya.do	priya	.do	priya.do	agents	product	agent	Priya	-	specify	specifying	strategic	Product specs and roadmaps	Product vision realized	implemented	P1	free
-quinn.do	quinn	.do	quinn.do	agents	qa	agent	Quinn	-	test	testing	quality-focused	QA and testing specialist	Quality assured	implemented	P1	free
-rae.do	rae	.do	rae.do	agents	frontend	agent	Rae	-	render	rendering	reactive	React and frontend specialist	Interfaces that delight	implemented	P1	free
-raj.do	raj	.do	raj.do	agents	engineering	agent	Raj	-	architect	architecting	systematic	Systems architect	-	planned	P3	free
-ralph.do	ralph	.do	ralph.do	agents	engineering	agent	Ralph	-	implement	implementing	iterative	Implementation specialist	Ship iteratively	implemented	P1	free
-reed.do	reed	.do	reed.do	agents	reading	agent	Reed	-	read	reading	comprehending	Document reading agent	-	planned	P3	free
-rex.do	rex	.do	rex.do	agents	regex	agent	Rex	-	match	matching	precise	Regex and pattern specialist	-	planned	P3	free
-rick.do	rick	.do	rick.do	agents	risk	agent	Rick	-	assess	assessing	cautious	Risk assessment agent	-	planned	P3	free
-rob.do	rob	.do	rob.do	agents	robotics	agent	Rob	-	automate	automating	robotic	RPA specialist	-	planned	P3	free
-rod.do	rod	.do	rod.do	agents	data	agent	Rod	-	record	recording	precise	Data recording agent	-	planned	P3	free
-rory.do	rory	.do	rory.do	agents	reporting	agent	Rory	-	report	reporting	analytical	Reporting specialist	-	planned	P3	free
-rowan.do	rowan	.do	rowan.do	agents	routing	agent	Rowan	-	route	routing	directional	Routing specialist	-	planned	P3	free
-ruby.do	ruby	.do	ruby.do	agents	engineering	agent	Ruby	-	script	scripting	elegant	Ruby language specialist	-	planned	P3	free
-sage.do	sage	.do	sage.do	agents	strategy	agent	Sage	-	advise	advising	wise	Strategic advisor agent	-	planned	P3	free
-sally.do	sally	.do	sally.do	agents	sales	agent	Sally	-	sell	selling	persuasive	Sales specialist	Close with confidence	implemented	P1	free
-sam.do	sam	.do	sam.do	agents	engineering	agent	Sam	-	develop	developing	versatile	Full-stack developer agent	-	planned	P3	free
-samuel.do	samuel	.do	samuel.do	agents	security	agent	Samuel	-	secure	securing	protective	Security specialist	-	planned	P3	free
-sarah.do	sarah	.do	sarah.do	agents	search	agent	Sarah	-	search	searching	thorough	Search specialist	-	planned	P3	free
-sean.do	sean	.do	sean.do	agents	seo	agent	Sean	-	optimize	optimizing	discoverable	SEO specialist	-	planned	P3	free
-seth.do	seth	.do	seth.do	agents	settings	agent	Seth	-	configure	configuring	configurable	Configuration specialist	-	planned	P3	free
-sid.do	sid	.do	sid.do	agents	security	agent	Sid	-	secure	securing	vigilant	Security ID specialist	-	planned	P3	free
-sierra.do	sierra	.do	sierra.do	agents	systems	agent	Sierra	-	systematize	systematizing	systematic	Systems specialist	-	planned	P3	free
-stella.do	stella	.do	stella.do	agents	stellar	agent	Stella	-	shine	shining	stellar	Excellence agent	-	planned	P3	free
-susan.do	susan	.do	susan.do	agents	support	agent	Susan	-	support	supporting	supportive	Support specialist	-	planned	P3	free
-tess.do	tess	.do	tess.do	agents	testing	agent	Tess	-	test	testing	rigorous	Test specialist	-	planned	P3	free
-tom.do	tom	.do	tom.do	agents	engineering	agent	Tom	-	review	reviewing	thorough	TypeScript architect, code review	Architecture that scales	implemented	P1	free
-tyler.do	tyler	.do	tyler.do	agents	typescript	agent	Tyler	-	type	typing	typed	TypeScript specialist	-	planned	P3	free
-uma.do	uma	.do	uma.do	agents	ux	agent	Uma	-	design	designing	user-centric	UX design specialist	-	planned	P3	free
-umi.do	umi	.do	umi.do	agents	engineering	agent	Umi	-	build	building	framework	Framework specialist	-	planned	P3	free
-uri.do	uri	.do	uri.do	agents	api	agent	Uri	-	route	routing	RESTful	API routing specialist	-	planned	P3	free
-vera.do	vera	.do	vera.do	agents	verification	agent	Vera	-	verify	verifying	verified	Verification specialist	-	planned	P3	free
-vic.do	vic	.do	vic.do	agents	video	agent	Vic	-	record	recording	visual	Video production agent	-	planned	P3	free
-vin.do	vin	.do	vin.do	agents	validation	agent	Vin	-	validate	validating	valid	Validation specialist	-	planned	P3	free
-wade.do	wade	.do	wade.do	agents	web	agent	Wade	-	browse	browsing	web-native	Web specialist	-	planned	P3	free
-xavi.do	xavi	.do	xavi.do	agents	xml	agent	Xavi	-	parse	parsing	structured	XML/structured data agent	-	planned	P3	free
-yuki.do	yuki	.do	yuki.do	agents	engineering	agent	Yuki	-	develop	developing	precise	Precision development agent	-	planned	P3	free
-zia.do	zia	.do	zia.do	agents	ai	agent	Zia	-	infer	inferring	intelligent	AI inference specialist	-	planned	P3	free
-zoe.do	zoe	.do	zoe.do	agents	zero	agent	Zoe	-	start	starting	fresh	Zero-to-one specialist	-	planned	P3	free
-zuri.do	zuri	.do	zuri.do	agents	engineering	agent	Zuri	-	build	building	beautiful	Beautiful code specialist	-	planned	P3	free
+ada.do	ada	doada.do	agents	engineering	agent	Ada	-	code	coding	adaptive	AI coding assistant inspired by Ada Lovelace	Code with Ada	planned	P2	free
+amit.do	amit	doamit.do	agents	engineering	agent	Amit	-	architect	architecting	analytical	Systems architecture specialist	-	planned	P3	free
+amy.do	amy	doamy.do	agents	support	agent	Amy	-	assist	assisting	helpful	Customer support specialist	-	planned	P3	free
+andrew.do	andrew	doandrew.do	agents	engineering	agent	Andrew	-	develop	developing	diligent	Full-stack developer agent	-	planned	P3	free
+ann.do	ann	doann.do	agents	analytics	agent	Ann	-	analyze	analyzing	analytical	Data analytics specialist	-	planned	P3	free
+archie.do	archie	doarchie.do	agents	devops	agent	Archie	-	archive	archiving	organized	Archive and backup specialist	-	planned	P3	free
+ari.do	ari	doari.do	agents	research	agent	Ari	-	research	researching	curious	Research and discovery agent	-	planned	P3	free
+arya.do	arya	doarya.do	agents	security	agent	Arya	-	secure	securing	vigilant	Security and compliance agent	-	planned	P3	free
+bailey.do	bailey	dobailey.do	agents	operations	agent	Bailey	-	operate	operating	reliable	Operations management agent	-	planned	P3	free
+beau.do	beau	dobeau.do	agents	design	agent	Beau	-	design	designing	aesthetic	UI/UX design specialist	-	planned	P3	free
+blake.do	blake	doblake.do	agents	engineering	agent	Blake	-	build	building	creative	Creative engineering agent	-	planned	P3	free
+bob.do	bob	dobob.do	agents	engineering	agent	Bob	-	build	building	practical	Pragmatic builder agent	-	planned	P3	free
+bryant.do	bryant	dobryant.do	agents	sales	agent	Bryant	-	pitch	pitching	persuasive	Sales pitch specialist	-	planned	P3	free
+cara.do	cara	docara.do	agents	customer	agent	Cara	-	care	caring	empathetic	Customer care specialist	-	planned	P3	free
+casey.do	casey	docasey.do	agents	engineering	agent	Casey	-	code	coding	versatile	Versatile coding agent	-	planned	P3	free
+clara.do	clara	doclara.do	agents	documentation	agent	Clara	-	clarify	clarifying	clear	Documentation clarity specialist	-	planned	P3	free
+cody.do	cody	docody.do	agents	engineering	agent	Cody	-	code	coding	focused	Focused coding agent	-	planned	P3	free
+cole.do	cole	docole.do	agents	data	agent	Cole	-	collect	collecting	thorough	Data collection specialist	-	planned	P3	free
+dana.do	dana	dodana.do	agents	analytics	agent	Dana	-	analyze	analyzing	data-driven	Data analysis agent	-	planned	P3	free
+dara.do	dara	dodara.do	agents	data	agent	Dara	-	derive	deriving	insightful	Data insights specialist	-	planned	P3	free
+deb.do	deb	dodeb.do	agents	debugging	agent	Deb	-	debug	debugging	meticulous	Debugging specialist	-	planned	P3	free
+devin.do	devin	dodevin.do	agents	engineering	agent	Devin	-	develop	developing	autonomous	Autonomous development agent	-	planned	P3	free
+devon.do	devon	dodevon.do	agents	devops	agent	Devon	-	deploy	deploying	reliable	DevOps specialist	-	planned	P3	free
+drew.do	drew	dodrew.do	agents	design	agent	Drew	-	draw	drawing	creative	Visual design agent	-	planned	P3	free
+eli.do	eli	doeli.do	agents	engineering	agent	Eli	-	engineer	engineering	elegant	Elegant solutions architect	-	planned	P3	free
+ella.do	ella	doella.do	agents	writing	agent	Ella	-	write	writing	eloquent	Technical writing specialist	-	planned	P3	free
+emma.do	emma	doemma.do	agents	email	agent	Emma	-	email	emailing	professional	Email communication specialist	-	planned	P3	free
+evie.do	evie	doevie.do	agents	events	agent	Evie	-	orchestrate	orchestrating	organized	Event orchestration agent	-	planned	P3	free
+finn.do	finn	dofinn.do	agents	finance	agent	Finn	-	finance	financing	precise	Financial analysis agent	-	planned	P3	free
+fran.do	fran	dofran.do	agents	frontend	agent	Fran	-	render	rendering	polished	Frontend specialist	-	planned	P3	free
+gene.do	gene	dogene.do	agents	generation	agent	Gene	-	generate	generating	generative	Content generation agent	-	planned	P3	free
+gio.do	gio	dogio.do	agents	graphics	agent	Gio	-	illustrate	illustrating	visual	Graphics and illustration agent	-	planned	P3	free
+gloria.do	gloria	dogloria.do	agents	growth	agent	Gloria	-	grow	growing	strategic	Growth strategy agent	-	planned	P3	free
+grace.do	grace	dograce.do	agents	engineering	agent	Grace	-	compute	computing	elegant	Elegant computing agent	-	planned	P3	free
+grant.do	grant	dogrant.do	agents	grants	agent	Grant	-	fund	funding	resourceful	Grant writing specialist	-	planned	P3	free
+hal.do	hal	dohal.do	agents	assistant	agent	Hal	-	assist	assisting	helpful	General assistant agent	-	planned	P3	free
+hazel.do	hazel	dohazel.do	agents	hr	agent	Hazel	-	hire	hiring	discerning	HR and hiring specialist	-	planned	P3	free
+henry.do	henry	dohenry.do	agents	help	agent	Henry	-	help	helping	supportive	Help desk agent	-	planned	P3	free
+ivy.do	ivy	doivy.do	agents	integration	agent	Ivy	-	integrate	integrating	connective	Integration specialist	-	planned	P3	free
+jack.do	jack	dojack.do	agents	engineering	agent	Jack	-	build	building	versatile	Jack-of-all-trades engineer	-	planned	P3	free
+jay.do	jay	dojay.do	agents	javascript	agent	Jay	-	script	scripting	dynamic	JavaScript specialist	-	planned	P3	free
+joe.do	joe	dojoe.do	agents	engineering	agent	Joe	-	develop	developing	reliable	Reliable development agent	-	planned	P3	free
+jon.do	jon	dojon.do	agents	engineering	agent	Jon	-	build	building	steady	Steady builder agent	-	planned	P3	free
+jules.do	jules	dojules.do	agents	jupyter	agent	Jules	-	notebook	notebooking	analytical	Jupyter notebook specialist	-	planned	P3	free
+jun.do	jun	dojun.do	agents	engineering	agent	Jun	-	develop	developing	junior	Junior development agent	-	planned	P3	free
+kat.do	kat	dokat.do	agents	testing	agent	Kat	-	test	testing	thorough	Test automation specialist	-	planned	P3	free
+kate.do	kate	dokate.do	agents	knowledge	agent	Kate	-	know	knowing	knowledgeable	Knowledge base agent	-	planned	P3	free
+koa.do	koa	dokoa.do	agents	backend	agent	Koa	-	serve	serving	performant	Backend API specialist	-	planned	P3	free
+larry.do	larry	dolarry.do	agents	legal	agent	Larry	-	litigate	litigating	precise	Legal document specialist	-	planned	P3	free
+lei.do	lei	dolei.do	agents	compliance	agent	Lei	-	comply	complying	regulatory	Compliance specialist	-	planned	P3	free
+lena.do	lena	dolena.do	agents	learning	agent	Lena	-	learn	learning	adaptive	Machine learning agent	-	planned	P3	free
+leo.do	leo	doleo.do	agents	leadership	agent	Leo	-	lead	leading	decisive	Leadership and strategy agent	-	planned	P3	free
+lexi.do	lexi	dolexi.do	agents	lexical	agent	Lexi	-	parse	parsing	linguistic	NLP and language specialist	-	planned	P3	free
+lia.do	lia	dolia.do	agents	liaison	agent	Lia	-	liaise	liaising	diplomatic	Cross-team liaison agent	-	planned	P3	free
+liv.do	liv	doliv.do	agents	live	agent	Liv	-	stream	streaming	real-time	Live streaming specialist	-	planned	P3	free
+lou.do	lou	dolou.do	agents	logistics	agent	Lou	-	ship	shipping	efficient	Logistics and shipping agent	-	planned	P3	free
+luz.do	luz	doluz.do	agents	localization	agent	Luz	-	localize	localizing	multilingual	Localization specialist	-	planned	P3	free
+mark.do	mark	domark.do	agents	marketing	agent	Mark	-	market	marketing	creative	Marketing copy and content	Marketing that resonates	implemented	P1	free
+mary.do	mary	domary.do	agents	management	agent	Mary	-	manage	managing	organized	Project management agent	-	planned	P3	free
+maya.do	maya	domaya.do	agents	modeling	agent	Maya	-	model	modeling	dimensional	3D modeling specialist	-	planned	P3	free
+mel.do	mel	domel.do	agents	ml	agent	Mel	-	train	training	intelligent	ML training specialist	-	planned	P3	free
+mia.do	mia	domia.do	agents	metrics	agent	Mia	-	measure	measuring	quantitative	Metrics and KPI agent	-	planned	P3	free
+miles.do	miles	domiles.do	agents	mobile	agent	Miles	-	mobilize	mobilizing	responsive	Mobile development agent	-	planned	P3	free
+nat.do	nat	donat.do	agents	networking	agent	Nat	-	connect	connecting	networked	Networking specialist	-	planned	P3	free
+nathan.do	nathan	donathan.do	agents	engineering	agent	Nathan	-	architect	architecting	visionary	Platform architect	-	implemented	P1	free
+ned.do	ned	doned.do	agents	node	agent	Ned	-	serve	serving	server-side	Node.js specialist	-	planned	P3	free
+nia.do	nia	donia.do	agents	nlp	agent	Nia	-	understand	understanding	semantic	NLP understanding agent	-	planned	P3	free
+nina.do	nina	donina.do	agents	notifications	agent	Nina	-	notify	notifying	timely	Notification specialist	-	planned	P3	free
+noa.do	noa	donoa.do	agents	nocode	agent	Noa	-	build	building	accessible	No-code builder agent	-	planned	P3	free
+noah.do	noah	donoah.do	agents	engineering	agent	Noah	-	navigate	navigating	systematic	Systematic engineering agent	-	planned	P3	free
+nolan.do	nolan	donolan.do	agents	optimization	agent	Nolan	-	optimize	optimizing	efficient	Performance optimization agent	-	planned	P3	free
+oliver.do	oliver	dooliver.do	agents	operations	agent	Oliver	-	operate	operating	operational	Operations specialist	-	planned	P3	free
+oscar.do	oscar	dooscar.do	agents	observability	agent	Oscar	-	observe	observing	watchful	Observability specialist	-	planned	P3	free
+otis.do	otis	dootis.do	agents	automation	agent	Otis	-	automate	automating	efficient	Automation specialist	-	planned	P3	free
+owen.do	owen	doowen.do	agents	ownership	agent	Owen	-	own	owning	responsible	Product ownership agent	-	planned	P3	free
+pam.do	pam	dopam.do	agents	pm	agent	Pam	-	plan	planning	strategic	Project manager agent	-	planned	P3	free
+peg.do	peg	dopeg.do	agents	parsing	agent	Peg	-	parse	parsing	precise	Parser specialist	-	planned	P3	free
+penny.do	penny	dopenny.do	agents	payments	agent	Penny	-	pay	paying	financial	Payments specialist	-	planned	P3	free
+perry.do	perry	doperry.do	agents	performance	agent	Perry	-	perform	performing	performant	Performance specialist	-	planned	P3	free
+priya.do	priya	dopriya.do	agents	product	agent	Priya	-	specify	specifying	strategic	Product specs and roadmaps	Product vision realized	implemented	P1	free
+quinn.do	quinn	doquinn.do	agents	qa	agent	Quinn	-	test	testing	quality-focused	QA and testing specialist	Quality assured	implemented	P1	free
+rae.do	rae	dorae.do	agents	frontend	agent	Rae	-	render	rendering	reactive	React and frontend specialist	Interfaces that delight	implemented	P1	free
+raj.do	raj	doraj.do	agents	engineering	agent	Raj	-	architect	architecting	systematic	Systems architect	-	planned	P3	free
+ralph.do	ralph	doralph.do	agents	engineering	agent	Ralph	-	implement	implementing	iterative	Implementation specialist	Ship iteratively	implemented	P1	free
+reed.do	reed	doreed.do	agents	reading	agent	Reed	-	read	reading	comprehending	Document reading agent	-	planned	P3	free
+rex.do	rex	dorex.do	agents	regex	agent	Rex	-	match	matching	precise	Regex and pattern specialist	-	planned	P3	free
+rick.do	rick	dorick.do	agents	risk	agent	Rick	-	assess	assessing	cautious	Risk assessment agent	-	planned	P3	free
+rob.do	rob	dorob.do	agents	robotics	agent	Rob	-	automate	automating	robotic	RPA specialist	-	planned	P3	free
+rod.do	rod	dorod.do	agents	data	agent	Rod	-	record	recording	precise	Data recording agent	-	planned	P3	free
+rory.do	rory	dorory.do	agents	reporting	agent	Rory	-	report	reporting	analytical	Reporting specialist	-	planned	P3	free
+rowan.do	rowan	dorowan.do	agents	routing	agent	Rowan	-	route	routing	directional	Routing specialist	-	planned	P3	free
+ruby.do	ruby	doruby.do	agents	engineering	agent	Ruby	-	script	scripting	elegant	Ruby language specialist	-	planned	P3	free
+sage.do	sage	dosage.do	agents	strategy	agent	Sage	-	advise	advising	wise	Strategic advisor agent	-	planned	P3	free
+sally.do	sally	dosally.do	agents	sales	agent	Sally	-	sell	selling	persuasive	Sales specialist	Close with confidence	implemented	P1	free
+sam.do	sam	dosam.do	agents	engineering	agent	Sam	-	develop	developing	versatile	Full-stack developer agent	-	planned	P3	free
+samuel.do	samuel	dosamuel.do	agents	security	agent	Samuel	-	secure	securing	protective	Security specialist	-	planned	P3	free
+sarah.do	sarah	dosarah.do	agents	search	agent	Sarah	-	search	searching	thorough	Search specialist	-	planned	P3	free
+sean.do	sean	dosean.do	agents	seo	agent	Sean	-	optimize	optimizing	discoverable	SEO specialist	-	planned	P3	free
+seth.do	seth	doseth.do	agents	settings	agent	Seth	-	configure	configuring	configurable	Configuration specialist	-	planned	P3	free
+sid.do	sid	dosid.do	agents	security	agent	Sid	-	secure	securing	vigilant	Security ID specialist	-	planned	P3	free
+sierra.do	sierra	dosierra.do	agents	systems	agent	Sierra	-	systematize	systematizing	systematic	Systems specialist	-	planned	P3	free
+stella.do	stella	dostella.do	agents	stellar	agent	Stella	-	shine	shining	stellar	Excellence agent	-	planned	P3	free
+susan.do	susan	dosusan.do	agents	support	agent	Susan	-	support	supporting	supportive	Support specialist	-	planned	P3	free
+tess.do	tess	dotess.do	agents	testing	agent	Tess	-	test	testing	rigorous	Test specialist	-	planned	P3	free
+tom.do	tom	dotom.do	agents	engineering	agent	Tom	-	review	reviewing	thorough	TypeScript architect, code review	Architecture that scales	implemented	P1	free
+tyler.do	tyler	dotyler.do	agents	typescript	agent	Tyler	-	type	typing	typed	TypeScript specialist	-	planned	P3	free
+uma.do	uma	douma.do	agents	ux	agent	Uma	-	design	designing	user-centric	UX design specialist	-	planned	P3	free
+umi.do	umi	doumi.do	agents	engineering	agent	Umi	-	build	building	framework	Framework specialist	-	planned	P3	free
+uri.do	uri	douri.do	agents	api	agent	Uri	-	route	routing	RESTful	API routing specialist	-	planned	P3	free
+vera.do	vera	dovera.do	agents	verification	agent	Vera	-	verify	verifying	verified	Verification specialist	-	planned	P3	free
+vic.do	vic	dovic.do	agents	video	agent	Vic	-	record	recording	visual	Video production agent	-	planned	P3	free
+vin.do	vin	dovin.do	agents	validation	agent	Vin	-	validate	validating	valid	Validation specialist	-	planned	P3	free
+wade.do	wade	dowade.do	agents	web	agent	Wade	-	browse	browsing	web-native	Web specialist	-	planned	P3	free
+xavi.do	xavi	doxavi.do	agents	xml	agent	Xavi	-	parse	parsing	structured	XML/structured data agent	-	planned	P3	free
+yuki.do	yuki	doyuki.do	agents	engineering	agent	Yuki	-	develop	developing	precise	Precision development agent	-	planned	P3	free
+zia.do	zia	dozia.do	agents	ai	agent	Zia	-	infer	inferring	intelligent	AI inference specialist	-	planned	P3	free
+zoe.do	zoe	dozoe.do	agents	zero	agent	Zoe	-	start	starting	fresh	Zero-to-one specialist	-	planned	P3	free
+zuri.do	zuri	dozuri.do	agents	engineering	agent	Zuri	-	build	building	beautiful	Beautiful code specialist	-	planned	P3	free
 # Roles - Job Functions (~15 domains)
-bdr.do	bdr	.do	bdr.do	roles	sales	role	BDR	BDRs	prospect	prospecting	prospective	Business Development Representative	Prospect with purpose	planned	P2	free
-cfo.do	cfo	.do	cfo.do	roles	executive	role	CFO	CFOs	finance	financing	financial	Chief Financial Officer	Financial leadership	planned	P2	free
-cmo.do	cmo	.do	cmo.do	roles	executive	role	CMO	CMOs	market	marketing	marketable	Chief Marketing Officer	Marketing leadership	planned	P2	free
-coo.do	coo	.do	coo.do	roles	executive	role	COO	COOs	operate	operating	operational	Chief Operating Officer	Operations leadership	planned	P2	free
-cpo.do	cpo	.do	cpo.do	roles	executive	role	CPO	CPOs	produce	producing	productive	Chief Product Officer	Product leadership	planned	P2	free
-cro.do	cro	.do	cro.do	roles	executive	role	CRO	CROs	revenue	generating	revenue-focused	Chief Revenue Officer	Revenue leadership	planned	P2	free
-cto.do	cto	.do	cto.do	roles	executive	role	CTO	CTOs	architect	architecting	technical	Chief Technology Officer	Technical leadership	planned	P2	free
-coach.do	coach	.do	coach.do	roles	management	role	Coach	Coaches	coach	coaching	supportive	Coaching and mentorship role	Develop your team	planned	P2	free
-engineers.do	engineers	.do	engineers.do	roles	engineering	role	Engineer	Engineers	engineer	engineering	technical	Engineering team role	Build with excellence	planned	P2	free
-exec.do	exec	.do	exec.do	roles	executive	role	Executive	Executives	execute	executing	executive	Executive leadership role	Lead decisively	planned	P2	free
-mgmt.do	mgmt	.do	mgmt.do	roles	management	role	Manager	Managers	manage	managing	managerial	Management role	Manage effectively	planned	P2	free
-management.do	management	.do	management.do	roles	management	role	Manager	Managers	manage	managing	managerial	Management role (full name)	Manage effectively	planned	P2	free
-pdm.do	pdm	.do	pdm.do	roles	product	role	PDM	PDMs	develop	developing	product-focused	Product Development Manager	Product excellence	planned	P2	free
-programmers.do	programmers	.do	programmers.do	roles	engineering	role	Programmer	Programmers	program	programming	technical	Programming role	Code with craft	planned	P2	free
-sdr.do	sdr	.do	sdr.do	roles	sales	role	SDR	SDRs	develop	developing	sales-focused	Sales Development Representative	Develop opportunities	planned	P2	free
-swe.do	swe	.do	swe.do	roles	engineering	role	SWE	SWEs	engineer	engineering	software	Software Engineer	Engineer solutions	planned	P2	free
-devs.do	devs	.do	devs.do	roles	engineering	role	Developer	Developers	develop	developing	developmental	Developer role	Develop brilliantly	planned	P2	free
+bdr.do	bdr	dobdr.do	roles	sales	role	BDR	BDRs	prospect	prospecting	prospective	Business Development Representative	Prospect with purpose	planned	P2	free
+cfo.do	cfo	docfo.do	roles	executive	role	CFO	CFOs	finance	financing	financial	Chief Financial Officer	Financial leadership	planned	P2	free
+cmo.do	cmo	docmo.do	roles	executive	role	CMO	CMOs	market	marketing	marketable	Chief Marketing Officer	Marketing leadership	planned	P2	free
+coo.do	coo	docoo.do	roles	executive	role	COO	COOs	operate	operating	operational	Chief Operating Officer	Operations leadership	planned	P2	free
+cpo.do	cpo	docpo.do	roles	executive	role	CPO	CPOs	produce	producing	productive	Chief Product Officer	Product leadership	planned	P2	free
+cro.do	cro	docro.do	roles	executive	role	CRO	CROs	revenue	generating	revenue-focused	Chief Revenue Officer	Revenue leadership	planned	P2	free
+cto.do	cto	docto.do	roles	executive	role	CTO	CTOs	architect	architecting	technical	Chief Technology Officer	Technical leadership	planned	P2	free
+coach.do	coach	docoach.do	roles	management	role	Coach	Coaches	coach	coaching	supportive	Coaching and mentorship role	Develop your team	planned	P2	free
+engineers.do	engineers	doengineers.do	roles	engineering	role	Engineer	Engineers	engineer	engineering	technical	Engineering team role	Build with excellence	planned	P2	free
+exec.do	exec	doexec.do	roles	executive	role	Executive	Executives	execute	executing	executive	Executive leadership role	Lead decisively	planned	P2	free
+mgmt.do	mgmt	domgmt.do	roles	management	role	Manager	Managers	manage	managing	managerial	Management role	Manage effectively	planned	P2	free
+management.do	management	domanagement.do	roles	management	role	Manager	Managers	manage	managing	managerial	Management role (full name)	Manage effectively	planned	P2	free
+pdm.do	pdm	dopdm.do	roles	product	role	PDM	PDMs	develop	developing	product-focused	Product Development Manager	Product excellence	planned	P2	free
+programmers.do	programmers	doprogrammers.do	roles	engineering	role	Programmer	Programmers	program	programming	technical	Programming role	Code with craft	planned	P2	free
+sdr.do	sdr	dosdr.do	roles	sales	role	SDR	SDRs	develop	developing	sales-focused	Sales Development Representative	Develop opportunities	planned	P2	free
+swe.do	swe	doswe.do	roles	engineering	role	SWE	SWEs	engineer	engineering	software	Software Engineer	Engineer solutions	planned	P2	free
+devs.do	devs	dodevs.do	roles	engineering	role	Developer	Developers	develop	developing	developmental	Developer role	Develop brilliantly	planned	P2	free
 # Primitives - Core Platform (~50 domains)
-action.do	action	.do	action.do	primitives	execution	primitive	Action	Actions	act	acting	actionable	Single executable action	Actions that work	planned	P1	free
-actions.do	actions	.do	actions.do	primitives	execution	primitive	Action	Actions	act	acting	actionable	Action execution engine	Actions at scale	planned	P1	free
-agents.do	agents	.do	agents.do	primitives	core	primitive	Agent	Agents	act	acting	autonomous	AI agent runtime	Agents that work	implemented	P0	free
-apis.do	apis	.do	apis.do	primitives	interfaces	primitive	API	APIs	expose	exposing	exposed	API definition and routing	APIs made simple	planned	P1	free
-assistant.do	assistant	.do	assistant.do	primitives	ai	primitive	Assistant	Assistants	assist	assisting	helpful	AI assistant runtime	Your AI assistant	planned	P1	free
-assistants.do	assistants	.do	assistants.do	primitives	ai	primitive	Assistant	Assistants	assist	assisting	helpful	Multiple assistants runtime	Assistants at scale	planned	P1	free
-bots.do	bots	.do	bots.do	primitives	automation	primitive	Bot	Bots	automate	automating	automated	Bot automation runtime	Bots that work	planned	P2	free
-cli.do	cli	.do	cli.do	primitives	interfaces	primitive	CLI	CLIs	command	commanding	command-line	Command line interface	CLI made easy	planned	P2	free
-components.do	components	.do	components.do	primitives	ui	primitive	Component	Components	compose	composing	composable	UI component library	Components that compose	planned	P2	free
-context.do	context	.do	context.do	primitives	state	primitive	Context	Contexts	contextualize	contextualizing	contextual	Execution context management	Context aware	planned	P1	free
-ctx.do	ctx	.do	ctx.do	primitives	state	primitive	Context	Contexts	contextualize	contextualizing	contextual	Context shorthand	Context aware	planned	P1	free
-dash.do	dash	.do	dash.do	primitives	ui	primitive	Dashboard	Dashboards	visualize	visualizing	visual	Dashboard shorthand	Dashboards fast	planned	P2	free
-dashboard.do	dashboard	.do	dashboard.do	primitives	ui	primitive	Dashboard	Dashboards	visualize	visualizing	visual	Dashboard builder	Dashboards that inform	planned	P2	free
-database.do	database	.do	database.do	primitives	data	primitive	Database	Databases	store	storing	persistent	Database abstraction	Data that persists	planned	P1	free
-databases.do	databases	.do	databases.do	primitives	data	primitive	Database	Databases	store	storing	persistent	Multi-database management	Databases unified	planned	P1	free
-directories.do	directories	.do	directories.do	primitives	discovery	primitive	Directory	Directories	list	listing	discoverable	Directory listings	Find anything	planned	P2	free
-directory.do	directory	.do	directory.do	primitives	discovery	primitive	Directory	Directories	list	listing	discoverable	Single directory	Directory service	planned	P2	free
-events.do	events	.do	events.do	primitives	messaging	primitive	Event	Events	emit	emitting	event-driven	Event bus and pub/sub	Events that flow	implemented	P0	free
-fetch.do	fetch	.do	fetch.do	primitives	networking	primitive	Fetch	Fetches	fetch	fetching	fetched	HTTP fetch abstraction	Fetch anything	planned	P2	free
-function.do	function	.do	function.do	primitives	execution	primitive	Function	Functions	execute	executing	executable	Single function execution	Functions that run	planned	P1	free
-functions.do	functions	.do	functions.do	primitives	execution	primitive	Function	Functions	execute	executing	executable	Function execution engine	Functions at scale	implemented	P0	free
-goals.do	goals	.do	goals.do	primitives	planning	primitive	Goal	Goals	achieve	achieving	achievable	Goal tracking system	Goals achieved	planned	P2	free
-humans.do	humans	.do	humans.do	primitives	core	primitive	Human	Humans	collaborate	collaborating	human	Human worker runtime	Humans in the loop	implemented	P0	free
-integrate.do	integrate	.do	integrate.do	primitives	connectivity	primitive	Integration	Integrations	integrate	integrating	integrated	Integration helper	Integrate anything	planned	P2	free
-integrations.do	integrations	.do	integrations.do	primitives	connectivity	primitive	Integration	Integrations	integrate	integrating	integrated	Integration management	Integrations unified	planned	P1	free
-issues.do	issues	.do	issues.do	primitives	tracking	primitive	Issue	Issues	track	tracking	tracked	Issue tracking	Issues resolved	planned	P2	free
-keys.do	keys	.do	keys.do	primitives	security	primitive	Key	Keys	authenticate	authenticating	secure	API key management	Keys secured	planned	P1	free
-lists.do	lists	.do	lists.do	primitives	data	primitive	List	Lists	list	listing	listed	List management	Lists organized	planned	P2	free
-names.do	names	.do	names.do	primitives	identity	primitive	Name	Names	name	naming	named	Name resolution	Names resolved	planned	P2	free
-nouns.do	nouns	.do	nouns.do	primitives	language	primitive	Noun	Nouns	define	defining	defined	Noun definitions	Nouns defined	planned	P2	free
-numbers.do	numbers	.do	numbers.do	primitives	data	primitive	Number	Numbers	count	counting	numeric	Number management	Numbers handled	planned	P2	free
-oauth.do	oauth	.do	oauth.do	primitives	security	primitive	OAuth	-	authorize	authorizing	authorized	OAuth authentication	OAuth simplified	implemented	P1	free
-objects.do	objects	.do	objects.do	primitives	data	primitive	Object	Objects	store	storing	stored	Object storage	Objects persisted	planned	P1	free
-okr.do	okr	.do	okr.do	primitives	planning	primitive	OKR	OKRs	track	tracking	tracked	OKR tracking shorthand	OKRs achieved	planned	P2	free
-okrs.do	okrs	.do	okrs.do	primitives	planning	primitive	OKR	OKRs	track	tracking	tracked	OKR tracking system	OKRs at scale	planned	P2	free
-orgs.do	orgs	.do	orgs.do	primitives	identity	primitive	Organization	Organizations	organize	organizing	organizational	Organization management	Organizations unified	planned	P1	free
-plans.do	plans	.do	plans.do	primitives	planning	primitive	Plan	Plans	plan	planning	planned	Plan management	Plans executed	planned	P2	free
-platform.do	platform	.do	platform.do	primitives	core	primitive	Platform	Platforms	platform	platforming	platform	Platform abstraction	The platform	implemented	P0	free
-processes.do	processes	.do	processes.do	primitives	execution	primitive	Process	Processes	process	processing	processed	Process management	Processes automated	planned	P1	free
-products.do	products	.do	products.do	primitives	business	primitive	Product	Products	produce	producing	productive	Product catalog	Products organized	planned	P2	free
-projects.do	projects	.do	projects.do	primitives	organization	primitive	Project	Projects	project	projecting	projected	Project management	Projects delivered	planned	P2	free
-queue.do	queue	.do	queue.do	primitives	messaging	primitive	Queue	Queues	queue	queuing	queued	Message queue	Queues that flow	planned	P1	free
-rbac.do	rbac	.do	rbac.do	primitives	security	primitive	RBAC	-	authorize	authorizing	authorized	Role-based access control	RBAC simplified	planned	P1	free
-fga.do	fga	.do	fga.do	primitives	security	primitive	FGA	-	authorize	authorizing	authorized	Fine-grained authorization	FGA made easy	planned	P1	free
-requests.do	requests	.do	requests.do	primitives	networking	primitive	Request	Requests	request	requesting	requested	HTTP request handling	Requests handled	planned	P2	free
-resources.do	resources	.do	resources.do	primitives	data	primitive	Resource	Resources	resource	resourcing	resourced	Resource management	Resources managed	planned	P1	free
-responses.do	responses	.do	responses.do	primitives	networking	primitive	Response	Responses	respond	responding	responsive	HTTP response handling	Responses delivered	planned	P2	free
-roles.do	roles	.do	roles.do	primitives	identity	primitive	Role	Roles	assign	assigning	assigned	Role management	Roles defined	implemented	P1	free
-rpc.do	rpc	.do	rpc.do	primitives	networking	primitive	RPC	RPCs	call	calling	callable	RPC framework	RPC simplified	implemented	P0	free
-sandbox.do	sandbox	.do	sandbox.do	primitives	execution	primitive	Sandbox	Sandboxes	sandbox	sandboxing	sandboxed	Sandboxed execution	Sandboxes secure	planned	P1	free
-sdk.do	sdk	.do	sdk.do	primitives	development	primitive	SDK	SDKs	develop	developing	developmental	SDK generation	SDKs generated	planned	P1	free
-searches.do	searches	.do	searches.do	primitives	discovery	primitive	Search	Searches	search	searching	searchable	Search engine	Search anything	planned	P1	free
-service.do	service	.do	service.do	primitives	execution	primitive	Service	Services	serve	serving	serviced	Single service	Services deployed	planned	P1	free
-services.do	services	.do	services.do	primitives	execution	primitive	Service	Services	serve	serving	serviced	Service mesh	Services at scale	planned	P1	free
-state.do	state	.do	state.do	primitives	data	primitive	State	States	state	stating	stateful	State management	State managed	planned	P1	free
-storage.do	storage	.do	storage.do	primitives	data	primitive	Storage	-	store	storing	stored	Object storage	Storage unified	planned	P1	free
-tasks.do	tasks	.do	tasks.do	primitives	execution	primitive	Task	Tasks	task	tasking	tasked	Task execution	Tasks completed	planned	P1	free
-teams.do	teams	.do	teams.do	primitives	organization	primitive	Team	Teams	team	teaming	teamed	Team composition	Teams that work	implemented	P0	free
-templates.do	templates	.do	templates.do	primitives	generation	primitive	Template	Templates	template	templating	templated	Template engine	Templates rendered	planned	P2	free
-tests.do	tests	.do	tests.do	primitives	quality	primitive	Test	Tests	test	testing	tested	Test runner	Tests passing	planned	P1	free
-trace.do	trace	.do	trace.do	primitives	observability	primitive	Trace	Traces	trace	tracing	traced	Distributed tracing	Traces connected	planned	P1	free
-traces.do	traces	.do	traces.do	primitives	observability	primitive	Trace	Traces	trace	tracing	traced	Trace aggregation	Traces unified	planned	P1	free
-trigger.do	trigger	.do	trigger.do	primitives	automation	primitive	Trigger	Triggers	trigger	triggering	triggered	Event trigger	Triggers fired	planned	P1	free
-triggers.do	triggers	.do	triggers.do	primitives	automation	primitive	Trigger	Triggers	trigger	triggering	triggered	Trigger management	Triggers at scale	implemented	P0	free
-verbs.do	verbs	.do	verbs.do	primitives	language	primitive	Verb	Verbs	do	doing	active	Verb definitions	Verbs that act	planned	P2	free
-webhooks.do	webhooks	.do	webhooks.do	primitives	messaging	primitive	Webhook	Webhooks	hook	hooking	hooked	Webhook management	Webhooks delivered	implemented	P1	free
-worker.do	worker	.do	worker.do	primitives	execution	primitive	Worker	Workers	work	working	working	Single worker	Workers deployed	planned	P1	free
-workers.do	workers	.do	workers.do	primitives	execution	primitive	Worker	Workers	work	working	working	Worker runtime	Workers at scale	implemented	P0	free
-workflows.do	workflows	.do	workflows.do	primitives	orchestration	primitive	Workflow	Workflows	orchestrate	orchestrating	orchestrated	Workflow orchestration	Workflows automated	implemented	P0	free
+action.do	action	doaction.do	primitives	execution	primitive	Action	Actions	act	acting	actionable	Single executable action	Actions that work	planned	P1	free
+actions.do	actions	doactions.do	primitives	execution	primitive	Action	Actions	act	acting	actionable	Action execution engine	Actions at scale	planned	P1	free
+agents.do	agents	doagents.do	primitives	core	primitive	Agent	Agents	act	acting	autonomous	AI agent runtime	Agents that work	implemented	P0	free
+apis.do	apis	doapis.do	primitives	interfaces	primitive	API	APIs	expose	exposing	exposed	API definition and routing	APIs made simple	planned	P1	free
+assistant.do	assistant	doassistant.do	primitives	ai	primitive	Assistant	Assistants	assist	assisting	helpful	AI assistant runtime	Your AI assistant	planned	P1	free
+assistants.do	assistants	doassistants.do	primitives	ai	primitive	Assistant	Assistants	assist	assisting	helpful	Multiple assistants runtime	Assistants at scale	planned	P1	free
+bots.do	bots	dobots.do	primitives	automation	primitive	Bot	Bots	automate	automating	automated	Bot automation runtime	Bots that work	planned	P2	free
+cli.do	cli	docli.do	primitives	interfaces	primitive	CLI	CLIs	command	commanding	command-line	Command line interface	CLI made easy	planned	P2	free
+components.do	components	docomponents.do	primitives	ui	primitive	Component	Components	compose	composing	composable	UI component library	Components that compose	planned	P2	free
+context.do	context	docontext.do	primitives	state	primitive	Context	Contexts	contextualize	contextualizing	contextual	Execution context management	Context aware	planned	P1	free
+ctx.do	ctx	doctx.do	primitives	state	primitive	Context	Contexts	contextualize	contextualizing	contextual	Context shorthand	Context aware	planned	P1	free
+dash.do	dash	dodash.do	primitives	ui	primitive	Dashboard	Dashboards	visualize	visualizing	visual	Dashboard shorthand	Dashboards fast	planned	P2	free
+dashboard.do	dashboard	dodashboard.do	primitives	ui	primitive	Dashboard	Dashboards	visualize	visualizing	visual	Dashboard builder	Dashboards that inform	planned	P2	free
+database.do	database	dodatabase.do	primitives	data	primitive	Database	Databases	store	storing	persistent	Database abstraction	Data that persists	planned	P1	free
+databases.do	databases	dodatabases.do	primitives	data	primitive	Database	Databases	store	storing	persistent	Multi-database management	Databases unified	planned	P1	free
+directories.do	directories	dodirectories.do	primitives	discovery	primitive	Directory	Directories	list	listing	discoverable	Directory listings	Find anything	planned	P2	free
+directory.do	directory	dodirectory.do	primitives	discovery	primitive	Directory	Directories	list	listing	discoverable	Single directory	Directory service	planned	P2	free
+events.do	events	doevents.do	primitives	messaging	primitive	Event	Events	emit	emitting	event-driven	Event bus and pub/sub	Events that flow	implemented	P0	free
+fetch.do	fetch	dofetch.do	primitives	networking	primitive	Fetch	Fetches	fetch	fetching	fetched	HTTP fetch abstraction	Fetch anything	planned	P2	free
+function.do	function	dofunction.do	primitives	execution	primitive	Function	Functions	execute	executing	executable	Single function execution	Functions that run	planned	P1	free
+functions.do	functions	dofunctions.do	primitives	execution	primitive	Function	Functions	execute	executing	executable	Function execution engine	Functions at scale	implemented	P0	free
+goals.do	goals	dogoals.do	primitives	planning	primitive	Goal	Goals	achieve	achieving	achievable	Goal tracking system	Goals achieved	planned	P2	free
+humans.do	humans	dohumans.do	primitives	core	primitive	Human	Humans	collaborate	collaborating	human	Human worker runtime	Humans in the loop	implemented	P0	free
+integrate.do	integrate	dointegrate.do	primitives	connectivity	primitive	Integration	Integrations	integrate	integrating	integrated	Integration helper	Integrate anything	planned	P2	free
+integrations.do	integrations	dointegrations.do	primitives	connectivity	primitive	Integration	Integrations	integrate	integrating	integrated	Integration management	Integrations unified	planned	P1	free
+issues.do	issues	doissues.do	primitives	tracking	primitive	Issue	Issues	track	tracking	tracked	Issue tracking	Issues resolved	planned	P2	free
+keys.do	keys	dokeys.do	primitives	security	primitive	Key	Keys	authenticate	authenticating	secure	API key management	Keys secured	planned	P1	free
+lists.do	lists	dolists.do	primitives	data	primitive	List	Lists	list	listing	listed	List management	Lists organized	planned	P2	free
+names.do	names	donames.do	primitives	identity	primitive	Name	Names	name	naming	named	Name resolution	Names resolved	planned	P2	free
+nouns.do	nouns	donouns.do	primitives	language	primitive	Noun	Nouns	define	defining	defined	Noun definitions	Nouns defined	planned	P2	free
+numbers.do	numbers	donumbers.do	primitives	data	primitive	Number	Numbers	count	counting	numeric	Number management	Numbers handled	planned	P2	free
+oauth.do	oauth	dooauth.do	primitives	security	primitive	OAuth	-	authorize	authorizing	authorized	OAuth authentication	OAuth simplified	implemented	P1	free
+objects.do	objects	doobjects.do	primitives	data	primitive	Object	Objects	store	storing	stored	Object storage	Objects persisted	planned	P1	free
+okr.do	okr	dookr.do	primitives	planning	primitive	OKR	OKRs	track	tracking	tracked	OKR tracking shorthand	OKRs achieved	planned	P2	free
+okrs.do	okrs	dookrs.do	primitives	planning	primitive	OKR	OKRs	track	tracking	tracked	OKR tracking system	OKRs at scale	planned	P2	free
+orgs.do	orgs	doorgs.do	primitives	identity	primitive	Organization	Organizations	organize	organizing	organizational	Organization management	Organizations unified	planned	P1	free
+plans.do	plans	doplans.do	primitives	planning	primitive	Plan	Plans	plan	planning	planned	Plan management	Plans executed	planned	P2	free
+platform.do	platform	doplatform.do	primitives	core	primitive	Platform	Platforms	platform	platforming	platform	Platform abstraction	The platform	implemented	P0	free
+processes.do	processes	doprocesses.do	primitives	execution	primitive	Process	Processes	process	processing	processed	Process management	Processes automated	planned	P1	free
+products.do	products	doproducts.do	primitives	business	primitive	Product	Products	produce	producing	productive	Product catalog	Products organized	planned	P2	free
+projects.do	projects	doprojects.do	primitives	organization	primitive	Project	Projects	project	projecting	projected	Project management	Projects delivered	planned	P2	free
+queue.do	queue	doqueue.do	primitives	messaging	primitive	Queue	Queues	queue	queuing	queued	Message queue	Queues that flow	planned	P1	free
+rbac.do	rbac	dorbac.do	primitives	security	primitive	RBAC	-	authorize	authorizing	authorized	Role-based access control	RBAC simplified	planned	P1	free
+fga.do	fga	dofga.do	primitives	security	primitive	FGA	-	authorize	authorizing	authorized	Fine-grained authorization	FGA made easy	planned	P1	free
+requests.do	requests	dorequests.do	primitives	networking	primitive	Request	Requests	request	requesting	requested	HTTP request handling	Requests handled	planned	P2	free
+resources.do	resources	doresources.do	primitives	data	primitive	Resource	Resources	resource	resourcing	resourced	Resource management	Resources managed	planned	P1	free
+responses.do	responses	doresponses.do	primitives	networking	primitive	Response	Responses	respond	responding	responsive	HTTP response handling	Responses delivered	planned	P2	free
+roles.do	roles	doroles.do	primitives	identity	primitive	Role	Roles	assign	assigning	assigned	Role management	Roles defined	implemented	P1	free
+rpc.do	rpc	dorpc.do	primitives	networking	primitive	RPC	RPCs	call	calling	callable	RPC framework	RPC simplified	implemented	P0	free
+sandbox.do	sandbox	dosandbox.do	primitives	execution	primitive	Sandbox	Sandboxes	sandbox	sandboxing	sandboxed	Sandboxed execution	Sandboxes secure	planned	P1	free
+sdk.do	sdk	dosdk.do	primitives	development	primitive	SDK	SDKs	develop	developing	developmental	SDK generation	SDKs generated	planned	P1	free
+searches.do	searches	dosearches.do	primitives	discovery	primitive	Search	Searches	search	searching	searchable	Search engine	Search anything	planned	P1	free
+service.do	service	doservice.do	primitives	execution	primitive	Service	Services	serve	serving	serviced	Single service	Services deployed	planned	P1	free
+services.do	services	doservices.do	primitives	execution	primitive	Service	Services	serve	serving	serviced	Service mesh	Services at scale	planned	P1	free
+state.do	state	dostate.do	primitives	data	primitive	State	States	state	stating	stateful	State management	State managed	planned	P1	free
+storage.do	storage	dostorage.do	primitives	data	primitive	Storage	-	store	storing	stored	Object storage	Storage unified	planned	P1	free
+tasks.do	tasks	dotasks.do	primitives	execution	primitive	Task	Tasks	task	tasking	tasked	Task execution	Tasks completed	planned	P1	free
+teams.do	teams	doteams.do	primitives	organization	primitive	Team	Teams	team	teaming	teamed	Team composition	Teams that work	implemented	P0	free
+templates.do	templates	dotemplates.do	primitives	generation	primitive	Template	Templates	template	templating	templated	Template engine	Templates rendered	planned	P2	free
+tests.do	tests	dotests.do	primitives	quality	primitive	Test	Tests	test	testing	tested	Test runner	Tests passing	planned	P1	free
+trace.do	trace	dotrace.do	primitives	observability	primitive	Trace	Traces	trace	tracing	traced	Distributed tracing	Traces connected	planned	P1	free
+traces.do	traces	dotraces.do	primitives	observability	primitive	Trace	Traces	trace	tracing	traced	Trace aggregation	Traces unified	planned	P1	free
+trigger.do	trigger	dotrigger.do	primitives	automation	primitive	Trigger	Triggers	trigger	triggering	triggered	Event trigger	Triggers fired	planned	P1	free
+triggers.do	triggers	dotriggers.do	primitives	automation	primitive	Trigger	Triggers	trigger	triggering	triggered	Trigger management	Triggers at scale	implemented	P0	free
+verbs.do	verbs	doverbs.do	primitives	language	primitive	Verb	Verbs	do	doing	active	Verb definitions	Verbs that act	planned	P2	free
+webhooks.do	webhooks	dowebhooks.do	primitives	messaging	primitive	Webhook	Webhooks	hook	hooking	hooked	Webhook management	Webhooks delivered	implemented	P1	free
+worker.do	worker	doworker.do	primitives	execution	primitive	Worker	Workers	work	working	working	Single worker	Workers deployed	planned	P1	free
+workers.do	workers	doworkers.do	primitives	execution	primitive	Worker	Workers	work	working	working	Worker runtime	Workers at scale	implemented	P0	free
+workflows.do	workflows	doworkflows.do	primitives	orchestration	primitive	Workflow	Workflows	orchestrate	orchestrating	orchestrated	Workflow orchestration	Workflows automated	implemented	P0	free
 # Business - Business-as-Code Financial Platform (~25 domains)
-402.do	402	.do	402.do	business	payments	service	PaymentRequired	-	require	requiring	required	Payment required handling	Payments enforced	planned	P2	pro
-accounting.do	accounting	.do	accounting.do	business	financial	service	Account	Accounts	account	accounting	accountable	Autonomous accounting	Accounting automated	planned	P0	pro
-accounts.do	accounts	.do	accounts.do	business	financial	service	Account	Accounts	manage	managing	managed	Bank account management	Accounts unified	planned	P0	pro
-address.do	address	.do	address.do	business	formation	service	Address	Addresses	address	addressing	addressed	Business address service	Addresses managed	planned	P1	pro
-addresses.do	addresses	.do	addresses.do	business	formation	service	Address	Addresses	address	addressing	addressed	Multiple addresses	Addresses unified	planned	P1	pro
-analytics.do	analytics	.do	analytics.do	business	metrics	service	Analytics	-	analyze	analyzing	analytical	Business analytics	Analytics that matter	planned	P1	pro
-businesses.do	businesses	.do	businesses.do	business	formation	service	Business	Businesses	conduct	conducting	business	Business management	Businesses launched	planned	P1	pro
-calls.do	calls	.do	calls.do	business	communications	service	Call	Calls	call	calling	callable	Voice call service	Calls connected	planned	P1	pro
-cards.do	cards	.do	cards.do	business	financial	service	Card	Cards	issue	issuing	issued	Card issuance	Cards issued	planned	P0	pro
-careers.do	careers	.do	careers.do	business	hr	service	Career	Careers	hire	hiring	hireable	Career management	Careers launched	planned	P2	pro
-companies.do	companies	.do	companies.do	business	formation	service	Company	Companies	incorporate	incorporating	incorporated	Company management	Companies formed	planned	P1	pro
-emails.do	emails	.do	emails.do	business	communications	service	Email	Emails	email	emailing	emailable	Email service	Emails delivered	planned	P1	pro
-financials.do	financials	.do	financials.do	business	financial	service	Financial	Financials	finance	financing	financial	Financial reporting	Financials clear	planned	P1	pro
-incorporate.do	incorporate	.do	incorporate.do	business	formation	service	Entity	Entities	incorporate	incorporating	incorporated	Entity formation	Entities formed	planned	P1	pro
-kpis.do	kpis	.do	kpis.do	business	metrics	service	KPI	KPIs	measure	measuring	measurable	KPI tracking	KPIs tracked	planned	P2	pro
-payments.do	payments	.do	payments.do	business	financial	service	Payment	Payments	pay	paying	payable	Payment processing	Payments simplified	implementing	P0	pro
-soc2.do	soc2	.do	soc2.do	business	compliance	service	SOC2	-	comply	complying	compliant	SOC 2 compliance	Compliance instant	planned	P1	pro
-startups.do	startups	.do	startups.do	business	formation	service	Startup	Startups	launch	launching	launched	Startup formation	Startups launched	planned	P1	pro
-texts.do	texts	.do	texts.do	business	communications	service	Text	Texts	text	texting	textable	SMS messaging	Texts sent	planned	P1	pro
-treasury.do	treasury	.do	treasury.do	business	financial	service	Treasury	-	transfer	transferring	transferred	Treasury management	Money moved	planned	P0	pro
-waitlist.do	waitlist	.do	waitlist.do	business	marketing	service	Waitlist	Waitlists	waitlist	waitlisting	waitlisted	Waitlist management	Waitlists managed	planned	P2	free
+402.do	402	do402.do	business	payments	service	PaymentRequired	-	require	requiring	required	Payment required handling	Payments enforced	planned	P2	pro
+accounting.do	accounting	doaccounting.do	business	financial	service	Account	Accounts	account	accounting	accountable	Autonomous accounting	Accounting automated	planned	P0	pro
+accounts.do	accounts	doaccounts.do	business	financial	service	Account	Accounts	manage	managing	managed	Bank account management	Accounts unified	planned	P0	pro
+address.do	address	doaddress.do	business	formation	service	Address	Addresses	address	addressing	addressed	Business address service	Addresses managed	planned	P1	pro
+addresses.do	addresses	doaddresses.do	business	formation	service	Address	Addresses	address	addressing	addressed	Multiple addresses	Addresses unified	planned	P1	pro
+analytics.do	analytics	doanalytics.do	business	metrics	service	Analytics	-	analyze	analyzing	analytical	Business analytics	Analytics that matter	planned	P1	pro
+businesses.do	businesses	dobusinesses.do	business	formation	service	Business	Businesses	conduct	conducting	business	Business management	Businesses launched	planned	P1	pro
+calls.do	calls	docalls.do	business	communications	service	Call	Calls	call	calling	callable	Voice call service	Calls connected	planned	P1	pro
+cards.do	cards	docards.do	business	financial	service	Card	Cards	issue	issuing	issued	Card issuance	Cards issued	planned	P0	pro
+careers.do	careers	docareers.do	business	hr	service	Career	Careers	hire	hiring	hireable	Career management	Careers launched	planned	P2	pro
+companies.do	companies	docompanies.do	business	formation	service	Company	Companies	incorporate	incorporating	incorporated	Company management	Companies formed	planned	P1	pro
+emails.do	emails	doemails.do	business	communications	service	Email	Emails	email	emailing	emailable	Email service	Emails delivered	planned	P1	pro
+financials.do	financials	dofinancials.do	business	financial	service	Financial	Financials	finance	financing	financial	Financial reporting	Financials clear	planned	P1	pro
+incorporate.do	incorporate	doincorporate.do	business	formation	service	Entity	Entities	incorporate	incorporating	incorporated	Entity formation	Entities formed	planned	P1	pro
+kpis.do	kpis	dokpis.do	business	metrics	service	KPI	KPIs	measure	measuring	measurable	KPI tracking	KPIs tracked	planned	P2	pro
+payments.do	payments	dopayments.do	business	financial	service	Payment	Payments	pay	paying	payable	Payment processing	Payments simplified	implementing	P0	pro
+soc2.do	soc2	dosoc2.do	business	compliance	service	SOC2	-	comply	complying	compliant	SOC 2 compliance	Compliance instant	planned	P1	pro
+startups.do	startups	dostartups.do	business	formation	service	Startup	Startups	launch	launching	launched	Startup formation	Startups launched	planned	P1	pro
+texts.do	texts	dotexts.do	business	communications	service	Text	Texts	text	texting	textable	SMS messaging	Texts sent	planned	P1	pro
+treasury.do	treasury	dotreasury.do	business	financial	service	Treasury	-	transfer	transferring	transferred	Treasury management	Money moved	planned	P0	pro
+waitlist.do	waitlist	dowaitlist.do	business	marketing	service	Waitlist	Waitlists	waitlist	waitlisting	waitlisted	Waitlist management	Waitlists managed	planned	P2	free
 # AI - AI/ML Services (~15 domains)
-agi.do	agi	.do	agi.do	ai	models	service	AGI	-	think	thinking	intelligent	AGI capabilities	Intelligence amplified	planned	P2	pro
-benchmarks.do	benchmarks	.do	benchmarks.do	ai	evaluation	service	Benchmark	Benchmarks	benchmark	benchmarking	benchmarked	AI benchmarking	Benchmarks tracked	planned	P2	free
-datasets.do	datasets	.do	datasets.do	ai	data	service	Dataset	Datasets	curate	curating	curated	Dataset management	Datasets curated	planned	P2	free
-embed.do	embed	.do	embed.do	ai	embeddings	service	Embedding	Embeddings	embed	embedding	embedded	Single embedding	Embeddings created	planned	P1	free
-embeddings.do	embeddings	.do	embeddings.do	ai	embeddings	service	Embedding	Embeddings	embed	embedding	embedded	Embedding generation	Embeddings at scale	planned	P1	free
-evals.do	evals	.do	evals.do	ai	evaluation	service	Eval	Evals	evaluate	evaluating	evaluated	AI evaluation	Evals automated	planned	P1	free
-experiments.do	experiments	.do	experiments.do	ai	evaluation	service	Experiment	Experiments	experiment	experimenting	experimental	Experiment tracking	Experiments tracked	planned	P2	free
-gemini.do	gemini	.do	gemini.do	ai	models	integration	Gemini	-	generate	generating	generative	Google Gemini integration	Gemini powered	planned	P2	pro
-gpt.do	gpt	.do	gpt.do	ai	models	integration	GPT	-	generate	generating	generative	OpenAI GPT integration	GPT powered	planned	P2	pro
-llm.do	llm	.do	llm.do	ai	models	service	LLM	LLMs	generate	generating	generative	LLM gateway	LLMs unified	implemented	P0	pro
-llms.do	llms	.do	llms.do	ai	models	service	LLM	LLMs	generate	generating	generative	Multi-LLM management	LLMs at scale	planned	P1	pro
-mcp.do	mcp	.do	mcp.do	ai	protocols	service	MCP	-	connect	connecting	connected	Model Context Protocol	MCP enabled	planned	P1	free
-models.do	models	.do	models.do	ai	models	service	Model	Models	model	modeling	modeled	Model registry	Models managed	planned	P1	free
-thinking.do	thinking	.do	thinking.do	ai	reasoning	service	Thought	Thoughts	think	thinking	thoughtful	Chain of thought	Thinking deeply	planned	P2	pro
-vectors.do	vectors	.do	vectors.do	ai	embeddings	service	Vector	Vectors	vectorize	vectorizing	vectorized	Vector storage	Vectors stored	planned	P1	free
+agi.do	agi	doagi.do	ai	models	service	AGI	-	think	thinking	intelligent	AGI capabilities	Intelligence amplified	planned	P2	pro
+benchmarks.do	benchmarks	dobenchmarks.do	ai	evaluation	service	Benchmark	Benchmarks	benchmark	benchmarking	benchmarked	AI benchmarking	Benchmarks tracked	planned	P2	free
+datasets.do	datasets	dodatasets.do	ai	data	service	Dataset	Datasets	curate	curating	curated	Dataset management	Datasets curated	planned	P2	free
+embed.do	embed	doembed.do	ai	embeddings	service	Embedding	Embeddings	embed	embedding	embedded	Single embedding	Embeddings created	planned	P1	free
+embeddings.do	embeddings	doembeddings.do	ai	embeddings	service	Embedding	Embeddings	embed	embedding	embedded	Embedding generation	Embeddings at scale	planned	P1	free
+evals.do	evals	doevals.do	ai	evaluation	service	Eval	Evals	evaluate	evaluating	evaluated	AI evaluation	Evals automated	planned	P1	free
+experiments.do	experiments	doexperiments.do	ai	evaluation	service	Experiment	Experiments	experiment	experimenting	experimental	Experiment tracking	Experiments tracked	planned	P2	free
+gemini.do	gemini	dogemini.do	ai	models	integration	Gemini	-	generate	generating	generative	Google Gemini integration	Gemini powered	planned	P2	pro
+gpt.do	gpt	dogpt.do	ai	models	integration	GPT	-	generate	generating	generative	OpenAI GPT integration	GPT powered	planned	P2	pro
+llm.do	llm	dollm.do	ai	models	service	LLM	LLMs	generate	generating	generative	LLM gateway	LLMs unified	implemented	P0	pro
+llms.do	llms	dollms.do	ai	models	service	LLM	LLMs	generate	generating	generative	Multi-LLM management	LLMs at scale	planned	P1	pro
+mcp.do	mcp	domcp.do	ai	protocols	service	MCP	-	connect	connecting	connected	Model Context Protocol	MCP enabled	planned	P1	free
+models.do	models	domodels.do	ai	models	service	Model	Models	model	modeling	modeled	Model registry	Models managed	planned	P1	free
+thinking.do	thinking	dothinking.do	ai	reasoning	service	Thought	Thoughts	think	thinking	thoughtful	Chain of thought	Thinking deeply	planned	P2	pro
+vectors.do	vectors	dovectors.do	ai	embeddings	service	Vector	Vectors	vectorize	vectorizing	vectorized	Vector storage	Vectors stored	planned	P1	free
 # Content - Content Generation (~20 domains)
-blogs.do	blogs	.do	blogs.do	content	publishing	service	Blog	Blogs	blog	blogging	blogged	Blog management	Blogs published	planned	P2	free
-deck.do	deck	.do	deck.do	content	presentations	service	Deck	Decks	present	presenting	presented	Presentation builder	Decks created	planned	P2	free
-diagram.do	diagram	.do	diagram.do	content	visualization	service	Diagram	Diagrams	diagram	diagramming	diagrammed	Diagram generation	Diagrams rendered	planned	P2	free
-documentation.do	documentation	.do	documentation.do	content	publishing	service	Documentation	-	document	documenting	documented	Documentation generator	Docs generated	planned	P1	free
-excel.do	excel	.do	excel.do	content	spreadsheets	integration	Spreadsheet	Spreadsheets	calculate	calculating	calculated	Excel integration	Spreadsheets powered	planned	P2	pro
-guide.do	guide	.do	guide.do	content	publishing	service	Guide	Guides	guide	guiding	guided	Guide builder	Guides created	planned	P2	free
-icons.do	icons	.do	icons.do	content	assets	service	Icon	Icons	iconify	iconifying	iconic	Icon library	Icons delivered	planned	P2	free
-images.do	images	.do	images.do	content	media	service	Image	Images	image	imaging	imaged	Image generation	Images created	planned	P1	free
-mdx.do	mdx	.do	mdx.do	content	publishing	service	MDX	-	render	rendering	rendered	MDX rendering	MDX powered	planned	P1	free
-mermaid.do	mermaid	.do	mermaid.do	content	visualization	service	Diagram	Diagrams	diagram	diagramming	diagrammed	Mermaid diagrams	Diagrams rendered	planned	P2	free
-photos.do	photos	.do	photos.do	content	media	service	Photo	Photos	photograph	photographing	photographed	Photo management	Photos managed	planned	P2	free
-qrcode.do	qrcode	.do	qrcode.do	content	generation	service	QRCode	QRCodes	generate	generating	generated	QR code generator	QR codes created	planned	P2	free
-reference.do	reference	.do	reference.do	content	publishing	service	Reference	References	reference	referencing	referenced	Reference documentation	References organized	planned	P2	free
-screenshots.do	screenshots	.do	screenshots.do	content	media	service	Screenshot	Screenshots	capture	capturing	captured	Screenshot capture	Screenshots taken	planned	P2	free
-sheets.do	sheets	.do	sheets.do	content	spreadsheets	service	Sheet	Sheets	sheet	sheeting	sheeted	Spreadsheet service	Sheets managed	planned	P2	free
-sites.do	sites	.do	sites.do	content	publishing	service	Site	Sites	publish	publishing	published	Static site hosting	Sites deployed	planned	P2	free
-speak.do	speak	.do	speak.do	content	audio	service	Speech	Speeches	speak	speaking	spoken	Text-to-speech	Speech generated	planned	P2	free
-summarize.do	summarize	.do	summarize.do	content	text	service	Summary	Summaries	summarize	summarizing	summarized	Text summarization	Summaries created	planned	P2	free
-videos.do	videos	.do	videos.do	content	media	service	Video	Videos	record	recording	recorded	Video generation	Videos created	planned	P2	free
-word.do	word	.do	word.do	content	documents	integration	Document	Documents	document	documenting	documented	Word document integration	Documents powered	planned	P2	pro
+blogs.do	blogs	doblogs.do	content	publishing	service	Blog	Blogs	blog	blogging	blogged	Blog management	Blogs published	planned	P2	free
+deck.do	deck	dodeck.do	content	presentations	service	Deck	Decks	present	presenting	presented	Presentation builder	Decks created	planned	P2	free
+diagram.do	diagram	dodiagram.do	content	visualization	service	Diagram	Diagrams	diagram	diagramming	diagrammed	Diagram generation	Diagrams rendered	planned	P2	free
+documentation.do	documentation	dodocumentation.do	content	publishing	service	Documentation	-	document	documenting	documented	Documentation generator	Docs generated	planned	P1	free
+excel.do	excel	doexcel.do	content	spreadsheets	integration	Spreadsheet	Spreadsheets	calculate	calculating	calculated	Excel integration	Spreadsheets powered	planned	P2	pro
+guide.do	guide	doguide.do	content	publishing	service	Guide	Guides	guide	guiding	guided	Guide builder	Guides created	planned	P2	free
+icons.do	icons	doicons.do	content	assets	service	Icon	Icons	iconify	iconifying	iconic	Icon library	Icons delivered	planned	P2	free
+images.do	images	doimages.do	content	media	service	Image	Images	image	imaging	imaged	Image generation	Images created	planned	P1	free
+mdx.do	mdx	domdx.do	content	publishing	service	MDX	-	render	rendering	rendered	MDX rendering	MDX powered	planned	P1	free
+mermaid.do	mermaid	domermaid.do	content	visualization	service	Diagram	Diagrams	diagram	diagramming	diagrammed	Mermaid diagrams	Diagrams rendered	planned	P2	free
+photos.do	photos	dophotos.do	content	media	service	Photo	Photos	photograph	photographing	photographed	Photo management	Photos managed	planned	P2	free
+qrcode.do	qrcode	doqrcode.do	content	generation	service	QRCode	QRCodes	generate	generating	generated	QR code generator	QR codes created	planned	P2	free
+reference.do	reference	doreference.do	content	publishing	service	Reference	References	reference	referencing	referenced	Reference documentation	References organized	planned	P2	free
+screenshots.do	screenshots	doscreenshots.do	content	media	service	Screenshot	Screenshots	capture	capturing	captured	Screenshot capture	Screenshots taken	planned	P2	free
+sheets.do	sheets	dosheets.do	content	spreadsheets	service	Sheet	Sheets	sheet	sheeting	sheeted	Spreadsheet service	Sheets managed	planned	P2	free
+sites.do	sites	dosites.do	content	publishing	service	Site	Sites	publish	publishing	published	Static site hosting	Sites deployed	planned	P2	free
+speak.do	speak	dospeak.do	content	audio	service	Speech	Speeches	speak	speaking	spoken	Text-to-speech	Speech generated	planned	P2	free
+summarize.do	summarize	dosummarize.do	content	text	service	Summary	Summaries	summarize	summarizing	summarized	Text summarization	Summaries created	planned	P2	free
+videos.do	videos	dovideos.do	content	media	service	Video	Videos	record	recording	recorded	Video generation	Videos created	planned	P2	free
+word.do	word	doword.do	content	documents	integration	Document	Documents	document	documenting	documented	Word document integration	Documents powered	planned	P2	pro
 # Infrastructure - Platform Infrastructure (~20 domains)
-beads.do	beads	.do	beads.do	infra	tracking	service	Bead	Beads	track	tracking	tracked	Issue tracking (Beads)	Issues tracked	implemented	P1	free
-browse.do	browse	.do	browse.do	infra	web	service	Browser	Browsers	browse	browsing	browsable	Web browsing service	Pages browsed	planned	P2	free
-browser.do	browser	.do	browser.do	infra	web	service	Browser	Browsers	browse	browsing	browsable	Browser automation	Browser controlled	planned	P2	free
-browsers.do	browsers	.do	browsers.do	infra	web	service	Browser	Browsers	browse	browsing	browsable	Multi-browser management	Browsers unified	planned	P2	free
-cname.do	cname	.do	cname.do	infra	dns	service	CNAME	CNAMEs	alias	aliasing	aliased	CNAME management	CNAMEs configured	planned	P2	free
-colo.do	colo	.do	colo.do	infra	networking	service	Colo	Colos	colocate	colocating	colocated	Colocation routing	Colos optimized	planned	P2	free
-deployments.do	deployments	.do	deployments.do	infra	cicd	service	Deployment	Deployments	deploy	deploying	deployed	Deployment management	Deployments automated	planned	P1	free
-esbuild.do	esbuild	.do	esbuild.do	infra	build	integration	Build	Builds	build	building	built	esbuild integration	Builds fast	planned	P2	free
-esm.do	esm	.do	esm.do	infra	modules	service	Module	Modules	import	importing	imported	ESM module hosting	Modules served	planned	P2	free
-fsx.do	fsx	.do	fsx.do	infra	filesystem	service	FileSystem	FileSystems	file	filing	filed	Filesystem abstraction	Files managed	planned	P1	free
-gitx.do	gitx	.do	gitx.do	infra	vcs	service	Repository	Repositories	commit	committing	committed	Git extensions	Git extended	planned	P2	free
-perf.do	perf	.do	perf.do	infra	observability	service	Performance	-	perform	performing	performant	Performance monitoring	Performance tracked	planned	P1	free
-pkg.do	pkg	.do	pkg.do	infra	packages	service	Package	Packages	package	packaging	packaged	Package management	Packages published	planned	P2	free
-prxy.do	prxy	.do	prxy.do	infra	networking	service	Proxy	Proxies	proxy	proxying	proxied	Proxy service	Requests proxied	planned	P2	free
-repo.do	repo	.do	repo.do	infra	vcs	service	Repository	Repositories	store	storing	stored	Repository management	Repos managed	planned	P2	free
-research.do	research	.do	research.do	infra	discovery	service	Research	-	research	researching	researched	Research tools	Research enabled	planned	P2	free
-rpa.do	rpa	.do	rpa.do	infra	automation	service	RPA	-	automate	automating	automated	Robotic process automation	Processes automated	planned	P2	pro
-scraper.do	scraper	.do	scraper.do	infra	web	service	Scraper	Scrapers	scrape	scraping	scraped	Web scraper	Pages scraped	planned	P2	free
-scrapers.do	scrapers	.do	scrapers.do	infra	web	service	Scraper	Scrapers	scrape	scraping	scraped	Scraper management	Scrapers unified	planned	P2	free
-src.do	src	.do	src.do	infra	code	service	Source	Sources	source	sourcing	sourced	Source management	Sources managed	planned	P2	free
-studio.do	studio	.do	studio.do	infra	development	service	Studio	Studios	develop	developing	developmental	Development studio	Studio enabled	planned	P2	free
-tunnels.do	tunnels	.do	tunnels.do	infra	networking	service	Tunnel	Tunnels	tunnel	tunneling	tunneled	Tunnel management	Tunnels connected	planned	P2	free
+beads.do	beads	dobeads.do	infra	tracking	service	Bead	Beads	track	tracking	tracked	Issue tracking (Beads)	Issues tracked	implemented	P1	free
+browse.do	browse	dobrowse.do	infra	web	service	Browser	Browsers	browse	browsing	browsable	Web browsing service	Pages browsed	planned	P2	free
+browser.do	browser	dobrowser.do	infra	web	service	Browser	Browsers	browse	browsing	browsable	Browser automation	Browser controlled	planned	P2	free
+browsers.do	browsers	dobrowsers.do	infra	web	service	Browser	Browsers	browse	browsing	browsable	Multi-browser management	Browsers unified	planned	P2	free
+cname.do	cname	docname.do	infra	dns	service	CNAME	CNAMEs	alias	aliasing	aliased	CNAME management	CNAMEs configured	planned	P2	free
+colo.do	colo	docolo.do	infra	networking	service	Colo	Colos	colocate	colocating	colocated	Colocation routing	Colos optimized	planned	P2	free
+deployments.do	deployments	dodeployments.do	infra	cicd	service	Deployment	Deployments	deploy	deploying	deployed	Deployment management	Deployments automated	planned	P1	free
+esbuild.do	esbuild	doesbuild.do	infra	build	integration	Build	Builds	build	building	built	esbuild integration	Builds fast	planned	P2	free
+esm.do	esm	doesm.do	infra	modules	service	Module	Modules	import	importing	imported	ESM module hosting	Modules served	planned	P2	free
+fsx.do	fsx	dofsx.do	infra	filesystem	service	FileSystem	FileSystems	file	filing	filed	Filesystem abstraction	Files managed	planned	P1	free
+gitx.do	gitx	dogitx.do	infra	vcs	service	Repository	Repositories	commit	committing	committed	Git extensions	Git extended	planned	P2	free
+perf.do	perf	doperf.do	infra	observability	service	Performance	-	perform	performing	performant	Performance monitoring	Performance tracked	planned	P1	free
+pkg.do	pkg	dopkg.do	infra	packages	service	Package	Packages	package	packaging	packaged	Package management	Packages published	planned	P2	free
+prxy.do	prxy	doprxy.do	infra	networking	service	Proxy	Proxies	proxy	proxying	proxied	Proxy service	Requests proxied	planned	P2	free
+repo.do	repo	dorepo.do	infra	vcs	service	Repository	Repositories	store	storing	stored	Repository management	Repos managed	planned	P2	free
+research.do	research	doresearch.do	infra	discovery	service	Research	-	research	researching	researched	Research tools	Research enabled	planned	P2	free
+rpa.do	rpa	dorpa.do	infra	automation	service	RPA	-	automate	automating	automated	Robotic process automation	Processes automated	planned	P2	pro
+scraper.do	scraper	doscraper.do	infra	web	service	Scraper	Scrapers	scrape	scraping	scraped	Web scraper	Pages scraped	planned	P2	free
+scrapers.do	scrapers	doscrapers.do	infra	web	service	Scraper	Scrapers	scrape	scraping	scraped	Scraper management	Scrapers unified	planned	P2	free
+src.do	src	dosrc.do	infra	code	service	Source	Sources	source	sourcing	sourced	Source management	Sources managed	planned	P2	free
+studio.do	studio	dostudio.do	infra	development	service	Studio	Studios	develop	developing	developmental	Development studio	Studio enabled	planned	P2	free
+tunnels.do	tunnels	dotunnels.do	infra	networking	service	Tunnel	Tunnels	tunnel	tunneling	tunneled	Tunnel management	Tunnels connected	planned	P2	free
 # Integrations - Database Integrations (~15 domains)
-clickhouse.do	clickhouse	.do	clickhouse.do	integrations	databases	integration	ClickHouse	-	query	querying	queryable	ClickHouse integration	Analytics fast	planned	P2	pro
-convex.do	convex	.do	convex.do	integrations	databases	integration	Convex	-	sync	syncing	synced	Convex integration	Data synced	planned	P2	pro
-firebase.do	firebase	.do	firebase.do	integrations	databases	integration	Firebase	-	store	storing	stored	Firebase integration	Firebase powered	planned	P2	pro
-iceberg.do	iceberg	.do	iceberg.do	integrations	databases	integration	Iceberg	-	lake	laking	lakeable	Apache Iceberg integration	Data lakehouse	planned	P2	pro
-kafka.do	kafka	.do	kafka.do	integrations	messaging	integration	Kafka	-	stream	streaming	streamed	Apache Kafka integration	Events streamed	planned	P2	pro
-mongo.do	mongo	.do	mongo.do	integrations	databases	integration	MongoDB	-	document	documenting	documented	MongoDB integration	Documents stored	planned	P2	pro
-mongoose.do	mongoose	.do	mongoose.do	integrations	databases	integration	Mongoose	-	model	modeling	modeled	Mongoose ODM integration	Models defined	planned	P2	pro
-nats.do	nats	.do	nats.do	integrations	messaging	integration	NATS	-	publish	publishing	published	NATS integration	Messages delivered	planned	P2	pro
-neo4j.do	neo4j	.do	neo4j.do	integrations	databases	integration	Neo4j	-	graph	graphing	graphed	Neo4j integration	Graphs queried	planned	P2	pro
-neon.do	neon	.do	neon.do	integrations	databases	integration	Neon	-	query	querying	queryable	Neon Postgres integration	Serverless Postgres	planned	P2	pro
-payload.do	payload	.do	payload.do	integrations	cms	integration	Payload	-	manage	managing	managed	Payload CMS integration	Content managed	planned	P2	pro
-postgres.do	postgres	.do	postgres.do	integrations	databases	integration	PostgreSQL	-	query	querying	queryable	PostgreSQL integration	SQL powered	planned	P1	pro
-redis.do	redis	.do	redis.do	integrations	databases	integration	Redis	-	cache	caching	cached	Redis integration	Cache fast	planned	P1	pro
-sql.do	sql	.do	sql.do	integrations	databases	integration	SQL	-	query	querying	queryable	SQL abstraction	SQL unified	planned	P1	free
-sqlite.do	sqlite	.do	sqlite.do	integrations	databases	integration	SQLite	-	query	querying	queryable	SQLite integration	Embedded SQL	planned	P1	free
-supabase.do	supabase	.do	supabase.do	integrations	databases	integration	Supabase	-	query	querying	queryable	Supabase integration	Backend instant	planned	P1	pro
-turso.do	turso	.do	turso.do	integrations	databases	integration	Turso	-	query	querying	queryable	Turso integration	Edge SQL	planned	P2	pro
+clickhouse.do	clickhouse	doclickhouse.do	integrations	databases	integration	ClickHouse	-	query	querying	queryable	ClickHouse integration	Analytics fast	planned	P2	pro
+convex.do	convex	doconvex.do	integrations	databases	integration	Convex	-	sync	syncing	synced	Convex integration	Data synced	planned	P2	pro
+firebase.do	firebase	dofirebase.do	integrations	databases	integration	Firebase	-	store	storing	stored	Firebase integration	Firebase powered	planned	P2	pro
+iceberg.do	iceberg	doiceberg.do	integrations	databases	integration	Iceberg	-	lake	laking	lakeable	Apache Iceberg integration	Data lakehouse	planned	P2	pro
+kafka.do	kafka	dokafka.do	integrations	messaging	integration	Kafka	-	stream	streaming	streamed	Apache Kafka integration	Events streamed	planned	P2	pro
+mongo.do	mongo	domongo.do	integrations	databases	integration	MongoDB	-	document	documenting	documented	MongoDB integration	Documents stored	planned	P2	pro
+mongoose.do	mongoose	domongoose.do	integrations	databases	integration	Mongoose	-	model	modeling	modeled	Mongoose ODM integration	Models defined	planned	P2	pro
+nats.do	nats	donats.do	integrations	messaging	integration	NATS	-	publish	publishing	published	NATS integration	Messages delivered	planned	P2	pro
+neo4j.do	neo4j	doneo4j.do	integrations	databases	integration	Neo4j	-	graph	graphing	graphed	Neo4j integration	Graphs queried	planned	P2	pro
+neon.do	neon	doneon.do	integrations	databases	integration	Neon	-	query	querying	queryable	Neon Postgres integration	Serverless Postgres	planned	P2	pro
+payload.do	payload	dopayload.do	integrations	cms	integration	Payload	-	manage	managing	managed	Payload CMS integration	Content managed	planned	P2	pro
+postgres.do	postgres	dopostgres.do	integrations	databases	integration	PostgreSQL	-	query	querying	queryable	PostgreSQL integration	SQL powered	planned	P1	pro
+redis.do	redis	doredis.do	integrations	databases	integration	Redis	-	cache	caching	cached	Redis integration	Cache fast	planned	P1	pro
+sql.do	sql	dosql.do	integrations	databases	integration	SQL	-	query	querying	queryable	SQL abstraction	SQL unified	planned	P1	free
+sqlite.do	sqlite	dosqlite.do	integrations	databases	integration	SQLite	-	query	querying	queryable	SQLite integration	Embedded SQL	planned	P1	free
+supabase.do	supabase	dosupabase.do	integrations	databases	integration	Supabase	-	query	querying	queryable	Supabase integration	Backend instant	planned	P1	pro
+turso.do	turso	doturso.do	integrations	databases	integration	Turso	-	query	querying	queryable	Turso integration	Edge SQL	planned	P2	pro
 # Integrations - Platform Integrations (~5 domains)
-cloudflare.do	cloudflare	.do	cloudflare.do	integrations	platforms	integration	Cloudflare	-	deploy	deploying	deployed	Cloudflare integration	Edge deployed	implemented	P1	pro
-foundry.do	foundry	.do	foundry.do	integrations	platforms	integration	Foundry	-	analyze	analyzing	analyzed	Palantir Foundry integration	Data analyzed	planned	P3	enterprise
-gcp.do	gcp	.do	gcp.do	integrations	platforms	integration	GCP	-	deploy	deploying	deployed	Google Cloud integration	Cloud powered	planned	P2	pro
-vercel.do	vercel	.do	vercel.do	integrations	platforms	integration	Vercel	-	deploy	deploying	deployed	Vercel integration	Frontend deployed	planned	P2	pro
+cloudflare.do	cloudflare	docloudflare.do	integrations	platforms	integration	Cloudflare	-	deploy	deploying	deployed	Cloudflare integration	Edge deployed	implemented	P1	pro
+foundry.do	foundry	dofoundry.do	integrations	platforms	integration	Foundry	-	analyze	analyzing	analyzed	Palantir Foundry integration	Data analyzed	planned	P3	enterprise
+gcp.do	gcp	dogcp.do	integrations	platforms	integration	GCP	-	deploy	deploying	deployed	Google Cloud integration	Cloud powered	planned	P2	pro
+vercel.do	vercel	dovercel.do	integrations	platforms	integration	Vercel	-	deploy	deploying	deployed	Vercel integration	Frontend deployed	planned	P2	pro
 # Integrations - Communication Integrations (~3 domains)
-slack.do	slack	.do	slack.do	integrations	messaging	integration	Slack	-	message	messaging	messaged	Slack integration	Messages sent	planned	P1	pro
+slack.do	slack	doslack.do	integrations	messaging	integration	Slack	-	message	messaging	messaged	Slack integration	Messages sent	planned	P1	pro
 # Integrations - Libraries (~5 domains)
-lodash.do	lodash	.do	lodash.do	integrations	libraries	integration	Lodash	-	utility	utilizing	utilized	Lodash utilities	Utils available	planned	P3	free
-react.do	react	.do	react.do	integrations	libraries	integration	React	-	render	rendering	rendered	React integration	UI rendered	planned	P2	free
+lodash.do	lodash	dolodash.do	integrations	libraries	integration	Lodash	-	utility	utilizing	utilized	Lodash utilities	Utils available	planned	P3	free
+react.do	react	doreact.do	integrations	libraries	integration	React	-	render	rendering	rendered	React integration	UI rendered	planned	P2	free
 # Utilities - Specialized Utilities (~10 domains)
-agentkit.do	agentkit	.do	agentkit.do	utilities	kits	utility	AgentKit	-	build	building	built	Agent building kit	Agents built	planned	P2	free
-chatkit.do	chatkit	.do	chatkit.do	utilities	kits	utility	ChatKit	-	chat	chatting	chatted	Chat UI kit	Chat built	planned	P2	free
-extract.do	extract	.do	extract.do	utilities	data	utility	Extraction	Extractions	extract	extracting	extracted	Data extraction	Data extracted	planned	P2	free
-pace.do	pace	.do	pace.do	utilities	metrics	utility	Pace	Paces	pace	pacing	paced	Velocity tracking	Pace tracked	planned	P3	free
-patent.do	patent	.do	patent.do	utilities	legal	utility	Patent	Patents	patent	patenting	patented	Patent search	Patents searched	planned	P3	pro
-rev.do	rev	.do	rev.do	utilities	metrics	utility	Revenue	Revenues	generate	generating	generated	Revenue tracking	Revenue tracked	planned	P2	pro
-startupkit.do	startupkit	.do	startupkit.do	utilities	kits	utility	StartupKit	-	launch	launching	launched	Startup kit	Startups launched	planned	P2	free
-svc.do	svc	.do	svc.do	utilities	shortcuts	utility	Service	Services	serve	serving	served	Service shorthand	Services quick	planned	P3	free
-transform.do	transform	.do	transform.do	utilities	data	utility	Transform	Transforms	transform	transforming	transformed	Data transformation	Data transformed	planned	P2	free
-vehicle.do	vehicle	.do	vehicle.do	utilities	specialized	utility	Vehicle	Vehicles	transport	transporting	transported	Vehicle data	Vehicles tracked	planned	P3	pro
+agentkit.do	agentkit	doagentkit.do	utilities	kits	utility	AgentKit	-	build	building	built	Agent building kit	Agents built	planned	P2	free
+chatkit.do	chatkit	dochatkit.do	utilities	kits	utility	ChatKit	-	chat	chatting	chatted	Chat UI kit	Chat built	planned	P2	free
+extract.do	extract	doextract.do	utilities	data	utility	Extraction	Extractions	extract	extracting	extracted	Data extraction	Data extracted	planned	P2	free
+pace.do	pace	dopace.do	utilities	metrics	utility	Pace	Paces	pace	pacing	paced	Velocity tracking	Pace tracked	planned	P3	free
+patent.do	patent	dopatent.do	utilities	legal	utility	Patent	Patents	patent	patenting	patented	Patent search	Patents searched	planned	P3	pro
+rev.do	rev	dorev.do	utilities	metrics	utility	Revenue	Revenues	generate	generating	generated	Revenue tracking	Revenue tracked	planned	P2	pro
+startupkit.do	startupkit	dostartupkit.do	utilities	kits	utility	StartupKit	-	launch	launching	launched	Startup kit	Startups launched	planned	P2	free
+svc.do	svc	dosvc.do	utilities	shortcuts	utility	Service	Services	serve	serving	served	Service shorthand	Services quick	planned	P3	free
+transform.do	transform	dotransform.do	utilities	data	utility	Transform	Transforms	transform	transforming	transformed	Data transformation	Data transformed	planned	P2	free
+vehicle.do	vehicle	dovehicle.do	utilities	specialized	utility	Vehicle	Vehicles	transport	transporting	transported	Vehicle data	Vehicles tracked	planned	P3	pro
 # .as Domains - Definitions/Schemas (36 domains)
-agent.as	agent	.as	agent.as	definitions	core	definition	Agent	Agents	define	defining	defined	Agent type definition	Agent defined	implemented	P0	free
-agi.as	agi	.as	agi.as	definitions	ai	definition	AGI	-	define	defining	defined	AGI interface definition	AGI defined	planned	P2	free
-apps.as	apps	.as	apps.as	definitions	core	definition	App	Apps	define	defining	defined	Application definition	Apps defined	planned	P1	free
-assistant.as	assistant	.as	assistant.as	definitions	ai	definition	Assistant	Assistants	define	defining	defined	Assistant interface	Assistants defined	planned	P1	free
-associates.as	associates	.as	associates.as	definitions	organization	definition	Associate	Associates	define	defining	defined	Associate definition	Associates defined	planned	P2	free
-blogs.as	blogs	.as	blogs.as	definitions	content	definition	Blog	Blogs	define	defining	defined	Blog schema	Blogs defined	planned	P2	free
-brands.as	brands	.as	brands.as	definitions	marketing	definition	Brand	Brands	define	defining	defined	Brand definition	Brands defined	planned	P2	free
-ctx.as	ctx	.as	ctx.as	definitions	core	definition	Context	Contexts	define	defining	defined	Context interface	Context defined	planned	P1	free
-database.as	database	.as	database.as	definitions	data	definition	Database	Databases	define	defining	defined	Database interface	Database defined	planned	P0	free
-directories.as	directories	.as	directories.as	definitions	discovery	definition	Directory	Directories	define	defining	defined	Directory schema	Directories defined	planned	P2	free
-docs.as	docs	.as	docs.as	definitions	content	definition	Document	Documents	define	defining	defined	Document schema	Docs defined	planned	P1	free
-forms.as	forms	.as	forms.as	definitions	ui	definition	Form	Forms	define	defining	defined	Form schema	Forms defined	planned	P2	free
-functions.as	functions	.as	functions.as	definitions	execution	definition	Function	Functions	define	defining	defined	Function interface	Functions defined	planned	P0	free
-gpts.as	gpts	.as	gpts.as	definitions	ai	definition	GPT	GPTs	define	defining	defined	GPT schema	GPTs defined	planned	P2	free
-ideas.as	ideas	.as	ideas.as	definitions	planning	definition	Idea	Ideas	define	defining	defined	Idea schema	Ideas defined	planned	P2	free
-ing.as	ing	.as	ing.as	definitions	language	definition	Gerund	Gerunds	define	defining	defined	Gerund/action suffix	Actions defined	planned	P3	free
-llc.as	llc	.as	llc.as	definitions	business	definition	LLC	LLCs	define	defining	defined	LLC definition	LLCs defined	planned	P2	free
-marketplace.as	marketplace	.as	marketplace.as	definitions	business	definition	Marketplace	Marketplaces	define	defining	defined	Marketplace schema	Marketplaces defined	planned	P2	free
-mdx.as	mdx	.as	mdx.as	definitions	content	definition	MDX	-	define	defining	defined	MDX schema	MDX defined	planned	P1	free
-page.as	page	.as	page.as	definitions	content	definition	Page	Pages	define	defining	defined	Page schema	Pages defined	planned	P1	free
-pages.as	pages	.as	pages.as	definitions	content	definition	Page	Pages	define	defining	defined	Pages schema	Pages defined	planned	P1	free
-proxy.as	proxy	.as	proxy.as	definitions	networking	definition	Proxy	Proxies	define	defining	defined	Proxy interface	Proxies defined	planned	P2	free
-queue.as	queue	.as	queue.as	definitions	messaging	definition	Queue	Queues	define	defining	defined	Queue interface	Queues defined	planned	P1	free
-saas.as	saas	.as	saas.as	definitions	business	definition	SaaS	-	define	defining	defined	SaaS schema	SaaS defined	planned	P2	free
-sdk.as	sdk	.as	sdk.as	definitions	development	definition	SDK	SDKs	define	defining	defined	SDK interface	SDKs defined	planned	P1	free
-services.as	services	.as	services.as	definitions	execution	definition	Service	Services	define	defining	defined	Service interface	Services defined	implemented	P0	free
-site.as	site	.as	site.as	definitions	content	definition	Site	Sites	define	defining	defined	Site schema	Sites defined	planned	P1	free
-sites.as	sites	.as	sites.as	definitions	content	definition	Site	Sites	define	defining	defined	Sites schema	Sites defined	planned	P1	free
-src.as	src	.as	src.as	definitions	code	definition	Source	Sources	define	defining	defined	Source interface	Sources defined	planned	P2	free
-startups.as	startups	.as	startups.as	definitions	business	definition	Startup	Startups	define	defining	defined	Startup schema	Startups defined	planned	P1	free
-task.as	task	.as	task.as	definitions	execution	definition	Task	Tasks	define	defining	defined	Task interface	Tasks defined	planned	P1	free
-videos.as	videos	.as	videos.as	definitions	media	definition	Video	Videos	define	defining	defined	Video schema	Videos defined	planned	P2	free
-waitlist.as	waitlist	.as	waitlist.as	definitions	marketing	definition	Waitlist	Waitlists	define	defining	defined	Waitlist schema	Waitlists defined	planned	P2	free
-webhooks.as	webhooks	.as	webhooks.as	definitions	messaging	definition	Webhook	Webhooks	define	defining	defined	Webhook interface	Webhooks defined	planned	P1	free
-wiki.as	wiki	.as	wiki.as	definitions	content	definition	Wiki	Wikis	define	defining	defined	Wiki schema	Wikis defined	planned	P2	free
-workflows.as	workflows	.as	workflows.as	definitions	orchestration	definition	Workflow	Workflows	define	defining	defined	Workflow interface	Workflows defined	planned	P0	free
+agent.as	agent	asagent.as	definitions	core	definition	Agent	Agents	define	defining	defined	Agent type definition	Agent defined	implemented	P0	free
+agi.as	agi	asagi.as	definitions	ai	definition	AGI	-	define	defining	defined	AGI interface definition	AGI defined	planned	P2	free
+apps.as	apps	asapps.as	definitions	core	definition	App	Apps	define	defining	defined	Application definition	Apps defined	planned	P1	free
+assistant.as	assistant	asassistant.as	definitions	ai	definition	Assistant	Assistants	define	defining	defined	Assistant interface	Assistants defined	planned	P1	free
+associates.as	associates	asassociates.as	definitions	organization	definition	Associate	Associates	define	defining	defined	Associate definition	Associates defined	planned	P2	free
+blogs.as	blogs	asblogs.as	definitions	content	definition	Blog	Blogs	define	defining	defined	Blog schema	Blogs defined	planned	P2	free
+brands.as	brands	asbrands.as	definitions	marketing	definition	Brand	Brands	define	defining	defined	Brand definition	Brands defined	planned	P2	free
+ctx.as	ctx	asctx.as	definitions	core	definition	Context	Contexts	define	defining	defined	Context interface	Context defined	planned	P1	free
+database.as	database	asdatabase.as	definitions	data	definition	Database	Databases	define	defining	defined	Database interface	Database defined	planned	P0	free
+directories.as	directories	asdirectories.as	definitions	discovery	definition	Directory	Directories	define	defining	defined	Directory schema	Directories defined	planned	P2	free
+docs.as	docs	asdocs.as	definitions	content	definition	Document	Documents	define	defining	defined	Document schema	Docs defined	planned	P1	free
+forms.as	forms	asforms.as	definitions	ui	definition	Form	Forms	define	defining	defined	Form schema	Forms defined	planned	P2	free
+functions.as	functions	asfunctions.as	definitions	execution	definition	Function	Functions	define	defining	defined	Function interface	Functions defined	planned	P0	free
+gpts.as	gpts	asgpts.as	definitions	ai	definition	GPT	GPTs	define	defining	defined	GPT schema	GPTs defined	planned	P2	free
+ideas.as	ideas	asideas.as	definitions	planning	definition	Idea	Ideas	define	defining	defined	Idea schema	Ideas defined	planned	P2	free
+ing.as	ing	asing.as	definitions	language	definition	Gerund	Gerunds	define	defining	defined	Gerund/action suffix	Actions defined	planned	P3	free
+llc.as	llc	asllc.as	definitions	business	definition	LLC	LLCs	define	defining	defined	LLC definition	LLCs defined	planned	P2	free
+marketplace.as	marketplace	asmarketplace.as	definitions	business	definition	Marketplace	Marketplaces	define	defining	defined	Marketplace schema	Marketplaces defined	planned	P2	free
+mdx.as	mdx	asmdx.as	definitions	content	definition	MDX	-	define	defining	defined	MDX schema	MDX defined	planned	P1	free
+page.as	page	aspage.as	definitions	content	definition	Page	Pages	define	defining	defined	Page schema	Pages defined	planned	P1	free
+pages.as	pages	aspages.as	definitions	content	definition	Page	Pages	define	defining	defined	Pages schema	Pages defined	planned	P1	free
+proxy.as	proxy	asproxy.as	definitions	networking	definition	Proxy	Proxies	define	defining	defined	Proxy interface	Proxies defined	planned	P2	free
+queue.as	queue	asqueue.as	definitions	messaging	definition	Queue	Queues	define	defining	defined	Queue interface	Queues defined	planned	P1	free
+saas.as	saas	assaas.as	definitions	business	definition	SaaS	-	define	defining	defined	SaaS schema	SaaS defined	planned	P2	free
+sdk.as	sdk	assdk.as	definitions	development	definition	SDK	SDKs	define	defining	defined	SDK interface	SDKs defined	planned	P1	free
+services.as	services	asservices.as	definitions	execution	definition	Service	Services	define	defining	defined	Service interface	Services defined	implemented	P0	free
+site.as	site	assite.as	definitions	content	definition	Site	Sites	define	defining	defined	Site schema	Sites defined	planned	P1	free
+sites.as	sites	assites.as	definitions	content	definition	Site	Sites	define	defining	defined	Sites schema	Sites defined	planned	P1	free
+src.as	src	assrc.as	definitions	code	definition	Source	Sources	define	defining	defined	Source interface	Sources defined	planned	P2	free
+startups.as	startups	asstartups.as	definitions	business	definition	Startup	Startups	define	defining	defined	Startup schema	Startups defined	planned	P1	free
+task.as	task	astask.as	definitions	execution	definition	Task	Tasks	define	defining	defined	Task interface	Tasks defined	planned	P1	free
+videos.as	videos	asvideos.as	definitions	media	definition	Video	Videos	define	defining	defined	Video schema	Videos defined	planned	P2	free
+waitlist.as	waitlist	aswaitlist.as	definitions	marketing	definition	Waitlist	Waitlists	define	defining	defined	Waitlist schema	Waitlists defined	planned	P2	free
+webhooks.as	webhooks	aswebhooks.as	definitions	messaging	definition	Webhook	Webhooks	define	defining	defined	Webhook interface	Webhooks defined	planned	P1	free
+wiki.as	wiki	aswiki.as	definitions	content	definition	Wiki	Wikis	define	defining	defined	Wiki schema	Wikis defined	planned	P2	free
+workflows.as	workflows	asworkflows.as	definitions	orchestration	definition	Workflow	Workflows	define	defining	defined	Workflow interface	Workflows defined	planned	P0	free

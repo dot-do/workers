@@ -1,0 +1,17 @@
+# Minimal wrangler.toml for vitest-pool-workers
+# This configuration enables the Cloudflare Workers test pool
+
+name = "workers-test"
+main = "packages/do/src/index.ts"
+compatibility_date = "2024-09-25"
+
+[vars]
+ENVIRONMENT = "test"
+
+[[durable_objects.bindings]]
+name = "DO_NAMESPACE"
+class_name = "DO"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["DO"]

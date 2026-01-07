@@ -5,6 +5,10 @@ node_modules/
 # Build outputs
 dist/
 *.tsbuildinfo
+*.d.ts
+*.d.ts.map
+*.js.map
+!packages/*/dist/**
 
 # Environment
 .env

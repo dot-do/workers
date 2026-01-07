@@ -1,0 +1,9 @@
+{
+  "enabledPlugins": {
+    "beads@beads-marketplace": true,
+    "ralph-loop@claude-plugins-official": true,
+    "superpowers@superpowers-marketplace": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "agent-sdk-dev@claude-code-plugins": true
+  }
+}

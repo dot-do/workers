@@ -1,13 +1,17 @@
-import { defineWorkersConfig } from '@cloudflare/vitest-pool-workers/config'
+import { defineConfig } from 'vitest/config'
 
-export default defineWorkersConfig({
+// Use standard vitest config that delegates to package-level configs
+// Tests run from packages/do using its own vitest.config.ts (Node environment)
+export default defineConfig({
   test: {
-    poolOptions: {
-      workers: {
-        wrangler: { configPath: './wrangler.toml' },
-      },
-    },
     include: ['packages/*/test/**/*.test.ts'],
     exclude: ['**/node_modules/**', '**/dist/**'],
+    environment: 'node',
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
   },
 })

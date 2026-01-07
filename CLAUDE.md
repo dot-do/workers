@@ -2,11 +2,79 @@
 
 This file provides context and guidance for AI assistants working on the workers.do codebase.
 
+## The Vision: Workers Work for You
+
+**workers.do** has a double meaning:
+
+1. **Cloudflare Workers** - The serverless runtime that powers everything
+2. **Digital Workers** - AI agents and humans that work for you
+
+Both kinds of workers. Working for startup founders who need a team.
+
+### The Core API
+
+```typescript
+import { tom, priya, mark } from 'agents.do'
+
+tom`build the authentication system`
+priya`plan the Q1 roadmap`
+mark`write the launch announcement`
+```
+
+Natural language. Tagged templates. Agents as functions. This is the heart of workers.do.
+
+### The Architecture
+
+```
+roles/        Base job descriptions (CEO, CTO, PDM, Dev, QA...)
+agents/       AI workers with identity (Priya, Tom, Rae, Mark, Sally, Quinn)
+humans/       Human workers via channels (Slack, Email, Teams, Discord)
+teams/        Groups of workers (Engineering, Product, Sales, Marketing)
+workflows/    Orchestrated processes (dev, review, marketing, sales)
+```
+
+### Named Agents
+
+| Agent | Role | Expertise |
+|-------|------|-----------|
+| **Priya** | Product | Specs, prioritization, roadmaps |
+| **Tom** | Tech Lead | TypeScript, architecture, code review |
+| **Rae** | Frontend | React, UI/UX, accessibility |
+| **Mark** | Marketing | Copy, content, MDX documentation |
+| **Sally** | Sales | Outreach, demos, closing |
+| **Quinn** | QA | Testing, edge cases, quality |
+
+Each agent has real identity: email (`tom@agents.do`), GitHub (`@tom-do`), avatar.
+
+### Key Domains
+
+| Domain | Package | Purpose |
+|--------|---------|---------|
+| [agents.do](https://agents.do) | `agents.do` | AI agents |
+| [roles.do](https://roles.do) | `roles.do` | Base role classes |
+| [humans.do](https://humans.do) | `humans.do` | Human workers |
+| [teams.do](https://teams.do) | `teams.do` | Team compositions |
+| [workflows.do](https://workflows.do) | `workflows.do` | Workflow definitions |
+| [tom.do](https://tom.do) | `tom.do` | Individual agent |
+| [priya.do](https://priya.do) | `priya.do` | Individual agent |
+
+### CapnWeb Pipelining
+
+Work chains without `Promise.all`:
+
+```typescript
+const implemented = await priya`plan ${feature}`
+  .map(issue => tom`implement ${issue}`)
+  .map(code => quinn`test ${code}`)
+```
+
+One network round trip. Record-replay pipelining.
+
 ## Project Overview
 
 workers.do is the platform for building **Autonomous Startups** - businesses that run on AI with human oversight. It provides:
 
-- **Startup-as-Code** - Define entire startups in code (MDX workers)
+- **Business-as-Code** - Define entire startups in code
 - **AI-delivered Services-as-Software** - AI agents deliver services humans used to provide
 - **Platform services** - Identity (WorkOS), Payments (Stripe), AI (llm.do) built in
 - **Multi-transport RPC** - REST, Workers RPC, CapnWeb, MCP from one definition
@@ -16,11 +84,16 @@ workers.do is the platform for building **Autonomous Startups** - businesses tha
 ## Repository Structure
 
 ```
+agents/         # AI agents (Priya, Tom, Rae, Mark, Sally, Quinn)
+roles/          # Base roles (CEO, CTO, PDM, Dev, QA...)
+humans/         # Human workers + channels (Slack, Email, Discord...)
+teams/          # Team compositions (Engineering, Product, Sales...)
+workflows/      # Workflow definitions (dev, review, marketing, sales...)
+workers/        # Cloudflare Workers (the runtime kind)
+sdks/           # SDK packages (tom.do, priya.do, llm.do...)
+objects/        # Durable Objects (Agent, Human, Workflow...)
 apps/           # Full applications (Vite + React Router + shadcn)
-workers/        # Cloudflare Workers (deployable) - internal bindings
-sdks/           # Client SDKs for external access (npm packages)
 middleware/     # Hono middleware
-objects/        # Durable Objects
 snippets/       # Cloudflare Snippets (free tier)
 packages/       # npm packages
 primitives/     # TypeScript interfaces (submodule)
@@ -54,7 +127,18 @@ await org.sso.getAuthorizationUrl({ organization })
 
 ## Key Design Principles
 
-### 1. Objects Over Frameworks
+### 1. Natural Language First
+
+Agents are functions you talk to:
+
+```typescript
+tom`review the architecture`      // Not tom.review({ type: 'architecture' })
+priya`what should we build next?` // Not priya.prioritize({ timeframe: 'next' })
+```
+
+The magic proxy interprets intent. No method names, no parameters.
+
+### 2. Objects Over Frameworks
 
 Developers should return data, not responses:
 
@@ -72,56 +156,28 @@ app.get('/users', (c) => c.json(db.query('SELECT * FROM users')))
 
 The system handles serialization to JSON, HTML, WebSocket, etc.
 
-### 2. Convention Over Configuration
+### 3. Convention Over Configuration
 
 Use conventional binding names:
 - `this.env.DOMAINS` - Free domains for builders (builder.domains)
-- `this.env.ORG` - Auth for AI and Humans (id.org.ai / WorkOS) - org-level identity, secrets, users
+- `this.env.ORG` - Auth for AI and Humans (id.org.ai / WorkOS)
 - `this.env.LLM` - AI gateway with billing (llm.do)
 - `this.env.STRIPE` - Stripe Connect platform (payments.do)
 - `this.env.JOSE` - JWT operations
 - `this.env.CLOUDFLARE` - Cloudflare API
 
-### Platform Services
+### 4. Agents and Humans are Interchangeable
 
-**builder.domains** (workers/domains) - Free Domains:
+Same interface for both:
+
 ```typescript
-// Claim free domains: *.hq.com.ai, *.app.net.ai, *.api.net.ai, *.hq.sb, *.io.sb, *.llc.st
-await env.DOMAINS.claim('my-startup.hq.com.ai')
-await env.DOMAINS.route('my-startup.hq.com.ai', { worker: 'my-worker' })
-// Paid tier: premium domains, custom TLDs, high-volume
+await tom`review the PR`        // AI agent reviews
+await cto`approve the release`  // Human approves via Slack
 ```
 
-**llm.do** (workers/llm) - AI Gateway:
-```typescript
-// Metered and billed automatically
-await env.LLM.complete({ model: 'claude-3-opus', prompt })
-await env.LLM.stream({ model: 'gpt-4', messages })
-// Customer BYOK (stored in WorkOS Vault or Workers secrets)
-await env.LLM.complete({ prompt, apiKey: customer.ownKey })
-```
+The caller doesn't know (or care) if it's AI or human.
 
-**payments.do** (workers/stripe) - Stripe Connect:
-```typescript
-// Platform billing
-await env.STRIPE.charges.create({ amount, currency })
-await env.STRIPE.subscriptions.create({ customer, price })
-await env.STRIPE.usage.record(customerId, { quantity: tokens })
-// Marketplace payouts
-await env.STRIPE.transfers.create({ amount, destination })
-```
-
-**id.org.ai** (workers/workos) - Auth for AI and Humans:
-```typescript
-// Enterprise SSO out-of-the-box
-await env.ORG.sso.getAuthorizationUrl({ organization })
-// Org-level secret storage (API keys, credentials)
-await env.ORG.vault.store(orgId, 'API_KEY', key)
-// Org user management
-await env.ORG.users.list(orgId)
-```
-
-### 3. Tree-Shakable Everything
+### 5. Tree-Shakable Everything
 
 Every package should have multiple entry points:
 - `/tiny` - Minimal, no dependencies
@@ -129,12 +185,72 @@ Every package should have multiple entry points:
 - `/auth` - With authentication
 - Default - Full featured
 
-### 4. Free Tier First
+### 6. Free Tier First
 
 Maximize Cloudflare free offerings:
 - Snippets for routing/caching/auth (<5ms CPU, <32KB)
 - Static Assets for multi-tenant hosting (100k files × 25MB)
 - Workers for dynamic computation
+
+### 7. SDK Endpoint Format
+
+All SDKs must use full URL format for endpoint specification:
+
+```typescript
+// CORRECT - Full URL format
+export function MyService(options?: ClientOptions): MyServiceClient {
+  return createClient<MyServiceClient>('https://myservice.do', options)
+}
+
+// INCORRECT - Service name only (don't do this)
+export function MyService(options?: ClientOptions): MyServiceClient {
+  return createClient<MyServiceClient>('myservice', options)  // NO!
+}
+```
+
+Lint check: `npx tsx scripts/lint-sdk-endpoints.ts`
+
+### 8. API Key Resolution
+
+SDKs must NOT directly access `process.env`. Instead, rely on rpc.do's environment system:
+
+```typescript
+// CORRECT - Let rpc.do handle env resolution
+export const myservice: MyServiceClient = MyService()
+
+// INCORRECT - Direct process.env access (don't do this)
+export const myservice = MyService({
+  apiKey: process.env.MYSERVICE_API_KEY,  // NO!
+})
+```
+
+**Lint check:** `npx tsx scripts/lint-sdk-apikey.ts`
+
+## Platform Services
+
+**builder.domains** (workers/domains) - Free Domains:
+```typescript
+await env.DOMAINS.claim('my-startup.hq.com.ai')
+await env.DOMAINS.route('my-startup.hq.com.ai', { worker: 'my-worker' })
+```
+
+**llm.do** (workers/llm) - AI Gateway:
+```typescript
+await env.LLM.complete({ model: 'claude-3-opus', prompt })
+await env.LLM.stream({ model: 'gpt-4', messages })
+```
+
+**payments.do** (workers/stripe) - Stripe Connect:
+```typescript
+await env.STRIPE.charges.create({ amount, currency })
+await env.STRIPE.subscriptions.create({ customer, price })
+```
+
+**id.org.ai** (workers/workos) - Auth for AI and Humans:
+```typescript
+await env.ORG.sso.getAuthorizationUrl({ organization })
+await env.ORG.vault.store(orgId, 'API_KEY', key)
+```
 
 ## Working with This Codebase
 
@@ -142,121 +258,87 @@ Maximize Cloudflare free offerings:
 
 | What you need | Where to find it |
 |---------------|------------------|
+| AI Agents | `agents/` |
+| Base Roles | `roles/` |
+| Human Workers | `humans/` |
+| Teams | `teams/` |
+| Workflows | `workflows/` |
 | Base DO class | `objects/do/` |
+| Agent DO | `objects/agent/` |
+| Human DO | `objects/human/` |
 | Hono middleware | `middleware/*/` |
 | Auth integration | `auth/*/` |
-| RPC wrapper | `packages/rpc/` |
-| HATEOAS framework | `packages/edge-api/` |
-| Snippets | `snippets/*/` |
-| Full apps | `apps/*/` |
-| Workers | `workers/*/` |
+| SDKs | `sdks/*/` |
 
-### Creating New Packages
+### Creating New Agents
 
-1. Choose the right folder:
-   - `workers/` for deployable workers
-   - `middleware/` for Hono middleware
-   - `objects/` for Durable Objects
-   - `packages/` for general npm packages
-   - `auth/` for auth-related plugins
-   - `snippets/` for Cloudflare Snippets
+1. Create folder: `agents/myagent/`
+2. Extend a role from `roles/`
+3. Add identity (name, email, avatar, GitHub)
+4. Add to `agents/index.ts` exports
+5. Optionally create `sdks/myagent.do/` for individual package
 
-2. Follow naming conventions:
-   - Folder: lowercase with dashes (`my-package`)
-   - npm name: `@dotdo/my-package`
-   - Also exported from `workers.do/my-package`
+```typescript
+// agents/myagent/index.ts
+import { DevAgent } from 'roles/dev'
 
-3. Include standard files:
-   - `package.json`
-   - `README.md`
-   - `src/index.ts`
-   - `tsconfig.json`
-
-### MDX-as-Worker Pattern
-
-Workers can be defined in MDX:
-
-```mdx
----
-name: my-worker
-d1_databases:
-  - binding: DB
-    database_name: users
-dependencies:
-  zod: ^3.0.0
----
-
-# My Worker
-
-Documentation here.
-
-export default {
-  users: { list: () => [...] }
+export class MyAgent extends DevAgent {
+  readonly identity = {
+    name: 'My Agent',
+    email: 'myagent@agents.do',
+    github: 'myagent-do',
+  }
 }
 ```
 
-Frontmatter is wrangler.json shape plus `dependencies` for package.json.
+### Creating New Roles
 
-### RPC Wrapper Pattern
-
-To wrap an npm package as an RPC worker:
+1. Create folder: `roles/myrole/`
+2. Define capabilities, tools, relationships
+3. Create both `Agent` and `Human` variants
 
 ```typescript
-import SomePackage from 'some-package'
-import { env } from 'cloudflare:workers'
-import { RPC } from 'workers.do/rpc'
+// roles/myrole/index.ts
+import { AgentRole, HumanRole } from '../role'
 
-export default RPC(new SomePackage(env.API_KEY))
+export class MyRoleAgent extends AgentRole {
+  readonly roleId = 'myrole'
+  readonly capabilities = {
+    functions: ['do', 'something'],
+    tools: ['tool1', 'tool2'],
+  }
+}
+
+export class MyRoleHuman extends HumanRole {
+  // Same interface, routes to human channels
+}
 ```
 
-This creates a worker exposing the package via all transports.
+### Creating New Workflows
+
+1. Create folder: `workflows/myworkflow/`
+2. Define phases with assignees
+3. Add human checkpoints where needed
+
+```typescript
+// workflows/myworkflow/index.ts
+import { Workflow } from 'workflows.do'
+
+export const myworkflow = Workflow({
+  name: 'My Workflow',
+  phases: {
+    start: { assignee: priya, then: 'work' },
+    work: { assignee: tom, then: 'review' },
+    review: { assignee: quinn, checkpoint: true, then: null },
+  },
+})
+```
 
 ## Testing
 
 - Use `vitest` for unit tests
 - Use `@cloudflare/vitest-pool-workers` for worker tests
 - Test files: `*.test.ts` or `*.spec.ts`
-
-## Common Tasks
-
-### Adding a new middleware
-
-```bash
-mkdir middleware/my-middleware
-```
-
-Create `package.json`:
-```json
-{
-  "name": "@dotdo/middleware-my-middleware",
-  "version": "0.0.1",
-  "type": "module",
-  "exports": { ".": "./src/index.ts" }
-}
-```
-
-### Adding a new worker
-
-```bash
-mkdir workers/my-worker
-```
-
-Minimal worker:
-```typescript
-import { RPC } from 'workers.do/rpc'
-
-export default RPC({
-  hello: (name: string) => `Hello, ${name}!`
-})
-```
-
-### Adding an auth plugin
-
-```bash
-mkdir auth/my-plugin
-```
-
-Follow Better Auth plugin conventions.
 
 ## Dependencies
 
@@ -266,7 +348,7 @@ Follow Better Auth plugin conventions.
 - `drizzle-orm` - ORM for SQLite/D1
 - `better-auth` - Authentication
 - `zod` - Schema validation
-- `sqids` - Short unique IDs
+- `capnweb` - CapnWeb RPC with pipelining
 
 ### Dev Dependencies
 
@@ -277,7 +359,7 @@ Follow Better Auth plugin conventions.
 
 ## Beads Issue Tracking
 
-This project uses Beads for issue tracking. Key commands:
+This project uses Beads for issue tracking:
 
 ```bash
 bd ready              # Find available work
@@ -287,52 +369,23 @@ bd close <id>         # Complete work
 bd sync --from-main   # Sync with main branch
 ```
 
-## Important Files
+## Important READMEs
 
-- `README.md` - Project overview
+- `README.md` - Project overview (the vision)
+- `agents/README.md` - AI agents documentation
+- `roles/README.md` - Roles documentation
+- `humans/README.md` - Human workers documentation
+- `teams/README.md` - Teams documentation
+- `workflows/README.md` - Workflows documentation
 - `ARCHITECTURE.md` - Technical deep-dive
-- `pnpm-workspace.yaml` - Workspace configuration
-- `tsconfig.json` - TypeScript configuration
 
-## Gotchas
+## The Hero
 
-### Snippets Constraints
-- < 5ms CPU time
-- < 32KB compressed
-- No bindings allowed
-- Limited subrequests
+Our hero is a **startup founder** at [startups.studio](https://startups.studio) who wants to:
 
-### dotdo Entry Points
-- `dotdo` - Full featured (larger bundle)
-- `dotdo/tiny` - Minimal (smallest bundle)
-- `dotdo/rpc` - Expects RPC bindings
-- `dotdo/auth` - With Better Auth
+1. Build a business without hiring a full team
+2. Define their startup in code ([Business-as-Code](https://agi.do/business-as-code))
+3. Have AI agents deliver services ([Services-as-Software](https://services.as/software))
+4. Maintain human oversight for important decisions
 
-### Package Publishing
-Packages are published under two names:
-- Direct: `@dotdo/middleware`
-- Re-exported: `workers.do/middleware`
-
-Both should work identically.
-
-## Future Exploration (TODOs)
-
-### Platform Services (Priority)
-1. **builder.domains** - Free domains for builders (workers/domains)
-2. **id.org.ai** - Auth for AI and Humans (workers/workos)
-3. **llm.do** - AI gateway with metering, billing, analytics (workers/llm)
-4. **payments.do** - Stripe Connect platform integration (workers/stripe)
-5. **services.do** - Marketplace for AI-delivered services
-
-### Infrastructure
-5. **hono/jsx + hono/jsx/dom** - Lighter alternative to React for apps
-6. **Auto-detection builds** - vite.config.ts vs next.config.ts
-7. **OpenNext simplification** - Embedded with opinionated defaults
-
-## Contact
-
-For questions about the codebase, check:
-1. This file (CLAUDE.md)
-2. ARCHITECTURE.md for technical details
-3. Individual package READMEs
-4. Beads issues (`bd list`)
+**workers.do** gives them an AI team that works like real people. Workers work for them.

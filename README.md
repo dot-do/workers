@@ -1,4 +1,4 @@
-# Workers.do AI-delivered Services-as-Software
+# Workers.do Economically Valuable Work
 
 > AI + Code Workers `.do` work for you.
 

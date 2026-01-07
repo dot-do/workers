@@ -1,0 +1,31 @@
+{
+  "name": "startups.studio",
+  "version": "0.0.1",
+  "description": "Build and manage your Autonomous Startup portfolio - the venture studio for Business-as-Code",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "homepage": "https://startups.studio",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/drivly/workers.do",
+    "directory": "sdks/startups.studio"
+  },
+  "dependencies": {
+    "@dotdo/rpc-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "startup",
+    "studio",
+    "venture",
+    "portfolio",
+    "management",
+    "business",
+    "workers.do"
+  ]
+}

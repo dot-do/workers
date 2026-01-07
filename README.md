@@ -17,6 +17,37 @@ The name carries a triple meaning:
 2. **workers DO** - Workers that can DO anything via integrated AI agents
 3. **Digital Workers** - The primitives.org.ai interface bridging autonomous agents and humans-in-the-loop
 
+### The Startup Journey
+
+Launch, build, and master Autonomous Startups:
+
+| Step | Platform | What It Does |
+|------|----------|--------------|
+| **Create** | [startups.new](https://startups.new) | Launch a new Autonomous Startup instantly |
+| **Build** | [startups.studio](https://startups.studio) | Develop, deploy, and manage your startup portfolio |
+| **Learn** | [startup.games](https://startup.games) | Gamified entrepreneurship - test and practice |
+
+```typescript
+import { launch } from 'startups.new'
+import { studio } from 'startups.studio'
+import { games } from 'startup.games'
+
+// Launch a startup in one line
+const startup = await launch.launch({
+  name: 'acme-ai',
+  template: 'saas',
+  domain: 'acme.hq.com.ai'
+})
+
+// Manage and deploy
+await studio.deploy('acme-ai', { code: workerCode })
+const health = await studio.health()
+
+// Practice and learn
+const sim = await games.simulate({ model: 'saas-b2b', market: 'developer-tools' })
+await sim.decide({ action: 'hire', role: 'engineer' })
+```
+
 ### The Autonomous Startup Stack
 
 workers.do provides everything needed to run an AI-powered business:
@@ -327,6 +358,12 @@ workers.do deploy
 Strongly-typed clients for all platform services. Each SDK auto-discovers its endpoint from its package name.
 
 ```typescript
+// Startup journey
+import { launch } from 'startups.new'
+import { studio } from 'startups.studio'
+import { games } from 'startup.games'
+
+// Platform services
 import { llm } from 'llm.do'
 import { org } from 'org.ai'
 import { payments } from 'payments.do'
@@ -334,6 +371,7 @@ import { services } from 'services.do'
 import { domains } from 'builder.domains'
 
 // Use default client (reads DO_API_KEY or ORG_AI_API_KEY from env)
+const startup = await launch.launch({ name: 'my-app', template: 'saas' })
 const response = await llm.complete({ model: 'claude-3-opus', prompt: 'Hello!' })
 
 // Or create with options
@@ -343,6 +381,9 @@ const myLLM = LLM({ apiKey: 'xxx', timeout: 60000 })
 
 | SDK | npm | Description |
 |-----|-----|-------------|
+| `startups.new` | `startups.new` | Launch Autonomous Startups instantly |
+| `startups.studio` | `startups.studio` | Build and manage your startup portfolio |
+| `startup.games` | `startup.games` | Gamified entrepreneurship - test and learn |
 | `llm.do` | `llm.do` | AI Gateway - Multi-model LLM access with billing |
 | `org.ai` | `org.ai` | Auth for AI and Humans - SSO, Vault, Users (id.org.ai) |
 | `payments.do` | `payments.do` | Stripe Connect - Billing, subscriptions, payouts |

@@ -1,0 +1,31 @@
+{
+  "name": "startups.new",
+  "version": "0.0.1",
+  "description": "Launch Autonomous Startups instantly - Business-as-Code creation",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "homepage": "https://startups.new",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/drivly/workers.do",
+    "directory": "sdks/startups.new"
+  },
+  "dependencies": {
+    "@dotdo/rpc-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "startup",
+    "launch",
+    "create",
+    "business",
+    "autonomous",
+    "ai",
+    "workers.do"
+  ]
+}

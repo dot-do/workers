@@ -1,176 +1,135 @@
 # teams.do
 
-> Tell the team what to do. They figure out who does what.
+> You have a vision. Now you have a team.
 
 ```typescript
-import { engineering, product, sales } from 'teams.do'
+import { engineering } from 'teams.do'
 
-engineering`build the new dashboard`
+engineering`we need a login system by Friday`
+```
+
+That's it. Tom coordinates the work. Ralph builds the backend. The team delivers.
+
+## Your Teams
+
+```typescript
+import { engineering, product, marketing, sales } from 'teams.do'
+
+engineering`build the dashboard`
 product`plan Q2 roadmap`
-sales`close the enterprise deal`
+marketing`write the launch campaign`
+sales`close the Acme deal`
 ```
 
-Teams are groups of agents and humans. You talk to the team, not individuals.
+Each team is a mix of AI agents and humans. You talk to the team. They figure out the rest.
 
-## Available Teams
+## How It Works
 
-| Team | Members | Focus |
-|------|---------|-------|
-| **engineering** | Ralph, Tom, Rae, Quinn + human devs | Building software |
-| **product** | Priya + human PDMs | What to build |
-| **marketing** | Mark + human marketers | Telling the story |
-| **sales** | Sally + human AEs | Closing deals |
-| **leadership** | CEO, CTO, CFO, CMO, CRO | Strategy & decisions |
-
-## Just Talk
+You say what you need:
 
 ```typescript
-engineering`we need a login system`
+engineering`add Stripe payments`
 ```
 
-The team figures out:
-- Ralph handles the backend auth implementation
-- Rae builds the React components
-- Quinn writes the tests
-- Tom reviews the architecture
-- Work happens in parallel
-- Results come back together
+Behind the scenes:
+- Tom (lead) breaks down the work
+- Ralph builds the integration
+- The team coordinates, reviews, ships
+- You get notified when it's done
 
-You don't coordinate. They do.
+One request. Full execution.
 
-## Parallel by Default
+## Run Your Company
 
 ```typescript
-const reviews = await engineering`review this PR`
-// Tom reviews architecture
-// Rae reviews frontend
-// Quinn checks test coverage
-// All in parallel, one round trip
+// Monday morning
+product`what should we build this sprint?`
+
+// Got customer feedback
+engineering`users are complaining about slow load times`
+
+// Preparing for launch
+marketing`we're announcing next Tuesday, get everything ready`
+
+// Big opportunity
+sales`enterprise prospect wants a demo Thursday`
 ```
 
-## Team Composition
+Talk to your teams like you'd talk to department heads. They handle coordination, delegation, and execution.
+
+## Solo Founder? You Still Have Teams
+
+```typescript
+import { engineering, product, marketing } from 'teams.do'
+
+const spec = await product`define the MVP for a todo app`
+const app = await engineering`build ${spec}`
+await marketing`launch ${app}`
+```
+
+Day one, you have departments. As you grow, add humans:
+
+```typescript
+engineering.add(sarahTheNewHire)
+```
+
+Same conversation. Bigger team. Your workflow doesn't change.
+
+## Inside a Team
 
 ```typescript
 import { Team } from 'teams.do'
-import { ralph, tom, rae, quinn } from 'agents.do'
-import { dev, qa } from 'humans.do'
 
 export const engineering = Team({
   name: 'Engineering',
-  members: [ralph, tom, rae, quinn, dev, qa],
+  members: [tom, ralph, rae, quinn],  // AI agents
   lead: tom,
 })
 ```
 
-Mix agents and humans. The team routes work appropriately.
-
-## Delegation
-
-Teams delegate internally:
+Add humans when you're ready:
 
 ```typescript
-engineering`build the payment integration`
+import { sarah, mike } from 'humans.do'
+
+engineering.add(sarah, mike)
 ```
 
-The lead (Tom) might:
-1. Delegate implementation to Ralph
-2. Delegate Stripe UI to Rae
-3. Delegate test cases to Quinn
-4. Review the architecture himself
-5. Escalate compliance questions to human
+AI and humans work together. The team routes work to whoever handles it best.
 
-You just asked for payment integration. The team handled the rest.
-
-## Cross-Team Work
-
-Teams coordinate with each other:
+## Teams Talk to Teams
 
 ```typescript
-import { engineering, product, marketing } from 'teams.do'
-
-// Product defines it
-const spec = await product`spec out the new feature`
+// Product specs it
+const feature = await product`spec out the new onboarding flow`
 
 // Engineering builds it
-const code = await engineering`build ${spec}`
+await engineering`build ${feature}`
 
 // Marketing announces it
-await marketing`write launch content for ${spec}`
+await marketing`write the announcement for ${feature}`
 ```
 
-## Team Workflows
+You orchestrate at the company level. Teams handle the details.
 
-Attach workflows to teams:
+## Your Org, Your Way
 
 ```typescript
 import { Team } from 'teams.do'
-import { dev, review } from 'workflows.do'
-
-export const engineering = Team({
-  name: 'Engineering',
-  members: [ralph, tom, rae, quinn],
-  workflows: [dev, review],
-})
-
-// Now this triggers the full dev workflow
-engineering`build the feature`
-// brainstorm → plan → implement → review → ship
-```
-
-## Custom Teams
-
-Create teams for your business:
-
-```typescript
-import { Team } from 'teams.do'
-import { tom, mark } from 'agents.do'
-import { founder, advisor } from 'humans.do'
 
 const founders = Team({
   name: 'Founders',
-  members: [founder, advisor, tom, mark],
-  lead: founder,
+  members: [you, cofounder, tom, priya],
+  lead: you,
 })
 
-founders`decide on our Series A strategy`
+founders`should we raise a Series A?`
 ```
 
-## The Org Chart
-
-Teams form your org structure:
-
-```
-           leadership
-          /    |    \
-   product  engineering  sales
-      |         |          |
-    priya   ralph,tom   sally
-            rae,quinn
-```
-
-Work flows down. Escalations flow up. Status flows everywhere.
-
-## For Solo Founders
-
-Start with AI teams:
-
-```typescript
-import { engineering, product, marketing } from 'teams.do'
-
-// You have departments, even if it's just you
-const mvp = await product`define the MVP`
-const app = await engineering`build ${mvp}`
-await marketing`launch ${app}`
-```
-
-As you hire, add humans to the teams:
-
-```typescript
-engineering.add(newHire)
-```
-
-Same interface. The team grows. Your code doesn't change.
+Create any team structure that fits how you work.
 
 ---
 
-[teams.do](https://teams.do) · [agents.do](https://agents.do) · [roles.do](https://roles.do) · [humans.do](https://humans.do) · [workflows.do](https://workflows.do)
+**You're the founder. You set the vision. Your teams make it real.**
+
+[teams.do](https://teams.do) | [agents.do](https://agents.do) | [humans.do](https://humans.do)

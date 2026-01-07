@@ -202,7 +202,7 @@ Everything you need to run a startup:
 
 ```typescript
 import { ai, code, agent, human } from 'functions.do'
-import { DB } from 'database.do'
+import { DB, Noun, Verb, Thing, Relationship } from 'database.do'
 import { on, every } from 'triggers.do'
 import { search } from 'searches.do'
 
@@ -217,8 +217,15 @@ on.User.signup(user => welcome(user))
 on.Payment.received(payment => fulfill(payment))
 every.Monday.at9am(() => sendWeeklyReport())
 
-// AI-native database
-const db = DB({ Lead, Contact, Deal })
+// AI-native database with relationship cascading
+const db = DB({
+  Lead: {
+    name: 'string',
+    company: '->Company',        // Forward: find/create Company
+    contacts: '<-Contact[]',     // Backward: Contacts linking here
+    industry: '~>Industry',      // Fuzzy: semantic match Industry
+  }
+})
 const hot = await db.Lead`ready to close this week`
 ```
 

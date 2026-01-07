@@ -62,3 +62,103 @@ export const constants = {
 } as const
 
 export type Constants = typeof constants
+
+// Mode Detection Helpers
+// These use bitwise AND with the file type mask to extract the file type,
+// then compare against the specific file type constant
+
+/**
+ * Check if mode represents a regular file
+ */
+export function isFile(mode: number): boolean {
+  return (mode & constants.S_IFMT) === constants.S_IFREG
+}
+
+/**
+ * Check if mode represents a directory
+ */
+export function isDirectory(mode: number): boolean {
+  return (mode & constants.S_IFMT) === constants.S_IFDIR
+}
+
+/**
+ * Check if mode represents a symbolic link
+ */
+export function isSymlink(mode: number): boolean {
+  return (mode & constants.S_IFMT) === constants.S_IFLNK
+}
+
+/**
+ * Check if mode represents a block device
+ */
+export function isBlockDevice(mode: number): boolean {
+  return (mode & constants.S_IFMT) === constants.S_IFBLK
+}
+
+/**
+ * Check if mode represents a character device
+ */
+export function isCharacterDevice(mode: number): boolean {
+  return (mode & constants.S_IFMT) === constants.S_IFCHR
+}
+
+/**
+ * Check if mode represents a FIFO (named pipe)
+ */
+export function isFIFO(mode: number): boolean {
+  return (mode & constants.S_IFMT) === constants.S_IFIFO
+}
+
+/**
+ * Check if mode represents a socket
+ */
+export function isSocket(mode: number): boolean {
+  return (mode & constants.S_IFMT) === constants.S_IFSOCK
+}
+
+// Permission Checking Helpers
+// These check if a specific permission bit is set for user, group, or other
+
+type Who = 'user' | 'group' | 'other'
+
+/**
+ * Check if mode has read permission for the specified entity
+ */
+export function hasReadPermission(mode: number, who: Who): boolean {
+  switch (who) {
+    case 'user':
+      return (mode & constants.S_IRUSR) !== 0
+    case 'group':
+      return (mode & constants.S_IRGRP) !== 0
+    case 'other':
+      return (mode & constants.S_IROTH) !== 0
+  }
+}
+
+/**
+ * Check if mode has write permission for the specified entity
+ */
+export function hasWritePermission(mode: number, who: Who): boolean {
+  switch (who) {
+    case 'user':
+      return (mode & constants.S_IWUSR) !== 0
+    case 'group':
+      return (mode & constants.S_IWGRP) !== 0
+    case 'other':
+      return (mode & constants.S_IWOTH) !== 0
+  }
+}
+
+/**
+ * Check if mode has execute permission for the specified entity
+ */
+export function hasExecutePermission(mode: number, who: Who): boolean {
+  switch (who) {
+    case 'user':
+      return (mode & constants.S_IXUSR) !== 0
+    case 'group':
+      return (mode & constants.S_IXGRP) !== 0
+    case 'other':
+      return (mode & constants.S_IXOTH) !== 0
+  }
+}

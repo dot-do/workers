@@ -75,12 +75,32 @@ export class EACCES extends FSError {
 }
 
 /**
+ * EPERM - Operation not permitted
+ */
+export class EPERM extends FSError {
+  constructor(syscall?: string, path?: string) {
+    super('EPERM', -1, 'operation not permitted', syscall, path)
+    this.name = 'EPERM'
+  }
+}
+
+/**
  * ENOTEMPTY - Directory not empty
  */
 export class ENOTEMPTY extends FSError {
   constructor(syscall?: string, path?: string) {
     super('ENOTEMPTY', -39, 'directory not empty', syscall, path)
     this.name = 'ENOTEMPTY'
+  }
+}
+
+/**
+ * EBADF - Bad file descriptor
+ */
+export class EBADF extends FSError {
+  constructor(syscall?: string, path?: string) {
+    super('EBADF', -9, 'bad file descriptor', syscall, path)
+    this.name = 'EBADF'
   }
 }
 
@@ -151,6 +171,16 @@ export class EMFILE extends FSError {
   constructor(syscall?: string, path?: string) {
     super('EMFILE', -24, 'too many open files', syscall, path)
     this.name = 'EMFILE'
+  }
+}
+
+/**
+ * ENFILE - File table overflow
+ */
+export class ENFILE extends FSError {
+  constructor(syscall?: string, path?: string) {
+    super('ENFILE', -23, 'file table overflow', syscall, path)
+    this.name = 'ENFILE'
   }
 }
 

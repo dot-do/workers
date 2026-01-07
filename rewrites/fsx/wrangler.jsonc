@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fsx-do",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-12-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Routes
+  "routes": [
+    { "pattern": "fsx.do", "custom_domain": true }
+  ],
+
+  // Durable Objects
+  "durable_objects": {
+    "bindings": [
+      { "name": "FSX", "class_name": "FileSystemDO" }
+    ]
+  },
+
+  "migrations": [
+    { "tag": "v1", "new_classes": ["FileSystemDO"] }
+  ],
+
+  // R2 for warm storage
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "fsx-storage"
+    }
+  ]
+}

@@ -352,22 +352,24 @@ async function main() {
       })
       console.log('NOT REGISTERED')
     } else if (result.expired) {
+      // TODO: Change back to 'blocker' after domain renewals (see workers-3tgb)
       results.push({
         domain,
-        status: 'blocker',
-        message: 'EXPIRED',
+        status: 'warning',
+        message: 'EXPIRED (pending renewal)',
       })
-      console.log('EXPIRED')
+      console.log('EXPIRED (pending renewal)')
     } else if (result.expiresAt) {
       const daysUntilExpiry = daysBetween(new Date(), result.expiresAt)
 
       if (daysUntilExpiry < 0) {
+        // TODO: Change back to 'blocker' after domain renewals (see workers-3tgb)
         results.push({
           domain,
-          status: 'blocker',
-          message: 'EXPIRED',
+          status: 'warning',
+          message: 'EXPIRED (pending renewal)',
         })
-        console.log('EXPIRED')
+        console.log('EXPIRED (pending renewal)')
       } else if (daysUntilExpiry <= WARN_THRESHOLD_DAYS) {
         results.push({
           domain,

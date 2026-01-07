@@ -1,27 +1,29 @@
 # database.do
 
-> AI-native database with cascading generation and natural language queries.
+> Data that generates itself.
+
+You define the shape. AI fills it in. One call creates everything.
 
 ```typescript
 import { DB } from 'database.do'
 
 const db = DB({
   Blog: {
-    title: 'SEO-optimized blog title',
-    topics: ['5 topics to cover ->Topic'],
+    title: 'SEO-optimized title',
+    topics: ['5 topics ->Topic'],
     posts: ['<-Post'],
   },
   Topic: {
-    name: 'PascalCase topic name',
-    posts: ['3 post titles ->Post'],
+    name: 'topic name',
+    posts: ['3 posts ->Post'],
   },
   Post: {
-    title: 'SEO title',
-    content: 'Markdown content',
+    title: 'compelling headline',
+    content: 'markdown article',
   },
 })
 
-// One call generates Blog -> 5 Topics -> 15 Posts
+// One call. Blog + 5 Topics + 15 Posts.
 const blog = await db.Blog('AI Startups')
 ```
 
@@ -31,321 +33,146 @@ const blog = await db.Blog('AI Startups')
 npm install database.do
 ```
 
-## The Vision
+## The Magic: Cascading Generation
 
-**database.do** treats your schema as a generation blueprint. Relationships aren't just foreign keys—they're instructions for cascading AI generation.
+Your schema is a blueprint. Relationships tell AI what to create next.
 
 ```typescript
-// Traditional database: you create each entity manually
-// database.do: one call cascades through the entire graph
+const blog = await db.Blog('Services-as-Software')
 
-const blog = await db.Blog('Services-as-Software', {
-  topic: 'How AI-delivered Services will transform the economy',
-})
-
-// blog.topics → 5 Topics (auto-generated)
-// blog.posts → 15 Posts (auto-generated via Topics)
+// That single call cascades through your entire graph:
+// Blog → generates 5 Topics → each Topic generates 3 Posts
+// Result: 1 Blog, 5 Topics, 15 Posts—all connected, all coherent
 ```
 
-## Relationship Operators
+No manual entry. No loops. No boilerplate. Just the data you need.
 
-Four operators control how relationships cascade:
+## Relationships That Make Sense
 
-| Operator | Direction | Mode | Behavior |
-|----------|-----------|------|----------|
-| `->Type` | Forward | Exact | Find or create `Type`, link FROM here TO it |
-| `~>Type` | Forward | Fuzzy | Semantic search for `Type`, create if no match |
-| `<-Type` | Backward | Exact | Collect `Type` entities that link TO here |
-| `<~Type` | Backward | Fuzzy | Semantic search for entities linking here |
+Think of arrows as "creates" or "collects":
 
-### Modifiers
+| Pattern | Meaning | Example |
+|---------|---------|---------|
+| `->Type` | Creates and links to | `'5 topics ->Topic'` creates 5 topics |
+| `<-Type` | Collects from | `'<-Post'` gathers all posts that link here |
+| `~>Type` | Finds similar or creates | `'~>Category'` matches existing or makes new |
+| `<~Type` | Finds similar that link here | `'<~Post'` finds related posts |
 
-- `?` - Optional (may be null)
-- `[]` - Array of references
+The arrow points where the data flows. Forward creates. Backward collects.
 
-### Examples
+### The Blog Example
 
 ```typescript
 const db = DB({
-  Startup: {
-    name: 'Company name',
-    founders: ['List founders ->Founder'],      // Forward: creates Founders
-    industry: '~>Industry',                      // Fuzzy: matches existing Industry
-    investors: ['<-Investment'],                 // Backward: collects Investments
+  Blog: {
+    title: 'SEO-optimized title',
+    topics: ['5 topics ->Topic'],    // Creates 5 topics
+    posts: ['<-Post'],               // Collects all posts (via topics)
   },
-  Founder: {
-    name: 'Full name',
-    role: 'CEO, CTO, etc.',
-    linkedin: 'LinkedIn URL?',                   // Optional field
-  },
-  Industry: {
-    _readOnly: true,                             // Controlled vocabulary
-    name: 'Industry name',
-    code: 'NAICS code',
-  },
-  Investment: {
-    amount: 'Investment amount',
-    round: 'Seed, Series A, etc.',
-    startup: '->Startup',                        // Links back to Startup
-  },
-})
-```
-
-## Core Exports
-
-```typescript
-import {
-  DB,              // Schema-first database factory
-  Noun,            // Semantic entity definition
-  Verb,            // Action definition with conjugations
-  Thing,           // JSON-LD compatible entity
-  Relationship,    // Graph edge between entities
-} from 'database.do'
-```
-
-## Schema Definition
-
-### Simple Fields
-
-```typescript
-const db = DB({
-  Post: {
-    title: 'SEO-optimized title',           // String with AI hint
-    views: 'number',                         // Primitive type
-    published: 'boolean',
-    createdAt: 'datetime',
-    content: 'markdown',                     // Rich text
-    metadata: 'json',                        // Arbitrary JSON
-  },
-})
-```
-
-### Field Types
-
-| Type | Description |
-|------|-------------|
-| `string` | Text |
-| `number` | Numeric |
-| `boolean` | True/false |
-| `date` | Date only |
-| `datetime` | Date and time |
-| `markdown` | Rich text content |
-| `json` | Arbitrary JSON |
-| `url` | URL string |
-
-### Relationships
-
-```typescript
-const db = DB({
-  Author: {
-    name: 'string',
-    posts: ['<-Post'],                        // All Posts by this Author
+  Topic: {
+    name: 'topic name',
+    posts: ['3 posts ->Post'],       // Each topic creates 3 posts
   },
   Post: {
-    title: 'string',
-    author: '->Author',                       // Single Author reference
-    tags: ['~>Tag'],                          // Fuzzy match Tags
-    relatedPosts: ['<~Post[]'],               // Semantically similar Posts
-  },
-  Tag: {
-    name: 'string',
-    posts: ['<-Post'],                        // All Posts with this Tag
+    title: 'compelling headline',
+    content: 'markdown article',
+    topic: '->Topic',                // Links back to its topic
   },
 })
+
+const blog = await db.Blog('Building with AI')
+// blog.topics[0].posts[0].content → full article, ready to publish
 ```
 
-## Natural Language Queries
+## Ask Questions, Get Answers
 
-Query your data conversationally:
+Query your data like you're asking a colleague:
 
 ```typescript
-// Tagged template queries
 const leads = await db.Lead`ready to close this week`
 const posts = await db.Post`most popular about AI`
 const users = await db.User`signed up from ProductHunt`
-
-// With context
-const qualified = await db.Lead`score above 80 in ${industry}`
 ```
 
-## Promise Pipelining
-
-Chain operations without intermediate awaits:
+Add context when you need it:
 
 ```typescript
-// Lazy evaluation - nothing executes until await
-const qualified = db.Lead.list()
+const qualified = await db.Lead`score above 80 in ${industry}`
+const recent = await db.Post`published in the last ${days} days`
+```
+
+## Chain Without Waiting
+
+Build queries naturally. Nothing runs until you await:
+
+```typescript
+const topLeads = db.Lead.list()
   .filter(l => l.score > 80)
   .sort('score', 'desc')
   .take(10)
 
-// Execute the pipeline
-const results = await qualified
+const results = await topLeads
+```
 
-// Batch relationship loading (N+1 prevention)
+Relationships load smart—no N+1 problem:
+
+```typescript
 const enriched = await db.Lead.list().map(lead => ({
   name: lead.name,
-  company: lead.company,    // Loaded in ONE query
-  contacts: lead.contacts,  // Also batched
+  company: lead.company,    // All companies load in one query
+  contacts: lead.contacts,  // Contacts too
 }))
 ```
 
-## CRUD Operations
+## The Basics Still Work
+
+Standard operations when you need them:
 
 ```typescript
 // Create
-const post = await db.Post.create({
-  title: 'Getting Started',
-  content: '...',
-})
+const post = await db.Post.create({ title: 'Getting Started', content: '...' })
 
 // Read
 const post = await db.Post.get('post-123')
 const posts = await db.Post.list()
-const recent = await db.Post.find({ published: true })
+const published = await db.Post.find({ published: true })
 
 // Update
-await db.Post.update('post-123', { title: 'Updated Title' })
+await db.Post.update('post-123', { title: 'New Title' })
 
 // Delete
 await db.Post.delete('post-123')
-
-// Upsert
-await db.Post.upsert({ id: 'post-123', views: 100 })
 ```
 
-## Semantic Nouns & Verbs
+## Process at Scale
 
-Define entities with rich semantics:
-
-```typescript
-import { Noun, Verb } from 'database.do'
-
-const Post = Noun({
-  singular: 'post',
-  plural: 'posts',
-  properties: {
-    title: { type: 'string', required: true },
-    content: { type: 'markdown' },
-  },
-  relationships: {
-    author: { type: 'Author', backref: 'posts' },
-    tags: { type: 'Tag[]', backref: 'posts' },
-  },
-  actions: ['create', 'update', 'delete', 'publish', 'archive'],
-})
-
-const Publish = Verb({
-  infinitive: 'publish',
-  pastTense: 'published',
-  presentParticiple: 'publishing',
-  permissions: ['editor', 'admin'],
-})
-```
-
-## Events & Actions
-
-### Event Tracking (Append-Only)
-
-```typescript
-// Track events
-await db.track({
-  type: 'Post.published',
-  data: { postId: 'post-123', author: 'user-456' },
-})
-
-// Query events
-const events = await db.events({
-  type: 'Post.%',  // Wildcard
-  after: new Date('2024-01-01'),
-})
-```
-
-### Actions (Commands)
-
-```typescript
-// Fire and forget
-await db.send({ action: 'enrich', object: 'lead-123' })
-
-// Wait for result
-const result = await db.do({ action: 'analyze', object: 'post-123' })
-```
-
-## ForEach with Durability
-
-Process large datasets with crash recovery:
+Run through thousands of records with built-in recovery:
 
 ```typescript
 await db.Lead.forEach(async lead => {
-  const analysis = await ai`analyze ${lead}`
-  await db.Lead.update(lead.id, { analysis })
+  await db.Lead.update(lead.id, {
+    analysis: await ai`analyze ${lead}`
+  })
 }, {
   concurrency: 10,
-  persist: true,                              // Survive crashes
-  maxRetries: 3,
-  onProgress: p => console.log(`${p.completed}/${p.total}`),
-  onError: err => err.code === 'RATE_LIMIT' ? 'retry' : 'continue',
+  persist: true,  // Survives crashes, picks up where it left off
 })
-```
-
-## Artifacts
-
-Cache computed results:
-
-```typescript
-// Store
-await db.storeArtifact({
-  key: 'report:2024-01',
-  content: reportData,
-  ttl: 86400,
-})
-
-// Retrieve
-const report = await db.getArtifact('report:2024-01')
 ```
 
 ## Configuration
 
+Set your API key:
+
+```bash
+export DO_API_KEY=your-api-key
+```
+
+Or configure directly:
+
 ```typescript
 import { Database } from 'database.do'
 
-const db = Database({
-  apiKey: process.env.DATABASE_DO_API_KEY,
-  baseUrl: 'https://database.do',
-})
-```
-
-Or use environment variables:
-
-- `DO_API_KEY` - API key for authentication
-- `DATABASE_DO_API_KEY` - Alternative (takes precedence)
-- `DATABASE_URL` - Provider URL (`./content`, `sqlite://./data`, `:memory:`)
-
-## Type Exports
-
-```typescript
-import type {
-  // Schema
-  DatabaseSchema,
-  EntitySchema,
-  FieldDefinition,
-
-  // Semantic
-  Noun,
-  Verb,
-  Thing,
-  Relationship,
-
-  // Operations
-  DBPromise,
-  QueryOptions,
-  ListOptions,
-
-  // Events
-  Event,
-  Action,
-  Artifact,
-} from 'database.do'
+const db = Database({ apiKey: 'your-api-key' })
 ```
 
 ## Links

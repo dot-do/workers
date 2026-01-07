@@ -10,6 +10,16 @@
   <a href="https://github.com/drivly/yardi.do/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/yardi.do.svg" alt="license" /></a>
 </p>
 
+```typescript
+import { yardi } from 'yardi.do'
+
+await yardi`lease the 2br to John`
+await yardi`collect rent`
+await yardi`fix the leak in 4B`
+```
+
+That's it. Screening, payments, maintenance - automatic.
+
 ---
 
 Yardi Systems dominates property management software. They charge $1-3 per unit per month. For a 500-unit property, that's $6,000-18,000/year. For a portfolio of 10,000 units, you're looking at $120,000-360,000 annually. Implementation takes 6-12 months. You're locked in forever.
@@ -72,76 +82,57 @@ Annual contracts              MIT licensed forever
 
 ## AI-Native API
 
-Property management through natural language:
+Property management as conversation.
+
+### Walking the Property
 
 ```typescript
-import { yardi, lexi } from 'yardi.do'
+import { yardi } from 'yardi.do'
 
-// Natural language property management
-const vacant = await yardi`vacant 2br units under $3500`
-const expiring = await yardi`leases expiring within 60 days`
-const delinquent = await yardi`tenants 15+ days late on rent`
+// Morning walkthrough
+await yardi`what's vacant?`
+await yardi`who's late?`
+await yardi`anything urgent?`
 
-// Promise pipelining for leasing
-const leased = await yardi`available units matching ${criteria}`
-  .map(units => lexi`show to prospect ${prospect}`)
-  .map(shown => lexi`answer questions about ${unit}`)
-  .map(interested => yardi`create application for ${prospect}`)
-  .map(app => yardi`screen and approve`)
+// You see a problem
+await yardi`handle the leak in 4B`
 
-// Rent collection automation
-const collected = await yardi`process rent for ${propertyId}`
-  .map(roll => yardi`generate owner statement`)
-  .map(stmt => yardi`email to owners`)
+// Prospect shows up
+await yardi`lease the 2br to John`
 
-// Event-driven automation
-yardi.on('lease.expiring', async (lease) => {
-  const market = await yardi`market rent for ${lease.unit}`
-  await yardi`send renewal offer at ${market.suggested}`
-})
-
-yardi.on('payment.late', async (payment) => {
-  await yardi`send reminder to ${payment.tenant}`
-  if (payment.daysLate > 5) {
-    await yardi`apply late fee to ${payment.lease}`
-  }
-})
-
-yardi.on('maintenance.urgent', async (request) => {
-  const vendor = await yardi`best vendor for ${request.category}`
-  await yardi`dispatch ${vendor} to ${request.unit}`
-})
+// End of day
+await yardi`what did we get done today?`
 ```
+
+Every command a property manager would actually say. No IDs. No parameters. Just intent.
+
+### Intent Drives Workflow
+
+What you say becomes what happens:
+
+| You Say | What Happens |
+|---------|--------------|
+| `lease 4B to Maria` | Credit check, background, income verify, lease gen, move-in packet, key handoff |
+| `collect rent` | Process ACH, apply late fees, send reminders, update ledgers, notify owners |
+| `fix the AC in 2A` | Categorize, find vendor, dispatch, track, notify tenant, invoice, close |
+| `renew the good ones` | Identify expiring, check payment history, calculate market, send offers |
+| `close the month` | Reconcile, post accruals, generate statements, calculate distributions, send |
+
+The complexity is hidden. You just talk.
 
 ### Lexi: Your AI Leasing Agent
 
-Lexi handles the entire prospect journey:
+Your 24/7 leasing office:
 
 ```typescript
 import { lexi } from 'yardi.do'
 
-// Lexi responds to inquiries 24/7
-lexi.on('inquiry', async (prospect) => {
-  await lexi`
-    Welcome ${prospect.name} and answer their questions.
-    Show available units matching their needs.
-    Schedule a tour if interested.
-  `
-})
-
-// Virtual tours with Lexi
-const tour = await lexi`
-  Guide ${prospect} through unit ${unit}.
-  Highlight the ${unit.features}.
-  Close on application if ready.
-`
-
-// Lexi handles renewals
-const renewed = await yardi`leases expiring in 60 days`
-  .map(lease => lexi`send renewal offer to ${lease.tenant}`)
-  .map(offer => lexi`follow up if no response in 7 days`)
-  .map(accepted => yardi`generate renewal lease`)
+await lexi`show John the 2br units`
+await lexi`fill our vacancies`
+await lexi`follow up with yesterday's tours`
 ```
+
+Lexi qualifies, schedules, answers questions, and closes. You approve.
 
 ---
 
@@ -177,386 +168,107 @@ Your own Yardi. In 60 seconds. Forever.
 
 ## Features
 
-### Properties & Units
+### The Property Manager's Voice
 
-Natural language property queries:
+Say it like you'd say it:
 
 ```typescript
 import { yardi } from 'yardi.do'
 
-// Query properties naturally
-const properties = await yardi`my properties in San Francisco`
-const vacant = await yardi`vacant units at Sunset Apartments`
-const affordable = await yardi`2br units under $3000 with parking`
+// Questions
+await yardi`what's vacant?`
+await yardi`who hasn't paid?`
+await yardi`anything need my attention?`
 
-// Complex queries with pipelining
-const marketAnalysis = await yardi`all my 1br units`
-  .map(unit => yardi`market rent for ${unit}`)
-  .map(analysis => yardi`units below market by 10%+`)
+// Commands
+await yardi`lease 4B to the Chens`
+await yardi`collect rent`
+await yardi`fix the AC in 2A`
+await yardi`renew the good ones`
+await yardi`close the month`
 
-// Bulk operations
-const rentRoll = await yardi`current rent roll for ${property}`
-const occupancy = await yardi`occupancy rate by property`
-const revenue = await yardi`monthly revenue trend for 2025`
+// Context-aware
+await yardi`move them in Saturday`        // Knows who "them" is
+await yardi`raise it $50`                 // Knows what "it" is
+await yardi`send him a reminder`          // Knows who "him" is
 ```
 
 ### Tenants & Leases
 
-Full tenant lifecycle with natural language:
-
 ```typescript
-import { yardi, lexi } from 'yardi.do'
-
-// Leasing pipeline: inquiry to move-in
-const moved = await lexi`new inquiry from ${prospect} for 2br`
-  .map(qualified => lexi`schedule tour for ${prospect}`)
-  .map(toured => yardi`create application for ${prospect}`)
-  .map(app => yardi`screen ${app}`)
-  .map(approved => yardi`generate lease for unit ${unit}`)
-  .map(signed => yardi`process move-in for ${tenant}`)
-
-// Query tenants naturally
-const expiring = await yardi`leases expiring this quarter`
-const delinquent = await yardi`tenants with balance over $500`
-const renewals = await yardi`tenants eligible for renewal`
-
-// Automated renewal workflow
-yardi.on('lease.expiring', async (lease) => {
-  const market = await yardi`market rent for ${lease.unit}`
-  const history = await yardi`payment history for ${lease.tenant}`
-
-  if (history.onTimeRate > 0.95) {
-    await yardi`offer renewal at ${market.current}` // No increase for good tenants
-  } else {
-    await yardi`offer renewal at ${market.suggested}`
-  }
-})
-
-// Move-out processing
-const moveout = await yardi`process move-out for ${tenant}`
-  .map(inspection => yardi`assess damages`)
-  .map(damages => yardi`calculate deposit return`)
-  .map(refund => yardi`send deposit to ${tenant}`)
+await yardi`lease 4B to Maria`              // Full workflow automatic
+await yardi`move out the Johnsons`          // Inspection, deposit, turnover
+await yardi`renew Sarah at $50 above`       // She's been difficult
+await yardi`renew the good ones as-is`      // Reward loyalty
+await yardi`who's moving out next month?`
 ```
 
-### Rent Collection & Payments
-
-Automated rent collection with event-driven workflows:
+### Rent
 
 ```typescript
-import { yardi } from 'yardi.do'
-
-// Process rent with natural language
-const collected = await yardi`process rent for ${property}`
-const outstanding = await yardi`tenants with unpaid rent`
-const delinquent = await yardi`accounts 15+ days past due`
-
-// Full rent cycle with pipelining
-const monthEnd = await yardi`process February rent`
-  .map(collected => yardi`apply late fees after grace period`)
-  .map(finalized => yardi`generate owner statements`)
-  .map(statements => yardi`process owner distributions`)
-  .map(distributed => yardi`email statements to owners`)
-
-// Event-driven collections
-yardi.on('payment.late', async (payment) => {
-  await yardi`send friendly reminder to ${payment.tenant}`
-})
-
-yardi.on('payment.delinquent', async (payment) => {
-  if (payment.daysLate > 5) {
-    await yardi`apply late fee to ${payment.lease}`
-    await yardi`send formal notice to ${payment.tenant}`
-  }
-  if (payment.daysLate > 15) {
-    await yardi`escalate ${payment} to collections`
-  }
-})
-
-yardi.on('payment.received', async (payment) => {
-  await yardi`send receipt to ${payment.tenant}`
-  await yardi`update ledger for ${payment.unit}`
-})
+await yardi`collect rent`                   // That's it
+await yardi`who owes?`
+await yardi`send final notice to 7`
+await yardi`pay the owners`
 ```
 
-### Maintenance & Work Orders
-
-Event-driven maintenance from request to resolution:
+### Maintenance
 
 ```typescript
-import { yardi } from 'yardi.do'
-
-// Query maintenance naturally
-const open = await yardi`open work orders at ${property}`
-const urgent = await yardi`urgent maintenance requests`
-const overdue = await yardi`work orders open more than 48 hours`
-
-// Event-driven maintenance workflow
-yardi.on('maintenance.request', async (request) => {
-  // AI categorizes and routes automatically
-  const vendor = await yardi`best vendor for ${request.category}`
-  await yardi`dispatch ${vendor} to ${request.unit}`
-  await yardi`notify tenant ${request.tenant} of scheduled visit`
-})
-
-yardi.on('maintenance.urgent', async (request) => {
-  // Immediate dispatch for emergencies
-  const available = await yardi`available vendors for ${request.category}`
-  await yardi`emergency dispatch to ${request.unit}`
-  await yardi`alert property manager about ${request}`
-})
-
-yardi.on('maintenance.completed', async (workOrder) => {
-  await yardi`send completion survey to ${workOrder.tenant}`
-  await yardi`update property maintenance log`
-  await yardi`process vendor invoice for ${workOrder}`
-})
-
-// Preventive maintenance automation
-yardi.on('schedule.monthly', async () => {
-  await yardi`schedule pest control for all properties`
-  await yardi`check HVAC filters due for replacement`
-  await yardi`generate preventive maintenance report`
-})
+await yardi`fix 4B's leak`                  // Dispatch, track, bill
+await yardi`what's overdue?`
+await yardi`schedule inspections`
 ```
 
-### AI Leasing Agent
+### Compliance
 
-Lexi is your 24/7 leasing office that never sleeps:
+HUD, LIHTC, Section 8 - the hard stuff:
 
 ```typescript
-import { yardi, lexi } from 'yardi.do'
-
-// The complete leasing pipeline
-const leased = await lexi`handle inquiry from ${prospect}`
-  .map(qualified => lexi`schedule tour for ${prospect}`)
-  .map(toured => lexi`answer questions about ${unit}`)
-  .map(interested => yardi`create application for ${prospect}`)
-  .map(app => yardi`screen and approve ${app}`)
-  .map(approved => yardi`generate lease for ${unit}`)
-
-// Lexi handles everything autonomously
-lexi.on('inquiry', async (prospect) => {
-  await lexi`
-    Welcome ${prospect.name}.
-    Answer questions about available ${prospect.preference} units.
-    Schedule a tour if interested.
-    Follow up in 24 hours if no response.
-  `
-})
-
-lexi.on('tour.scheduled', async (tour) => {
-  await lexi`
-    Prepare for ${tour.prospect}'s visit.
-    Review their preferences and budget.
-    Highlight matching amenities.
-    Be ready to close on application.
-  `
-})
-
-lexi.on('application.approved', async (app) => {
-  await lexi`
-    Congratulate ${app.applicant} on approval.
-    Explain next steps and move-in process.
-    Schedule lease signing.
-    Send welcome packet.
-  `
-})
+await yardi`recertify the Garcias`          // Income, eligibility, forms
+await yardi`who needs recertification?`
+await yardi`submit to HUD`
+await yardi`are we compliant?`
 ```
 
-### Tenant Portal
-
-AI-powered self-service for tenants:
+### Financials
 
 ```typescript
-import { yardi, lexi } from 'yardi.do'
-
-// Natural language tenant support
-yardi.on('portal.message', async (message) => {
-  await lexi`
-    Help ${message.tenant} with: "${message.text}"
-    Check their lease, payment history, and open requests.
-    Resolve if possible, escalate if needed.
-  `
-})
-
-// Event-driven portal features
-yardi.on('portal.payment', async (payment) => {
-  await yardi`process payment from ${payment.tenant}`
-  await yardi`send receipt to ${payment.tenant}`
-})
-
-yardi.on('portal.maintenance', async (request) => {
-  await yardi`create work order for ${request.unit}`
-  await lexi`confirm receipt with ${request.tenant}`
-})
-
-yardi.on('portal.renewal', async (request) => {
-  const terms = await yardi`renewal terms for ${request.lease}`
-  await lexi`present renewal offer to ${request.tenant}`
-})
-
-// Proactive tenant communication
-yardi.on('package.delivered', async (pkg) => {
-  await yardi`notify ${pkg.tenant} about package`
-})
-
-yardi.on('amenity.available', async (booking) => {
-  await yardi`confirm ${booking.amenity} booking for ${booking.tenant}`
-})
-```
-
-### Affordable Housing & Compliance
-
-HUD, LIHTC, Section 8 - AI handles the complexity:
-
-```typescript
-import { yardi } from 'yardi.do'
-
-// Natural language compliance queries
-const eligible = await yardi`tenants due for income recertification`
-const section8 = await yardi`units with Section 8 vouchers`
-const lihtc = await yardi`LIHTC compliance status for ${property}`
-
-// Automated certification workflow
-const certified = await yardi`recertify ${tenant}`
-  .map(docs => yardi`extract income from documents`)
-  .map(income => yardi`calculate eligibility at 60% AMI`)
-  .map(eligible => yardi`generate certification`)
-  .map(cert => yardi`submit to HUD`)
-
-// Event-driven compliance
-yardi.on('certification.due', async (tenant) => {
-  await yardi`send recertification notice to ${tenant}`
-  await yardi`schedule appointment for document collection`
-})
-
-yardi.on('income.changed', async (tenant) => {
-  const eligible = await yardi`check continued eligibility for ${tenant}`
-  if (!eligible) {
-    await yardi`notify ${tenant} of status change`
-    await yardi`calculate phase-out rent schedule`
-  }
-})
-
-yardi.on('hud.reporting', async (period) => {
-  await yardi`generate Form 50059 for all Section 8 units`
-  await yardi`submit HAP requests for ${period}`
-  await yardi`reconcile voucher payments`
-})
-
-// Rent reasonableness with AI
-const reasonable = await yardi`is $2800 reasonable for ${unit}?`
-// { reasonable: true, comparables: 12, marketRange: [2650, 3100] }
-```
-
-### Financial Reporting
-
-Natural language financials with pipelining:
-
-```typescript
-import { yardi } from 'yardi.do'
-
-// Query financials naturally
-const noi = await yardi`NOI for ${property} this quarter`
-const aging = await yardi`accounts receivable aging report`
-const cashflow = await yardi`cash flow forecast for next 6 months`
-
-// Month-end close with pipelining
-const closed = await yardi`close January books for ${property}`
-  .map(closed => yardi`generate owner statements`)
-  .map(stmts => yardi`calculate distributions`)
-  .map(dist => yardi`process ACH to owners`)
-  .map(paid => yardi`email statements to owners`)
-
-// Event-driven financial automation
-yardi.on('period.close', async (period) => {
-  await yardi`reconcile bank accounts`
-  await yardi`post accruals and deferrals`
-  await yardi`generate financial package`
-})
-
-yardi.on('distribution.ready', async (property) => {
-  const noi = await yardi`net operating income for ${property}`
-  const reserves = await yardi`required reserves for ${property}`
-  await yardi`distribute ${noi - reserves} to owners`
-})
-
-yardi.on('tax.season', async (year) => {
-  await yardi`generate Schedule E for all properties`
-  await yardi`calculate depreciation schedules`
-  await yardi`prepare 1099s for vendors`
-})
+await yardi`how's Sunset doing?`            // NOI, occupancy, trends
+await yardi`close January`                  // Full month-end
+await yardi`pay the owners`
+await yardi`get ready for taxes`            // Schedule E, 1099s, depreciation
 ```
 
 ---
 
 ## API Compatibility
 
-### Voyager-Compatible with AI Superpowers
+### Voyager Compatible
 
-Existing Yardi integrations work, plus natural language:
+Existing integrations work. But you won't need them:
 
 ```typescript
-import { yardi, lexi } from 'yardi.do'
-
-// Traditional API still works
+// The old way still works
 const properties = await yardi.properties.list()
 const tenants = await yardi.tenants.search({ lastName: 'Chen' })
 
-// But natural language is better
-const properties = await yardi`my SF properties`
-const tenants = await yardi`tenants named Chen`
-const leases = await yardi`active leases over $3000/month`
-
-// AI-powered bulk operations
-await yardi`apply 3% rent increase to all renewals`
-await yardi`schedule HVAC inspections for all units`
-await yardi`generate year-end reports for all properties`
+// The new way is better
+await yardi`find the Chens`
+await yardi`raise rent 3% on renewals`
+await yardi`list the vacant units`
 ```
 
-### Marketing with Lexi
-
-AI-native listing syndication:
-
-```typescript
-import { yardi, lexi } from 'yardi.do'
-
-// Syndication with natural language
-await yardi`list ${unit} on Zillow, Apartments.com, and Facebook`
-
-// AI-optimized listings
-const listing = await lexi`
-  Write compelling listing for ${unit}.
-  Highlight ${unit.features}.
-  Target young professionals.
-`
-
-// Event-driven lead handling
-yardi.on('lead.new', async (lead) => {
-  await lexi`qualify ${lead} and schedule tour if ready`
-})
-
-yardi.on('lead.stale', async (lead) => {
-  await lexi`re-engage ${lead} with new availability`
-})
-```
-
-### Migration from Yardi
-
-One-command migration:
+### Migration
 
 ```bash
 npx yardi.do migrate --from=voyager
 ```
 
+Or just:
+
 ```typescript
-// Or migrate programmatically
-const migrated = await yardi`migrate from Voyager`
-  .map(properties => yardi`verify property data`)
-  .map(verified => yardi`migrate tenant records`)
-  .map(tenants => yardi`migrate financial history`)
-  .map(financials => yardi`validate all data`)
+await yardi`bring over my Voyager data`
 ```
 
 ---
@@ -635,50 +347,45 @@ Each property is completely isolated:
 
 ## Use Cases
 
-### Individual Landlords
+### You Own a Duplex
 
-You own a duplex. You don't need Yardi. But you do need:
-
-- Online rent collection
-- Maintenance tracking
-- Lease document generation
-- Expense tracking for taxes
-
-```bash
-npx create-dotdo yardi --template=small-landlord
+```typescript
+await yardi`collect rent`
+await yardi`handle the furnace issue`
+await yardi`get ready for taxes`
 ```
 
-**Cost: Free.** Just your Cloudflare account.
+**Cost: Free.**
 
-### Property Management Companies
+### You Manage 500 Units
 
-You manage 500 units across 20 properties. Yardi wants $6,000-15,000/year.
-
-```bash
-npx create-dotdo yardi --template=property-manager
+```typescript
+await yardi`what needs my attention today?`
+await yardi`close out the month`
+await yardi`renew everyone coming up`
 ```
 
-**Cost: ~$50/month.** Cloudflare usage-based pricing.
+**Cost: ~$50/month.** (Yardi wants $15,000/year)
 
-### Affordable Housing Operators
+### You Run Affordable Housing
 
-You run LIHTC and Section 8 properties. Compliance is everything.
-
-```bash
-npx create-dotdo yardi --template=affordable-housing
+```typescript
+await yardi`recertify everyone due this month`
+await yardi`submit to HUD`
+await yardi`are we compliant?`
 ```
 
-**Cost: ~$100/month.** With full HUD compliance reporting.
+**Cost: ~$100/month.** With full HUD compliance.
 
-### Real Estate Investment Trusts
+### You Have 50,000 Units
 
-You have 50,000 units. You're paying Yardi $1M+/year.
-
-```bash
-npx create-dotdo yardi --template=enterprise
+```typescript
+await yardi`portfolio performance this quarter`
+await yardi`underperforming properties`
+await yardi`optimize rents across the portfolio`
 ```
 
-**Cost: ~$2,000/month.** That's 98% savings.
+**Cost: ~$2,000/month.** (You're paying Yardi $1M+/year)
 
 ---
 
@@ -777,14 +484,10 @@ Key contribution areas:
 
 MIT License - Use it however you want.
 
-Your property management software shouldn't cost more than your maintenance budget.
-
 ---
 
 <p align="center">
-  <strong>The property management monopoly ends here.</strong>
-  <br />
-  Your properties. Your tenants. Your data. Your platform.
+  <strong>Talk to your properties.</strong>
   <br /><br />
   <a href="https://yardi.do">Website</a> |
   <a href="https://docs.yardi.do">Docs</a> |

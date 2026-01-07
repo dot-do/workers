@@ -35,127 +35,92 @@ Billable hour leakage            AI reconstructs missed time
 API access costs extra           Full API included
 ```
 
-## AI-Native API
+## Talk to Your Practice
 
 ```typescript
-import { clio, tom, priya, ralph } from 'clio.do'
+import clio from 'clio.do'
 
-// Natural language legal queries
-const matters = await clio`open matters for client Smith`
-const unbilled = await clio`unbilled time entries this week`
-const overdue = await clio`invoices past due more than 30 days`
+// That's it. No config. No auth setup.
+// Context flows naturally - like talking to your paralegal.
 
-// Promise pipelining for billing workflow
-const invoiced = await clio`all open matters needing invoices`
-  .map(m => clio`generate invoice for ${m}`)
-  .map(inv => priya`review billing for appropriateness`)
-  .map(inv => tom`check for block billing issues`)
-  .map(inv => clio`send to client`)
+await clio`bill Smith for January`
+// → Finds matters, pulls unbilled time, reviews for block billing,
+//   generates invoice, sends to client. One sentence.
 
-// Legal research with AI
-const research = await tom`
-  Research California case law on:
-  - ${legalIssue}
-  Return citations and summaries
-`.map(findings => clio`attach to matter ${matterId}`)
+await clio`what's overdue?`
+// → Shows past-due invoices with aging.
 
-// End-of-day time reconstruction
-const timeEntries = await ralph`
-  Review my activity today and reconstruct billable time from:
-  - Emails sent and received
-  - Documents edited
-  - Calendar events
-  - Court filings
-`.map(entries => clio`create time entries ${entries}`)
-  .map(() => priya`review for billing accuracy`)
+await clio`reconstruct my time today`
+// → AI reviews emails, docs, calls, calendar.
+//   Creates draft entries. You approve.
 
-// Client intake pipeline
-const newMatter = await clio`new client intake for ${clientName}`
-  .map(intake => tom`run conflicts check against ${intake}`)
-  .map(cleared => priya`prepare engagement letter`)
-  .map(letter => clio`send for e-signature`)
+// Chain like conversation:
+await clio`open matters`
+  .bill()
+  .send()
+
+await clio`Smith deposition`
+  .prep()       // Gathers exhibits, drafts outline
+  .schedule()   // Finds available times, books court reporter
+
+// Research happens naturally:
+await clio`research negligence for Johnson v. Acme`
+// → Finds the matter, researches the issue, attaches memo.
+
+// Intake is one line:
+await clio`intake Sarah Connor, dog bite case`
+// → Conflicts check, engagement letter, fee agreement, e-sign. Done.
 ```
 
-### Tree-Shakable Imports
+**The test:** Can you dictate this walking to court? If not, we simplified it.
+
+### When You Need More
 
 ```typescript
-// Full featured - all AI capabilities
-import { clio, tom, priya, ralph, quinn } from 'clio.do'
+// Default: Just works
+import clio from 'clio.do'
 
-// Lightweight - just the client, no AI agents
-import { clio } from 'clio.do/client'
+// Need the AI team explicitly?
+import { clio, tom, priya } from 'clio.do'
+await tom`review ${brief}`
 
-// RPC only - for Workers service bindings
-import { createClioRpc } from 'clio.do/rpc'
-const clio = createClioRpc(env.CLIO)
-
-// Types only - for external integrations
-import type { Matter, TimeEntry, Invoice } from 'clio.do/types'
+// Cloudflare Workers service binding?
+import clio from 'clio.do/rpc'
 ```
 
-## One-Click Deploy
+## Just Talk
 
-```bash
-npx create-dotdo clio
-```
-
-Your own legal practice management platform. Running on Cloudflare's global edge. Ready for matters.
-
-```bash
-# Or add to existing workers.do project
-npx dotdo add clio
-```
-
-## Features
+Everything complex happens automatically. You just say what you need.
 
 ### Matters
 
-The complete client matter lifecycle:
-
 ```typescript
-import { clio } from 'clio.do'
-
-// Create a matter
-const matter = await clio.matters.create({
+// Old way (other software)
+await clio.matters.create({
   client: 'CL-001',
   name: 'Smith v. Johnson - Personal Injury',
   practiceArea: 'Personal Injury',
   responsibleAttorney: 'atty-001',
   billingMethod: 'contingency',
-  status: 'open',
-  openDate: new Date(),
-  description: 'Auto accident, rear-end collision, soft tissue injuries',
-  customFields: {
-    caseNumber: '2025-CV-12345',
-    jurisdiction: 'Superior Court of California',
-    opposingCounsel: 'Big Defense LLP',
-  },
+  // ... 15 more fields
 })
 
-// Add matter participants
-await matter.addParticipant({
-  contact: 'contact-001',
-  role: 'client',
-  relationship: 'plaintiff',
-})
+// clio.do
+await clio`new PI matter for John Smith, rear-end collision`
+// → Creates matter, sets practice area, assigns you, detects billing type.
 
-await matter.addParticipant({
-  contact: 'contact-002',
-  role: 'opposing_party',
-  relationship: 'defendant',
-})
+await clio`add opposing counsel Big Defense LLP`
+// → Context: knows you mean the current matter.
 ```
 
-### Time Tracking
-
-Frictionless time capture:
+### Time
 
 ```typescript
-// Quick time entry
+// Old way
 await clio.time.create({
   matter: 'MAT-001',
   user: 'atty-001',
-  duration: 1.5, // hours
+  duration: 1.5,
   date: new Date(),
   description: 'Draft motion for summary judgment; review case law',
   activityType: 'Drafting',
@@ -163,236 +128,66 @@ await clio.time.create({
   rate: 350,
 })
 
-// Timer-based tracking
-const timer = await clio.time.startTimer({
-  matter: 'MAT-001',
-  description: 'Client call re: settlement offer',
-})
+// clio.do
+await clio`1.5 hours drafting MSJ for Smith`
+// → Finds matter, knows your rate, marks billable. Done.
 
-// Later...
-await timer.stop() // Automatically calculates duration
-
-// Bulk time entry
-await clio.time.createBulk([
-  { matter: 'MAT-001', duration: 0.5, description: 'Review correspondence' },
-  { matter: 'MAT-002', duration: 2.0, description: 'Deposition preparation' },
-  { matter: 'MAT-003', duration: 0.3, description: 'Scheduling call with court' },
-])
+// Or just let AI handle it:
+await clio`what did I miss today?`
+// → Reviews your emails, docs, calendar. Suggests entries.
+// → You approve with one tap.
 ```
 
-### AI Time Capture
-
-This is where clio.do transforms practice management:
+### Billing
 
 ```typescript
-import { clio } from 'clio.do'
-
-// AI reconstructs time from activity
-await clio.ai.reconstructTime({
-  user: 'atty-001',
-  date: new Date(),
-  sources: [
-    'email', // Analyze sent emails
-    'documents', // Document edit history
-    'calendar', // Meeting durations
-    'calls', // Phone/video calls
-  ],
-})
-
-// AI suggests: "Based on your activity, you may have missed:
-// - 0.5h email correspondence on Smith v. Johnson
-// - 1.2h document review on Garcia Estate
-// - 0.3h scheduling coordination on Williams Matter"
-
-// AI captures time as you work
-await clio.ai.autoCapture({
-  enabled: true,
-  confidence: 0.85, // Only auto-log when confident
-  review: 'daily', // Attorney reviews AI-captured time daily
-  sources: ['email', 'documents', 'calendar'],
-})
-```
-
-### Contacts
-
-Unified contact management:
-
-```typescript
-// Create contact
-const client = await clio.contacts.create({
-  type: 'person',
-  firstName: 'John',
-  lastName: 'Smith',
-  email: 'john.smith@email.com',
-  phone: '+1-555-0123',
-  address: {
-    street: '123 Main St',
-    city: 'Los Angeles',
-    state: 'CA',
-    zip: '90001',
-  },
-})
-
-// Create organization
-const company = await clio.contacts.create({
-  type: 'company',
-  name: 'Acme Corporation',
-  website: 'https://acme.com',
-  industry: 'Manufacturing',
-})
-
-// Link contacts
-await client.linkTo(company, { relationship: 'employee', title: 'CEO' })
-
-// Search contacts
-const results = await clio.contacts.search({
-  query: 'smith',
-  type: 'person',
-  hasOpenMatters: true,
-})
-```
-
-### Billing & Invoices
-
-Complete billing workflow:
-
-```typescript
-// Generate invoice
+// Old way
 const invoice = await clio.invoices.create({
-  matter: 'MAT-001',
-  client: 'CL-001',
-  billTo: 'contact-001',
-  dateFrom: new Date('2025-01-01'),
-  dateTo: new Date('2025-01-31'),
-  includeUnbilled: true, // Pull all unbilled time and expenses
+  matter: 'MAT-001', client: 'CL-001', billTo: 'contact-001',
+  dateFrom: new Date('2025-01-01'), dateTo: new Date('2025-01-31'),
+  includeUnbilled: true
 })
-
-// Review and adjust
-await invoice.adjustLine({
-  line: 'LINE-001',
-  originalHours: 2.5,
-  billedHours: 2.0, // Write down
-  reason: 'Efficiency adjustment',
-})
-
-// Add expense
-await invoice.addExpense({
-  description: 'Filing fees',
-  amount: 450,
-  billable: true,
-})
-
-// Finalize and send
 await invoice.finalize()
-await invoice.send({
-  method: 'email',
-  includeStatement: true,
-  includeTimeDetail: true,
-})
+await invoice.send({ method: 'email', includeStatement: true })
 
-// Track payment
-await clio.payments.record({
-  invoice: invoice.id,
-  amount: 5250,
-  method: 'check',
-  checkNumber: '1234',
-  date: new Date(),
-})
+// clio.do
+await clio`bill Smith for January`
+// → Everything above, plus block billing review. One sentence.
 ```
 
-### Trust Accounting (IOLTA)
-
-Compliant trust accounting:
+### Trust
 
 ```typescript
-// Create trust account
-const trustAccount = await clio.trust.createAccount({
-  name: 'Client Trust Account',
-  bank: 'First National Bank',
-  accountNumber: '****1234',
-  type: 'IOLTA',
-})
+// Old way: 30 lines of trust deposit, transfer, reconciliation code
 
-// Record deposit
-await clio.trust.deposit({
-  account: trustAccount.id,
-  matter: 'MAT-001',
-  amount: 10000,
-  source: 'Client retainer',
-  date: new Date(),
-})
+// clio.do
+await clio`deposit $10k retainer from Smith`
+// → Creates trust deposit, assigns to matter, compliant ledger entry.
 
-// Transfer to operating (after earned)
-await clio.trust.transfer({
-  fromAccount: trustAccount.id,
-  toAccount: 'OPERATING',
-  matter: 'MAT-001',
-  amount: 2500,
-  reason: 'Transfer earned fees per Invoice #1234',
-  invoice: 'INV-001',
-})
+await clio`transfer earned fees for Smith invoice 1234`
+// → Validates against invoice, transfers to operating, updates ledger.
 
-// Three-way reconciliation
-const reconciliation = await clio.trust.reconcile({
-  account: trustAccount.id,
-  date: new Date(),
-})
-// {
-//   bankBalance: 150000,
-//   bookBalance: 150000,
-//   clientLedgerTotal: 150000,
-//   status: 'reconciled',
-//   discrepancies: []
-// }
+await clio`reconcile trust`
+// → Three-way reconciliation. Alerts on discrepancies.
 ```
 
 ### Documents
 
-Unified document management:
-
 ```typescript
-// Upload document
-const doc = await clio.documents.upload({
-  matter: 'MAT-001',
-  file: documentBuffer,
-  name: 'Motion for Summary Judgment.docx',
-  category: 'Pleadings',
-  description: 'Draft MSJ - v3',
-})
+// Old way: 20 lines with buffers, categories, metadata
 
-// Document versioning
-const newVersion = await doc.uploadVersion({
-  file: revisedBuffer,
-  comment: 'Incorporated partner edits',
-})
+// clio.do
+await clio`file the MSJ draft`
+// → Knows the current matter, categorizes as pleading, versions it.
 
-// Search documents
-const results = await clio.documents.search({
-  query: 'summary judgment motion',
-  matter: 'MAT-001',
-  category: 'Pleadings',
-  dateRange: { from: new Date('2025-01-01') },
-})
-
-// Document automation
-await clio.documents.generateFromTemplate({
-  template: 'engagement-letter',
-  matter: 'MAT-001',
-  variables: {
-    clientName: 'John Smith',
-    matterDescription: 'Personal injury representation',
-    hourlyRate: 350,
-    retainer: 5000,
-  },
-})
+await clio`engagement letter for new client Sarah Connor`
+// → Generates from template, fills variables, sends for e-sign.
 ```
 
-### Calendar & Tasks
-
-Integrated calendaring:
+### Calendar
 
 ```typescript
-// Create calendar event
+// Old way
 await clio.calendar.create({
   matter: 'MAT-001',
   title: 'Deposition - Jane Doe',
@@ -400,407 +195,147 @@ await clio.calendar.create({
   end: new Date('2025-02-15T12:00:00'),
   location: 'Court Reporter Services, 456 Legal Ave',
   attendees: ['atty-001', 'paralegal-001'],
-  reminders: [
-    { type: 'email', before: '1 day' },
-    { type: 'email', before: '1 hour' },
-  ],
+  reminders: [{ type: 'email', before: '1 day' }]
 })
 
-// Court deadlines with rules
-await clio.calendar.createDeadline({
-  matter: 'MAT-001',
-  type: 'court_deadline',
-  description: 'Opposition to MSJ due',
-  dueDate: new Date('2025-03-01'),
-  rule: 'california_civil', // Auto-calculates related dates
-})
+// clio.do
+await clio`schedule Jane Doe depo next Tuesday morning`
+// → Finds available time, books court reporter, adds to matter, sets reminders.
 
-// Task management
-await clio.tasks.create({
-  matter: 'MAT-001',
-  assignee: 'paralegal-001',
-  title: 'Prepare exhibit binders for trial',
-  dueDate: new Date('2025-02-28'),
-  priority: 'high',
-  checklist: [
-    'Gather all marked exhibits',
-    'Create index',
-    'Prepare 5 copies',
-    'Deliver to courthouse',
-  ],
-})
+await clio`opposition due March 1`
+// → Adds deadline, auto-calculates warning dates per California rules.
 ```
 
-## AI-Native Practice Management
+## Workflows That Flow
 
-### Pipelined Litigation Workflow
+Complex pipelines become simple chains. Say what you want to happen.
 
 ```typescript
-import { clio, tom, priya, ralph, quinn, mark } from 'clio.do'
+// Discovery → Review → Meet-and-confer → File
+// OLD: 50 lines of .map() chains with explicit agent calls
 
-// Discovery to trial preparation - one pipeline
-const trialReady = await clio`discovery responses for ${matter}`
-  .map(responses => tom`
-    Review discovery responses, identify:
-    - Incomplete or evasive answers
-    - Potential privilege issues
-    - Follow-up questions needed
-  `)
-  .map(issues => tom`draft meet and confer letter for ${issues}`)
-  .map(letter => priya`review for professional tone`)
-  .map(letter => clio`file to matter and send to opposing counsel`)
+// NEW:
+await clio`review discovery responses for Smith`
+  .meetAndConfer()
+  .send()
+// → AI identifies evasive answers, drafts letter, reviews tone, files, sends.
 
-// Legal research pipeline
-const research = await tom`
-  Research California case law on:
-  - Rear-end collision presumption of negligence
-  - Soft tissue injury damages in LA County
-  - Recent verdicts for similar cases
-`.map(findings => quinn`verify all citations are current`)
-  .map(verified => clio`attach research memo to ${matter}`)
+// Research → Verify → Attach
+// OLD: 20 lines with tom, quinn, explicit matter IDs
 
-// Deposition preparation pipeline
-const depPrep = await clio`all documents for witness ${witness}`
-  .map(docs => tom`identify key exhibits for deposition`)
-  .map(exhibits => priya`prepare examination outline`)
-  .map(outline => clio`create deposition prep binder`)
+// NEW:
+await clio`research rear-end presumption for Smith`
+// → Researches, verifies citations, attaches memo to matter. One line.
+
+// Depo prep
+await clio`prep for Jane Doe deposition`
+// → Gathers docs, identifies exhibits, creates outline, builds binder.
 ```
 
-### AI Time Reconstruction
+### Time Capture
 
 ```typescript
-import { clio, ralph, priya } from 'clio.do'
+// End of day - one sentence
+await clio`capture my time today`
+// → Reviews emails, docs, calls, calendar.
+// → Creates draft entries. You approve what's right.
 
-// End of day - reconstructs billable time automatically
-const captured = await ralph`
-  Review my activity today and reconstruct billable time:
-  - Emails sent and received
-  - Documents edited (version history)
-  - Calendar events and calls
-  - Court filings submitted
-`.map(entries => clio`create draft time entries`)
-  .map(drafts => priya`review for billing accuracy and block billing`)
-
-// Weekly time audit pipeline
-const weeklyAudit = await clio`all time entries this week`
-  .map(entries => priya`
-    Audit for:
-    - Block billing violations
-    - Vague descriptions ("review file", "correspondence")
-    - Potential write-downs
-    - Duplicate entries
-  `)
-  .map(issues => clio`flag entries needing attorney review`)
+// Weekly audit
+await clio`audit this week's time`
+// → Flags block billing, vague descriptions, duplicates.
+// → You fix what needs fixing.
 ```
 
-### AI Billing Workflow
+### Billing Pipeline
 
 ```typescript
-import { clio, tom, priya, mark } from 'clio.do'
+// The entire billing cycle
+await clio`bill all open matters`
+  .review()    // Block billing, write-downs, ethical check
+  .send()      // Emails with narrative
+  .collect()   // Tracks until paid
 
-// Full billing pipeline - from unbilled time to paid invoice
-const collected = await clio`unbilled time for ${matter}`
-  .map(time => clio`generate draft invoice`)
-  .map(draft => priya`
-    Review invoice for:
-    - Client-appropriate descriptions
-    - Block billing separation
-    - Appropriate write-downs
-  `)
-  .map(reviewed => tom`check for ethical billing issues`)
-  .map(approved => mark`
-    Write billing narrative:
-    - Work performed this period
-    - Key accomplishments
-    - Upcoming milestones
-  `)
-  .map(final => clio`send invoice to client`)
-  .map(sent => clio`track until payment received`)
-
-// Trust accounting pipeline
-const trustTransfer = await clio`earned fees for ${matter}`
-  .map(earned => priya`verify fees earned per engagement letter`)
-  .map(verified => clio`transfer from trust to operating`)
-  .map(transfer => clio`send trust account statement to client`)
+// Or matter by matter
+await clio`bill Smith`.send()
 ```
 
-### AI Client Communication
+### Trust Accounting
 
 ```typescript
-import { clio, mark, priya } from 'clio.do'
+// Transfer earned fees
+await clio`transfer Smith earned fees`
+// → Checks against invoice, moves funds, updates ledger, sends statement.
 
-// Client update pipeline
-const clientUpdate = await clio`recent activity on ${matter}`
-  .map(activity => mark`
-    Draft status update email:
-    - Recent progress
-    - Next steps
-    - Timeline expectations
-    Tone: Reassuring, accessible to non-lawyers
-  `)
-  .map(draft => priya`review for accuracy and professionalism`)
-  .map(approved => clio`send to client`)
-
-// New client intake pipeline
-const intake = await clio`consultation notes for ${prospect}`
-  .map(notes => tom`run conflicts check against all matters`)
-  .map(cleared => mark`
-    Prepare intake package:
-    - Engagement letter
-    - Client questionnaire
-    - Document request list
-    - Fee agreement
-  `)
-  .map(pkg => priya`review for California RPC compliance`)
-  .map(compliant => clio`send for e-signature`)
+// Reconciliation
+await clio`reconcile trust`
+// → Three-way reconciliation. Alerts on issues.
 ```
 
-## Comparison: Clio vs clio.do
-
-| Feature | Clio | clio.do |
-|---------|------|---------|
-| **Pricing** | $39-149/user/month | Free (open source) |
-| **Users** | Per-seat licensing | Unlimited |
-| **Time Tracking** | Manual entry | AI-powered capture |
-| **Document Storage** | Limited by plan | Unlimited (R2) |
-| **Trust Accounting** | Premium plans only | Included |
-| **API Access** | Extra cost | Full API included |
-| **Data Location** | Their cloud | Your infrastructure |
-| **AI Features** | "Clio Duo" add-on | Native, included |
-| **Customization** | Limited | Full source access |
-| **Integrations** | App marketplace | Build your own |
-| **Offline Access** | Limited | Edge-native |
-
-## API Compatibility
-
-clio.do implements Clio's API patterns. Your existing integrations work:
+### Client Communication
 
 ```typescript
-// Clio API-compatible endpoints
-GET    /api/v4/matters
-POST   /api/v4/matters
-GET    /api/v4/matters/{id}
-PATCH  /api/v4/matters/{id}
-DELETE /api/v4/matters/{id}
+// Status update
+await clio`update Smith on case progress`
+// → Drafts email with recent work, next steps. Sends after you approve.
 
-GET    /api/v4/contacts
-GET    /api/v4/activities
-GET    /api/v4/bills
-GET    /api/v4/calendar_entries
-GET    /api/v4/documents
-GET    /api/v4/tasks
-GET    /api/v4/trust_requests
+// Full intake
+await clio`intake new client, dog bite`
+// → Conflicts, engagement letter, questionnaire, fee agreement, e-sign.
+// All triggered by seven words.
 ```
 
-### Drop-In Replacement
+## Drop-In Migration
 
-```typescript
-// Before: Clio API
-const clio = new ClioClient({
-  accessToken: process.env.CLIO_ACCESS_TOKEN,
-})
-
-// After: clio.do (same code, different URL)
-const clio = new ClioClient({
-  accessToken: process.env.CLIO_ACCESS_TOKEN,
-  baseUrl: 'https://your-firm.clio.do',
-})
-
-// Everything works the same
-const matters = await clio.matters.list({ status: 'open' })
-```
-
-### Migration
+Already on Clio? One command to switch:
 
 ```bash
-# Export from Clio
-npx clio-do migrate export --source=clio
-
-# Import to your instance
-npx clio-do migrate import --target=https://your-firm.clio.do
+npx clio-do migrate
+# → Exports from Clio, imports to your instance.
+# → Matters, contacts, time, invoices, documents, trust. Everything.
 ```
 
-Migrates: Matters, contacts, time entries, invoices, documents, trust transactions.
-
-## Architecture
-
-Built on Cloudflare Durable Objects for security, consistency, and global performance:
-
-```
-                    Cloudflare Edge
-                          |
-          +---------------+---------------+
-          |               |               |
-    +-----------+   +-----------+   +-----------+
-    | Auth      |   | Routing   |   | API       |
-    | (WorkOS)  |   | Snippet   |   | Gateway   |
-    +-----------+   +-----------+   +-----------+
-          |               |               |
-          +---------------+---------------+
-                          |
-                  +---------------+
-                  |   Firm DO     |
-                  | (per law firm)|
-                  +---------------+
-                    |    |    |
-        +-----------+    |    +-----------+
-        |                |                |
-  +-----------+   +-----------+   +-----------+
-  | SQLite    |   | R2        |   | Vectorize |
-  | (matters, |   | (documents|   | (search)  |
-  | time, $)  |   | files)    |   |           |
-  +-----------+   +-----------+   +-----------+
-```
-
-### Why Durable Objects?
-
-1. **Strong consistency** - Trust accounting requires transactional integrity
-2. **Data isolation** - Each firm is completely separate
-3. **SQLite storage** - Real relational database for complex queries
-4. **Global edge** - Fast access from any courthouse
-5. **Automatic persistence** - No database administration
-
-### Storage Tiers
-
-| Tier | Storage | Use Case |
-|------|---------|----------|
-| **Hot** | SQLite | Active matters, recent time, open invoices |
-| **Warm** | R2 | Documents, closed matter archives |
-| **Cold** | R2 Archive | Retention compliance (7+ years) |
-
-### Security & Compliance
+Existing integrations keep working. Same API, better address:
 
 ```typescript
-// Encryption at rest
-await clio.security.configure({
-  encryption: {
-    atRest: true,
-    algorithm: 'AES-256-GCM',
-    keyManagement: 'customer-managed', // Bring your own keys
-  },
-  audit: {
-    enabled: true,
-    retention: '7 years',
-    events: ['all'],
-  },
-  access: {
-    mfa: 'required',
-    sso: 'optional',
-    ipWhitelist: ['office-network'],
-  },
-})
+// Change one line
+baseUrl: 'https://your-firm.clio.do'
 ```
 
-## Use Cases
+## Under the Hood
 
-### Solo Practitioners
+Each firm gets a Durable Object - a dedicated SQLite database at the edge:
 
-Stop paying $50+/month for software you barely use:
+- **Your matters stay together** - Transactional consistency for trust accounting
+- **Your data stays separate** - Complete isolation from other firms
+- **Your practice stays fast** - Edge locations near every courthouse
+- **Documents on R2** - Unlimited storage, 7-year retention
+- **Search via Vectorize** - Find anything instantly
 
-```bash
-npx create-dotdo clio --template=solo
-```
+Security is automatic: encryption at rest, audit logs, MFA. Configure SSO if you want it.
 
-- Simplified interface for one-attorney practice
-- Mobile-first time tracking
-- Basic billing and invoicing
-- Client portal included
-- $0/month (just Cloudflare costs ~$5/month)
+## For Every Practice
 
-### Small Firms (2-10 Attorneys)
+**Solo:** Stop paying $50/month. Voice-first time tracking. ~$5/month on Cloudflare.
 
-Full practice management without per-seat scaling:
+**Small Firm:** Unlimited attorneys. No per-seat scaling. Full trust accounting.
 
-```bash
-npx create-dotdo clio --template=small-firm
-```
+**Legal Aid:** Professional tools at zero cost. Grant tracking. Pro bono metrics.
 
-- Unlimited users
-- Matter assignment and supervision
-- Firm-wide reporting
-- Trust accounting with three-way reconciliation
-- AI time capture for entire firm
+**Virtual:** Multi-jurisdiction. Work from anywhere. E-signature built in.
 
-### Legal Aid & Non-Profits
-
-Access to professional tools without the cost barrier:
-
-```bash
-npx create-dotdo clio --template=legal-aid
-```
-
-- Grant tracking and reporting
-- Pro bono hour tracking
-- Client outcome metrics
-- Integration with legal aid portals
-- Completely free
-
-### Virtual Law Firms
-
-Built for distributed teams:
-
-```bash
-npx create-dotdo clio --template=virtual
-```
-
-- Multi-jurisdiction support
-- Secure client collaboration
-- Video conferencing integration
-- E-signature (via docusign.do)
-- Works from anywhere
-
-## Getting Started
-
-### 1. Deploy
+## Get Started
 
 ```bash
 npx create-dotdo clio
 ```
 
-### 2. Configure
+That's it. AI features are on by default. Add your firm name when prompted.
+
+First time you talk to it:
 
 ```typescript
-// wrangler.toml
-[vars]
-FIRM_NAME = "Smith & Associates"
-DEFAULT_JURISDICTION = "California"
-TRUST_ACCOUNT_REQUIRED = true
-
-[env.production.vars]
-SMTP_HOST = "smtp.your-email.com"
-```
-
-### 3. Create First User
-
-```bash
-curl -X POST https://your-firm.clio.do/api/v4/users \
-  -H "Authorization: Bearer $API_KEY" \
-  -d '{
-    "user": {
-      "name": "Jane Attorney",
-      "email": "jane@yourfirm.com",
-      "role": "attorney",
-      "rate": 350
-    }
-  }'
-```
-
-### 4. Enable AI Features
-
-```typescript
-// src/config.ts
-export const config = {
-  ai: {
-    enabled: true,
-    provider: 'llm.do',
-    features: {
-      timeCapture: true,
-      documentAnalysis: true,
-      billingReview: true,
-      legalResearch: true,
-    },
-  },
-}
+await clio`I'm Jane, $350/hour, California bar`
+// → Creates your profile. Ready to practice.
 ```
 
 ## The Vision
@@ -818,60 +353,24 @@ Every solo practitioner deserves the same tools as Big Law. Every legal aid orga
 
 The billable hour shouldn't be spent fighting with software.
 
-## Roadmap
+## What's Working
 
-### Core Features
-- [x] Matter Management
-- [x] Contact Management
-- [x] Time Tracking
-- [x] Billing & Invoicing
-- [x] Trust Accounting (IOLTA)
-- [x] Document Management
-- [x] Calendar & Tasks
-- [ ] Client Portal
-- [ ] Conflict Checking
-- [ ] Court Rules Engine
+Everything a practice needs: matters, contacts, time, billing, trust, documents, calendar.
 
-### AI Features
-- [x] AI Time Capture
-- [x] Time Reconstruction
-- [x] Billing Review
-- [ ] Legal Research Assistant
-- [ ] Document Drafting
-- [ ] Case Outcome Prediction
+AI handles: time capture, reconstruction, billing review.
 
-### Integrations
-- [x] Email Integration
-- [x] Calendar Sync
-- [ ] Court E-Filing
-- [ ] Legal Research (Westlaw, LexisNexis)
-- [ ] E-Signature (docusign.do)
-- [ ] Accounting (QuickBooks, Xero)
+Coming soon: client portal, conflict checking, court rules, e-filing, legal research integrations.
 
-## Contributing
+## Open Source
 
-clio.do is open source under the MIT license. We welcome contributions from:
-
-- Legal technologists
-- Practice management experts
-- Bar association technology committees
-- Access to justice advocates
+MIT license. Your practice, your data, your terms.
 
 ```bash
-git clone https://github.com/dotdo/clio.do
-cd clio.do
-npm install
-npm test
+git clone https://github.com/dotdo/clio.do && cd clio.do && npm install && npm test
 ```
-
-## License
-
-MIT - Practice freely.
 
 ---
 
 <p align="center">
-  <strong>Your practice. Your data. Your terms.</strong>
-  <br /><br />
-  <a href="https://clio.do">Website</a> | <a href="https://docs.clio.do">Documentation</a> | <a href="https://discord.gg/dotdo">Discord</a>
+  <a href="https://clio.do">clio.do</a> | <a href="https://docs.clio.do">Docs</a> | <a href="https://discord.gg/dotdo">Discord</a>
 </p>

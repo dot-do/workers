@@ -52,9 +52,9 @@ Just tell them what you need:
 ```typescript
 priya`what should we build next?`
 ralph`implement the user dashboard`
-tom`review the architecture`
+tom`review the pull request`
 mark`write a blog post about our launch`
-quinn`test the checkout flow thoroughly`
+quinn`test ${feature} thoroughly`
 ```
 
 No method names. No parameters. Just say what you want.

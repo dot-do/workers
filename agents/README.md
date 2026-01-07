@@ -31,12 +31,12 @@ Just say what you need:
 
 ```typescript
 priya`what should we build first?`
-ralph`implement the authentication system`
-tom`review the architecture and TypeScript`
+ralph`implement ${feature}`
+tom`review the pull request`
 rae`make the dashboard responsive`
-mark`write a blog post about our launch`
-sally`draft an outreach email for enterprise leads`
-quinn`test the checkout flow thoroughly`
+mark`write a blog post about ${launch}`
+sally`draft an outreach email for ${lead}`
+quinn`test ${feature} thoroughly`
 ```
 
 They understand natural language. Be specific or be vague—they'll figure it out.

@@ -217,16 +217,25 @@ on.User.signup(user => welcome(user))
 on.Payment.received(payment => fulfill(payment))
 every.Monday.at9am(() => sendWeeklyReport())
 
-// AI-native database with relationship cascading
+// AI-native database with cascading generation
 const db = DB({
-  Lead: {
-    name: 'string',
-    company: '->Company',        // Forward: find/create Company
-    contacts: '<-Contact[]',     // Backward: Contacts linking here
-    industry: '~>Industry',      // Fuzzy: semantic match Industry
-  }
+  Blog: {
+    title: 'SEO-optimized blog title',
+    topics: ['5 topics to cover ->Topic'],    // Forward: creates 5 Topics
+    posts: ['<-Post'],                         // Backward: collects all Posts
+  },
+  Topic: {
+    name: 'PascalCase topic name',
+    posts: ['3 post titles ->Post'],          // Forward: creates 3 Posts each
+  },
+  Post: {
+    title: 'SEO title',
+    content: 'Markdown content',
+  },
 })
-const hot = await db.Lead`ready to close this week`
+
+// One call generates Blog -> 5 Topics -> 15 Posts
+const blog = await db.Blog('AI Startups')
 ```
 
 ## Quick Start

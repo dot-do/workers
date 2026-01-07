@@ -1,86 +1,171 @@
 # database.do
 
-What do you want your database to .do for you?
+> AI-native database with cascading generation and natural language queries.
 
-Schema-first database with natural language queries and promise pipelining.
+```typescript
+import { DB } from 'database.do'
+
+const db = DB({
+  Blog: {
+    title: 'SEO-optimized blog title',
+    topics: ['5 topics to cover ->Topic'],
+    posts: ['<-Post'],
+  },
+  Topic: {
+    name: 'PascalCase topic name',
+    posts: ['3 post titles ->Post'],
+  },
+  Post: {
+    title: 'SEO title',
+    content: 'Markdown content',
+  },
+})
+
+// One call generates Blog -> 5 Topics -> 15 Posts
+const blog = await db.Blog('AI Startups')
+```
 
 ## Installation
 
 ```bash
 npm install database.do
-# or
-pnpm add database.do
-# or
-yarn add database.do
 ```
 
-## Quick Start
+## The Vision
+
+**database.do** treats your schema as a generation blueprint. Relationships aren't just foreign keys—they're instructions for cascading AI generation.
 
 ```typescript
-import { database } from 'database.do'
+// Traditional database: you create each entity manually
+// database.do: one call cascades through the entire graph
 
-// Natural language queries
-const activeUsers = await database.do`find all active users created this week`
+const blog = await db.Blog('Services-as-Software', {
+  topic: 'How AI-delivered Services will transform the economy',
+})
 
-// Entity operations with type safety
-interface User {
-  id: string
-  name: string
-  email: string
-  status: 'active' | 'inactive'
-  createdAt: Date
-}
-
-// Access entities via explicit entity() method
-const users = await database.entity<User>('User').list()
-const user = await database.entity<User>('User').get('user-123')
-await database.entity<User>('User').create({ name: 'Alice', email: 'alice@example.com', status: 'active' })
+// blog.topics → 5 Topics (auto-generated)
+// blog.posts → 15 Posts (auto-generated via Topics)
 ```
 
-## Entity Operations
+## Relationship Operators
 
-Access entities using the `entity<T>(name)` method:
+Four operators control how relationships cascade:
+
+| Operator | Direction | Mode | Behavior |
+|----------|-----------|------|----------|
+| `->Type` | Forward | Exact | Find or create `Type`, link FROM here TO it |
+| `~>Type` | Forward | Fuzzy | Semantic search for `Type`, create if no match |
+| `<-Type` | Backward | Exact | Collect `Type` entities that link TO here |
+| `<~Type` | Backward | Fuzzy | Semantic search for entities linking here |
+
+### Modifiers
+
+- `?` - Optional (may be null)
+- `[]` - Array of references
+
+### Examples
 
 ```typescript
-import { db } from 'database.do'
+const db = DB({
+  Startup: {
+    name: 'Company name',
+    founders: ['List founders ->Founder'],      // Forward: creates Founders
+    industry: '~>Industry',                      // Fuzzy: matches existing Industry
+    investors: ['<-Investment'],                 // Backward: collects Investments
+  },
+  Founder: {
+    name: 'Full name',
+    role: 'CEO, CTO, etc.',
+    linkedin: 'LinkedIn URL?',                   // Optional field
+  },
+  Industry: {
+    _readOnly: true,                             // Controlled vocabulary
+    name: 'Industry name',
+    code: 'NAICS code',
+  },
+  Investment: {
+    amount: 'Investment amount',
+    round: 'Seed, Series A, etc.',
+    startup: '->Startup',                        // Links back to Startup
+  },
+})
+```
 
-interface Lead {
-  id: string
-  name: string
-  company: string
-  score: number
-  status: string
-}
+## Core Exports
 
-// Get entity operations for a type
-const leads = db.entity<Lead>('Lead')
+```typescript
+import {
+  DB,              // Schema-first database factory
+  Noun,            // Semantic entity definition
+  Verb,            // Action definition with conjugations
+  Thing,           // JSON-LD compatible entity
+  Relationship,    // Graph edge between entities
+} from 'database.do'
+```
 
-// List all entities
-const allLeads = await leads.list()
+## Schema Definition
 
-// List with options
-const pagedLeads = await leads.list({ limit: 10, offset: 0, orderBy: 'createdAt' })
+### Simple Fields
 
-// Find by query
-const hotLeads = await leads.find({ status: 'hot' })
+```typescript
+const db = DB({
+  Post: {
+    title: 'SEO-optimized title',           // String with AI hint
+    views: 'number',                         // Primitive type
+    published: 'boolean',
+    createdAt: 'datetime',
+    content: 'markdown',                     // Rich text
+    metadata: 'json',                        // Arbitrary JSON
+  },
+})
+```
 
-// Search with natural language
-const techLeads = await leads.search('tech companies in SF')
+### Field Types
 
-// Get single entity
-const lead = await leads.get('lead-123')
+| Type | Description |
+|------|-------------|
+| `string` | Text |
+| `number` | Numeric |
+| `boolean` | True/false |
+| `date` | Date only |
+| `datetime` | Date and time |
+| `markdown` | Rich text content |
+| `json` | Arbitrary JSON |
+| `url` | URL string |
 
-// Create
-const newLead = await leads.create({ name: 'Acme Corp', company: 'Acme', score: 85 })
+### Relationships
 
-// Update
-const updated = await leads.update('lead-123', { score: 95 })
+```typescript
+const db = DB({
+  Author: {
+    name: 'string',
+    posts: ['<-Post'],                        // All Posts by this Author
+  },
+  Post: {
+    title: 'string',
+    author: '->Author',                       // Single Author reference
+    tags: ['~>Tag'],                          // Fuzzy match Tags
+    relatedPosts: ['<~Post[]'],               // Semantically similar Posts
+  },
+  Tag: {
+    name: 'string',
+    posts: ['<-Post'],                        // All Posts with this Tag
+  },
+})
+```
 
-// Upsert
-const upserted = await leads.upsert({ id: 'lead-123', score: 100 })
+## Natural Language Queries
 
-// Delete
-await leads.delete('lead-123')
+Query your data conversationally:
+
+```typescript
+// Tagged template queries
+const leads = await db.Lead`ready to close this week`
+const posts = await db.Post`most popular about AI`
+const users = await db.User`signed up from ProductHunt`
+
+// With context
+const qualified = await db.Lead`score above 80 in ${industry}`
 ```
 
 ## Promise Pipelining
@@ -88,169 +173,135 @@ await leads.delete('lead-123')
 Chain operations without intermediate awaits:
 
 ```typescript
-// Filter and map in a pipeline
-const qualified = await db.entity<Lead>('Lead').list()
+// Lazy evaluation - nothing executes until await
+const qualified = db.Lead.list()
   .filter(l => l.score > 80)
-  .map(l => ({ name: l.name, company: l.company }))
-
-// Take first N results
-const topLeads = await db.entity<Lead>('Lead').list()
   .sort('score', 'desc')
-  .take(5)
+  .take(10)
 
-// Get first matching item
-const bestLead = await db.entity<Lead>('Lead').list()
-  .filter(l => l.score > 90)
-  .first()
+// Execute the pipeline
+const results = await qualified
 
-// Count results
-const totalActive = await db.entity<User>('User').find({ status: 'active' }).count()
+// Batch relationship loading (N+1 prevention)
+const enriched = await db.Lead.list().map(lead => ({
+  name: lead.name,
+  company: lead.company,    // Loaded in ONE query
+  contacts: lead.contacts,  // Also batched
+}))
 ```
 
-## Event Tracking
-
-Track analytics events (append-only):
+## CRUD Operations
 
 ```typescript
-// Track an event
-await database.track({
-  type: 'User.signup',
-  source: 'web',
-  data: { userId: 'user-123', plan: 'pro' }
+// Create
+const post = await db.Post.create({
+  title: 'Getting Started',
+  content: '...',
 })
 
-// Track with correlation
-await database.track({
-  type: 'Order.placed',
-  source: 'api',
-  data: order,
-  correlationId: sessionId,
-  causationId: cartId
+// Read
+const post = await db.Post.get('post-123')
+const posts = await db.Post.list()
+const recent = await db.Post.find({ published: true })
+
+// Update
+await db.Post.update('post-123', { title: 'Updated Title' })
+
+// Delete
+await db.Post.delete('post-123')
+
+// Upsert
+await db.Post.upsert({ id: 'post-123', views: 100 })
+```
+
+## Semantic Nouns & Verbs
+
+Define entities with rich semantics:
+
+```typescript
+import { Noun, Verb } from 'database.do'
+
+const Post = Noun({
+  singular: 'post',
+  plural: 'posts',
+  properties: {
+    title: { type: 'string', required: true },
+    content: { type: 'markdown' },
+  },
+  relationships: {
+    author: { type: 'Author', backref: 'posts' },
+    tags: { type: 'Tag[]', backref: 'posts' },
+  },
+  actions: ['create', 'update', 'delete', 'publish', 'archive'],
+})
+
+const Publish = Verb({
+  infinitive: 'publish',
+  pastTense: 'published',
+  presentParticiple: 'publishing',
+  permissions: ['editor', 'admin'],
+})
+```
+
+## Events & Actions
+
+### Event Tracking (Append-Only)
+
+```typescript
+// Track events
+await db.track({
+  type: 'Post.published',
+  data: { postId: 'post-123', author: 'user-456' },
 })
 
 // Query events
-const signupEvents = await database.events({
-  type: 'User.signup',
+const events = await db.events({
+  type: 'Post.%',  // Wildcard
   after: new Date('2024-01-01'),
-  limit: 100
-})
-
-// Filter by entity type
-const userEvents = await database.events({
-  type: 'User.%',  // wildcard matching
-  source: 'api'
 })
 ```
 
-## Actions
-
-Send commands and track their status:
+### Actions (Commands)
 
 ```typescript
-// Fire-and-forget action
-await database.send({
-  actor: 'user-123',
-  object: 'lead-456',
-  action: 'qualify'
+// Fire and forget
+await db.send({ action: 'enrich', object: 'lead-123' })
+
+// Wait for result
+const result = await db.do({ action: 'analyze', object: 'post-123' })
+```
+
+## ForEach with Durability
+
+Process large datasets with crash recovery:
+
+```typescript
+await db.Lead.forEach(async lead => {
+  const analysis = await ai`analyze ${lead}`
+  await db.Lead.update(lead.id, { analysis })
+}, {
+  concurrency: 10,
+  persist: true,                              // Survive crashes
+  maxRetries: 3,
+  onProgress: p => console.log(`${p.completed}/${p.total}`),
+  onError: err => err.code === 'RATE_LIMIT' ? 'retry' : 'continue',
 })
-
-// Action with result waiting
-const result = await database.action({
-  actor: 'user-123',
-  object: 'lead-456',
-  action: 'enrich',
-  metadata: { provider: 'clearbit' }
-})
-
-// Query pending actions
-const pending = await database.actions({
-  actor: 'user-123',
-  status: 'pending'
-})
-
-// Complete an action
-await database.completeAction('action-id', { enrichedData: {...} })
-
-// Fail an action
-await database.failAction('action-id', 'Provider unavailable')
 ```
 
 ## Artifacts
 
-Store and retrieve computed artifacts with caching:
+Cache computed results:
 
 ```typescript
-// Store an artifact
-await database.storeArtifact({
-  key: 'report:monthly:2024-01',
-  type: 'report',
-  source: 'analytics',
-  sourceHash: 'abc123',
+// Store
+await db.storeArtifact({
+  key: 'report:2024-01',
   content: reportData,
   ttl: 86400,
-  metadata: { generatedAt: new Date() }
 })
 
-// Retrieve artifact
-const artifact = await database.getArtifact<ReportData>('report:monthly:2024-01')
-if (artifact) {
-  console.log(artifact.content)
-}
-
-// Delete artifact
-await database.deleteArtifact('report:monthly:2024-01')
-```
-
-## Schema Operations
-
-Introspect your database schema:
-
-```typescript
-// Get full schema
-const schema = await database.schema()
-
-// List entity types
-const types = await database.types()
-// ['User', 'Lead', 'Order', ...]
-
-// Describe an entity
-const userSchema = await database.describe('User')
-// {
-//   name: 'User',
-//   fields: {
-//     id: { type: 'string', required: true },
-//     email: { type: 'string', required: true },
-//     orders: { type: 'Order[]', required: false, relation: 'Order' }
-//   }
-// }
-```
-
-## Local Development
-
-Use `DB` for local schema definition:
-
-```typescript
-import { DB, setProvider } from 'database.do'
-
-// Define your schema
-const schema = {
-  User: {
-    id: 'string',
-    name: 'string',
-    email: 'string',
-  },
-  Post: {
-    id: 'string',
-    title: 'string',
-    authorId: 'string',
-  }
-}
-
-// Create a local database
-const localDb = DB(schema)
-
-// Or set a custom provider for production
-setProvider(myCustomProvider)
+// Retrieve
+const report = await db.getArtifact('report:2024-01')
 ```
 
 ## Configuration
@@ -258,49 +309,42 @@ setProvider(myCustomProvider)
 ```typescript
 import { Database } from 'database.do'
 
-// Create a configured client
 const db = Database({
   apiKey: process.env.DATABASE_DO_API_KEY,
   baseUrl: 'https://database.do',
-  timeout: 30000,
 })
 ```
 
-## Environment Variables
+Or use environment variables:
 
 - `DO_API_KEY` - API key for authentication
-- `DATABASE_DO_API_KEY` - Alternative API key (takes precedence)
+- `DATABASE_DO_API_KEY` - Alternative (takes precedence)
+- `DATABASE_URL` - Provider URL (`./content`, `sqlite://./data`, `:memory:`)
 
-## Types
-
-All types are exported for TypeScript users:
+## Type Exports
 
 ```typescript
 import type {
-  // Schema types
+  // Schema
   DatabaseSchema,
   EntitySchema,
   FieldDefinition,
-  PrimitiveType,
-  // Thing types
-  ThingFlat,
-  ThingExpanded,
+
+  // Semantic
+  Noun,
+  Verb,
   Thing,
-  // Query types
+  Relationship,
+
+  // Operations
+  DBPromise,
   QueryOptions,
   ListOptions,
-  SearchOptions,
-  // Event/Action/Artifact types
+
+  // Events
   Event,
   Action,
   Artifact,
-  ActionStatus,
-  ArtifactType,
-  // Client types
-  DatabaseClient,
-  EntityOperations,
-  DBPromise,
-  ClientOptions,
 } from 'database.do'
 ```
 

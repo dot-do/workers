@@ -1,6 +1,23 @@
 # [Workers.do](https://workers.do)
 
-You're a founder. You need a team.
+> AI + Code Workers `.do` work for you.
+
+```typescript
+import { priya, ralph, tom, mark } from 'agents.do'
+
+priya`plan the Q1 roadmap`
+ralph`build the authentication system`
+tom`review the architecture`
+mark`write the launch announcement`
+```
+
+**workers.do** is the platform for building Autonomous Startups. Your workers are AI agents and humans—and they run on Cloudflare Workers.
+
+Both kinds of workers. Working for you.
+
+## You're a Founder
+
+You need a team, but you're early. Maybe it's just you.
 
 ```typescript
 import { product, engineering, marketing } from 'teams.do'
@@ -24,7 +41,9 @@ That's your startup. Running.
 | **Sally** | Sales—outreach, demos, closing |
 | **Quinn** | QA—testing, edge cases, quality |
 
-Just tell them what you need:
+Each agent has real identity—email, GitHub account, avatar. When Tom reviews your PR, you'll see `@tom-do` commenting.
+
+## Just Talk to Them
 
 ```typescript
 import { priya, ralph, tom, mark, quinn } from 'agents.do'
@@ -33,12 +52,12 @@ await priya`what should we build next?`
 await ralph`implement the user dashboard`
 await tom`review the pull request`
 await mark`write a blog post about our launch`
-await quinn`test the checkout flow`
+await quinn`test ${feature} thoroughly`
 ```
 
-## Build Features
+No method names. No parameters. Just say what you want.
 
-Work flows through your team naturally:
+## Work Flows Naturally
 
 ```typescript
 const spec = await priya`spec out user authentication`
@@ -55,7 +74,7 @@ const sprint = await priya`plan the sprint`
   .map(code => tom`review ${code}`)
 ```
 
-Each agent passes their work to the next. No boilerplate. No orchestration code.
+The `.map()` isn't JavaScript's—it's a remote operation. The callback is recorded, not executed. The server receives the entire pipeline and executes it in one pass.
 
 ## Automate Everything
 
@@ -83,6 +102,8 @@ on.Idea.captured(async idea => {
 })
 ```
 
+Event-driven. PR-based. Real development workflow.
+
 ## Humans When It Matters
 
 AI does the work. Humans make the decisions.
@@ -96,28 +117,43 @@ const approved = await ceo`approve the partnership`
 
 Same syntax. Messages go to Slack, email, or wherever your humans are. Your workflow waits for their response.
 
-## Your Startup in Code
+## Business-as-Code
+
+Define your entire startup:
 
 ```typescript
 import { Startup } from 'startups.do'
 import { engineering, product, sales } from 'teams.do'
+import { dev, sales as salesWorkflow } from 'workflows.do'
 
 export default Startup({
   name: 'Acme AI',
   teams: { engineering, product, sales },
+  workflows: { build: dev, sell: salesWorkflow },
+  services: ['llm.do', 'payments.do', 'org.ai'],
 })
 ```
 
 That's a company. It builds products, sells them, and grows.
 
-## Everything You Need
+## Platform Services
 
-**AI** — [llm.do](https://llm.do) powers your agents
-**Payments** — [payments.do](https://payments.do) handles billing
-**Identity** — [org.ai](https://org.ai) manages users and auth
-**Database** — [database.do](https://database.do) stores your data
-**Workflows** — [workflows.do](https://workflows.do) runs your processes
-**Domains** — [builder.domains](https://builder.domains) gives you free domains
+Everything you need to run a startup:
+
+| Service | What It Does |
+|---------|--------------|
+| [database.do](https://database.do) | AI-native data with cascading generation |
+| [functions.do](https://functions.do) | Code, Generative, Agentic, Human functions |
+| [workflows.do](https://workflows.do) | Event-driven orchestration |
+| [triggers.do](https://triggers.do) | Webhooks, schedules, events |
+| [searches.do](https://searches.do) | Semantic & vector search |
+| [actions.do](https://actions.do) | Tool calling & side effects |
+| [integrations.do](https://integrations.do) | Connect external services |
+| [analytics.do](https://analytics.do) | Metrics, traces, insights |
+| [payments.do](https://payments.do) | Stripe Connect billing |
+| [services.do](https://services.do) | AI-delivered service marketplace |
+| [org.ai](https://org.ai) | Identity, SSO, users, secrets |
+| [builder.domains](https://builder.domains) | Free domains for builders |
 
 ```typescript
 import { llm } from 'llm.do'
@@ -128,6 +164,14 @@ await llm`summarize this article`
 await payments.charge(customer, amount)
 await org.users.invite(email)
 ```
+
+## The Double Meaning
+
+**workers.do** runs on Cloudflare Workers—the fastest serverless runtime.
+
+Your AI agents and human team members are also workers—digital workers that work for you.
+
+Both kinds of workers. On [workers.do](https://workers.do).
 
 ## Get Started
 

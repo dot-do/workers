@@ -1,5 +1,5 @@
 {
-  "name": "@dotdo/workers-agents",
+  "name": "@dotdo/agents",
   "version": "0.0.1",
   "description": "Autonomous agents worker for agents.do",
   "type": "module",

@@ -501,6 +501,10 @@ export interface FnTransformOptions {
   validate?: boolean
   /** Debug logging */
   debug?: boolean
+  /** Strict mode - throw on unknown parameters in named templates */
+  strict?: boolean
+  /** Known option keys that shouldn't be treated as unknown params */
+  knownOpts?: string[]
 }
 
 // =============================================================================

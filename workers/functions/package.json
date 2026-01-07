@@ -1,7 +1,6 @@
 {
-  "name": "@dotdo/workers-functions",
+  "name": "@dotdo/functions",
   "version": "0.0.1",
-  "private": true,
   "description": "Functions Worker (functions.do) - ai-functions RPC implementation",
   "type": "module",
   "main": "./dist/index.js",

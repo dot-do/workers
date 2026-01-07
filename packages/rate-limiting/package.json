@@ -32,5 +32,6 @@
     "rate-limiting",
     "middleware"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "private": true
 }

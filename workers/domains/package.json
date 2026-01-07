@@ -1,7 +1,6 @@
 {
-  "name": "@dotdo/workers-domains",
+  "name": "@dotdo/domains",
   "version": "0.0.1",
-  "private": true,
   "description": "Domains Worker (builder.domains) - Free domain management for builders",
   "type": "module",
   "main": "./dist/index.js",

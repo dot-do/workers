@@ -1,7 +1,6 @@
 {
   "name": "@dotdo/deployment",
   "version": "0.0.1",
-  "private": true,
   "description": "Deployment history tracking and rollback support for Cloudflare Workers",
   "type": "module",
   "main": "./dist/index.js",

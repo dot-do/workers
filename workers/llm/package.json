@@ -1,5 +1,5 @@
 {
-  "name": "@dotdo/worker-llm",
+  "name": "@dotdo/llm",
   "version": "0.0.1",
   "description": "LLM Gateway with billing and analytics (llm.do)",
   "type": "module",

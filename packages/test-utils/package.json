@@ -1,7 +1,6 @@
 {
-  "name": "@dotdo/test-utils",
+  "name": "@dotdo/utils",
   "version": "0.0.1",
-  "private": true,
   "description": "Test utilities and helpers for @dotdo/workers packages",
   "type": "module",
   "main": "./dist/index.js",

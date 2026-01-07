@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@dotdo/auth": "workspace:*",
-    "@dotdo/edge-api": "workspace:*",
+    "edge-api": "workspace:*",
     "@dotdo/rpc": "workspace:*",
     "capnweb": "^0.2.0",
     "cli.do": "workspace:*",

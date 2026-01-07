@@ -1,5 +1,5 @@
 {
-  "name": "@dotdo/workers-eval",
+  "name": "@dotdo/eval-worker",
   "version": "0.0.1",
   "private": true,
   "description": "Eval Worker (eval.do) - Secure sandbox code evaluation",

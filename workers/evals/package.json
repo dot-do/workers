@@ -1,7 +1,6 @@
 {
-  "name": "@dotdo/workers-evals",
+  "name": "@dotdo/evals",
   "version": "0.0.1",
-  "private": true,
   "description": "Evals Worker (evals.do) - AI evaluations and benchmarks",
   "type": "module",
   "main": "./dist/index.js",

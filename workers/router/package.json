@@ -1,7 +1,6 @@
 {
-  "name": "@dotdo/workers-router",
+  "name": "@dotdo/router",
   "version": "0.0.1",
-  "private": true,
   "description": "Router Worker - Hostname-based routing for multi-tenant deployments",
   "type": "module",
   "main": "./dist/index.js",

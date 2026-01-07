@@ -1,7 +1,6 @@
 {
   "name": "@dotdo/drizzle",
   "version": "0.0.1",
-  "private": true,
   "description": "Drizzle ORM schema management and migrations for Cloudflare Workers Durable Objects",
   "type": "module",
   "main": "./dist/index.js",

@@ -1,5 +1,5 @@
 {
-  "name": "@dotdo/workers-oauth",
+  "name": "@dotdo/oauth",
   "version": "0.0.1",
   "description": "OAuth 2.0/OIDC Durable Object with WorkOS AuthKit integration",
   "type": "module",

@@ -1,7 +1,6 @@
 {
   "name": "@dotdo/security",
   "version": "0.0.1",
-  "private": true,
   "description": "Security utilities for @dotdo/workers - SQL injection prevention, input sanitization",
   "type": "module",
   "main": "./dist/index.js",

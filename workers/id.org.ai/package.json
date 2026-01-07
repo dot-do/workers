@@ -1,5 +1,5 @@
 {
-  "name": "@dotdo/id.org.ai",
+  "name": "id.org.ai",
   "version": "0.1.0",
   "description": "Auth for AI and Humans - OAuth 2.1 Provider powered by WorkOS AuthKit",
   "type": "module",

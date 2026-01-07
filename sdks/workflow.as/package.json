@@ -1,5 +1,5 @@
 {
-  "name": "workflow.as",
+  "name": "workflows.as",
   "version": "0.0.1",
   "description": "What do you want your workflow to be?",
   "type": "module",
@@ -9,7 +9,7 @@
   },
   "author": ".do",
   "license": "MIT",
-  "homepage": "https://workflow.as",
+  "homepage": "https://workflows.as",
   "repository": {
     "type": "git",
     "url": "https://github.com/dot-do/workers"

@@ -6,6 +6,8 @@ packages:
   - 'snippets/*'
   - 'packages/*'
   - 'sdks/*'
+  - 'startups/*'
+  - 'integrations/*'
   - 'auth/*'
   - 'plugins/*'
   - 'primitives/packages/*'

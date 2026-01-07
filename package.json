@@ -7,7 +7,18 @@
   "license": "MIT",
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "apps/*",
+    "workers/*",
+    "middleware/*",
+    "objects/*",
+    "snippets/*",
+    "packages/*",
+    "sdks/*",
+    "startups/*",
+    "integrations/*",
+    "auth/*",
+    "plugins/*",
+    "primitives/packages/*"
   ],
   "scripts": {
     "changeset": "changeset",

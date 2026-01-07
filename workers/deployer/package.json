@@ -1,7 +1,6 @@
 {
-  "name": "@dotdo/workers-deployer",
+  "name": "@dotdo/deployer",
   "version": "0.0.1",
-  "private": true,
   "description": "Deployer Worker (deployer.do) - Cloudflare Workers deployment management",
   "type": "module",
   "main": "./dist/index.js",

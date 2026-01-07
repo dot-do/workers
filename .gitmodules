@@ -43,3 +43,6 @@
 [submodule "mdxui"]
 	path = mdxui
 	url = https://github.com/dot-do/mdxui.git
+[submodule "rewrites/fsx"]
+	path = rewrites/fsx
+	url = https://github.com/dot-do/fsx.git

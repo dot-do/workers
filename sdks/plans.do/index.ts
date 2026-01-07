@@ -321,18 +321,38 @@ export interface PlansClient {
 
 /**
  * Create a configured plans client
+ *
+ * @example
+ * ```typescript
+ * import { Plans } from 'plans.do'
+ * const plans = Plans({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function Plans(options?: ClientOptions): PlansClient {
-  return createClient<PlansClient>('https://plans.do', options)
+  return createClient<PlansClient>('plans', options)
 }
 
 /**
- * Default plans client
+ * Default plans client instance
+ *
+ * Uses global env from rpc.do/env for authentication.
+ * In Workers, import 'rpc.do/env' before using this instance.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { plans } from 'plans.do'
+ *
+ * await plans.create({ name: 'Q1 Roadmap', ... })
+ * ```
  */
-export const plans: PlansClient = Plans({
-  apiKey: typeof process !== 'undefined' ? (process.env?.PLANS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const plans: PlansClient = Plans()
 
+// Named exports
+export { Plans, plans }
+
+// Default export
 export default plans
 
 export type { ClientOptions } from 'rpc.do'

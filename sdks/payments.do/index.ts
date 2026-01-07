@@ -108,12 +108,39 @@ export interface PaymentsClient {
   }
 }
 
-export function createPayments(options?: ClientOptions): PaymentsClient {
+/**
+ * Create a configured Payments client (PascalCase factory)
+ *
+ * @example
+ * ```typescript
+ * import { Payments } from 'payments.do'
+ * const payments = Payments({ apiKey: 'xxx' })
+ * ```
+ */
+export function Payments(options?: ClientOptions): PaymentsClient {
   return createClient<PaymentsClient>('https://payments.do', options)
 }
 
-export const payments: PaymentsClient = createPayments({
-  apiKey: typeof process !== 'undefined' ? process.env?.PAYMENTS_API_KEY : undefined,
-})
+/**
+ * Default Payments client instance (camelCase)
+ * For Workers: import 'rpc.do/env' first to enable env-based API key resolution
+ *
+ * @example
+ * ```typescript
+ * import { payments } from 'payments.do'
+ * await payments.charges.create({ amount: 2000, currency: 'usd', customer: 'cus_123' })
+ * ```
+ */
+export const payments: PaymentsClient = Payments()
 
+// Named exports
+export { Payments, payments }
+
+// Default export = camelCase instance
+export default payments
+
+// Legacy alias
+export const createPayments = Payments
+
+// Re-export types
 export type { ClientOptions } from 'rpc.do'

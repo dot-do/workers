@@ -554,18 +554,34 @@ export interface AnalyticsClient {
 
 /**
  * Create a configured analytics client
+ *
+ * @example
+ * ```typescript
+ * // With custom options
+ * import { Analytics } from 'analytics.do'
+ * const analytics = Analytics({ baseURL: 'https://custom.example.com' })
+ *
+ * // In Cloudflare Workers, import env adapter first
+ * import 'rpc.do/env'
+ * import { analytics } from 'analytics.do'
+ * ```
  */
 export function Analytics(options?: ClientOptions): AnalyticsClient {
   return createClient<AnalyticsClient>('https://analytics.do', options)
 }
 
 /**
- * Default analytics client
+ * Default analytics client instance
+ *
+ * Note: For Cloudflare Workers, import 'rpc.do/env' first to set up environment.
+ * API key is read from ANALYTICS_API_KEY or DO_API_KEY environment variables.
  */
-export const analytics: AnalyticsClient = Analytics({
-  apiKey: typeof process !== 'undefined' ? (process.env?.ANALYTICS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const analytics: AnalyticsClient = Analytics()
 
+// Named exports
+export { Analytics, analytics }
+
+// Default export = camelCase instance
 export default analytics
 
 export type { ClientOptions } from 'rpc.do'

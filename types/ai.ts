@@ -42,8 +42,7 @@ export type {
   AutoDefineResult,
 } from 'ai-functions'
 
-import type { RpcPromise } from './rpc.js'
-import type { TaggedCallable } from './tagged-template.js'
+import type { RpcFn, RpcPromise } from './fn.js'
 
 // =============================================================================
 // RPC-Enhanced AI Client
@@ -86,4 +85,4 @@ export interface RpcAIClient {
  * const structured = await ai`Extract data from {content}`({ content })
  * ```
  */
-export type AIPrompt = TaggedCallable<RpcPromise<string>>
+export type AIPrompt = RpcFn<string, { prompt: string; context?: unknown }>

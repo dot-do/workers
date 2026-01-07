@@ -6,6 +6,18 @@
 npm install experiments.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { experiments } from 'experiments.do'
+
+// Or use the factory for custom config
+import { Experiments } from 'experiments.do'
+const experiments = Experiments({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## You're Shipping Blind
@@ -202,14 +214,19 @@ const running = await experiments.list({ status: 'running' })
 ## Configuration
 
 ```typescript
-import { Experiments } from 'experiments.do'
+// Workers - import env adapter for automatic env resolution
+import 'rpc.do/env'
+import { experiments } from 'experiments.do'
 
-const experiments = Experiments({
-  apiKey: process.env.EXPERIMENTS_API_KEY
+// Or use factory with custom config
+import { Experiments } from 'experiments.do'
+const customExperiments = Experiments({
+  baseURL: 'https://custom.example.com',
+  apiKey: 'your-api-key'
 })
 ```
 
-Or set `EXPERIMENTS_API_KEY` or `DO_API_KEY` in your environment.
+Set `EXPERIMENTS_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Stop Guessing
 

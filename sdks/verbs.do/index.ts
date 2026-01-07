@@ -305,19 +305,39 @@ export interface VerbsClient {
 }
 
 /**
- * Create a configured verbs client
+ * Create a configured Verbs client
+ *
+ * @example
+ * ```typescript
+ * import { Verbs } from 'verbs.do'
+ * const verbs = Verbs({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function Verbs(options?: ClientOptions): VerbsClient {
-  return createClient<VerbsClient>('https://verbs.do', options)
+  return createClient<VerbsClient>('verbs', options)
 }
 
 /**
- * Default verbs client
+ * Default Verbs client instance
+ *
+ * For Workers environment, import 'rpc.do/env' first to configure API keys
+ * from environment variables automatically.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { verbs } from 'verbs.do'
+ *
+ * await verbs.execute('sendEmail', { to: 'user@example.com' })
+ * ```
  */
-export const verbs: VerbsClient = Verbs({
-  apiKey: typeof process !== 'undefined' ? (process.env?.VERBS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const verbs: VerbsClient = Verbs()
 
+// Named exports
+export { Verbs, verbs }
+
+// Default export = camelCase instance
 export default verbs
 
 export type { ClientOptions } from 'rpc.do'

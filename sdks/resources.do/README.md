@@ -6,6 +6,18 @@
 npm install resources.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { resources } from 'resources.do'
+
+// Or use the factory for custom config
+import { Resources } from 'resources.do'
+const resources = Resources({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Resource Management Is Eating Your Time
@@ -240,14 +252,25 @@ await resources.update('room_123', {
 ## Configuration
 
 ```typescript
+// Workers - import env adapter to configure from environment
+import 'rpc.do/env'
+import { Resources } from 'resources.do'
+
+const resources = Resources()
+```
+
+Or use a custom configuration:
+
+```typescript
 import { Resources } from 'resources.do'
 
 const resources = Resources({
-  apiKey: process.env.RESOURCES_API_KEY
+  apiKey: 'your-api-key',
+  baseURL: 'https://custom.resources.do'
 })
 ```
 
-Or set `RESOURCES_API_KEY` or `DO_API_KEY` in your environment.
+Environment variables `RESOURCES_API_KEY` or `DO_API_KEY` are automatically configured when using `rpc.do/env`.
 
 ## Stop Fighting Your Resources
 

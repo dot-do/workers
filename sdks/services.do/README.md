@@ -6,6 +6,18 @@
 npm install services.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { services } from 'services.do'
+
+// Or use the factory for custom config
+import { Services } from 'services.do'
+const services = Services({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## The Microservices Nightmare Is Real
@@ -160,12 +172,14 @@ export SERVICES_API_KEY=your_api_key
 Or configure explicitly:
 
 ```typescript
-import { createServices } from 'services.do'
+import { Services } from 'services.do'
 
-const services = createServices({
-  apiKey: 'your_api_key'
+const services = Services({
+  apiKey: 'your-api-key'
 })
 ```
+
+For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based configuration.
 
 ## Pricing Models
 

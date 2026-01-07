@@ -6,6 +6,18 @@
 npm install models.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { models } from 'models.do'
+
+// Or use the factory for custom config
+import { Models } from 'models.do'
+const models = Models({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Lost in a Sea of LLMs
@@ -178,14 +190,19 @@ console.log(estimate.costPerRequest)  // 0.0225
 ## Configuration
 
 ```typescript
-import { Models } from 'models.do'
+// Workers - import env adapter for automatic env resolution
+import 'rpc.do/env'
+import { models } from 'models.do'
 
-const models = Models({
-  apiKey: process.env.MODELS_API_KEY
+// Or use factory with custom config
+import { Models } from 'models.do'
+const customModels = Models({
+  baseURL: 'https://custom.example.com',
+  apiKey: 'your-api-key'
 })
 ```
 
-Or set `MODELS_API_KEY` or `DO_API_KEY` in your environment.
+Set `MODELS_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Stop Guessing. Start Shipping.
 

@@ -96,12 +96,31 @@ export interface ServicesClient {
   }
 }
 
-export function createServices(options?: ClientOptions): ServicesClient {
-  return createClient<ServicesClient>('https://services.do', options)
+/**
+ * Create a configured services client
+ *
+ * @example
+ * ```typescript
+ * import { Services } from 'services.do'
+ * const services = Services({ baseURL: 'https://custom.example.com' })
+ * ```
+ */
+export function Services(options?: ClientOptions): ServicesClient {
+  return createClient<ServicesClient>('services', options)
 }
 
-export const services: ServicesClient = createServices({
-  apiKey: typeof process !== 'undefined' ? process.env?.SERVICES_API_KEY : undefined,
-})
+/**
+ * Default services client
+ *
+ * Authentication: Set DO_API_KEY or SERVICES_API_KEY in environment.
+ * For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based config.
+ */
+export const services: ServicesClient = Services()
+
+// Named exports
+export { Services, services }
+
+// Default export = camelCase instance
+export default services
 
 export type { ClientOptions } from 'rpc.do'

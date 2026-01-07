@@ -432,18 +432,34 @@ export interface SearchesClient {
 
 /**
  * Create a configured searches client
+ *
+ * @example
+ * ```typescript
+ * // With custom options
+ * import { Searches } from 'searches.do'
+ * const searches = Searches({ baseURL: 'https://custom.example.com' })
+ *
+ * // In Cloudflare Workers, import env adapter first
+ * import 'rpc.do/env'
+ * import { searches } from 'searches.do'
+ * ```
  */
 export function Searches(options?: ClientOptions): SearchesClient {
   return createClient<SearchesClient>('https://searches.do', options)
 }
 
 /**
- * Default searches client
+ * Default searches client instance
+ *
+ * Note: For Cloudflare Workers, import 'rpc.do/env' first to set up environment.
+ * API key is read from SEARCHES_API_KEY or DO_API_KEY environment variables.
  */
-export const searches: SearchesClient = Searches({
-  apiKey: typeof process !== 'undefined' ? (process.env?.SEARCHES_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const searches: SearchesClient = Searches()
 
+// Named exports
+export { Searches, searches }
+
+// Default export = camelCase instance
 export default searches
 
 export type { ClientOptions } from 'rpc.do'

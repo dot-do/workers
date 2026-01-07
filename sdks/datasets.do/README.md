@@ -6,6 +6,18 @@
 npm install datasets.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { datasets } from 'datasets.do'
+
+// Or use the factory for custom config
+import { Datasets } from 'datasets.do'
+const datasets = Datasets({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Your Training Data Is a Mess
@@ -193,14 +205,19 @@ console.log(`${stats.recordCount} records, ${stats.size} bytes`)
 ## Configuration
 
 ```typescript
-import { Datasets } from 'datasets.do'
+// Workers - import env adapter for automatic env resolution
+import 'rpc.do/env'
+import { datasets } from 'datasets.do'
 
-const datasets = Datasets({
-  apiKey: process.env.DATASETS_API_KEY
+// Or use factory with custom config
+import { Datasets } from 'datasets.do'
+const customDatasets = Datasets({
+  baseURL: 'https://custom.example.com',
+  apiKey: 'your-api-key'
 })
 ```
 
-Or set `DATASETS_API_KEY` or `DO_API_KEY` in your environment.
+Set `DATASETS_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Stop Losing Your Data
 

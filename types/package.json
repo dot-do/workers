@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./index.ts",
-    "./template": "./template.ts",
+    "./fn": "./fn.ts",
     "./rpc": "./rpc.ts",
     "./do": "./do.ts",
     "./sql": "./sql.ts",
@@ -14,8 +14,7 @@
     "./database": "./database.ts",
     "./workers": "./workers.ts",
     "./agents": "./agents.ts",
-    "./humans": "./humans.ts",
-    "./function": "./function.ts"
+    "./humans": "./humans.ts"
   },
   "files": [
     "*.ts",

@@ -6,6 +6,18 @@
 npm install payments.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { payments } from 'payments.do'
+
+// Or use the factory for custom config
+import { Payments } from 'payments.do'
+const payments = Payments({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## You Just Want to Get Paid

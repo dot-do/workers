@@ -1,7 +1,7 @@
 /**
  * SQL Types with Tagged Template and RPC Support
  *
- * Combines the TaggedCallable pattern with RpcPromise for SQL queries:
+ * Combines the Fn<T, Args, Config> pattern with RpcPromise for SQL queries:
  * - Template literal syntax: `db.sql\`SELECT * FROM users\``
  * - Named parameters: `db.sql\`SELECT * FROM {table}\`({ table: 'users' })`
  * - Promise pipelining: `db.users.get('123').sql\`...\``
@@ -12,8 +12,7 @@
  * @packageDocumentation
  */
 
-import type { TaggedCallable, ExtractParams } from './template.js'
-import type { RpcPromise } from './rpc.js'
+import type { ExtractParams, Fn, RpcFn, TaggedResult, RpcPromise } from './fn.js'
 import type { SqlStorage, SqlStorageCursor } from './do.js'
 
 // =============================================================================

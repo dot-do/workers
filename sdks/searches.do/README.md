@@ -6,6 +6,18 @@
 npm install searches.do
 ```
 
+## Quick Start
+
+```typescript
+// Cloudflare Workers - import env adapter first
+import 'rpc.do/env'
+import { searches } from 'searches.do'
+
+// Or use the factory for custom config
+import { Searches } from 'searches.do'
+const searches = Searches({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Your Data Is Buried. Your Users Are Lost.
@@ -223,8 +235,11 @@ Answer:`
 ```typescript
 import { Searches } from 'searches.do'
 
+// For Cloudflare Workers, import env adapter first
+import 'rpc.do/env'
+
 const searches = Searches({
-  apiKey: process.env.SEARCHES_API_KEY
+  // API key is read from SEARCHES_API_KEY or DO_API_KEY environment variables
 })
 ```
 

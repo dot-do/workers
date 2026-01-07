@@ -196,17 +196,30 @@ await tasks.reopen(task.id)   // Changed our mind
 | `medium` | Standard work, planned features |
 | `low` | Nice to have, when time permits |
 
-## Configuration
+## Installation
 
-```typescript
-import { Tasks } from 'tasks.do'
-
-const tasks = Tasks({
-  apiKey: process.env.TASKS_API_KEY
-})
+```bash
+npm install tasks.do
 ```
 
-Or set `TASKS_API_KEY` or `DO_API_KEY` in your environment.
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { tasks } from 'tasks.do'
+
+// Or use the factory for custom config
+import { Tasks } from 'tasks.do'
+const tasks = Tasks({ baseURL: 'https://custom.example.com' })
+
+// Default import also works
+import tasks from 'tasks.do'
+```
+
+## Configuration
+
+Set `DO_API_KEY` or `ORG_AI_API_KEY` in your environment for authentication.
 
 ## Stop Losing Track of Work
 

@@ -487,18 +487,39 @@ export interface ModelsClient {
 
 /**
  * Create a configured models client
+ *
+ * @example
+ * ```typescript
+ * import { Models } from 'models.do'
+ *
+ * const models = Models({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function Models(options?: ClientOptions): ModelsClient {
   return createClient<ModelsClient>('https://models.do', options)
 }
 
 /**
- * Default models client
+ * Default models client instance
+ *
+ * For Workers environment, import 'rpc.do/env' first to enable
+ * automatic environment variable resolution.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { models } from 'models.do'
+ *
+ * const all = await models.list()
+ * ```
  */
-export const models: ModelsClient = Models({
-  apiKey: typeof process !== 'undefined' ? (process.env?.MODELS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const models: ModelsClient = Models()
 
+// Named exports
+export { Models, models }
+
+// Default export = camelCase instance
 export default models
 
 export type { ClientOptions } from 'rpc.do'

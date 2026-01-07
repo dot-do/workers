@@ -6,6 +6,18 @@
 npm install triggers.do
 ```
 
+## Quick Start
+
+```typescript
+// Cloudflare Workers - import env adapter first
+import 'rpc.do/env'
+import { triggers } from 'triggers.do'
+
+// Or use the factory for custom config
+import { Triggers } from 'triggers.do'
+const triggers = Triggers({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Your Automation Is a Mess
@@ -219,8 +231,11 @@ await triggers.fire('enterprise-signup', {
 ```typescript
 import { Triggers } from 'triggers.do'
 
+// For Cloudflare Workers, import env adapter first
+import 'rpc.do/env'
+
 const triggers = Triggers({
-  apiKey: process.env.TRIGGERS_API_KEY
+  // API key is read from TRIGGERS_API_KEY or DO_API_KEY environment variables
 })
 ```
 

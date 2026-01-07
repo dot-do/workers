@@ -53,12 +53,31 @@ export interface EventsClient {
   get(eventId: string): Promise<Event>
 }
 
+/**
+ * Create a configured events client
+ *
+ * @example
+ * ```typescript
+ * import { Events } from 'events.do'
+ * const events = Events({ baseURL: 'https://custom.example.com' })
+ * ```
+ */
 export function Events(options?: ClientOptions): EventsClient {
-  return createClient<EventsClient>('https://events.do', options)
+  return createClient<EventsClient>('events', options)
 }
 
-export const events: EventsClient = Events({
-  apiKey: typeof process !== 'undefined' ? process.env?.EVENTS_API_KEY : undefined,
-})
+/**
+ * Default events client
+ *
+ * Authentication: Set DO_API_KEY or EVENTS_API_KEY in environment.
+ * For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based config.
+ */
+export const events: EventsClient = Events()
+
+// Named exports
+export { Events, events }
+
+// Default export = camelCase instance
+export default events
 
 export type { ClientOptions } from 'rpc.do'

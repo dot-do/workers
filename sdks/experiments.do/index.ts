@@ -401,18 +401,39 @@ export interface ExperimentsClient {
 
 /**
  * Create a configured experiments client
+ *
+ * @example
+ * ```typescript
+ * import { Experiments } from 'experiments.do'
+ *
+ * const experiments = Experiments({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function Experiments(options?: ClientOptions): ExperimentsClient {
   return createClient<ExperimentsClient>('https://experiments.do', options)
 }
 
 /**
- * Default experiments client
+ * Default experiments client instance
+ *
+ * For Workers environment, import 'rpc.do/env' first to enable
+ * automatic environment variable resolution.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { experiments } from 'experiments.do'
+ *
+ * const exp = await experiments.list()
+ * ```
  */
-export const experiments: ExperimentsClient = Experiments({
-  apiKey: typeof process !== 'undefined' ? (process.env?.EXPERIMENTS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const experiments: ExperimentsClient = Experiments()
 
+// Named exports
+export { Experiments, experiments }
+
+// Default export = camelCase instance
 export default experiments
 
 export type { ClientOptions } from 'rpc.do'

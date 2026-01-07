@@ -6,6 +6,18 @@
 npm install verbs.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { verbs } from 'verbs.do'
+
+// Or use the factory for custom config
+import { Verbs } from 'verbs.do'
+const verbs = Verbs({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Your AI Can Talk, But It Can't Act
@@ -186,14 +198,25 @@ const recentFailures = await verbs.history({
 ## Configuration
 
 ```typescript
+// Workers - import env adapter to configure from environment
+import 'rpc.do/env'
+import { Verbs } from 'verbs.do'
+
+const verbs = Verbs()
+```
+
+Or use a custom configuration:
+
+```typescript
 import { Verbs } from 'verbs.do'
 
 const verbs = Verbs({
-  apiKey: process.env.VERBS_API_KEY
+  apiKey: 'your-api-key',
+  baseURL: 'https://custom.verbs.do'
 })
 ```
 
-Or set `VERBS_API_KEY` or `DO_API_KEY` in your environment.
+Environment variables `VERBS_API_KEY` or `DO_API_KEY` are automatically configured when using `rpc.do/env`.
 
 ## Stop Holding AI Back
 

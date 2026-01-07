@@ -6,6 +6,18 @@
 npm install functions.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { functions } from 'functions.do'
+
+// Or use the factory for custom config
+import { Functions } from 'functions.do'
+const functions = Functions({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## You Built a Function. Now You're Managing a Platform.
@@ -140,6 +152,26 @@ await functions.define('ml', { code, runtime: 'python' })
 // WebAssembly - for maximum performance
 await functions.define('wasm', { code, runtime: 'wasm' })
 ```
+
+## Configuration
+
+Set your API key via environment variable:
+
+```bash
+export FUNCTIONS_API_KEY=your_api_key
+```
+
+Or configure explicitly:
+
+```typescript
+import { Functions } from 'functions.do'
+
+const functions = Functions({
+  apiKey: 'your-api-key'
+})
+```
+
+For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based configuration.
 
 ## Your Functions, Your Focus
 

@@ -6,6 +6,18 @@
 npm install analytics.do
 ```
 
+## Quick Start
+
+```typescript
+// Cloudflare Workers - import env adapter first
+import 'rpc.do/env'
+import { analytics } from 'analytics.do'
+
+// Or use the factory for custom config
+import { Analytics } from 'analytics.do'
+const analytics = Analytics({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Data Without Direction Is Just Noise
@@ -205,8 +217,11 @@ const exportJob = await analytics.export({
 ```typescript
 import { Analytics } from 'analytics.do'
 
+// For Cloudflare Workers, import env adapter first
+import 'rpc.do/env'
+
 const analytics = Analytics({
-  apiKey: process.env.ANALYTICS_API_KEY
+  // API key is read from ANALYTICS_API_KEY or DO_API_KEY environment variables
 })
 ```
 

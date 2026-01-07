@@ -63,12 +63,31 @@ export interface FunctionsClient {
   logs(name: string, options?: { limit?: number; from?: Date }): Promise<Array<{ timestamp: Date; message: string; level: string }>>
 }
 
+/**
+ * Create a configured functions client
+ *
+ * @example
+ * ```typescript
+ * import { Functions } from 'functions.do'
+ * const functions = Functions({ baseURL: 'https://custom.example.com' })
+ * ```
+ */
 export function Functions(options?: ClientOptions): FunctionsClient {
-  return createClient<FunctionsClient>('https://functions.do', options)
+  return createClient<FunctionsClient>('functions', options)
 }
 
-export const functions: FunctionsClient = Functions({
-  apiKey: typeof process !== 'undefined' ? process.env?.FUNCTIONS_API_KEY : undefined,
-})
+/**
+ * Default functions client
+ *
+ * Authentication: Set DO_API_KEY or FUNCTIONS_API_KEY in environment.
+ * For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based config.
+ */
+export const functions: FunctionsClient = Functions()
+
+// Named exports
+export { Functions, functions }
+
+// Default export = camelCase instance
+export default functions
 
 export type { ClientOptions } from 'rpc.do'

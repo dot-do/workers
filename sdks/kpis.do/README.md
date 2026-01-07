@@ -6,6 +6,18 @@
 npm install kpis.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { kpis } from 'kpis.do'
+
+// Or use the factory for custom config
+import { KPIs } from 'kpis.do'
+const kpis = KPIs({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Your Metrics Are Already Outdated
@@ -222,14 +234,25 @@ await kpis.refresh({ kpiIds: ['mrr'] })
 ## Configuration
 
 ```typescript
+// Workers - import env adapter to configure from environment
+import 'rpc.do/env'
+import { KPIs } from 'kpis.do'
+
+const kpis = KPIs()
+```
+
+Or use a custom configuration:
+
+```typescript
 import { KPIs } from 'kpis.do'
 
 const kpis = KPIs({
-  apiKey: process.env.KPIS_API_KEY
+  apiKey: 'your-api-key',
+  baseURL: 'https://custom.kpis.do'
 })
 ```
 
-Or set `KPIS_API_KEY` or `DO_API_KEY` in your environment.
+Environment variables `KPIS_API_KEY` or `DO_API_KEY` are automatically configured when using `rpc.do/env`.
 
 ## Stop Flying Blind
 

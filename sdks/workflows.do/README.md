@@ -6,6 +6,18 @@
 npm install workflows.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { workflows } from 'workflows.do'
+
+// Or use the factory for custom config
+import { Workflows } from 'workflows.do'
+const workflows = Workflows({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Your Business Logic Is Trapped in Chaos
@@ -185,11 +197,13 @@ for await (const event of workflows.stream(run.id)) {
 import { Workflows } from 'workflows.do'
 
 const workflows = Workflows({
-  apiKey: process.env.WORKFLOWS_API_KEY
+  apiKey: 'your-api-key'
 })
 ```
 
 Or set `WORKFLOWS_API_KEY` or `DO_API_KEY` in your environment.
+
+For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based configuration.
 
 ## Stop Fearing Your Own Code
 

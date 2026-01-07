@@ -511,18 +511,38 @@ export interface ProjectsClient {
 
 /**
  * Create a configured projects client
+ *
+ * @example
+ * ```typescript
+ * import { Projects } from 'projects.do'
+ * const projects = Projects({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function Projects(options?: ClientOptions): ProjectsClient {
-  return createClient<ProjectsClient>('https://projects.do', options)
+  return createClient<ProjectsClient>('projects', options)
 }
 
 /**
- * Default projects client
+ * Default projects client instance
+ *
+ * Uses global env from rpc.do/env for authentication.
+ * In Workers, import 'rpc.do/env' before using this instance.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { projects } from 'projects.do'
+ *
+ * await projects.create({ name: 'Mobile App Launch', ... })
+ * ```
  */
-export const projects: ProjectsClient = Projects({
-  apiKey: typeof process !== 'undefined' ? (process.env?.PROJECTS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const projects: ProjectsClient = Projects()
 
+// Named exports
+export { Projects, projects }
+
+// Default export
 export default projects
 
 export type { ClientOptions } from 'rpc.do'

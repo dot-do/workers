@@ -6,6 +6,18 @@
 npm install actions.do
 ```
 
+## Quick Start
+
+```typescript
+// Cloudflare Workers - import env adapter first
+import 'rpc.do/env'
+import { actions } from 'actions.do'
+
+// Or use the factory for custom config
+import { Actions } from 'actions.do'
+const actions = Actions({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Your Actions Are Scattered Across Services
@@ -206,8 +218,11 @@ await actions.delete('deprecated_action')
 ```typescript
 import { Actions } from 'actions.do'
 
+// For Cloudflare Workers, import env adapter first
+import 'rpc.do/env'
+
 const actions = Actions({
-  apiKey: process.env.ACTIONS_API_KEY
+  // API key is read from ACTIONS_API_KEY or DO_API_KEY environment variables
 })
 ```
 

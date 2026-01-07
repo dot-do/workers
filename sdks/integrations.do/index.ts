@@ -468,18 +468,34 @@ export interface IntegrationsClient {
 
 /**
  * Create a configured integrations client
+ *
+ * @example
+ * ```typescript
+ * // With custom options
+ * import { Integrations } from 'integrations.do'
+ * const integrations = Integrations({ baseURL: 'https://custom.example.com' })
+ *
+ * // In Cloudflare Workers, import env adapter first
+ * import 'rpc.do/env'
+ * import { integrations } from 'integrations.do'
+ * ```
  */
 export function Integrations(options?: ClientOptions): IntegrationsClient {
   return createClient<IntegrationsClient>('https://integrations.do', options)
 }
 
 /**
- * Default integrations client
+ * Default integrations client instance
+ *
+ * Note: For Cloudflare Workers, import 'rpc.do/env' first to set up environment.
+ * API key is read from INTEGRATIONS_API_KEY or DO_API_KEY environment variables.
  */
-export const integrations: IntegrationsClient = Integrations({
-  apiKey: typeof process !== 'undefined' ? (process.env?.INTEGRATIONS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const integrations: IntegrationsClient = Integrations()
 
+// Named exports
+export { Integrations, integrations }
+
+// Default export = camelCase instance
 export default integrations
 
 export type { ClientOptions } from 'rpc.do'

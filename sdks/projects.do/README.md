@@ -226,17 +226,30 @@ console.log(forecast.runwayDays) // 45
 | `completed` | Project finished successfully |
 | `cancelled` | Project was cancelled |
 
-## Configuration
+## Installation
 
-```typescript
-import { Projects } from 'projects.do'
-
-const projects = Projects({
-  apiKey: process.env.PROJECTS_API_KEY
-})
+```bash
+npm install projects.do
 ```
 
-Or set `PROJECTS_API_KEY` or `DO_API_KEY` in your environment.
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { projects } from 'projects.do'
+
+// Or use the factory for custom config
+import { Projects } from 'projects.do'
+const projects = Projects({ baseURL: 'https://custom.example.com' })
+
+// Default import also works
+import projects from 'projects.do'
+```
+
+## Configuration
+
+Set `DO_API_KEY` or `ORG_AI_API_KEY` in your environment for authentication.
 
 ## Stop Managing, Start Shipping
 

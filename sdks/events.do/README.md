@@ -6,6 +6,18 @@
 npm install events.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { events } from 'events.do'
+
+// Or use the factory for custom config
+import { Events } from 'events.do'
+const events = Events({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Event-Driven Architecture Shouldn't Require an Ops Team
@@ -163,9 +175,11 @@ Or configure the client directly:
 import { Events } from 'events.do'
 
 const events = Events({
-  apiKey: process.env.EVENTS_API_KEY
+  apiKey: 'your-api-key'
 })
 ```
+
+For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based configuration.
 
 ## Types
 

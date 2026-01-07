@@ -198,17 +198,30 @@ const companyProgress = await goals.progress('company-arr')
 | `completed` | Target achieved |
 | `cancelled` | Goal abandoned |
 
-## Configuration
+## Installation
 
-```typescript
-import { Goals } from 'goals.do'
-
-const goals = Goals({
-  apiKey: process.env.GOALS_API_KEY
-})
+```bash
+npm install goals.do
 ```
 
-Or set `GOALS_API_KEY` or `DO_API_KEY` in your environment.
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { goals } from 'goals.do'
+
+// Or use the factory for custom config
+import { Goals } from 'goals.do'
+const goals = Goals({ baseURL: 'https://custom.example.com' })
+
+// Default import also works
+import goals from 'goals.do'
+```
+
+## Configuration
+
+Set `DO_API_KEY` or `ORG_AI_API_KEY` in your environment for authentication.
 
 ## Stop Setting Goals You Forget
 

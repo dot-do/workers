@@ -212,17 +212,30 @@ await plans.archive('2024-plan')
 | `completed` | All objectives and milestones achieved |
 | `archived` | Plan retained for reference |
 
-## Configuration
+## Installation
 
-```typescript
-import { Plans } from 'plans.do'
-
-const plans = Plans({
-  apiKey: process.env.PLANS_API_KEY
-})
+```bash
+npm install plans.do
 ```
 
-Or set `PLANS_API_KEY` or `DO_API_KEY` in your environment.
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { plans } from 'plans.do'
+
+// Or use the factory for custom config
+import { Plans } from 'plans.do'
+const plans = Plans({ baseURL: 'https://custom.example.com' })
+
+// Default import also works
+import plans from 'plans.do'
+```
+
+## Configuration
+
+Set `DO_API_KEY` or `ORG_AI_API_KEY` in your environment for authentication.
 
 ## Stop Planning, Start Executing
 

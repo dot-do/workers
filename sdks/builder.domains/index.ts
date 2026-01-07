@@ -91,12 +91,39 @@ export interface DomainsClient {
   }
 }
 
-export function createDomains(options?: ClientOptions): DomainsClient {
+/**
+ * Create a configured Domains client (PascalCase factory)
+ *
+ * @example
+ * ```typescript
+ * import { Domains } from 'builder.domains'
+ * const domains = Domains({ apiKey: 'xxx' })
+ * ```
+ */
+export function Domains(options?: ClientOptions): DomainsClient {
   return createClient<DomainsClient>('https://builder.domains', options)
 }
 
-export const domains: DomainsClient = createDomains({
-  apiKey: typeof process !== 'undefined' ? process.env?.DOMAINS_API_KEY : undefined,
-})
+/**
+ * Default Domains client instance (camelCase)
+ * For Workers: import 'rpc.do/env' first to enable env-based API key resolution
+ *
+ * @example
+ * ```typescript
+ * import { domains } from 'builder.domains'
+ * await domains.claim('my-startup.hq.com.ai')
+ * ```
+ */
+export const domains: DomainsClient = Domains()
 
+// Named exports
+export { Domains, domains }
+
+// Default export = camelCase instance
+export default domains
+
+// Legacy alias
+export const createDomains = Domains
+
+// Re-export types
 export type { ClientOptions } from 'rpc.do'

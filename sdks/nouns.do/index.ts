@@ -319,19 +319,39 @@ export interface NounsClient {
 }
 
 /**
- * Create a configured nouns client
+ * Create a configured Nouns client
+ *
+ * @example
+ * ```typescript
+ * import { Nouns } from 'nouns.do'
+ * const nouns = Nouns({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function Nouns(options?: ClientOptions): NounsClient {
-  return createClient<NounsClient>('https://nouns.do', options)
+  return createClient<NounsClient>('nouns', options)
 }
 
 /**
- * Default nouns client
+ * Default Nouns client instance
+ *
+ * For Workers environment, import 'rpc.do/env' first to configure API keys
+ * from environment variables automatically.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { nouns } from 'nouns.do'
+ *
+ * await nouns.define('Customer', { fields: { name: { type: 'string' } } })
+ * ```
  */
-export const nouns: NounsClient = Nouns({
-  apiKey: typeof process !== 'undefined' ? (process.env?.NOUNS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const nouns: NounsClient = Nouns()
 
+// Named exports
+export { Nouns, nouns }
+
+// Default export = camelCase instance
 export default nouns
 
 export type { ClientOptions } from 'rpc.do'

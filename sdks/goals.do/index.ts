@@ -295,18 +295,38 @@ export interface GoalsClient {
 
 /**
  * Create a configured goals client
+ *
+ * @example
+ * ```typescript
+ * import { Goals } from 'goals.do'
+ * const goals = Goals({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function Goals(options?: ClientOptions): GoalsClient {
-  return createClient<GoalsClient>('https://goals.do', options)
+  return createClient<GoalsClient>('goals', options)
 }
 
 /**
- * Default goals client
+ * Default goals client instance
+ *
+ * Uses global env from rpc.do/env for authentication.
+ * In Workers, import 'rpc.do/env' before using this instance.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { goals } from 'goals.do'
+ *
+ * await goals.create({ name: 'Q2 Revenue', ... })
+ * ```
  */
-export const goals: GoalsClient = Goals({
-  apiKey: typeof process !== 'undefined' ? (process.env?.GOALS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const goals: GoalsClient = Goals()
 
+// Named exports
+export { Goals, goals }
+
+// Default export
 export default goals
 
 export type { ClientOptions } from 'rpc.do'

@@ -6,6 +6,18 @@
 npm install llm.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { llm } from 'llm.do'
+
+// Or use the factory for custom config
+import { LLM } from 'llm.do'
+const llm = LLM({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## AI Is Eating Your Budget (And Your Time)

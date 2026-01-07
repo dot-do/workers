@@ -6,6 +6,18 @@
 npm install nouns.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { nouns } from 'nouns.do'
+
+// Or use the factory for custom config
+import { Nouns } from 'nouns.do'
+const nouns = Nouns({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Your Data Is Speaking a Language AI Can't Understand
@@ -210,14 +222,25 @@ console.log(`${count} products out of stock`)
 ## Configuration
 
 ```typescript
+// Workers - import env adapter to configure from environment
+import 'rpc.do/env'
+import { Nouns } from 'nouns.do'
+
+const nouns = Nouns()
+```
+
+Or use a custom configuration:
+
+```typescript
 import { Nouns } from 'nouns.do'
 
 const nouns = Nouns({
-  apiKey: process.env.NOUNS_API_KEY
+  apiKey: 'your-api-key',
+  baseURL: 'https://custom.nouns.do'
 })
 ```
 
-Or set `NOUNS_API_KEY` or `DO_API_KEY` in your environment.
+Environment variables `NOUNS_API_KEY` or `DO_API_KEY` are automatically configured when using `rpc.do/env`.
 
 ## Stop Translating. Start Building.
 

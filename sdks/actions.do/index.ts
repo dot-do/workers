@@ -359,18 +359,34 @@ export interface ActionsClient {
 
 /**
  * Create a configured actions client
+ *
+ * @example
+ * ```typescript
+ * // With custom options
+ * import { Actions } from 'actions.do'
+ * const actions = Actions({ baseURL: 'https://custom.example.com' })
+ *
+ * // In Cloudflare Workers, import env adapter first
+ * import 'rpc.do/env'
+ * import { actions } from 'actions.do'
+ * ```
  */
 export function Actions(options?: ClientOptions): ActionsClient {
   return createClient<ActionsClient>('https://actions.do', options)
 }
 
 /**
- * Default actions client
+ * Default actions client instance
+ *
+ * Note: For Cloudflare Workers, import 'rpc.do/env' first to set up environment.
+ * API key is read from ACTIONS_API_KEY or DO_API_KEY environment variables.
  */
-export const actions: ActionsClient = Actions({
-  apiKey: typeof process !== 'undefined' ? (process.env?.ACTIONS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const actions: ActionsClient = Actions()
 
+// Named exports
+export { Actions, actions }
+
+// Default export = camelCase instance
 export default actions
 
 export type { ClientOptions } from 'rpc.do'

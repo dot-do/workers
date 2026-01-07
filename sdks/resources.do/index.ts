@@ -433,19 +433,39 @@ export interface ResourcesClient {
 }
 
 /**
- * Create a configured resources client
+ * Create a configured Resources client
+ *
+ * @example
+ * ```typescript
+ * import { Resources } from 'resources.do'
+ * const resources = Resources({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function Resources(options?: ClientOptions): ResourcesClient {
-  return createClient<ResourcesClient>('https://resources.do', options)
+  return createClient<ResourcesClient>('resources', options)
 }
 
 /**
- * Default resources client
+ * Default Resources client instance
+ *
+ * For Workers environment, import 'rpc.do/env' first to configure API keys
+ * from environment variables automatically.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { resources } from 'resources.do'
+ *
+ * await resources.allocate({ resourceId: 'room-1', start: new Date(), end: new Date() })
+ * ```
  */
-export const resources: ResourcesClient = Resources({
-  apiKey: typeof process !== 'undefined' ? (process.env?.RESOURCES_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const resources: ResourcesClient = Resources()
 
+// Named exports
+export { Resources, resources }
+
+// Default export = camelCase instance
 export default resources
 
 export type { ClientOptions } from 'rpc.do'

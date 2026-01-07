@@ -275,18 +275,29 @@ export interface WorkflowsClient {
 
 /**
  * Create a configured workflows client
+ *
+ * @example
+ * ```typescript
+ * import { Workflows } from 'workflows.do'
+ * const workflows = Workflows({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function Workflows(options?: ClientOptions): WorkflowsClient {
-  return createClient<WorkflowsClient>('https://workflows.do', options)
+  return createClient<WorkflowsClient>('workflows', options)
 }
 
 /**
  * Default workflows client
+ *
+ * Authentication: Set DO_API_KEY or WORKFLOWS_API_KEY in environment.
+ * For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based config.
  */
-export const workflows: WorkflowsClient = Workflows({
-  apiKey: typeof process !== 'undefined' ? (process.env?.WORKFLOWS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const workflows: WorkflowsClient = Workflows()
 
+// Named exports
+export { Workflows, workflows }
+
+// Default export = camelCase instance
 export default workflows
 
 // Re-export the Workflow function for local usage

@@ -357,18 +357,39 @@ export interface DatasetsClient {
 
 /**
  * Create a configured datasets client
+ *
+ * @example
+ * ```typescript
+ * import { Datasets } from 'datasets.do'
+ *
+ * const datasets = Datasets({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function Datasets(options?: ClientOptions): DatasetsClient {
   return createClient<DatasetsClient>('https://datasets.do', options)
 }
 
 /**
- * Default datasets client
+ * Default datasets client instance
+ *
+ * For Workers environment, import 'rpc.do/env' first to enable
+ * automatic environment variable resolution.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { datasets } from 'datasets.do'
+ *
+ * const all = await datasets.list()
+ * ```
  */
-export const datasets: DatasetsClient = Datasets({
-  apiKey: typeof process !== 'undefined' ? (process.env?.DATASETS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const datasets: DatasetsClient = Datasets()
 
+// Named exports
+export { Datasets, datasets }
+
+// Default export = camelCase instance
 export default datasets
 
 export type { ClientOptions } from 'rpc.do'

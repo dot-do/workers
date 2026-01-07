@@ -1,0 +1,77 @@
+{
+  "name": "workers.do",
+  "version": "0.0.1",
+  "description": "The complete platform for building on Cloudflare Workers - CLI and SDK",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "workers.do": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./middleware": {
+      "import": "@dotdo/middleware",
+      "types": "@dotdo/middleware"
+    },
+    "./auth": {
+      "import": "@dotdo/auth",
+      "types": "@dotdo/auth"
+    },
+    "./rpc": {
+      "import": "@dotdo/rpc",
+      "types": "@dotdo/rpc"
+    },
+    "./snippets": {
+      "import": "./dist/snippets.js",
+      "types": "./dist/snippets.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts src/cli.ts src/snippets.ts --format esm --dts --clean",
+    "dev": "tsup src/index.ts src/cli.ts src/snippets.ts --format esm --dts --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dotdo/auth": "workspace:*",
+    "@dotdo/edge-api": "workspace:*",
+    "@dotdo/middleware": "workspace:*",
+    "@dotdo/rpc": "workspace:*",
+    "capnweb": "^0.2.0",
+    "cli.do": "workspace:*",
+    "commander": "^12.0.0",
+    "dotdo": "workspace:*",
+    "mcp.do": "workspace:*",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "@types/node": "^20.0.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "snippets",
+    "deployment",
+    "cli",
+    "sdk",
+    "workers.do",
+    "platform"
+  ],
+  "files": [
+    "dist"
+  ],
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://workers.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/drivly/workers.do"
+  }
+}

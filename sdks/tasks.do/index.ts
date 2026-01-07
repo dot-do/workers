@@ -394,18 +394,38 @@ export interface TasksClient {
 
 /**
  * Create a configured tasks client
+ *
+ * @example
+ * ```typescript
+ * import { Tasks } from 'tasks.do'
+ * const tasks = Tasks({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function Tasks(options?: ClientOptions): TasksClient {
-  return createClient<TasksClient>('https://tasks.do', options)
+  return createClient<TasksClient>('tasks', options)
 }
 
 /**
- * Default tasks client
+ * Default tasks client instance
+ *
+ * Uses global env from rpc.do/env for authentication.
+ * In Workers, import 'rpc.do/env' before using this instance.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { tasks } from 'tasks.do'
+ *
+ * await tasks.create({ title: 'Review report', ... })
+ * ```
  */
-export const tasks: TasksClient = Tasks({
-  apiKey: typeof process !== 'undefined' ? (process.env?.TASKS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const tasks: TasksClient = Tasks()
 
+// Named exports
+export { Tasks, tasks }
+
+// Default export
 export default tasks
 
 export type { ClientOptions } from 'rpc.do'

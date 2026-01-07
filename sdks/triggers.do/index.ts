@@ -322,18 +322,34 @@ export interface TriggersClient {
 
 /**
  * Create a configured triggers client
+ *
+ * @example
+ * ```typescript
+ * // With custom options
+ * import { Triggers } from 'triggers.do'
+ * const triggers = Triggers({ baseURL: 'https://custom.example.com' })
+ *
+ * // In Cloudflare Workers, import env adapter first
+ * import 'rpc.do/env'
+ * import { triggers } from 'triggers.do'
+ * ```
  */
 export function Triggers(options?: ClientOptions): TriggersClient {
   return createClient<TriggersClient>('https://triggers.do', options)
 }
 
 /**
- * Default triggers client
+ * Default triggers client instance
+ *
+ * Note: For Cloudflare Workers, import 'rpc.do/env' first to set up environment.
+ * API key is read from TRIGGERS_API_KEY or DO_API_KEY environment variables.
  */
-export const triggers: TriggersClient = Triggers({
-  apiKey: typeof process !== 'undefined' ? (process.env?.TRIGGERS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const triggers: TriggersClient = Triggers()
 
+// Named exports
+export { Triggers, triggers }
+
+// Default export = camelCase instance
 export default triggers
 
 export type { ClientOptions } from 'rpc.do'

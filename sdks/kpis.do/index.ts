@@ -387,18 +387,38 @@ export interface KPIsClient {
 
 /**
  * Create a configured KPIs client
+ *
+ * @example
+ * ```typescript
+ * import { KPIs } from 'kpis.do'
+ * const kpis = KPIs({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function KPIs(options?: ClientOptions): KPIsClient {
-  return createClient<KPIsClient>('https://kpis.do', options)
+  return createClient<KPIsClient>('kpis', options)
 }
 
 /**
- * Default KPIs client
+ * Default KPIs client instance
+ *
+ * For Workers environment, import 'rpc.do/env' first to configure API keys
+ * from environment variables automatically.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { kpis } from 'kpis.do'
+ *
+ * await kpis.measure('mrr')
+ * ```
  */
-export const kpis: KPIsClient = KPIs({
-  apiKey: typeof process !== 'undefined' ? (process.env?.KPIS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const kpis: KPIsClient = KPIs()
 
+// Named exports
+export { KPIs, kpis }
+
+// Default export = camelCase instance
 export default kpis
 
 export type { ClientOptions } from 'rpc.do'

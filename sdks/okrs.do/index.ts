@@ -360,18 +360,38 @@ export interface OKRsClient {
 
 /**
  * Create a configured OKRs client
+ *
+ * @example
+ * ```typescript
+ * import { OKRs } from 'okrs.do'
+ * const okrs = OKRs({ baseURL: 'https://custom.example.com' })
+ * ```
  */
 export function OKRs(options?: ClientOptions): OKRsClient {
-  return createClient<OKRsClient>('https://okrs.do', options)
+  return createClient<OKRsClient>('okrs', options)
 }
 
 /**
- * Default OKRs client
+ * Default OKRs client instance
+ *
+ * For Workers environment, import 'rpc.do/env' first to configure API keys
+ * from environment variables automatically.
+ *
+ * @example
+ * ```typescript
+ * // Workers - import env adapter first
+ * import 'rpc.do/env'
+ * import { okrs } from 'okrs.do'
+ *
+ * await okrs.score('objective-1')
+ * ```
  */
-export const okrs: OKRsClient = OKRs({
-  apiKey: typeof process !== 'undefined' ? (process.env?.OKRS_API_KEY || process.env?.DO_API_KEY) : undefined,
-})
+export const okrs: OKRsClient = OKRs()
 
+// Named exports
+export { OKRs, okrs }
+
+// Default export = camelCase instance
 export default okrs
 
 export type { ClientOptions } from 'rpc.do'

@@ -7,18 +7,21 @@
  * - CapnWeb RPC
  *
  * Key patterns:
- * - TaggedCallable: fn(args), fn`template`, fn`{named}`(params)
- * - RpcPromise: Promise pipelining for efficient RPC
+ * - Fn<T, Args, Config>: Three calling styles
+ *   - fn(args, config?) - Direct call
+ *   - fn`${vals}` - Tagged template with interpolation
+ *   - fn`{name}`(params) - Tagged template with named params
+ * - RpcFn<T, Args, Config>: Returns RpcPromise for pipelining
  * - SerializableSqlQuery: Transform tagged templates for RPC wire format
  *
  * @packageDocumentation
  */
 
 // =============================================================================
-// Core Utility Types
+// Core Function & RPC Types
 // =============================================================================
 
-export * from './template.js'
+export * from './fn.js'
 export * from './rpc.js'
 
 // =============================================================================
@@ -27,7 +30,6 @@ export * from './rpc.js'
 
 export * from './do.js'
 export * from './sql.js'
-export * from './function.js'
 
 // =============================================================================
 // Primitives Re-exports

@@ -109,7 +109,7 @@ export function LLM(options?: ClientOptions): LLMClient {
 
 /**
  * Default LLM client instance (camelCase)
- * Uses environment variable LLM_API_KEY if available
+ * For Workers: import 'rpc.do/env' first to enable env-based API key resolution
  *
  * @example
  * ```typescript
@@ -117,9 +117,13 @@ export function LLM(options?: ClientOptions): LLMClient {
  * await llm.complete({ model: 'claude-3-opus', prompt: '...' })
  * ```
  */
-export const llm: LLMClient = LLM({
-  apiKey: typeof process !== 'undefined' ? process.env?.LLM_API_KEY : undefined,
-})
+export const llm: LLMClient = LLM()
+
+// Named exports
+export { LLM, llm }
+
+// Default export = camelCase instance
+export default llm
 
 // Legacy alias
 export const createLLM = LLM

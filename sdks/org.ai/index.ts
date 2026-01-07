@@ -83,17 +83,38 @@ export interface OrgClient {
 }
 
 /**
- * Create a configured org client
+ * Create a configured Org client (PascalCase factory)
+ *
+ * @example
+ * ```typescript
+ * import { Org } from 'org.ai'
+ * const org = Org({ apiKey: 'xxx' })
+ * ```
  */
-export function createOrg(options?: ClientOptions): OrgClient {
+export function Org(options?: ClientOptions): OrgClient {
   return createClient<OrgClient>('https://id.org.ai', options)
 }
 
 /**
- * Default org client instance
+ * Default Org client instance (camelCase)
+ * For Workers: import 'rpc.do/env' first to enable env-based API key resolution
+ *
+ * @example
+ * ```typescript
+ * import { org } from 'org.ai'
+ * await org.sso.getAuthorizationUrl({ organization: 'org_123' })
+ * ```
  */
-export const org: OrgClient = createOrg({
-  apiKey: typeof process !== 'undefined' ? process.env?.ORG_API_KEY : undefined,
-})
+export const org: OrgClient = Org()
 
+// Named exports
+export { Org, org }
+
+// Default export = camelCase instance
+export default org
+
+// Legacy alias
+export const createOrg = Org
+
+// Re-export types
 export type { ClientOptions } from 'rpc.do'

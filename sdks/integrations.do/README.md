@@ -6,6 +6,18 @@
 npm install integrations.do
 ```
 
+## Quick Start
+
+```typescript
+// Cloudflare Workers - import env adapter first
+import 'rpc.do/env'
+import { integrations } from 'integrations.do'
+
+// Or use the factory for custom config
+import { Integrations } from 'integrations.do'
+const integrations = Integrations({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Your Data Is Trapped in Silos
@@ -204,8 +216,11 @@ await integrations.sync('stripe-to-hubspot', { force: true })
 ```typescript
 import { Integrations } from 'integrations.do'
 
+// For Cloudflare Workers, import env adapter first
+import 'rpc.do/env'
+
 const integrations = Integrations({
-  apiKey: process.env.INTEGRATIONS_API_KEY
+  // API key is read from INTEGRATIONS_API_KEY or DO_API_KEY environment variables
 })
 ```
 

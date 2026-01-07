@@ -1,4 +1,4 @@
-# Workers.do Services-as-Software
+# [Workers.do](https://workers.do) [Services-as-Software](https://services.as/software)
 
 > AI + Code Workers `.do` work for you.
 

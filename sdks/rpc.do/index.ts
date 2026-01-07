@@ -596,13 +596,14 @@ export {
   createFnProxy,
   createStreamFnProxy,
   createContextFnProxy,
-  batchRpc,
   withDefaultOpts,
   toSafe,
   serializeFnCall,
   isTemplateStringsArray,
   hasNamedParams,
   extractParamNames,
+  // Note: batchRpc was removed - it was fundamentally broken.
+  // Use Promise.all() for concurrent calls instead.
 } from './fn-proxy.js'
 
 export type {

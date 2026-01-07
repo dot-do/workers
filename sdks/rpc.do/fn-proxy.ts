@@ -196,12 +196,15 @@ export function serializeFnCall<In>(
  * await ai`Summarize {content}`({ content: text, model: 'gpt-4' })
  * ```
  */
+// Default known option keys (common across most Fn types)
+const DEFAULT_KNOWN_OPTS = ['timeout', 'model', 'temperature', 'maxTokens', 'signal', 'cache']
+
 export function createFnProxy<Out, In = any, Opts extends Record<string, unknown> = {}>(
   method: string,
   rpcCall: (call: SerializableFnCall<In>) => RpcPromise<Out>,
   options: FnTransformOptions = {}
 ): RpcFn<Out, In, Opts> {
-  const { debug = false } = options
+  const { debug = false, strict = false, knownOpts = DEFAULT_KNOWN_OPTS } = options
 
   function handler(
     inputOrStrings: In | TemplateStringsArray,
@@ -219,13 +222,36 @@ export function createFnProxy<Out, In = any, Opts extends Record<string, unknown
       // Return function that accepts params
       return (params: Record<string, unknown> & Partial<Opts>) => {
         const template = parseNamedTemplate(strings, params)
+
         // Extract opts from params (anything not in paramNames)
         const opts: Record<string, unknown> = {}
+        const unknownKeys: string[] = []
+
         for (const [key, value] of Object.entries(params)) {
           if (!paramNames.includes(key)) {
-            opts[key] = value
+            // Check if this is a known option key
+            if (knownOpts.includes(key)) {
+              opts[key] = value
+            } else {
+              // Unknown key - not a template param and not a known opt
+              unknownKeys.push(key)
+              opts[key] = value // Still include it, but warn/error
+            }
           }
         }
+
+        // Handle unknown keys
+        if (unknownKeys.length > 0) {
+          const msg = `Unknown parameter(s): ${unknownKeys.join(', ')}. ` +
+            `Expected template params: [${paramNames.join(', ')}] or opts: [${knownOpts.join(', ')}]`
+
+          if (strict) {
+            throw new Error(msg)
+          } else if (debug) {
+            console.warn(`[${method}] ${msg}`)
+          }
+        }
+
         const call = serializeFnCall(method, undefined as In, opts, template)
         if (debug) {
           console.log(`[${method}] RPC call:`, call)
@@ -384,22 +410,60 @@ export function batchRpc(): never {
 
 /**
  * Create a function with default options.
+ *
+ * Supports all three calling styles:
+ * - Direct call: `fn(input, opts)` - merges defaults with opts
+ * - Named template: `fn\`{name}\`({ name, ...opts })` - merges defaults with opts
+ * - Direct template: `fn\`${val}\`` - applies defaults (limited support)
  */
 export function withDefaultOpts<Out, In, Opts extends Record<string, unknown>>(
   fn: RpcFn<Out, In, Opts>,
   defaults: Partial<Opts>
 ): RpcFn<Out, In, Opts> {
+  // Store defaults on the function for access by the proxy
+  const wrappedFn = Object.assign(
+    function wrappedHandler(this: unknown, ...args: unknown[]) {
+      return (fn as Function).apply(this, args)
+    },
+    { _defaults: defaults }
+  )
+
   // Create a new proxy that merges defaults with provided opts
-  return new Proxy(fn, {
+  return new Proxy(wrappedFn as unknown as RpcFn<Out, In, Opts>, {
     apply(target, thisArg, args) {
-      // Check if this is a direct call with opts
-      if (args.length === 2 && typeof args[1] === 'object') {
+      // Case 1: Direct call with opts - fn(input, opts)
+      if (args.length === 2 && typeof args[1] === 'object' && !isTemplateStringsArray(args[0])) {
         args[1] = { ...defaults, ...args[1] }
-      } else if (args.length === 1 && !isTemplateStringsArray(args[0])) {
-        // Direct call without opts - add defaults
-        args.push(defaults)
+        return Reflect.apply(fn as Function, thisArg, args)
       }
-      return Reflect.apply(target, thisArg, args)
+
+      // Case 2: Direct call without opts - fn(input)
+      if (args.length === 1 && !isTemplateStringsArray(args[0])) {
+        args.push(defaults)
+        return Reflect.apply(fn as Function, thisArg, args)
+      }
+
+      // Case 3: Template call - fn`template` or fn`{name}`
+      if (isTemplateStringsArray(args[0])) {
+        const result = Reflect.apply(fn as Function, thisArg, args)
+
+        // Named template returns a function - wrap it to inject defaults
+        if (typeof result === 'function') {
+          return (params: Record<string, unknown>) => {
+            // Merge defaults with provided params (params override defaults)
+            const mergedParams = { ...defaults, ...params }
+            return result(mergedParams)
+          }
+        }
+
+        // Direct template returns a promise - can't inject opts here
+        // The underlying proxy would need to capture defaults somehow
+        // For now, this is a known limitation
+        return result
+      }
+
+      // Fallback
+      return Reflect.apply(fn as Function, thisArg, args)
     },
   }) as RpcFn<Out, In, Opts>
 }

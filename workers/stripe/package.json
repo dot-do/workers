@@ -1,0 +1,15 @@
+{
+  "name": "@dotdo/worker-stripe",
+  "version": "0.0.1",
+  "description": "Stripe SDK exposed as multi-transport RPC worker",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "stripe": "^17.0.0",
+    "@dotdo/rpc": "workspace:*"
+  }
+}

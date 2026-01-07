@@ -1,0 +1,25 @@
+{
+  "name": "workers.do",
+  "version": "0.0.1",
+  "description": "The complete platform for building on Cloudflare Workers - umbrella package with tree-shakable imports",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./middleware": "@dotdo/middleware",
+    "./auth": "@dotdo/auth",
+    "./router": "./router.ts",
+    "./rpc": "@dotdo/rpc",
+    "./snippets": "@dotdo/snippets"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "tsup"
+  },
+  "dependencies": {
+    "@dotdo/middleware": "workspace:*",
+    "@dotdo/auth": "workspace:*",
+    "@dotdo/rpc": "workspace:*",
+    "dotdo": "workspace:*"
+  }
+}

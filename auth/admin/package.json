@@ -1,0 +1,12 @@
+{
+  "name": "@dotdo/auth-plugin-admin",
+  "version": "0.0.1",
+  "description": "Better Auth admin plugin for user management",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/auth": "workspace:*"
+  }
+}

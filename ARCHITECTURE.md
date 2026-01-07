@@ -1,1865 +1,475 @@
-# @dotdo/workers Architecture
+# workers.do Architecture
 
 ## Overview
 
-A monorepo of Cloudflare Workers deployed on the .do account, providing RPC-accessible AI primitives. Each worker is both:
-1. **An RPC server** - accessible via Cloudflare service bindings internally
-2. **A CapnWeb server** - accessible externally via HTTP and WebSocket
+workers.do is a monorepo providing a complete platform for building on Cloudflare Workers. The architecture is designed around several key principles:
 
-All workers use Durable Objects with WebSocket hibernation for cost-effective, stateful connections.
+1. **Multi-transport RPC** - Every API automatically exposes REST, Workers RPC, CapnWeb, MCP, and HATEOAS interfaces
+2. **Tree-shakable composition** - Pay only for what you use, from tiny to full-featured
+3. **Free-tier optimization** - Maximize Cloudflare's free offerings with Snippets and Static Assets
+4. **MDX-as-Worker** - Workers defined in MDX files that serve as code, docs, and config
 
-## Research Summary
-
-### Key Technologies
-
-| Technology | Purpose |
-|-----------|---------|
-| **Workers RPC** | Service bindings for internal worker-to-worker calls |
-| **RpcTarget** | Base class for objects callable via RPC |
-| **WorkerEntrypoint** | Base class for Workers as RPC servers |
-| **WebSocket Hibernation** | Cost-effective long-lived connections |
-| **agents** (npm) | Cloudflare's Agent SDK (extends partyserver) |
-
-### Inheritance Chain (agents package)
-```
-Agent<Env, State, Props> extends Server extends DurableObject
-```
-
-## Proposed Architecture
-
-### 1. Base Classes
+## Repository Structure
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    cloudflare:workers                        │
-│                      DurableObject                           │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      agents (npm)                            │
-│                        Server                                │
-│   • WebSocket handling (partyserver)                        │
-│   • Connection management                                    │
-│   • Room-based messaging                                     │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      agents (npm)                            │
-│                        Agent                                 │
-│   • State management (SQL-backed)                           │
-│   • @callable() decorator for RPC                           │
-│   • Scheduling & queuing                                     │
-│   • MCP integration                                          │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│          @dotdo/do (standalone repo: github.com/dotdo/do)   │
-│                         DO                                   │
-│   "An agentic database that can DO anything"                │
-│   • RpcTarget implementation (capnweb style)                │
-│   • HTTP + WS dual transport                                │
-│   • WebSocket hibernation handlers                          │
-│   • Auth context propagation                                 │
-│   • Simple CRUD primitives (get, list, create, update, del) │
-│   • ai-database compatible interface                         │
-│   • SMALL BUNDLE (~20-30KB treeshaken)                      │
-└─────────────────────────────────────────────────────────────┘
-                              │
-          ┌───────────────────┼───────────────────┐
-          ▼                   ▼                   ▼
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│    MongoDB      │  │   Other .do     │  │   Other .do     │
-│   (mongo.do)    │  │    Workers      │  │    Workers      │
-│ • Full MongoDB  │  │ • Functions     │  │ • Agents        │
-│   compatibility │  │ • Workflows     │  │ • Humans        │
-│ • Aggregation   │  │ • Workers       │  │ • OAuth         │
-│ • Wire protocol │  │                 │  │                 │
-│ • BSON, etc.    │  │ Use DO for      │  │ Use DO for      │
-│ • ~176KB bundle │  │ simple storage  │  │ simple storage  │
-│ Extends DO      │  │ Extends DO      │  │ Extends DO      │
-└─────────────────┘  └─────────────────┘  └─────────────────┘
+workers.do/
+├── apps/                  # Full applications (Vite + React Router + shadcn)
+│   ├── admin/             # Platform admin UI
+│   ├── dashboard/         # Analytics & monitoring
+│   ├── app/               # User-facing application
+│   └── docs/              # Fumadocs documentation
+│
+├── workers/               # Cloudflare Workers (deployable units)
+│   ├── workers/           # workers.do umbrella worker
+│   ├── cloudflare/        # Cloudflare SDK as RPC
+│   ├── jose/              # JWT operations as RPC
+│   ├── stripe/            # Stripe SDK as RPC
+│   ├── workos/            # WorkOS SDK as RPC
+│   ├── esbuild/           # esbuild-wasm as RPC
+│   └── mdx/               # MDX compiler as RPC
+│
+├── middleware/            # Hono middleware (@dotdo/middleware)
+│   ├── cors/
+│   ├── auth/
+│   ├── cache/
+│   └── rate-limit/
+│
+├── objects/               # Durable Objects
+│   └── do/                # Base DO class (npm: dotdo)
+│
+├── snippets/              # Cloudflare Snippets (free tier)
+│   ├── cache/             # Caching + analytics
+│   ├── auth/              # JWT verification
+│   └── router/            # Dynamic routing
+│
+├── packages/              # npm packages
+│   ├── edge-api/          # HATEOAS framework
+│   └── rpc/               # Universal RPC wrapper
+│
+├── primitives/            # TypeScript interfaces (git submodule)
+│
+├── auth/                  # Better Auth integration
+│   ├── core/
+│   ├── api-key/
+│   ├── mcp/
+│   ├── organization/
+│   ├── admin/
+│   └── oauth-proxy/
+│
+└── plugins/               # Extensibility plugins
 ```
 
-### Key Design: DO as the Core Base Class
+## Package Naming Convention
 
-The `DO` class ("An agentic database that can DO anything") is the foundational layer that:
-1. **Extends Agent** from Cloudflare's `agents` package (getting state, scheduling, WebSocket)
-2. **Adds RpcTarget** capabilities (capnweb-style HTTP/WS/RPC transport)
-3. **Provides simple CRUD** that's ai-database compatible
-4. **Stays lightweight** - workers that just need simple storage don't get MongoDB bloat
+| Folder | npm Package | Import Path |
+|--------|-------------|-------------|
+| `workers/workers/` | `workers.do` | `workers.do`, `workers.do/middleware`, etc. |
+| `objects/do/` | `dotdo` | `dotdo`, `dotdo/tiny`, `dotdo/rpc` |
+| `middleware/*` | `@dotdo/middleware` | `@dotdo/middleware`, `workers.do/middleware` |
+| `auth/*` | `@dotdo/auth` | `@dotdo/auth`, `workers.do/auth` |
+| `snippets/*` | `@dotdo/snippets` | `@dotdo/snippets` |
+| `packages/edge-api/` | `@dotdo/edge-api` | `@dotdo/edge-api` |
+| `packages/rpc/` | `@dotdo/rpc` | `@dotdo/rpc` |
 
-**Standalone repo**: `@dotdo/do` lives at github.com/dotdo/do (~/projects/do)
-This is the foundational primitive that everything else builds on.
+## Core Components
 
-**mongo.do refactor**: Currently `MondoDatabase` is a plain DurableObject.
-We'll refactor it to extend `DO`, inheriting all the base capabilities while
-adding full MongoDB compatibility (aggregation, wire protocol, BSON, etc.).
+### 1. dotdo - The Base Durable Object
 
-### 1b. DO Class Specification
+The foundation of the entire system. A Durable Object class built on:
+- **Drizzle ORM** - Type-safe SQL with Cloudflare D1/DO SQLite
+- **Better Auth** - Complete authentication with plugins
+- **Multi-transport** - HTTP, WebSocket, Workers RPC, CapnWeb
 
 ```typescript
-// @dotdo/do (standalone repo: github.com/dotdo/do)
-import { Agent, callable } from 'agents'
-import { RpcTarget } from 'capnweb'
+// Full featured
+import { DO } from 'dotdo'
 
-/**
- * DO - "An agentic database that can DO anything"
- *
- * Base class for all .do workers. Extends Cloudflare's Agent with:
- * - Workers RPC (service bindings)
- * - Capnweb RPC (HTTP + WS)
- * - MCP (HTTP with optional OAuth 2.1)
- * - Simple CRUD operations (ai-database compatible)
- * - WebSocket hibernation support
- * - Auth context propagation
- *
- * Built-in MCP Tools (required by OpenAI ChatGPT/Deep Research):
- * - search: Full-text search across collections
- * - fetch: Retrieve documents/resources
- * - do: Secure arbitrary code execution via ai-evaluate
- */
-export class DO<Env = unknown, State = unknown> extends Agent<Env, State>
-  implements RpcTarget {
+// Minimal - no deps, no auth, smallest bundle
+import { DO } from 'dotdo/tiny'
 
-  // ============================================
-  // RpcTarget Implementation (capnweb style)
-  // ============================================
+// RPC mode - expects heavy deps (jose, etc.) as Worker bindings
+import { DO } from 'dotdo/rpc'
 
-  protected allowedMethods = new Set<string>()
-
-  /** Check if method is callable via RPC */
-  hasMethod(name: string): boolean {
-    return this.allowedMethods.has(name)
-  }
-
-  /** Invoke method by name (for RPC) */
-  async invoke(method: string, params: unknown[]): Promise<unknown> {
-    if (!this.allowedMethods.has(method)) {
-      throw new Error(`Method not allowed: ${method}`)
-    }
-    const fn = (this as any)[method]
-    if (typeof fn !== 'function') {
-      throw new Error(`Method not found: ${method}`)
-    }
-    return fn.apply(this, params)
-  }
-
-  // ============================================
-  // Simple CRUD (ai-database compatible)
-  // ============================================
-
-  @callable()
-  async get<T>(collection: string, id: string): Promise<T | null> {
-    const sql = this.ctx.storage.sql
-    const result = sql.exec(
-      `SELECT data FROM documents WHERE collection = ? AND _id = ?`,
-      collection, id
-    ).toArray()
-    return result[0] ? JSON.parse(result[0].data) : null
-  }
-
-  @callable()
-  async list<T>(collection: string, options?: ListOptions): Promise<T[]> {
-    const sql = this.ctx.storage.sql
-    const { limit = 100, offset = 0, where } = options ?? {}
-    // Simple list with optional limit/offset
-    const result = sql.exec(
-      `SELECT data FROM documents WHERE collection = ? LIMIT ? OFFSET ?`,
-      collection, limit, offset
-    ).toArray()
-    return result.map(r => JSON.parse(r.data))
-  }
-
-  @callable()
-  async create<T extends { _id?: string }>(collection: string, doc: T): Promise<T> {
-    const sql = this.ctx.storage.sql
-    const id = doc._id ?? crypto.randomUUID()
-    const data = { ...doc, _id: id }
-    sql.exec(
-      `INSERT INTO documents (collection, _id, data) VALUES (?, ?, json(?))`,
-      collection, id, JSON.stringify(data)
-    )
-    return data as T
-  }
-
-  @callable()
-  async update<T>(collection: string, id: string, updates: Partial<T>): Promise<T | null> {
-    const existing = await this.get<T>(collection, id)
-    if (!existing) return null
-    const updated = { ...existing, ...updates }
-    const sql = this.ctx.storage.sql
-    sql.exec(
-      `UPDATE documents SET data = json(?) WHERE collection = ? AND _id = ?`,
-      JSON.stringify(updated), collection, id
-    )
-    return updated
-  }
-
-  @callable()
-  async delete(collection: string, id: string): Promise<boolean> {
-    const sql = this.ctx.storage.sql
-    sql.exec(
-      `DELETE FROM documents WHERE collection = ? AND _id = ?`,
-      collection, id
-    )
-    return true
-  }
-
-  // ============================================
-  // WebSocket Hibernation Support
-  // ============================================
-
-  async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
-    // Restore session from attachment
-    const session = ws.deserializeAttachment()
-
-    // Handle RPC-style messages
-    const data = JSON.parse(message as string)
-    if (data.type === 'rpc') {
-      try {
-        const result = await this.invoke(data.method, data.args ?? [])
-        ws.send(JSON.stringify({ id: data.id, result }))
-      } catch (error) {
-        ws.send(JSON.stringify({
-          id: data.id,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        }))
-      }
-    }
-  }
-
-  async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
-    // Cleanup - subclasses can override
-  }
-
-  async webSocketError(ws: WebSocket, error: unknown) {
-    console.error('WebSocket error:', error)
-  }
-
-  // ============================================
-  // Multi-Transport Support (Hono Router)
-  // ============================================
-
-  private router = this.createRouter()
-
-  /**
-   * Create Hono router with all routes
-   * Using Hono for lightweight, fast routing with middleware support
-   */
-  private createRouter() {
-    const app = new Hono<{ Bindings: Env }>()
-
-    // Middleware: Add DB instance to context
-    app.use('*', async (c, next) => {
-      c.set('db', this)
-      await next()
-    })
-
-    // 1. WebSocket upgrade (Capnweb WS transport)
-    app.get('/ws', (c) => this.handleWebSocketUpgrade(c.req.raw))
-
-    // 2. MCP endpoint (with optional OAuth 2.1)
-    app.route('/mcp', this.createMcpRoutes())
-
-    // 3. Capnweb HTTP RPC
-    app.post('/rpc', (c) => this.handleRpc(c.req.raw))
-    app.post('/rpc/batch', (c) => this.handleRpcBatch(c.req.raw))
-
-    // 4. Monaco Editor UI: /~/:resource/:id
-    app.get('/~', (c) => this.handleCollectionPicker(c))
-    app.get('/~/:resource', (c) => this.handleDocumentList(c))
-    app.get('/~/:resource/:id', (c) => this.handleMonacoEditor(c))
-
-    // 5. HATEOAS REST API: /api/:resource/:id
-    app.get('/api', (c) => this.handleApiRoot(c))
-    app.get('/api/.schema/:method?', (c) => this.handleSchemaRequest(c))
-    app.get('/api/:resource', (c) => this.handleRestList(c))
-    app.get('/api/:resource/:id', (c) => this.handleRestGet(c))
-    app.post('/api/:resource', (c) => this.handleRestCreate(c))
-    app.put('/api/:resource/:id', (c) => this.handleRestUpdate(c))
-    app.delete('/api/:resource/:id', (c) => this.handleRestDelete(c))
-
-    // 6. Root: GET for HATEOAS discovery, POST for MCP
-    app.get('/', (c) => this.handleHateoasDiscovery(c))
-    app.post('/', (c) => this.handleMcp(c.req.raw))  // POST / = MCP (simple server config)
-
-    // Health check
-    app.get('/health', (c) => c.json({ status: 'ok' }))
-
-    return app
-  }
-
-  override async fetch(request: Request): Promise<Response> {
-    // Check for WebSocket upgrade first (before Hono)
-    if (request.headers.get('Upgrade') === 'websocket') {
-      return this.handleWebSocketUpgrade(request)
-    }
-
-    // Use Hono router for all other requests
-    return this.router.fetch(request, this.env)
-  }
-
-  protected async handleWebSocketUpgrade(request: Request): Promise<Response> {
-    const pair = new WebSocketPair()
-    const [client, server] = Object.values(pair)
-
-    // Use ctx.acceptWebSocket for hibernation
-    this.ctx.acceptWebSocket(server)
-    this.ctx.setWebSocketAutoResponse(
-      new WebSocketRequestResponsePair('ping', 'pong')
-    )
-
-    return new Response(null, { status: 101, webSocket: client })
-  }
-
-  protected async handleRpc(request: Request): Promise<Response> {
-    const body = await request.json() as { method: string; params?: unknown[] }
-
-    if (!this.hasMethod(body.method)) {
-      return Response.json({ error: `Method not found: ${body.method}` }, { status: 400 })
-    }
-
-    try {
-      const result = await this.invoke(body.method, body.params ?? [])
-      return Response.json({ result })
-    } catch (error) {
-      return Response.json({
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }, { status: 500 })
-    }
-  }
-
-  protected async handleMcp(request: Request): Promise<Response> {
-    // MCP protocol handler with OAuth 2.1 support
-    // Uses Agent's built-in MCP capabilities + our custom tools
-    return this.mcpHandler.handle(request)
-  }
-
-  // ============================================
-  // HATEOAS REST API (apis.vin style)
-  // ============================================
-
-  /**
-   * Root discovery endpoint - HATEOAS style API navigation
-   * Returns clickable links to all available resources and methods
-   */
-  protected async handleHateoasDiscovery(request: Request, url: URL): Promise<Response> {
-    const baseUrl = `${url.protocol}//${url.host}`
-    const collections = await this.listCollections()
-
-    const discovery = {
-      api: {
-        name: this.constructor.name,
-        version: '1.0.0',
-        documentation: `${baseUrl}/docs`,
-      },
-      links: {
-        self: baseUrl,
-        api: `${baseUrl}/api`,
-        rpc: `${baseUrl}/rpc`,
-        mcp: `${baseUrl}/mcp`,
-        websocket: `ws://${url.host}/ws`,
-      },
-      discover: {
-        // Collections (data resources)
-        collections: collections.map(c => ({
-          name: c,
-          icon: '📁',
-          href: `${baseUrl}/api/${c}`,
-          edit: `${baseUrl}/~/${c}`,
-        })),
-        // Available RPC methods
-        methods: Array.from(this.allowedMethods).map(m => ({
-          name: m,
-          icon: this.getMethodIcon(m),
-          href: `${baseUrl}/rpc`,
-          schema: `${baseUrl}/api/.schema/${m}`,
-        })),
-        // MCP tools
-        tools: ['search', 'fetch', 'do'].map(t => ({
-          name: t,
-          icon: t === 'search' ? '🔍' : t === 'fetch' ? '📥' : '⚡',
-          href: `${baseUrl}/mcp/tools/${t}`,
-        })),
-      },
-      request: {
-        origin: request.headers.get('CF-Connecting-IP'),
-        country: request.headers.get('CF-IPCountry'),
-        userAgent: request.headers.get('User-Agent'),
-      },
-    }
-
-    return Response.json(discovery, {
-      headers: { 'Content-Type': 'application/json' }
-    })
-  }
-
-  /**
-   * REST API handler - CRUD operations on resources
-   * Routes: GET/POST/PUT/DELETE /api/:resource/:id?
-   */
-  protected async handleRestApi(request: Request, url: URL): Promise<Response> {
-    const pathParts = url.pathname.replace('/api/', '').split('/').filter(Boolean)
-    const [resource, id, ...rest] = pathParts
-    const method = request.method
-
-    // Special routes
-    if (resource === '.schema') {
-      return this.handleSchemaRequest(id)
-    }
-
-    if (!resource) {
-      // GET /api - list all collections
-      const collections = await this.listCollections()
-      return Response.json({
-        collections: collections.map(c => ({
-          name: c,
-          href: `${url.origin}/api/${c}`,
-        }))
-      })
-    }
-
-    switch (method) {
-      case 'GET':
-        if (id) {
-          // GET /api/:resource/:id - get single document
-          const doc = await this.get(resource, id)
-          if (!doc) {
-            return Response.json({ error: 'Not found' }, { status: 404 })
-          }
-          return Response.json({
-            data: doc,
-            links: {
-              self: `${url.origin}/api/${resource}/${id}`,
-              edit: `${url.origin}/~/${resource}/${id}`,
-              collection: `${url.origin}/api/${resource}`,
-            }
-          })
-        } else {
-          // GET /api/:resource - list documents
-          const docs = await this.list(resource, this.parseListOptions(url))
-          return Response.json({
-            data: docs,
-            links: {
-              self: `${url.origin}/api/${resource}`,
-              create: `${url.origin}/api/${resource}`,
-            }
-          })
-        }
-
-      case 'POST':
-        // POST /api/:resource - create document
-        const createData = await request.json()
-        const created = await this.create(resource, createData)
-        return Response.json({
-          data: created,
-          links: {
-            self: `${url.origin}/api/${resource}/${created.id}`,
-            edit: `${url.origin}/~/${resource}/${created.id}`,
-          }
-        }, { status: 201 })
-
-      case 'PUT':
-        // PUT /api/:resource/:id - update document
-        if (!id) {
-          return Response.json({ error: 'ID required for PUT' }, { status: 400 })
-        }
-        const updateData = await request.json()
-        const updated = await this.update(resource, id, updateData)
-        if (!updated) {
-          return Response.json({ error: 'Not found' }, { status: 404 })
-        }
-        return Response.json({
-          data: updated,
-          links: {
-            self: `${url.origin}/api/${resource}/${id}`,
-            edit: `${url.origin}/~/${resource}/${id}`,
-          }
-        })
-
-      case 'DELETE':
-        // DELETE /api/:resource/:id - delete document
-        if (!id) {
-          return Response.json({ error: 'ID required for DELETE' }, { status: 400 })
-        }
-        const deleted = await this.delete(resource, id)
-        if (!deleted) {
-          return Response.json({ error: 'Not found' }, { status: 404 })
-        }
-        return Response.json({ success: true }, { status: 200 })
-
-      default:
-        return Response.json({ error: 'Method not allowed' }, { status: 405 })
-    }
-  }
-
-  /**
-   * Monaco Editor UI - inline document editing
-   * Route: /~/:resource/:id
-   */
-  protected async handleMonacoEditor(request: Request, url: URL): Promise<Response> {
-    const pathParts = url.pathname.replace('/~/', '').split('/').filter(Boolean)
-    const [resource, id] = pathParts
-
-    if (!resource) {
-      // /~ - show collection picker
-      const collections = await this.listCollections()
-      return new Response(this.renderCollectionPicker(collections, url.origin), {
-        headers: { 'Content-Type': 'text/html' }
-      })
-    }
-
-    if (!id) {
-      // /~/:resource - show document list for collection
-      const docs = await this.list(resource, { limit: 100 })
-      return new Response(this.renderDocumentList(resource, docs, url.origin), {
-        headers: { 'Content-Type': 'text/html' }
-      })
-    }
-
-    // /~/:resource/:id - Monaco editor for specific document
-    const doc = await this.get(resource, id)
-    const content = doc ? JSON.stringify(doc, null, 2) : '{}'
-
-    return new Response(this.renderMonacoEditor(resource, id, content, url.origin), {
-      headers: { 'Content-Type': 'text/html' }
-    })
-  }
-
-  /**
-   * Render Monaco Editor HTML
-   */
-  private renderMonacoEditor(resource: string, id: string, content: string, origin: string): string {
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <title>Edit ${resource}/${id}</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: system-ui, -apple-system, sans-serif; }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 16px;
-      background: #1e1e1e;
-      color: #fff;
-    }
-    .header h1 { font-size: 14px; font-weight: 500; }
-    .header .path { opacity: 0.7; }
-    .save-btn {
-      background: #0e639c;
-      color: white;
-      border: none;
-      padding: 6px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 13px;
-    }
-    .save-btn:hover { background: #1177bb; }
-    .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    #editor { height: calc(100vh - 40px); }
-    .status { position: fixed; bottom: 8px; right: 16px; font-size: 12px; color: #888; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1><span class="path">${resource}/</span>${id}</h1>
-    <button class="save-btn" id="saveBtn">Save</button>
-  </div>
-  <div id="editor"></div>
-  <div class="status" id="status">Ready</div>
-
-  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
-  <script>
-    require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
-    require(['vs/editor/editor.main'], function() {
-      const editor = monaco.editor.create(document.getElementById('editor'), {
-        value: ${JSON.stringify(content)},
-        language: 'json',
-        theme: 'vs-dark',
-        automaticLayout: true,
-        minimap: { enabled: false },
-        fontSize: 14,
-      });
-
-      let isDirty = false;
-      editor.onDidChangeModelContent(() => {
-        isDirty = true;
-        document.getElementById('status').textContent = 'Modified';
-      });
-
-      document.getElementById('saveBtn').onclick = async () => {
-        const btn = document.getElementById('saveBtn');
-        btn.disabled = true;
-        btn.textContent = 'Saving...';
-
-        try {
-          const response = await fetch('${origin}/api/${resource}/${id}', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: editor.getValue()
-          });
-
-          if (response.ok) {
-            isDirty = false;
-            document.getElementById('status').textContent = 'Saved';
-          } else {
-            const err = await response.json();
-            alert('Save failed: ' + (err.error || 'Unknown error'));
-          }
-        } catch (e) {
-          alert('Save failed: ' + e.message);
-        } finally {
-          btn.disabled = false;
-          btn.textContent = 'Save';
-        }
-      };
-
-      // Ctrl+S to save
-      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-        document.getElementById('saveBtn').click();
-      });
-    });
-  </script>
-</body>
-</html>`
-  }
-
-  /**
-   * Render collection picker HTML
-   */
-  private renderCollectionPicker(collections: string[], origin: string): string {
-    const items = collections.map(c =>
-      `<a href="${origin}/~/${c}" class="item">📁 ${c}</a>`
-    ).join('')
-
-    return `<!DOCTYPE html>
-<html><head><title>Collections</title>
-<style>
-  body { font-family: system-ui; padding: 20px; background: #1e1e1e; color: #fff; }
-  h1 { margin-bottom: 16px; }
-  .item { display: block; padding: 8px 12px; color: #4fc3f7; text-decoration: none; }
-  .item:hover { background: #333; }
-</style>
-</head><body>
-  <h1>Collections</h1>
-  ${items || '<p>No collections yet</p>'}
-</body></html>`
-  }
-
-  /**
-   * Render document list HTML
-   */
-  private renderDocumentList(resource: string, docs: unknown[], origin: string): string {
-    const items = (docs as Array<{id: string}>).map(d =>
-      `<a href="${origin}/~/${resource}/${d.id}" class="item">📄 ${d.id}</a>`
-    ).join('')
-
-    return `<!DOCTYPE html>
-<html><head><title>${resource}</title>
-<style>
-  body { font-family: system-ui; padding: 20px; background: #1e1e1e; color: #fff; }
-  h1 { margin-bottom: 16px; }
-  .item { display: block; padding: 8px 12px; color: #4fc3f7; text-decoration: none; }
-  .item:hover { background: #333; }
-  .back { margin-bottom: 16px; }
-</style>
-</head><body>
-  <a href="${origin}/~/" class="back">← Back</a>
-  <h1>📁 ${resource}</h1>
-  ${items || '<p>No documents yet</p>'}
-</body></html>`
-  }
-
-  /** List all collections in the database */
-  private async listCollections(): Promise<string[]> {
-    const sql = this.ctx.storage.sql
-    const result = sql.exec(
-      `SELECT DISTINCT collection FROM documents ORDER BY collection`
-    ).toArray()
-    return result.map((r: any) => r.collection as string)
-  }
-
-  /** Parse list options from URL query params */
-  private parseListOptions(url: URL): ListOptions {
-    return {
-      limit: Number(url.searchParams.get('limit')) || undefined,
-      offset: Number(url.searchParams.get('offset')) || undefined,
-      orderBy: url.searchParams.get('orderBy') || undefined,
-      order: (url.searchParams.get('order') as 'asc' | 'desc') || undefined,
-    }
-  }
-
-  /** Get icon for RPC method */
-  private getMethodIcon(method: string): string {
-    const icons: Record<string, string> = {
-      get: '📖', list: '📋', create: '➕', update: '✏️', delete: '🗑️',
-      search: '🔍', fetch: '📥', do: '⚡',
-    }
-    return icons[method] || '🔧'
-  }
-
-  /** Handle schema requests */
-  private async handleSchemaRequest(methodName?: string): Promise<Response> {
-    // Return JSON schema for methods
-    const schemas: Record<string, object> = {
-      get: { params: ['collection', 'id'], returns: 'Document | null' },
-      list: { params: ['collection', 'options?'], returns: 'Document[]' },
-      create: { params: ['collection', 'data'], returns: 'Document' },
-      update: { params: ['collection', 'id', 'data'], returns: 'Document | null' },
-      delete: { params: ['collection', 'id'], returns: 'boolean' },
-    }
-
-    if (methodName && schemas[methodName]) {
-      return Response.json(schemas[methodName])
-    }
-    return Response.json(schemas)
-  }
-
-  // ============================================
-  // MCP Tools (OpenAI ChatGPT/Deep Research compatible)
-  // ============================================
-
-  /** MCP Tool: search - Full-text search across collections */
-  @callable()
-  async search(query: string, options?: SearchOptions): Promise<SearchResult[]> {
-    const sql = this.ctx.storage.sql
-    const { collection, limit = 10 } = options ?? {}
-
-    // Full-text search using SQLite FTS or LIKE
-    let sqlQuery = `
-      SELECT collection, _id, data,
-             CASE WHEN data LIKE ? THEN 1 ELSE 0 END as relevance
-      FROM documents
-      WHERE data LIKE ?
-    `
-    const params: unknown[] = [`%${query}%`, `%${query}%`]
-
-    if (collection) {
-      sqlQuery += ` AND collection = ?`
-      params.push(collection)
-    }
-
-    sqlQuery += ` ORDER BY relevance DESC LIMIT ?`
-    params.push(limit)
-
-    const results = sql.exec(sqlQuery, ...params).toArray()
-    return results.map(r => ({
-      collection: r.collection,
-      id: r._id,
-      data: JSON.parse(r.data),
-      score: r.relevance
-    }))
-  }
-
-  /** MCP Tool: fetch - Retrieve document/resource by ID or URL */
-  @callable()
-  async fetch(target: string, options?: FetchOptions): Promise<FetchResult> {
-    // If target looks like a URL, fetch external resource
-    if (target.startsWith('http://') || target.startsWith('https://')) {
-      const response = await globalThis.fetch(target, options)
-      const contentType = response.headers.get('content-type') ?? ''
-
-      if (contentType.includes('application/json')) {
-        return { type: 'json', data: await response.json() }
-      } else if (contentType.includes('text/')) {
-        return { type: 'text', data: await response.text() }
-      } else {
-        return { type: 'binary', data: await response.arrayBuffer() }
-      }
-    }
-
-    // Otherwise, fetch from local collection
-    // Format: "collection/id" or just "id" (searches all collections)
-    const parts = target.split('/')
-    if (parts.length === 2) {
-      const doc = await this.get(parts[0], parts[1])
-      return { type: 'document', data: doc }
-    }
-
-    // Search all collections for this ID
-    const sql = this.ctx.storage.sql
-    const result = sql.exec(
-      `SELECT collection, data FROM documents WHERE _id = ? LIMIT 1`,
-      target
-    ).toArray()
-
-    if (result[0]) {
-      return { type: 'document', data: JSON.parse(result[0].data) }
-    }
-
-    return { type: 'not_found', data: null }
-  }
-
-  /** MCP Tool: do - Secure arbitrary code execution via ai-evaluate */
-  @callable()
-  async do(code: string, options?: DoOptions): Promise<DoResult> {
-    const { context = {}, timeout = 5000 } = options ?? {}
-
-    // Use ai-evaluate for sandboxed execution
-    // This provides secure arbitrary code execution in Workers
-    const evaluator = this.getEvaluator()
-
-    // Build execution context with RPC access
-    const execContext = {
-      ...context,
-      // Expose all RPC methods to the sandbox
-      rpc: this.createRpcProxy(),
-      // Expose simple DB operations
-      db: {
-        get: this.get.bind(this),
-        list: this.list.bind(this),
-        create: this.create.bind(this),
-        update: this.update.bind(this),
-        delete: this.delete.bind(this),
-        search: this.search.bind(this),
-      }
-    }
-
-    try {
-      const result = await evaluator.evaluate(code, {
-        context: execContext,
-        timeout,
-      })
-
-      return {
-        success: true,
-        result: result.value,
-        logs: result.logs,
-        duration: result.duration,
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Execution failed',
-        logs: [],
-        duration: 0,
-      }
-    }
-  }
-
-  /** Create proxy for RPC method access from sandbox */
-  private createRpcProxy(): Record<string, (...args: unknown[]) => Promise<unknown>> {
-    const proxy: Record<string, (...args: unknown[]) => Promise<unknown>> = {}
-
-    for (const method of this.allowedMethods) {
-      proxy[method] = async (...args: unknown[]) => {
-        return this.invoke(method, args)
-      }
-    }
-
-    return proxy
-  }
-
-  /** Get or create evaluator instance */
-  private getEvaluator(): Evaluator {
-    if (!this._evaluator) {
-      // Uses ai-evaluate package for sandboxed execution
-      this._evaluator = createEvaluator({
-        // Can use worker_loaders or miniflare depending on environment
-      })
-    }
-    return this._evaluator
-  }
-
-  private _evaluator?: Evaluator
-}
-
-// Type definitions
-interface ListOptions {
-  limit?: number
-  offset?: number
-  where?: Record<string, unknown>
-}
-
-interface SearchOptions {
-  collection?: string
-  limit?: number
-}
-
-interface SearchResult {
-  collection: string
-  id: string
-  data: unknown
-  score: number
-}
-
-interface FetchOptions extends RequestInit {}
-
-interface FetchResult {
-  type: 'json' | 'text' | 'binary' | 'document' | 'not_found'
-  data: unknown
-}
-
-interface DoOptions {
-  context?: Record<string, unknown>
-  timeout?: number
-}
-
-interface DoResult {
-  success: boolean
-  result?: unknown
-  error?: string
-  logs: string[]
-  duration: number
-}
+// With auth
+import { DO } from 'dotdo/auth'
 ```
 
-### 1c. MongoDB Class (refactored mongo.do)
+#### Binding Conventions
+
+When using `dotdo/rpc`, dependencies are accessed via conventional binding names:
 
 ```typescript
-// mongo.do/src/mondo-database.ts (refactored)
-import { DB } from '@dotdo/workers/base'
-import { ObjectId } from './types/objectid'
-import { AggregationExecutor } from './executor/aggregation-executor'
-
-/**
- * MongoDB - Full MongoDB-compatible database
- *
- * Extends DO base class with:
- * - Full MongoDB query language
- * - Aggregation pipeline
- * - Wire protocol support
- * - BSON types
- * - Index management
- */
-export class MongoDB<Env = MondoEnv> extends DO<Env> {
-  private schemaManager: SchemaManager
-
-  constructor(ctx: DurableObjectState, env: Env) {
-    super(ctx, env)
-    this.schemaManager = new SchemaManager(ctx.storage)
-
-    // Extended allowed methods for MongoDB operations
-    this.allowedMethods = new Set([
-      // Inherited from DB
-      'get', 'list', 'create', 'update', 'delete',
-      // MongoDB-specific
-      'insertOne', 'insertMany',
-      'findOne', 'find',
-      'updateOne', 'updateMany',
-      'deleteOne', 'deleteMany',
-      'aggregate',
-      'countDocuments',
-      'createIndex', 'dropIndex', 'listIndexes',
-    ])
-
-    ctx.blockConcurrencyWhile(async () => {
-      await this.schemaManager.initializeSchema()
-    })
-  }
-
-  // Full MongoDB operations...
-  @callable()
-  async insertOne(collection: string, document: Document): Promise<InsertOneResult> {
-    // ... existing implementation
-  }
-
-  @callable()
-  async aggregate(collection: string, pipeline: PipelineStage[]): Promise<unknown[]> {
-    // ... existing implementation with AggregationExecutor
-  }
-
-  // ... rest of MongoDB methods
-}
-
-// Export as default for Workers
-export { MongoDB as MondoDatabase }
+this.env.JOSE        // JWT operations
+this.env.ESBUILD     // Build/transform
+this.env.MDX         // MDX compilation
+this.env.STRIPE      // Stripe operations
+this.env.WORKOS      // WorkOS/OAuth
+this.env.CLOUDFLARE  // Cloudflare API
 ```
 
-### 2. Workers Deployment Map
+### 2. RPC() - Universal Package Wrapper
 
-| Domain | Worker | Package | Purpose |
-|--------|--------|---------|---------|
-| `database.do` | Database Worker | `@dotdo/workers/database` | ai-database RPC implementation |
-| `functions.do` | Functions Worker | `@dotdo/workers/functions` | ai-functions RPC implementation |
-| `workflows.do` | Workflows Worker | `@dotdo/workers/workflows` | ai-workflows RPC implementation |
-| `workers.do` | Digital Workers | `@dotdo/workers/workers` | digital-workers RPC implementation |
-| `agents.do` | Agents Worker | `@dotdo/workers/agents` | autonomous-agents RPC implementation |
-| `humans.do` | Humans Worker | `@dotdo/workers/humans` | human-in-the-loop RPC implementation |
-| `oauth.do` | OAuth Worker | `@dotdo/workers/oauth` | WorkOS AuthKit integration |
-
-**Note**: Auth is not a separate worker - it's middleware/RPC that all workers use via `@dotdo/middleware/auth`.
-
-### 3. Transport Architecture
-
-Each worker supports three access patterns:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                       Client                                 │
-└─────────────────────────────────────────────────────────────┘
-        │                    │                    │
-        ▼                    ▼                    ▼
-   ┌─────────┐         ┌─────────┐         ┌─────────┐
-   │  HTTP   │         │   WS    │         │  RPC    │
-   │ /api/*  │         │ /ws/*   │         │ binding │
-   └─────────┘         └─────────┘         └─────────┘
-        │                    │                    │
-        └────────────────────┼────────────────────┘
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      Worker Entry                            │
-│                  (WorkerEntrypoint + Hono)                   │
-│   • Route HTTP to DO                                         │
-│   • Upgrade WS to DO                                         │
-│   • Forward RPC to DO                                        │
-└─────────────────────────────────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Durable Object                            │
-│                     (DotDoAgent)                             │
-│   • fetch() for HTTP                                         │
-│   • webSocketMessage() for WS (hibernation)                 │
-│   • RPC methods via @callable()                              │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 4. WebSocket Hibernation Pattern
+Wraps any npm package as a multi-transport RPC worker:
 
 ```typescript
-import { DurableObject } from 'cloudflare:workers'
-import { Agent, callable } from 'agents'
+// workers/jose/index.ts
+import * as jose from 'jose'
+import { RPC } from 'workers.do/rpc'
 
-export class DotDoAgent extends Agent {
-  // HTTP handler
-  async fetch(request: Request): Promise<Response> {
-    if (request.headers.get('Upgrade') === 'websocket') {
-      return this.handleWebSocketUpgrade(request)
-    }
-    return this.handleHttp(request)
-  }
+export default RPC(jose)
 
-  // Hibernation-compatible WS upgrade
-  async handleWebSocketUpgrade(request: Request): Promise<Response> {
-    const pair = new WebSocketPair()
-    const [client, server] = Object.values(pair)
+// workers/stripe/index.ts
+import Stripe from 'stripe'
+import { env } from 'cloudflare:workers'
+import { RPC } from 'workers.do/rpc'
 
-    // Use ctx.acceptWebSocket for hibernation
-    this.ctx.acceptWebSocket(server)
-    this.ctx.setWebSocketAutoResponse(
-      new WebSocketRequestResponsePair('ping', 'pong')
-    )
+export default RPC(new Stripe(env.STRIPE_SECRET_KEY))
 
-    return new Response(null, { status: 101, webSocket: client })
-  }
+// workers/cloudflare/index.ts
+import Cloudflare from 'cloudflare'
+import { env } from 'cloudflare:workers'
+import { RPC } from 'workers.do/rpc'
 
-  // Hibernation handlers (not addEventListener)
-  async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
-    // Restore session from attachment
-    const session = ws.deserializeAttachment() ?? this.createSession()
-
-    // Handle RPC-style messages
-    const data = JSON.parse(message as string)
-    if (data.type === 'rpc') {
-      const result = await this[data.method](...data.args)
-      ws.send(JSON.stringify({ id: data.id, result }))
-    }
-  }
-
-  async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
-    // Cleanup session
-  }
-
-  async webSocketError(ws: WebSocket, error: any) {
-    console.error('WebSocket error:', error)
-  }
-
-  // RPC-callable methods
-  @callable()
-  async myMethod(arg: string): Promise<string> {
-    // Available via HTTP, WS, and service binding RPC
-  }
-}
+export default RPC(new Cloudflare({ apiToken: env.CLOUDFLARE_API_TOKEN }))
 ```
 
-### 5. NPM Package Structure
+RPC() automatically provides:
+- **Workers RPC** - `env.JOSE.verify(token)`
+- **CapnWeb** - WebSocket RPC protocol
+- **MCP JSON-RPC** - `{ jsonrpc: '2.0', method: 'verify', params: [...] }`
+- **REST** - `GET /api/verify?token=xyz`
 
-```
-packages/
-├── base/                      # @dotdo/workers/base
-│   ├── src/
-│   │   ├── index.ts          # Main exports
-│   │   ├── agent.ts          # DotDoAgent base class
-│   │   ├── store.ts          # DotDoStore with SQLite
-│   │   ├── transport.ts      # HTTP/WS/RPC transport layer
-│   │   ├── hibernation.ts    # WebSocket hibernation helpers
-│   │   └── auth.ts           # Auth context propagation
-│   └── package.json
-│
-├── middleware/               # @dotdo/middleware
-│   ├── src/
-│   │   ├── index.ts
-│   │   ├── auth.ts           # Auth middleware (Hono + RPC)
-│   │   ├── rpc-context.ts    # Context propagation for RPC
-│   │   ├── rate-limit.ts     # Rate limiting
-│   │   └── cors.ts           # CORS handling
-│   └── package.json
-│
-├── db/                       # @dotdo/workers/db
-│   ├── src/
-│   │   ├── index.ts          # Worker entrypoint
-│   │   ├── database.ts       # DatabaseDO implementation
-│   │   └── schema.ts         # ai-database schema support
-│   └── wrangler.toml
-│
-├── fn/                       # @dotdo/workers/fn
-│   ├── src/
-│   │   ├── index.ts
-│   │   └── functions.ts      # FunctionsDO implementation
-│   └── wrangler.toml
-│
-├── workflow/                 # @dotdo/workers/workflow
-│   ├── src/
-│   │   ├── index.ts
-│   │   └── workflow.ts       # WorkflowDO implementation
-│   └── wrangler.toml
-│
-├── worker/                   # @dotdo/workers/worker
-│   ├── src/
-│   │   ├── index.ts
-│   │   └── digital-worker.ts # DigitalWorkerDO
-│   └── wrangler.toml
-│
-├── agent/                    # @dotdo/workers/agent
-│   ├── src/
-│   │   ├── index.ts
-│   │   └── agent.ts          # AgentDO implementation
-│   └── wrangler.toml
-│
-├── hitl/                     # @dotdo/workers/hitl
-│   ├── src/
-│   │   ├── index.ts
-│   │   └── hitl.ts           # HumanInTheLoopDO
-│   └── wrangler.toml
-│
-├── auth/                     # @dotdo/workers/auth
-│   ├── src/
-│   │   ├── index.ts
-│   │   ├── auth.ts           # AuthDO - token validation
-│   │   └── authz.ts          # Authorization (RBAC/FGA)
-│   └── wrangler.toml
-│
-├── oauth/                    # @dotdo/workers/oauth
-│   ├── src/
-│   │   ├── index.ts
-│   │   ├── oauth.ts          # OAuthDO
-│   │   └── workos.ts         # WorkOS AuthKit integration
-│   └── wrangler.toml
-│
-└── eval/                     # @dotdo/workers/eval
-    ├── src/
-    │   ├── index.ts
-    │   └── evaluate.ts       # EvaluateDO - sandboxed execution
-    └── wrangler.toml
-```
+### 3. edge-api - HATEOAS Framework
 
-### 6. Middleware over RPC Architecture
-
-The key challenge: how to share Hono middleware (like auth) across Workers without bundling dependencies.
-
-**Solution: RPC-based middleware pattern**
+Provides the HTTP layer with explorable APIs:
 
 ```typescript
-// @dotdo/middleware/auth.ts
-import { Context, MiddlewareHandler } from 'hono'
+import { EdgeAPI } from '@dotdo/edge-api'
 
-// For HTTP routes with Hono
-export function authMiddleware(authBinding: AuthService): MiddlewareHandler {
-  return async (c: Context, next) => {
-    const token = c.req.header('Authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return c.json({ error: 'Unauthorized' }, 401)
-    }
-
-    // Call auth worker via RPC
-    const result = await authBinding.validate(token)
-    if (!result.valid) {
-      return c.json({ error: 'Invalid token' }, 401)
-    }
-
-    c.set('user', result.user)
-    c.set('permissions', result.permissions)
-    await next()
+export default EdgeAPI({
+  users: {
+    list: () => db.query('SELECT * FROM users'),
+    get: (id) => db.query('SELECT * FROM users WHERE id = ?', [id])
   }
-}
-
-// For RPC methods - decorator pattern
-export function requireAuth(permissions?: string[]) {
-  return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-    const original = descriptor.value
-    descriptor.value = async function(this: DotDoAgent, ...args: any[]) {
-      // Get auth context from RPC headers or session
-      const authContext = this.getAuthContext()
-      if (!authContext) {
-        throw new Error('Unauthorized')
-      }
-      if (permissions) {
-        const hasPermission = permissions.every(p => authContext.permissions.includes(p))
-        if (!hasPermission) {
-          throw new Error('Forbidden')
-        }
-      }
-      return original.apply(this, args)
-    }
-    return descriptor
-  }
-}
-```
-
-**Context propagation for RPC:**
-
-```typescript
-// @dotdo/middleware/rpc-context.ts
-export interface RPCContext {
-  user?: User
-  permissions?: string[]
-  traceId?: string
-  correlationId?: string
-}
-
-// Worker entrypoint wraps RPC with context
-export class WorkerWithContext extends WorkerEntrypoint {
-  // RPC methods receive context as first hidden parameter
-  async callWithContext<T>(
-    method: string,
-    args: any[],
-    context: RPCContext
-  ): Promise<T> {
-    // Context is serialized in RPC headers
-    const stub = this.env.TARGET.get(this.env.TARGET.idFromName('default'))
-    return stub[method](...args, { __rpcContext: context })
-  }
-}
-
-// In DotDoAgent base
-export class DotDoAgent extends Agent {
-  protected rpcContext?: RPCContext
-
-  // Extract context from RPC call
-  protected getAuthContext(): RPCContext | undefined {
-    return this.rpcContext
-  }
-}
-```
-
-### 7. Service Binding Configuration
-
-**wrangler.toml for a consuming worker:**
-
-```toml
-name = "my-app"
-
-# Service bindings to other .do workers
-[[services]]
-binding = "AUTH"
-service = "auth-do"
-
-[[services]]
-binding = "DB"
-service = "db-do"
-
-[[services]]
-binding = "FN"
-service = "fn-do"
-
-[[services]]
-binding = "WORKFLOW"
-service = "workflow-do"
-
-[[services]]
-binding = "AGENT"
-service = "agent-do"
-
-[[services]]
-binding = "HITL"
-service = "hitl-do"
-
-[[services]]
-binding = "OAUTH"
-service = "oauth-do"
-
-[[services]]
-binding = "EVAL"
-service = "eval-do"
-```
-
-### 8. Type Definitions
-
-**Environment bindings type:**
-
-```typescript
-// @dotdo/workers/types
-export interface DotDoBindings {
-  AUTH: AuthService
-  DB: DatabaseService
-  FN: FunctionsService
-  WORKFLOW: WorkflowService
-  AGENT: AgentService
-  HITL: HumanInTheLoopService
-  OAUTH: OAuthService
-  EVAL: EvaluateService
-}
-
-// Each service type defines the RPC interface
-export interface AuthService {
-  validate(token: string): Promise<AuthResult>
-  authorize(user: string, resource: string, action: string): Promise<boolean>
-  createSession(userId: string, metadata?: Record<string, any>): Promise<Session>
-}
-
-export interface DatabaseService {
-  // ai-database compatible interface
-  get<T>(collection: string, id: string): Promise<T | null>
-  list<T>(collection: string, options?: ListOptions): Promise<T[]>
-  create<T>(collection: string, data: T): Promise<T>
-  update<T>(collection: string, id: string, data: Partial<T>): Promise<T>
-  delete(collection: string, id: string): Promise<void>
-  query<T>(collection: string, query: string): Promise<T[]>
-}
-
-// ... etc for other services
-```
-
-### 9. Workers Mapping to Primitives Packages
-
-| Worker | Implements | Key Features |
-|--------|-----------|--------------|
-| **db.do** | `ai-database` | Schema-first DB, promise pipelining, NL queries, Events/Actions/Artifacts, Authorization engine |
-| **fn.do** | `ai-functions` | AI primitives (generate, list, extract, etc.), AIPromise, batch processing, providers |
-| **workflow.do** | `ai-workflows` | Event-driven workflows, `$.on.*`, `$.every.*`, scheduling, context |
-| **worker.do** | `digital-workers` | Worker interface, Role/Team/Goals, notify/ask/approve/decide/do |
-| **agent.do** | `autonomous-agents` | Agent creation, roles, teams, goals, KPIs/OKRs, autonomous execution |
-| **hitl.do** | `human-in-the-loop` | Human oversight, approval gates, review queues, escalation |
-| **auth.do** | `ai-database/authorization` | RBAC/FGA, permissions, roles, assignments |
-| **oauth.do** | - | WorkOS AuthKit, session management, cookies |
-| **eval.do** | `ai-evaluate` | Sandboxed code execution, test runner |
-
-### 10. External Client Access (CapnWeb Style)
-
-For external clients (browser, CLI), each worker exposes:
-
-```typescript
-// HTTP endpoints
-GET  /api/:collection            # List
-GET  /api/:collection/:id        # Get
-POST /api/:collection            # Create
-PUT  /api/:collection/:id        # Update
-DELETE /api/:collection/:id      # Delete
-POST /api/rpc/:method            # Direct RPC call
-
-// WebSocket
-WS /ws                           # Real-time connection
-   -> { type: 'rpc', id: string, method: string, args: any[] }
-   <- { id: string, result: any } | { id: string, error: string }
-   -> { type: 'subscribe', channel: string }
-   <- { type: 'event', channel: string, data: any }
-```
-
-### 11. Implementation Priorities
-
-**Phase 1: Core Infrastructure**
-- [ ] `@dotdo/workers/base` - DotDoAgent base class
-- [ ] `@dotdo/middleware` - Auth middleware
-- [ ] `@dotdo/workers/auth` - Authentication worker
-- [ ] `@dotdo/workers/db` - Database worker
-
-**Phase 2: AI Primitives**
-- [ ] `@dotdo/workers/fn` - Functions worker
-- [ ] `@dotdo/workers/eval` - Evaluation worker
-- [ ] `@dotdo/workers/workflow` - Workflows worker
-
-**Phase 3: Human/Agent Integration**
-- [ ] `@dotdo/workers/worker` - Digital workers
-- [ ] `@dotdo/workers/agent` - Autonomous agents
-- [ ] `@dotdo/workers/hitl` - Human-in-the-loop
-
-**Phase 4: OAuth & Polish**
-- [ ] `@dotdo/workers/oauth` - WorkOS integration
-- [ ] External client libraries
-- [ ] Documentation
-
-## Key Design Decisions
-
-### 1. Not Extending dot-do/mongo
-The `dot-do/mongo` repository doesn't exist publicly. Instead, we'll create a new `@dotdo/workers/db` that:
-- Implements the `ai-database` API directly
-- Uses SQLite (via DO storage) as the primary store
-- Supports the full ai-database interface (Things, Events, Actions, Artifacts)
-
-### 2. agents vs Custom Base
-We'll extend the `agents` package (`Agent` class) rather than building from scratch because:
-- Already handles WebSocket via partyserver
-- Provides `@callable()` decorator for RPC
-- Has state management, scheduling, queuing built-in
-- Active Cloudflare support
-
-We add `DotDoAgent` as a thin layer for:
-- Hibernation-compatible WebSocket handlers
-- Auth context propagation
-- HTTP routing integration
-- ai-database primitives bridge
-
-### 3. Middleware Over RPC
-Instead of bundling middleware in every worker:
-- Auth validation calls `auth.do` via RPC
-- Each worker only needs the service binding
-- Shared middleware package provides patterns but not implementations
-- Zero duplicate code, single source of truth for auth logic
-
-### 4. Dual Transport (HTTP + WS)
-Every DO supports both:
-- HTTP for simple request/response
-- WebSocket for streaming and real-time
-- Same methods accessible via both
-- Client chooses based on use case
-
----
-
-## Storage Architecture (gitx patterns)
-
-### Tiered Storage Strategy
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      Hot Tier (DO SQLite)                    │
-│  • Things, Relationships (rowid-based)                       │
-│  • Events (recent, append-only)                              │
-│  • Actions (pending/active)                                  │
-│  • LRU Cache (in-memory, 25MB limit)                        │
-│  • WAL for crash recovery                                    │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼ (CDC Pipeline)
-┌─────────────────────────────────────────────────────────────┐
-│                     Warm Tier (R2 Packfiles)                 │
-│  • Batched events (Parquet format)                          │
-│  • Large artifacts                                           │
-│  • Object index for tier tracking                           │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼ (Analytics)
-┌─────────────────────────────────────────────────────────────┐
-│                     Cold Tier (R2 SQL/Parquet)               │
-│  • Historical events                                         │
-│  • Analytics queries                                         │
-│  • Archival storage                                         │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Core Storage Components (from gitx)
-
-```typescript
-// WAL Manager - Write-Ahead Log for durability
-class WALManager {
-  async append(operation: string, payload: Uint8Array): Promise<number>
-  async beginTransaction(): Promise<string>
-  async commitTransaction(txId: string): Promise<void>
-  async rollbackTransaction(txId: string): Promise<void>
-  async recover(): Promise<WALEntry[]>
-  async createCheckpoint(label: string): Promise<void>
-}
-
-// LRU Cache - In-memory hot objects
-class LRUCache<K, V> {
-  constructor(options: {
-    maxCount?: number       // Default: 500
-    maxBytes?: number       // Default: 25MB
-    defaultTTL?: number     // Default: 1 hour
-    onEvict?: (key: K, value: V, reason: string) => void
-  })
-  get(key: K): V | undefined
-  set(key: K, value: V): void
-  delete(key: K): boolean
-  getStats(): CacheStats
-}
-
-// Object Index - Track locations across tiers
-class ObjectIndex {
-  async recordLocation(location: ObjectLocation): Promise<void>
-  async lookupLocation(id: string): Promise<ObjectLocation | null>
-  async batchLookup(ids: string[]): Promise<Map<string, ObjectLocation>>
-  async getStatsByTier(): Promise<TierStats>
-}
-
-// Schema Manager - Table initialization and migrations
-class SchemaManager {
-  async initializeSchema(): Promise<void>
-  async migrate(fromVersion: number, toVersion: number): Promise<void>
-  getVersion(): number
-}
-```
-
-### SQL Schema
-
-```sql
--- Things (graph nodes with rowid for lightweight relationships)
-CREATE TABLE things (
-  rowid INTEGER PRIMARY KEY AUTOINCREMENT,
-  ns TEXT NOT NULL,
-  type TEXT NOT NULL,
-  id TEXT NOT NULL,
-  url TEXT,
-  data TEXT NOT NULL,  -- JSON
-  context TEXT,        -- JSON-LD @context
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL,
-  UNIQUE(ns, type, id)
-);
-CREATE INDEX idx_things_url ON things(url);
-CREATE INDEX idx_things_type ON things(ns, type);
-
--- Relationships (graph edges using rowid)
-CREATE TABLE relationships (
-  id TEXT PRIMARY KEY,
-  type TEXT NOT NULL,
-  from_rowid INTEGER NOT NULL REFERENCES things(rowid),
-  to_rowid INTEGER NOT NULL REFERENCES things(rowid),
-  data TEXT,           -- JSON metadata
-  created_at INTEGER NOT NULL
-);
-CREATE INDEX idx_rel_from ON relationships(from_rowid, type);
-CREATE INDEX idx_rel_to ON relationships(to_rowid, type);
-
--- Events (append-only audit log)
-CREATE TABLE events (
-  id TEXT PRIMARY KEY,
-  type TEXT NOT NULL,
-  source TEXT NOT NULL,
-  data TEXT NOT NULL,  -- JSON
-  correlation_id TEXT,
-  causation_id TEXT,
-  created_at INTEGER NOT NULL
-);
-CREATE INDEX idx_events_type ON events(type, created_at);
-CREATE INDEX idx_events_correlation ON events(correlation_id);
-
--- Actions (durable execution)
-CREATE TABLE actions (
-  id TEXT PRIMARY KEY,
-  actor TEXT NOT NULL,
-  object TEXT NOT NULL,
-  action TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  metadata TEXT,       -- JSON
-  result TEXT,         -- JSON
-  error TEXT,
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL,
-  started_at INTEGER,
-  completed_at INTEGER
-);
-CREATE INDEX idx_actions_status ON actions(status);
-CREATE INDEX idx_actions_actor ON actions(actor);
-
--- Artifact Index (locations, content in R2)
-CREATE TABLE artifact_index (
-  key TEXT PRIMARY KEY,
-  type TEXT NOT NULL,
-  source TEXT NOT NULL,
-  source_hash TEXT NOT NULL,
-  tier TEXT NOT NULL DEFAULT 'r2',
-  pack_id TEXT,
-  offset INTEGER,
-  size INTEGER NOT NULL,
-  created_at INTEGER NOT NULL,
-  expires_at INTEGER,
-  metadata TEXT        -- JSON
-);
-CREATE INDEX idx_artifacts_source ON artifact_index(source, type);
-
--- WAL (Write-Ahead Log)
-CREATE TABLE wal (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  operation TEXT NOT NULL,
-  payload BLOB NOT NULL,
-  transaction_id TEXT,
-  created_at INTEGER NOT NULL,
-  flushed INTEGER DEFAULT 0
-);
-CREATE INDEX idx_wal_unflushed ON wal(flushed) WHERE flushed = 0;
-
--- Schema version
-CREATE TABLE schema_version (
-  version INTEGER PRIMARY KEY,
-  applied_at INTEGER NOT NULL
-);
-```
-
----
-
-## Natural Language Interface
-
-### GET /do?q= - Natural Language Queries
-
-```typescript
-// Route: GET /do?q=show+me+all+users+created+today
-app.get('/do', async (c) => {
-  const query = c.req.query('q')
-  if (!query) {
-    return c.json({ error: 'Query parameter q is required' }, 400)
-  }
-  return this.handleNaturalLanguageQuery(c, query)
 })
 
-// Handler
-protected async handleNaturalLanguageQuery(c: Context, query: string): Promise<Response> {
-  // 1. Build context for the AI
-  const context = {
-    availableMethods: Array.from(this.allowedMethods),
-    collections: await this.listCollections(),
-    schema: await this.getSchema(),
-  }
-
-  // 2. Call Workers AI to interpret query
-  const ai = c.env.AI
-  const prompt = `
-You are a database assistant. Convert natural language queries to function calls.
-
-Available methods: ${context.availableMethods.join(', ')}
-Available collections: ${context.collections.join(', ')}
-
-User query: "${query}"
-
-Respond with JSON: { "method": "...", "params": [...] }
-`
-
-  const response = await ai.run('@cf/openai/gpt-oss-120b', {
-    messages: [{ role: 'user', content: prompt }]
-  })
-
-  // 3. Parse and execute
-  const parsed = JSON.parse(response.response)
-  const result = await this.invoke(parsed.method, parsed.params)
-
-  return c.json({
-    query,
-    interpreted: parsed,
-    result
-  })
+// Response shape:
+{
+  api: { name: 'my-api', version: '1.0.0' },
+  links: {
+    users: '/users',
+    'users.list': '/users/list',
+    'users.get': '/users/:id'
+  },
+  actions: { ... },
+  data: { ... },
+  user: { ... }
 }
 ```
 
-### Example Queries
+### 4. MDX-as-Worker
 
-```
-GET /do?q=show+me+all+users
-→ { method: "list", params: ["users"] }
+Workers can be defined in MDX files:
 
-GET /do?q=find+user+with+email+john@example.com
-→ { method: "find", params: ["users", { email: "john@example.com" }] }
-
-GET /do?q=count+orders+from+last+week
-→ { method: "list", params: ["orders", { where: { createdAt: { $gte: "..." } } }] }
-
-GET /do?q=delete+expired+sessions
-→ { method: "delete", params: ["sessions", { expiresAt: { $lt: "..." } }] }
-```
-
+```mdx
+---
+name: my-api
+compatibility_date: "2024-01-01"
+d1_databases:
+  - binding: DB
+    database_name: users
+kv_namespaces:
+  - binding: CACHE
+    id: abc123
+dependencies:
+  hono: ^4.0.0
+  zod: ^3.0.0
 ---
 
-## CDC Pipeline (Event Streaming)
+# My API Worker
 
-### Event Flow
+This worker handles user management.
+
+import { Hono } from 'hono'
+import { z } from 'zod'
+
+const app = new Hono()
+
+app.get('/users', async (c) => {
+  const users = await c.env.DB.prepare('SELECT * FROM users').all()
+  return c.json(users)
+})
+
+export default app
+```
+
+The `workers.do build` command:
+1. Parses frontmatter → generates `wrangler.json`
+2. Extracts `dependencies` → updates `package.json`
+3. Compiles code → `dist/my-api.js`
+4. Optionally generates docs from prose
+
+Fenced code blocks with `export` marker become actual exports:
+
+````mdx
+```ts export
+export const config = { cors: true }
+```
+````
+
+## Authentication Architecture
+
+### Better Auth Integration
+
+All Better Auth plugins supported:
 
 ```
-Operation (create/update/delete)
+auth/
+├── core/              # Base better-auth + Drizzle schema
+├── api-key/           # Programmatic access tokens
+├── mcp/               # AI tool authentication
+├── organization/      # Multi-tenancy
+├── admin/             # User management
+└── oauth-proxy/       # OAuth flow handling
+```
+
+### Cookie Strategy
+
+Three cookies with distinct purposes:
+
+| Cookie | Format | Purpose |
+|--------|--------|---------|
+| `auth` | JWT | User authentication (signed, verified) |
+| `settings` | sqid | Anonymous ID + preferences (lightweight) |
+| `session` | sqid | Session tracking (lightweight) |
+
+Anonymous ID generated via sqid from:
+- ASN
+- Cloudflare colo
+- ISO country/region
+- Language
+- IP prefix (first 3 octets)
+
+## Snippets Architecture
+
+Cloudflare Snippets for free-tier optimization:
+
+### Constraints
+- < 5ms CPU time
+- < 32KB compressed
+- No bindings
+- Limited subrequests (2 Pro, 5 Enterprise)
+
+### Snippet Cascade
+
+```
+Request → auth snippet → cache snippet → origin
+              │               │
+         verify JWT      analytics + caching
+              │               │
+         auth cookie     settings/session cookies
+                              │
+                         HTTP → Pipelines → R2 Data Catalog
+```
+
+### Free-Tier Multi-Tenancy
+
+```
+100k sites from single deployment:
+
+Request (my-docs.workers.do)
     │
     ▼
-CDCEventCapture
-    │ Creates CDCEvent { type, source, timestamp, payload, sequence }
+cache snippet (analytics + routing)
+    │
     ▼
-CDCBatcher
-    │ Batches by size (100) or time (5s)
+Static Assets (sites/my-docs.jsonl)
+    │
     ▼
-ParquetTransformer
-    │ Converts to columnar Parquet format
-    ▼
-R2 Upload
-    │ /events/{year}/{month}/{day}/{batch_id}.parquet
-    ▼
-Update artifact_index
+{ module: "...", mdx: "...", html: "..." }
 ```
 
-### Implementation
+Hostname maps to filename: `my-site.workers.do` → `sites/my-site.jsonl`
 
-```typescript
-interface CDCEvent {
-  id: string
-  type: 'THING_CREATED' | 'THING_UPDATED' | 'THING_DELETED' |
-        'REL_CREATED' | 'REL_DELETED' |
-        'ACTION_STARTED' | 'ACTION_COMPLETED' | 'ACTION_FAILED'
-  source: 'api' | 'rpc' | 'workflow' | 'internal'
-  timestamp: number
-  sequence: number
-  payload: unknown
+## Analytics Pipeline
+
+```
+cache snippet
+    │
+    ▼
+Analytics Event {
+  timestamp, hostname, path, method,
+  status, cache (HIT/MISS), cf: { colo, country },
+  userId (if auth), anonymousId (sqid)
 }
+    │
+    ▼
+HTTP endpoint → Pipelines → Streams → R2 Data Catalog (Iceberg)
+                                            │
+                                            ▼
+                                       R2 SQL queries
+```
 
-class CDCPipeline {
-  private batcher: EventBatcher
-  private r2: R2Bucket
+## Apps Architecture
 
-  constructor(config: {
-    batchSize: number         // 100
-    flushIntervalMs: number   // 5000
-    parquetCompression: 'snappy' | 'gzip'
-  })
+All apps built with Vite + React Router + shadcn:
 
-  async process(event: CDCEvent): Promise<void> {
-    const batch = await this.batcher.add(event)
-    if (batch) {
-      const parquet = await this.toParquet(batch.events)
-      const path = this.getPath(batch)
-      await this.r2.put(path, parquet)
-      await this.updateIndex(batch)
-    }
-  }
+```
+apps/
+├── admin/       # /admin - Platform controls (users, secrets, billing)
+├── dashboard/   # /dashboard - Analytics, monitoring, overview
+├── app/         # /app - User-facing features
+└── docs/        # /docs - Fumadocs documentation
+```
 
-  private getPath(batch: Batch): string {
-    const d = new Date(batch.timestamp)
-    return `events/${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}/${batch.id}.parquet`
+### UI Routes
+
+Each app is embeddable in any workers.do site:
+
+```
+my-site.workers.do/admin      → admin UI (requires admin role)
+my-site.workers.do/dashboard  → dashboard UI
+my-site.workers.do/app        → application UI
+my-site.workers.do/docs       → documentation
+```
+
+### Future Exploration
+
+- **hono/jsx + hono/jsx/dom** - Lighter alternative to React
+- **Auto-detection** - vite.config.ts vs next.config.ts determines build
+
+## CLI Architecture
+
+```bash
+# Deploy-focused
+workers.do login              # OAuth via WorkOS
+workers.do dev                # Local development
+workers.do deploy             # Deploy to workers.do platform
+workers.do logs               # Tail logs
+
+# Full lifecycle
+workers.do init               # Scaffold new project
+workers.do build              # Generate wrangler.json from MDX
+workers.do domains add        # Custom domain setup
+workers.do secrets set        # Manage secrets
+workers.do env list           # Environment management
+
+# Platform management
+workers.do sites list         # Multi-tenant site management
+workers.do sites create       # Create new site
+workers.do analytics query    # R2 SQL analytics queries
+workers.do users list         # User management
+workers.do apikeys create     # API key management
+```
+
+### Workers for Platforms
+
+The CLI deploys to Workers for Platforms for multi-tenant hosting:
+- OAuth via oauth.do (WorkOS integration)
+- Automatic wrangler.json generation from MDX
+- Smart pooling to minimize per-worker costs
+
+## primitives/ Submodule
+
+Git submodule from `github.com/dot-org-ai/primitives.org.ai`:
+
+```
+primitives/packages/
+├── ai-database/          # Database interfaces
+├── ai-functions/         # Function interfaces
+├── ai-workflows/         # Workflow interfaces
+├── ai-providers/         # Provider interfaces
+├── digital-workers/      # Worker interfaces
+├── autonomous-agents/    # Agent interfaces
+└── ...                   # 19 total interface packages
+```
+
+These TypeScript interfaces define contracts that `dotdo` and workers implement.
+
+## Build System
+
+### pnpm Workspace
+
+```yaml
+# pnpm-workspace.yaml
+packages:
+  - 'apps/*'
+  - 'workers/*'
+  - 'middleware/*'
+  - 'objects/*'
+  - 'snippets/*'
+  - 'packages/*'
+  - 'auth/*'
+  - 'plugins/*'
+  - 'primitives/packages/*'
+```
+
+### Dual Publishing
+
+Packages publish under multiple names:
+- Direct: `@dotdo/middleware`
+- Re-exported: `workers.do/middleware`
+
+```json
+// workers/workers/package.json
+{
+  "name": "workers.do",
+  "exports": {
+    ".": "./dist/index.js",
+    "./middleware": "@dotdo/middleware",
+    "./auth": "@dotdo/auth",
+    "./router": "./dist/router/index.js"
   }
 }
 ```
 
----
+## Data Flow
 
-## Workflow Integration
+### Request Lifecycle
 
-### WorkflowContext ($)
-
-```typescript
-class DB implements WorkflowContext {
-  // Fire-and-forget event
-  async send<T>(event: string, data: T): Promise<void> {
-    await this.track({
-      type: event,
-      source: 'workflow',
-      data: data as Record<string, unknown>
-    })
-  }
-
-  // Durable execution with retry
-  async do<TData, TResult>(event: string, data: TData): Promise<TResult> {
-    const action = await this.createAction({
-      actor: 'workflow',
-      object: event,
-      action: 'execute',
-      status: 'active',
-      metadata: { data }
-    })
-
-    try {
-      const result = await this.executeHandler(event, data)
-      await this.completeAction(action.id, result)
-      return result as TResult
-    } catch (error) {
-      await this.failAction(action.id, error.message)
-      throw error
-    }
-  }
-
-  // Non-durable execution
-  async try<TData, TResult>(event: string, data: TData): Promise<TResult> {
-    return this.executeHandler(event, data)
-  }
-
-  // State management
-  state: Record<string, unknown> = {}
-
-  set<T>(key: string, value: T): void {
-    this.state[key] = value
-  }
-
-  get<T>(key: string): T | undefined {
-    return this.state[key] as T | undefined
-  }
-
-  getState(): WorkflowState {
-    return {
-      context: { ...this.state },
-      history: this.history
-    }
-  }
-
-  log(message: string, data?: unknown): void {
-    console.log(`[Workflow] ${message}`, data)
-    this.history.push({
-      timestamp: Date.now(),
-      type: 'action',
-      name: 'log',
-      data: { message, data }
-    })
-  }
-
-  private history: WorkflowHistoryEntry[] = []
-}
+```
+Client Request
+    │
+    ▼
+Snippet (auth) ─────────────────┐
+    │                           │
+    ▼                           │ JWT verify via
+Snippet (cache) ────────────────┤ subrequest to
+    │                           │ jose worker
+    │ analytics event ──────────┼──► Pipelines
+    │                           │
+    ▼                           │
+Origin (Worker/Static Assets)   │
+    │                           │
+    ▼                           │
+Durable Object (dotdo)          │
+    │                           │
+    ├─► Drizzle ─► SQLite       │
+    │                           │
+    ├─► RPC ─► env.JOSE ────────┘
+    │       ─► env.STRIPE
+    │       ─► env.CLOUDFLARE
+    │
+    ▼
+Response (JSON/HTML/CapnWeb/MCP)
 ```
 
----
+### Multi-Transport Response
 
-## gitx.do Refactor
-
-gitx.do can be refactored to extend the DB base class:
+Same data, multiple formats:
 
 ```typescript
-// gitx.do/src/git-store.ts
-import { DO } from '@dotdo/do'
-import { WALManager, LRUCache, ObjectIndex } from '@dotdo/db/storage'
-
-export class GitStore extends DO {
-  private packStorage: R2PackStorage
-
-  constructor(ctx: DurableObjectState, env: GitEnv) {
-    super(ctx, env)
-
-    // Extend allowed methods for Git operations
-    this.allowedMethods = new Set([
-      ...this.allowedMethods,
-      'putObject', 'getObject', 'deleteObject',
-      'updateRef', 'resolveRef',
-      'push', 'fetch', 'clone',
-    ])
-
-    this.packStorage = new R2PackStorage({
-      bucket: env.GIT_OBJECTS,
-      prefix: 'packs/'
-    })
+// Developer writes:
+export default {
+  users: {
+    list: () => [{ id: 1, name: 'Alice' }]
   }
-
-  // Git-specific operations
-  @callable()
-  async putObject(type: ObjectType, data: Uint8Array): Promise<string> {
-    const sha = await hashObject(type, data)
-
-    // Track as event
-    await this.track({
-      type: 'OBJECT_CREATED',
-      source: 'git',
-      data: { sha, type, size: data.length }
-    })
-
-    // Store in Things table
-    await this.create('objects', {
-      id: sha,
-      type,
-      size: data.length,
-      data: Buffer.from(data).toString('base64')
-    })
-
-    return sha
-  }
-
-  // Reuse base class for:
-  // - WAL management
-  // - LRU caching
-  // - Object indexing
-  // - Event streaming
-  // - Action tracking
 }
+
+// System serves:
+// REST: GET /users/list → [{ id: 1, name: 'Alice' }]
+// RPC:  env.MY_API.users.list() → [{ id: 1, name: 'Alice' }]
+// WS:   { method: 'users.list' } → { result: [...] }
+// MCP:  { jsonrpc: '2.0', method: 'users.list' } → { result: [...] }
+// HTML: Rendered via mdxui/hono-jsx
 ```

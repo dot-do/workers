@@ -1,0 +1,16 @@
+{
+  "name": "@dotdo/rpc",
+  "version": "0.0.1",
+  "description": "Universal RPC wrapper - wrap any npm package as a multi-transport worker (REST, Workers RPC, CapnWeb, MCP)",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "hono": "^4.0.0"
+  }
+}

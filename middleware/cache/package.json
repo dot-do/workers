@@ -1,0 +1,12 @@
+{
+  "name": "@dotdo/middleware-cache",
+  "version": "0.0.1",
+  "description": "Caching middleware for Hono with Cloudflare Cache API",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.0.0"
+  }
+}

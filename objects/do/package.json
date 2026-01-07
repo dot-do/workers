@@ -1,0 +1,26 @@
+{
+  "name": "dotdo",
+  "version": "0.0.1",
+  "description": "An agentic database that can DO anything - Base Durable Object with Drizzle, Better Auth, and AI agent",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./tiny": "./tiny.ts",
+    "./rpc": "./rpc.ts",
+    "./auth": "./auth.ts"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.36.0",
+    "hono": "^4.0.0"
+  },
+  "peerDependencies": {
+    "better-auth": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "better-auth": { "optional": true }
+  }
+}

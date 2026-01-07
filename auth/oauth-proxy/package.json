@@ -1,0 +1,12 @@
+{
+  "name": "@dotdo/auth-plugin-oauth-proxy",
+  "version": "0.0.1",
+  "description": "Better Auth OAuth proxy plugin for OAuth flow handling",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/auth": "workspace:*"
+  }
+}

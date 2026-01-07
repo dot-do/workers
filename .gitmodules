@@ -1,0 +1,3 @@
+[submodule "primitives"]
+	path = primitives
+	url = https://github.com/dot-org-ai/primitives.org.ai

@@ -1,0 +1,15 @@
+{
+  "name": "@dotdo/worker-jose",
+  "version": "0.0.1",
+  "description": "jose JWT library exposed as multi-transport RPC worker",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "jose": "^5.0.0",
+    "@dotdo/rpc": "workspace:*"
+  }
+}

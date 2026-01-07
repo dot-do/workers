@@ -1,0 +1,13 @@
+{
+  "name": "@dotdo/middleware-auth",
+  "version": "0.0.1",
+  "description": "Authentication middleware for Hono with Better Auth integration",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.0.0",
+    "@dotdo/auth": "workspace:*"
+  }
+}

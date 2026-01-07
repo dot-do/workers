@@ -1,0 +1,12 @@
+{
+  "name": "@dotdo/middleware-rate-limit",
+  "version": "0.0.1",
+  "description": "Rate limiting middleware for Hono",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.0.0"
+  }
+}

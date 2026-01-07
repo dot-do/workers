@@ -1,0 +1,17 @@
+{
+  "name": "@dotdo/edge-api",
+  "version": "0.0.1",
+  "description": "HATEOAS API framework - explorable APIs with links, actions, data, and user objects",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "hono": "^4.0.0",
+    "@dotdo/rpc": "workspace:*"
+  }
+}

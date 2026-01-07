@@ -1,0 +1,10 @@
+packages:
+  - 'apps/*'
+  - 'workers/*'
+  - 'middleware/*'
+  - 'objects/*'
+  - 'snippets/*'
+  - 'packages/*'
+  - 'auth/*'
+  - 'plugins/*'
+  - 'primitives/packages/*'

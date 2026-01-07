@@ -1,0 +1,15 @@
+{
+  "name": "@dotdo/worker-workos",
+  "version": "0.0.1",
+  "description": "WorkOS SDK exposed as multi-transport RPC worker",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@workos-inc/node": "^7.0.0",
+    "@dotdo/rpc": "workspace:*"
+  }
+}

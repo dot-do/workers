@@ -1,0 +1,16 @@
+{
+  "name": "@dotdo/snippets",
+  "version": "0.0.1",
+  "description": "Cloudflare Snippets collection - free tier workers (<5ms CPU, <32KB, no bindings)",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./cache": "./cache.ts",
+    "./auth": "./auth.ts",
+    "./router": "./router.ts"
+  },
+  "scripts": {
+    "build": "tsup",
+    "deploy": "workers.do snippets deploy"
+  }
+}

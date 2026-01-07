@@ -1,0 +1,12 @@
+{
+  "name": "@dotdo/auth-plugin-org",
+  "version": "0.0.1",
+  "description": "Better Auth organization plugin for multi-tenancy",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@dotdo/auth": "workspace:*"
+  }
+}

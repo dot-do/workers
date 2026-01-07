@@ -16,7 +16,7 @@ Teams are groups of agents and humans. You talk to the team, not individuals.
 
 | Team | Members | Focus |
 |------|---------|-------|
-| **engineering** | Tom, Rae, Quinn + human devs | Building software |
+| **engineering** | Ralph, Tom, Rae, Quinn + human devs | Building software |
 | **product** | Priya + human PDMs | What to build |
 | **marketing** | Mark + human marketers | Telling the story |
 | **sales** | Sally + human AEs | Closing deals |
@@ -29,9 +29,10 @@ engineering`we need a login system`
 ```
 
 The team figures out:
-- Tom handles the backend auth
+- Ralph handles the backend auth implementation
 - Rae builds the React components
 - Quinn writes the tests
+- Tom reviews the architecture
 - Work happens in parallel
 - Results come back together
 
@@ -51,12 +52,12 @@ const reviews = await engineering`review this PR`
 
 ```typescript
 import { Team } from 'teams.do'
-import { tom, rae, quinn } from 'agents.do'
+import { ralph, tom, rae, quinn } from 'agents.do'
 import { dev, qa } from 'humans.do'
 
 export const engineering = Team({
   name: 'Engineering',
-  members: [tom, rae, quinn, dev, qa],
+  members: [ralph, tom, rae, quinn, dev, qa],
   lead: tom,
 })
 ```
@@ -72,10 +73,11 @@ engineering`build the payment integration`
 ```
 
 The lead (Tom) might:
-1. Take the architecture himself
+1. Delegate implementation to Ralph
 2. Delegate Stripe UI to Rae
 3. Delegate test cases to Quinn
-4. Escalate compliance questions to human
+4. Review the architecture himself
+5. Escalate compliance questions to human
 
 You just asked for payment integration. The team handled the rest.
 
@@ -106,7 +108,7 @@ import { dev, review } from 'workflows.do'
 
 export const engineering = Team({
   name: 'Engineering',
-  members: [tom, rae, quinn],
+  members: [ralph, tom, rae, quinn],
   workflows: [dev, review],
 })
 
@@ -142,8 +144,8 @@ Teams form your org structure:
           /    |    \
    product  engineering  sales
       |         |          |
-    priya    tom,rae    sally
-             quinn
+    priya   ralph,tom   sally
+            rae,quinn
 ```
 
 Work flows down. Escalations flow up. Status flows everywhere.
@@ -156,9 +158,9 @@ Start with AI teams:
 import { engineering, product, marketing } from 'teams.do'
 
 // You have departments, even if it's just you
-product`define the MVP`
-engineering`build it`
-marketing`launch it`
+const mvp = await product`define the MVP`
+const app = await engineering`build ${mvp}`
+await marketing`launch ${app}`
 ```
 
 As you hire, add humans to the teams:

@@ -7,6 +7,7 @@
   "exports": {
     ".": "./index.ts",
     "./priya": "./priya/index.ts",
+    "./ralph": "./ralph/index.ts",
     "./tom": "./tom/index.ts",
     "./rae": "./rae/index.ts",
     "./mark": "./mark/index.ts",

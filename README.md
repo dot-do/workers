@@ -3,10 +3,11 @@
 > Workers work for you.
 
 ```typescript
-import { tom, priya, mark } from 'agents.do'
+import { priya, ralph, tom, mark } from 'agents.do'
 
-tom`build the authentication system`
 priya`plan the Q1 roadmap`
+ralph`build the authentication system`
+tom`review the architecture`
 mark`write the launch announcement`
 ```
 
@@ -23,9 +24,9 @@ You're a founder. You need a team, but you're early. Maybe it's just you.
 ```typescript
 import { engineering, product, marketing } from 'teams.do'
 
-product`define the MVP`
-engineering`build it`
-marketing`launch it`
+const mvp = await product`define the MVP`
+const app = await engineering`build ${mvp}`
+await marketing`launch ${app}`
 ```
 
 That's your startup. Running.
@@ -34,8 +35,9 @@ That's your startup. Running.
 
 | Agent | Role | What They Do |
 |-------|------|--------------|
-| **Priya** | Product | Specs, prioritization, roadmaps |
-| **Tom** | Tech Lead | TypeScript, architecture, code review |
+| **Priya** | Product | Specs, prioritization, roadmaps, product review |
+| **Ralph** | Developer | Implementation, coding, iteration |
+| **Tom** | Tech Lead | Architecture, TypeScript, code review |
 | **Rae** | Frontend | React, UI/UX, accessibility |
 | **Mark** | Marketing | Copy, content, documentation |
 | **Sally** | Sales | Outreach, demos, closing |
@@ -48,13 +50,50 @@ Each agent has real identity—email, GitHub account, avatar. When Tom reviews y
 Just tell them what you need:
 
 ```typescript
-tom`review the pull request`
 priya`what should we build next?`
+ralph`implement the user dashboard`
+tom`review the architecture`
 mark`write a blog post about our launch`
 quinn`test the checkout flow thoroughly`
 ```
 
 No method names. No parameters. Just say what you want.
+
+## Promise Pipelining
+
+Chain promises without round trips:
+
+```typescript
+const spec = await priya`spec out user auth`
+const code = await ralph`implement ${spec}`
+const reviews = await [priya, tom, quinn].map(r => r`review ${code}`)
+const docs = await mark`document ${code}`
+```
+
+Or pipeline everything in a single network call:
+
+```typescript
+const shipped = await priya`plan ${feature}`
+  .map(issue => ralph`implement ${issue}`)
+  .map(code => [priya, tom, quinn].map(r => r`review ${code}`))
+```
+
+No `Promise.all`. No callback hell. One round trip.
+
+### Magic Map
+
+The `.map()` isn't JavaScript's—it's a remote operation:
+
+```typescript
+// This doesn't fetch issues, then loop locally
+// It records the transform and executes remotely
+const implementations = await priya`plan the sprint`
+  .map(issue => ralph`implement ${issue}`)
+```
+
+The callback `issue => ralph\`implement ${issue}\`` is recorded, not executed. The server receives the entire pipeline and executes it in one pass. Results stream back.
+
+This is [CapnWeb](https://github.com/cloudflare/capnweb) pipelining—record-replay promises that batch automatically. See [rpc.do](https://rpc.do) for the technical details.
 
 ## Workflows
 
@@ -160,16 +199,16 @@ await payments.usage.record(user.id, { tokens: content.usage.total })
 npm install agents.do
 
 # Or individual agents
-npm install tom.do priya.do quinn.do mark.do
+npm install priya.do ralph.do tom.do quinn.do mark.do
 ```
 
 ```typescript
-import { tom, priya, mark, quinn } from 'agents.do'
+import { priya, ralph, tom, quinn, mark } from 'agents.do'
 
 // Your first feature
 const spec = await priya`spec out user authentication`
-const code = await tom`implement ${spec}`
-await quinn`test ${code}`
+const code = await ralph`implement ${spec}`
+await [priya, tom, quinn].map(r => r`review ${code}`)
 const docs = await mark`document ${code}`
 ```
 

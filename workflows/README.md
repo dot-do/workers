@@ -34,8 +34,8 @@ dev`build user authentication`
 What happens:
 1. **Brainstorm** — Human defines requirements (via Slack/chat)
 2. **Plan** — Priya creates issues with specs
-3. **Implement** — Tom builds each issue
-4. **Review** — Tom, Rae, Quinn review in parallel
+3. **Implement** — Ralph builds each issue
+4. **Review** — Priya, Tom, Quinn review in parallel
 5. **Approve** — Human signs off
 6. **Ship** — Merged and deployed
 
@@ -45,7 +45,7 @@ One line of code. Full development cycle.
 
 ```typescript
 import { Workflow } from 'workflows.do'
-import { priya, tom, rae, quinn } from 'agents.do'
+import { priya, ralph, tom, quinn } from 'agents.do'
 import { pdm } from 'humans.do'
 
 export const dev = Workflow({
@@ -63,22 +63,22 @@ export const dev = Workflow({
     },
 
     implement: {
-      assignee: tom,
+      assignee: ralph,
       then: 'review',
     },
 
     review: {
-      assignee: [tom, rae, quinn],  // Parallel
+      assignee: [priya, tom, quinn],  // Parallel
       then: ({ approved }) => approved ? 'ship' : 'fix',
     },
 
     fix: {
-      assignee: tom,
+      assignee: ralph,
       then: 'review',  // Loop back
     },
 
     ship: {
-      assignee: tom,
+      assignee: ralph,
       then: null,  // Done
     },
   },

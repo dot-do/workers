@@ -14,10 +14,11 @@ Both kinds of workers. Working for startup founders who need a team.
 ### The Core API
 
 ```typescript
-import { tom, priya, mark } from 'agents.do'
+import { priya, ralph, tom, mark } from 'agents.do'
 
-tom`build the authentication system`
 priya`plan the Q1 roadmap`
+ralph`build the authentication system`
+tom`review the architecture`
 mark`write the launch announcement`
 ```
 
@@ -37,7 +38,8 @@ workflows/    Orchestrated processes (dev, review, marketing, sales)
 
 | Agent | Role | Expertise |
 |-------|------|-----------|
-| **Priya** | Product | Specs, prioritization, roadmaps |
+| **Priya** | Product | Specs, prioritization, roadmaps, product review |
+| **Ralph** | Developer | Implementation, coding, iteration |
 | **Tom** | Tech Lead | TypeScript, architecture, code review |
 | **Rae** | Frontend | React, UI/UX, accessibility |
 | **Mark** | Marketing | Copy, content, MDX documentation |
@@ -64,8 +66,8 @@ Work chains without `Promise.all`:
 
 ```typescript
 const implemented = await priya`plan ${feature}`
-  .map(issue => tom`implement ${issue}`)
-  .map(code => quinn`test ${code}`)
+  .map(issue => ralph`implement ${issue}`)
+  .map(code => [priya, tom, quinn].map(r => r`review ${code}`))
 ```
 
 One network round trip. Record-replay pipelining.
@@ -84,7 +86,7 @@ workers.do is the platform for building **Autonomous Startups** - businesses tha
 ## Repository Structure
 
 ```
-agents/         # AI agents (Priya, Tom, Rae, Mark, Sally, Quinn)
+agents/         # AI agents (Priya, Ralph, Tom, Rae, Mark, Sally, Quinn)
 roles/          # Base roles (CEO, CTO, PDM, Dev, QA...)
 humans/         # Human workers + channels (Slack, Email, Discord...)
 teams/          # Team compositions (Engineering, Product, Sales...)
@@ -328,8 +330,8 @@ export const myworkflow = Workflow({
   name: 'My Workflow',
   phases: {
     start: { assignee: priya, then: 'work' },
-    work: { assignee: tom, then: 'review' },
-    review: { assignee: quinn, checkpoint: true, then: null },
+    work: { assignee: ralph, then: 'review' },
+    review: { assignee: [priya, tom, quinn], checkpoint: true, then: null },
   },
 })
 ```

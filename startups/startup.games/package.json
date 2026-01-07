@@ -1,0 +1,49 @@
+{
+  "name": "startup.games",
+  "version": "0.0.1",
+  "description": "Gamified entrepreneurship - test business models, compete, and learn startup skills",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://startup.games",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers",
+    "directory": "sdks/startup.games"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "capnweb": "^0.2.0",
+    "cli.do": "workspace:*",
+    "mcp.do": "workspace:*",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "dotdo": "workspace:*",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "startup",
+    "games",
+    "entrepreneurship",
+    "simulation",
+    "business",
+    "gamification",
+    "business-model",
+    "saas",
+    "marketplace",
+    "leaderboard",
+    "achievements",
+    "startup-simulator",
+    "workers.do",
+    "autonomous-startup"
+  ]
+}

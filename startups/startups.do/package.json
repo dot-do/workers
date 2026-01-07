@@ -1,0 +1,45 @@
+{
+  "name": "startups.do",
+  "version": "0.0.1",
+  "description": "Autonomous Startups SDK - Build businesses that run on AI with human oversight",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://startups.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers",
+    "directory": "startups/startups.do"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "capnweb": "^0.2.0",
+    "cli.do": "workspace:*",
+    "mcp.do": "workspace:*",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "dotdo": "workspace:*",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "startup",
+    "startups",
+    "autonomous",
+    "business",
+    "ai",
+    "saas",
+    "startup-as-code",
+    "cloudflare-workers",
+    "workers.do",
+    "dotdo"
+  ]
+}

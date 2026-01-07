@@ -1,0 +1,29 @@
+{
+  "name": "nouns.do",
+  "version": "0.0.1",
+  "description": "Nouns SDK - Define your business entities and their relationships",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://nouns.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "dependencies": {
+    "rpc.do": "workspace:*"
+  },
+  "keywords": [
+    "nouns",
+    "entities",
+    "models",
+    "domain",
+    "schema",
+    "sdk",
+    "workers.do"
+  ]
+}

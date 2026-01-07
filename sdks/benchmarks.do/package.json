@@ -1,0 +1,29 @@
+{
+  "name": "benchmarks.do",
+  "version": "0.0.1",
+  "description": "Benchmarks SDK - Compare AI performance on standard tasks",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://benchmarks.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "dependencies": {
+    "rpc.do": "workspace:*"
+  },
+  "keywords": [
+    "benchmarks",
+    "performance",
+    "ai",
+    "comparison",
+    "leaderboard",
+    "sdk",
+    "workers.do"
+  ]
+}

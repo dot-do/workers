@@ -1,0 +1,28 @@
+{
+  "name": "triggers.do",
+  "version": "0.0.1",
+  "description": "Triggers SDK - Event-driven automation made simple",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://triggers.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "dependencies": {
+    "rpc.do": "workspace:*"
+  },
+  "keywords": [
+    "triggers",
+    "events",
+    "automation",
+    "webhooks",
+    "sdk",
+    "workers.do"
+  ]
+}

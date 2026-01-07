@@ -1,0 +1,28 @@
+{
+  "name": "integrations.do",
+  "version": "0.0.1",
+  "description": "Integrations SDK - Connect any service in minutes",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://integrations.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "dependencies": {
+    "rpc.do": "workspace:*"
+  },
+  "keywords": [
+    "integrations",
+    "connectors",
+    "apis",
+    "sync",
+    "sdk",
+    "workers.do"
+  ]
+}

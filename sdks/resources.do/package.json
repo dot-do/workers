@@ -1,7 +1,7 @@
 {
-  "name": "analytics.do",
+  "name": "resources.do",
   "version": "0.0.1",
-  "description": "AI-Powered Analytics SDK - Analytics that tell you what to do next",
+  "description": "Resources SDK - Manage and allocate resources intelligently",
   "type": "module",
   "main": "index.ts",
   "exports": {
@@ -9,7 +9,7 @@
   },
   "author": ".do",
   "license": "MIT",
-  "homepage": "https://analytics.do",
+  "homepage": "https://resources.do",
   "repository": {
     "type": "git",
     "url": "https://github.com/dot-do/workers"
@@ -24,19 +24,16 @@
     "typescript": "^5.0.0"
   },
   "keywords": [
-    "analytics",
-    "ai-analytics",
-    "tracking",
-    "bi",
-    "business-intelligence",
-    "metrics",
-    "dashboards",
-    "events",
-    "funnels",
-    "cohorts",
-    "insights",
+    "resources",
+    "allocation",
+    "capacity",
+    "scheduling",
     "sdk",
     "workers.do",
-    "cloudflare-workers"
+    "cloudflare",
+    "workers",
+    "optimization",
+    "availability",
+    "conflicts"
   ]
 }

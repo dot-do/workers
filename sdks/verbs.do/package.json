@@ -1,0 +1,28 @@
+{
+  "name": "verbs.do",
+  "version": "0.0.1",
+  "description": "Verbs SDK - Define actions your AI can take",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://verbs.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "dependencies": {
+    "rpc.do": "workspace:*"
+  },
+  "keywords": [
+    "verbs",
+    "actions",
+    "operations",
+    "commands",
+    "sdk",
+    "workers.do"
+  ]
+}

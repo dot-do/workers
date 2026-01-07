@@ -1,7 +1,7 @@
 {
-  "name": "analytics.do",
+  "name": "kpis.do",
   "version": "0.0.1",
-  "description": "AI-Powered Analytics SDK - Analytics that tell you what to do next",
+  "description": "KPIs SDK - Key Performance Indicators that update themselves",
   "type": "module",
   "main": "index.ts",
   "exports": {
@@ -9,7 +9,7 @@
   },
   "author": ".do",
   "license": "MIT",
-  "homepage": "https://analytics.do",
+  "homepage": "https://kpis.do",
   "repository": {
     "type": "git",
     "url": "https://github.com/dot-do/workers"
@@ -24,19 +24,17 @@
     "typescript": "^5.0.0"
   },
   "keywords": [
-    "analytics",
-    "ai-analytics",
-    "tracking",
-    "bi",
-    "business-intelligence",
+    "kpis",
     "metrics",
+    "performance",
     "dashboards",
-    "events",
-    "funnels",
-    "cohorts",
-    "insights",
     "sdk",
     "workers.do",
-    "cloudflare-workers"
+    "cloudflare",
+    "workers",
+    "analytics",
+    "monitoring",
+    "indicators",
+    "real-time"
   ]
 }

@@ -1,7 +1,7 @@
 {
-  "name": "analytics.do",
+  "name": "goals.do",
   "version": "0.0.1",
-  "description": "AI-Powered Analytics SDK - Analytics that tell you what to do next",
+  "description": "Goals SDK - Goal tracking with automatic progress",
   "type": "module",
   "main": "index.ts",
   "exports": {
@@ -9,7 +9,7 @@
   },
   "author": ".do",
   "license": "MIT",
-  "homepage": "https://analytics.do",
+  "homepage": "https://goals.do",
   "repository": {
     "type": "git",
     "url": "https://github.com/dot-do/workers"
@@ -24,19 +24,18 @@
     "typescript": "^5.0.0"
   },
   "keywords": [
-    "analytics",
-    "ai-analytics",
-    "tracking",
-    "bi",
-    "business-intelligence",
-    "metrics",
-    "dashboards",
-    "events",
-    "funnels",
-    "cohorts",
-    "insights",
+    "goals",
+    "goal-tracking",
+    "objectives",
+    "targets",
+    "okrs",
     "sdk",
     "workers.do",
-    "cloudflare-workers"
+    "cloudflare",
+    "workers",
+    "automation",
+    "progress",
+    "milestones",
+    "kpis"
   ]
 }

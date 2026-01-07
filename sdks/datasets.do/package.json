@@ -1,0 +1,29 @@
+{
+  "name": "datasets.do",
+  "version": "0.0.1",
+  "description": "Datasets SDK - Manage training and evaluation datasets",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://datasets.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "dependencies": {
+    "rpc.do": "workspace:*"
+  },
+  "keywords": [
+    "datasets",
+    "data",
+    "training",
+    "evaluation",
+    "ai",
+    "sdk",
+    "workers.do"
+  ]
+}

@@ -1,17 +1,41 @@
 {
   "name": "actions.do",
   "version": "0.0.1",
-  "description": "AI Actions SDK - Define and execute AI-powered actions",
+  "description": "Unified Action Registry - Define once, execute anywhere for AI and humans",
   "type": "module",
   "main": "index.ts",
   "exports": {
     ".": "./index.ts"
   },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://actions.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
   "dependencies": {
-    "@dotdo/rpc-client": "workspace:*"
+    "rpc.do": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
   },
-  "keywords": ["actions", "ai", "automation", "sdk", "workers.do"]
+  "keywords": [
+    "actions",
+    "ai",
+    "automation",
+    "sdk",
+    "workers.do",
+    "cloudflare",
+    "serverless",
+    "execution",
+    "permissions",
+    "registry",
+    "ai-agents",
+    "rpc",
+    "unified-api"
+  ]
 }

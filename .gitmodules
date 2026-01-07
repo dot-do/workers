@@ -1,3 +1,45 @@
 [submodule "primitives"]
 	path = primitives
 	url = https://github.com/dot-org-ai/primitives.org.ai
+[submodule "rewrites/gitx"]
+	path = rewrites/gitx
+	url = https://github.com/dot-do/gitx.git
+[submodule "rewrites/mongo"]
+	path = rewrites/mongo
+	url = https://github.com/dot-do/mongo.git
+[submodule "rewrites/redis"]
+	path = rewrites/redis
+	url = https://github.com/dot-do/redis.git
+[submodule "rewrites/neo4j"]
+	path = rewrites/neo4j
+	url = https://github.com/dot-do/neo4j.git
+[submodule "rewrites/excel"]
+	path = rewrites/excel
+	url = https://github.com/dot-do/excel.git
+[submodule "rewrites/firebase"]
+	path = rewrites/firebase
+	url = https://github.com/dot-do/firebase.git
+[submodule "rewrites/convex"]
+	path = rewrites/convex
+	url = https://github.com/dot-do/convex.git
+[submodule "packages/esm"]
+	path = packages/esm
+	url = https://github.com/dot-do/esm.git
+[submodule "packages/claude"]
+	path = packages/claude
+	url = https://github.com/dot-do/claude.git
+[submodule "rewrites/kafka"]
+	path = rewrites/kafka
+	url = https://github.com/dot-do/kafka.git
+[submodule "rewrites/nats"]
+	path = rewrites/nats
+	url = https://github.com/dot-do/nats.git
+[submodule "rewrites/turso"]
+	path = rewrites/turso
+	url = https://github.com/dot-do/turso.git
+[submodule "packages/eval/rewrites/supabase"]
+	path = packages/eval/rewrites/supabase
+	url = https://github.com/dot-do/supabase.git
+[submodule "mdxui"]
+	path = mdxui
+	url = https://github.com/dot-do/mdxui.git

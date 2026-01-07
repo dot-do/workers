@@ -4,6 +4,10 @@
   "description": "Base CapnWeb RPC client for .do SDKs with tagged template SQL support",
   "type": "module",
   "main": "index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "exports": {
     ".": "./index.ts",
     "./env": "./env.ts",
@@ -42,6 +46,7 @@
     "capnweb": "^0.2.0",
     "dotdo": "workspace:*",
     "org.ai": "workspace:*",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
   }
 }

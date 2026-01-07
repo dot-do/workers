@@ -94,6 +94,38 @@ export interface ClientOptions {
   }
   /** Pass environment directly instead of using global */
   env?: Record<string, string | undefined>
+  /** WS reconnection attempts (default: 3) */
+  wsReconnectAttempts?: number
+  /** WS reconnection delay in ms (default: 1000) */
+  wsReconnectDelay?: number
+  /** WS reconnection backoff period in ms (default: 5000) */
+  wsBackoffPeriod?: number
+}
+
+/** Transport state */
+export type TransportState = 'ws' | 'http' | 'auto' | 'connecting'
+
+/** Transport change event */
+export interface TransportChangeEvent {
+  from: TransportState
+  to: TransportState
+  reason: string
+}
+
+/** Client with connection methods */
+export interface ClientMethods {
+  /** Check if WebSocket is connected */
+  isConnected(): boolean
+  /** Disconnect WebSocket */
+  disconnect(): Promise<void>
+  /** Close client and clean up resources */
+  close(): Promise<void>
+  /** Get current transport state */
+  getTransport(): TransportState
+  /** Set transport mode */
+  setTransport(transport: 'ws' | 'http' | 'auto'): void
+  /** Subscribe to transport changes */
+  on(event: 'transportChange', handler: (event: TransportChangeEvent) => void): void
 }
 
 /**
@@ -188,16 +220,17 @@ export interface RPCResponse<T = unknown> {
 export function createClient<T extends object>(
   service: string,
   options: ClientOptions = {}
-): T {
+): T & ClientMethods {
   const {
     apiKey: explicitApiKey,
     token,
     baseURL,
     baseUrl,  // deprecated
-    transport = 'auto',
+    transport: initialTransport = 'auto',
     timeout = 30000,
     retry = { attempts: 3, delay: 1000, backoff: 'exponential' },
     env: envOverride,
+    wsBackoffPeriod = 5000,
   } = options
 
   // Resolve base URL: explicit > deprecated > default
@@ -216,39 +249,228 @@ export function createClient<T extends object>(
     headers['Authorization'] = `Bearer ${token}`
   }
 
+  // Transport state
+  let currentTransport: 'ws' | 'http' | 'auto' = initialTransport
+  let wsConnection: WebSocket | null = null
+  let wsConnecting = false
+  let wsFailedAt: number | null = null
+  const pendingRequests = new Map<string | number, {
+    resolve: (value: unknown) => void
+    reject: (error: Error) => void
+    timeout: ReturnType<typeof setTimeout>
+  }>()
+  const transportChangeHandlers: Array<(event: TransportChangeEvent) => void> = []
+
+  // Convert HTTP URL to WebSocket URL
+  function toWsUrl(httpUrl: string): string {
+    const url = httpUrl.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:')
+    return `${url}/ws/${service}`
+  }
+
+  // Emit transport change event
+  function emitTransportChange(from: TransportState, to: TransportState, reason: string) {
+    const event: TransportChangeEvent = { from, to, reason }
+    for (const handler of transportChangeHandlers) {
+      try {
+        handler(event)
+      } catch {
+        // Ignore handler errors
+      }
+    }
+  }
+
+  // Connect WebSocket
+  function connectWs(): Promise<WebSocket> {
+    return new Promise((resolve, reject) => {
+      if (wsConnection && wsConnection.readyState === 1) {
+        resolve(wsConnection)
+        return
+      }
+
+      wsConnecting = true
+      const wsUrl = toWsUrl(resolvedBaseURL)
+      const ws = new WebSocket(wsUrl)
+
+      const connectTimeout = setTimeout(() => {
+        ws.close()
+        wsConnecting = false
+        reject(new Error('WebSocket connection timeout'))
+      }, timeout)
+
+      ws.onopen = () => {
+        clearTimeout(connectTimeout)
+        wsConnecting = false
+        wsConnection = ws
+        wsFailedAt = null
+        resolve(ws)
+      }
+
+      ws.onerror = () => {
+        clearTimeout(connectTimeout)
+        wsConnecting = false
+        wsFailedAt = Date.now()
+        reject(new Error('WebSocket connection failed'))
+      }
+
+      ws.onclose = () => {
+        wsConnection = null
+        wsConnecting = false
+      }
+
+      ws.onmessage = (event) => {
+        try {
+          const response: RPCResponse = JSON.parse(event.data as string)
+          const pending = pendingRequests.get(response.id!)
+          if (pending) {
+            clearTimeout(pending.timeout)
+            pendingRequests.delete(response.id!)
+            if (response.error) {
+              pending.reject(new RPCError(response.error.code, response.error.message, response.error.data))
+            } else {
+              pending.resolve(response.result)
+            }
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    })
+  }
+
+  // Send via WebSocket
+  async function sendWs(request: RPCRequest): Promise<unknown> {
+    const ws = await connectWs()
+
+    return new Promise((resolve, reject) => {
+      const requestTimeout = setTimeout(() => {
+        pendingRequests.delete(request.id!)
+        reject(new Error('WebSocket request timeout'))
+      }, timeout)
+
+      pendingRequests.set(request.id!, { resolve, reject, timeout: requestTimeout })
+      ws.send(JSON.stringify(request))
+    })
+  }
+
+  // Send via HTTP
+  async function sendHttp(request: RPCRequest): Promise<unknown> {
+    const response = await fetchWithRetry(
+      `${resolvedBaseURL}/${service}`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(request),
+      },
+      { timeout, ...retry }
+    )
+
+    const data: RPCResponse = await response.json()
+
+    if (data.error) {
+      throw new RPCError(data.error.code, data.error.message, data.error.data)
+    }
+
+    return data.result
+  }
+
+  // Should attempt WS connection?
+  function shouldAttemptWs(): boolean {
+    if (currentTransport === 'http') return false
+    if (currentTransport === 'ws') return true
+    // Auto mode: try WS unless recently failed
+    if (wsFailedAt && Date.now() - wsFailedAt < wsBackoffPeriod) return false
+    return true
+  }
+
+  // Make RPC call with transport selection
+  async function call(method: string, params: unknown[]): Promise<unknown> {
+    const request: RPCRequest = {
+      method,
+      params,
+      id: crypto.randomUUID(),
+    }
+
+    // HTTP only
+    if (currentTransport === 'http') {
+      return sendHttp(request)
+    }
+
+    // WS only
+    if (currentTransport === 'ws') {
+      return sendWs(request)
+    }
+
+    // Auto: try WS, fallback to HTTP
+    if (shouldAttemptWs()) {
+      try {
+        return await sendWs(request)
+      } catch (wsError) {
+        wsFailedAt = Date.now()
+        emitTransportChange('ws', 'http', (wsError as Error).message)
+        return sendHttp(request)
+      }
+    } else {
+      return sendHttp(request)
+    }
+  }
+
+  // Client methods
+  const clientMethods: ClientMethods = {
+    isConnected(): boolean {
+      return wsConnection !== null && wsConnection.readyState === 1
+    },
+
+    async disconnect(): Promise<void> {
+      if (wsConnection) {
+        wsConnection.close()
+        wsConnection = null
+      }
+      // Cancel all pending requests
+      for (const [id, pending] of pendingRequests) {
+        clearTimeout(pending.timeout)
+        pending.reject(new Error('Connection closed'))
+        pendingRequests.delete(id)
+      }
+    },
+
+    async close(): Promise<void> {
+      await this.disconnect()
+    },
+
+    getTransport(): TransportState {
+      if (wsConnecting) return 'connecting'
+      if (wsConnection && wsConnection.readyState === 1) return 'ws'
+      if (currentTransport === 'auto') return 'auto'
+      return currentTransport
+    },
+
+    setTransport(transport: 'ws' | 'http' | 'auto'): void {
+      currentTransport = transport
+    },
+
+    on(event: 'transportChange', handler: (event: TransportChangeEvent) => void): void {
+      if (event === 'transportChange') {
+        transportChangeHandlers.push(handler)
+      }
+    },
+  }
+
   // Create proxy that intercepts method calls and turns them into RPC requests
-  return new Proxy({} as T, {
-    get(_target, prop: string) {
+  return new Proxy(clientMethods as T & ClientMethods, {
+    get(target, prop: string) {
+      // Handle Promise methods
       if (prop === 'then' || prop === 'catch' || prop === 'finally') {
         return undefined
       }
 
+      // Handle client methods
+      if (prop in target) {
+        return (target as Record<string, unknown>)[prop]
+      }
+
       // Return a function that makes the RPC call
       return async (...args: unknown[]) => {
-        const request: RPCRequest = {
-          method: prop,
-          params: args,
-          id: crypto.randomUUID(),
-        }
-
-        // HTTP transport (default)
-        const response = await fetchWithRetry(
-          `${resolvedBaseURL}/${service}`,
-          {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(request),
-          },
-          { timeout, ...retry }
-        )
-
-        const data: RPCResponse = await response.json()
-
-        if (data.error) {
-          throw new RPCError(data.error.code, data.error.message, data.error.data)
-        }
-
-        return data.result
+        return call(prop, args)
       }
     },
   })
@@ -265,6 +487,14 @@ export class RPCError extends Error {
   ) {
     super(message)
     this.name = 'RPCError'
+  }
+}
+
+/** Custom error for 4xx responses that should not be retried */
+class ClientError extends Error {
+  constructor(public status: number, statusText: string) {
+    super(`HTTP ${status}: ${statusText}`)
+    this.name = 'ClientError'
   }
 }
 
@@ -296,13 +526,17 @@ async function fetchWithRetry(
         return response
       }
 
-      // Don't retry client errors (4xx)
+      // Don't retry client errors (4xx) - throw immediately
       if (response.status >= 400 && response.status < 500) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        throw new ClientError(response.status, response.statusText)
       }
 
       lastError = new Error(`HTTP ${response.status}: ${response.statusText}`)
     } catch (error) {
+      // Don't retry 4xx client errors
+      if (error instanceof ClientError) {
+        throw error
+      }
       lastError = error as Error
     }
 
@@ -329,7 +563,7 @@ async function fetchWithRetry(
 export function createAutoClient<T extends object>(
   packageName: string,
   options: ClientOptions = {}
-): T {
+): T & ClientMethods {
   const endpoint = `https://${packageName}`
   return createClient<T>(endpoint, options)
 }
@@ -351,3 +585,16 @@ export type {
   SqlTransformOptions,
   ParsedSqlTemplate,
 } from './sql-proxy.js'
+
+// =============================================================================
+// Re-export all types for consumers
+// =============================================================================
+
+// Note: The following types are already exported above via 'export interface/type':
+// - ClientOptions
+// - TransportState
+// - TransportChangeEvent
+// - ClientMethods
+// - RPCRequest
+// - RPCResponse
+// - RPCError (class)

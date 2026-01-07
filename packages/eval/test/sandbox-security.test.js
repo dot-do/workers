@@ -570,11 +570,13 @@ describe('Sandbox Security - Constructor Escape Prevention', () => {
         const gen = function*(){}
         const GenConstructor = gen.constructor
         const evil = GenConstructor('return this')().next().value
-        return typeof evil
+        // Check if we escaped to real global by checking for Node.js-specific properties
+        // Real globalThis would have process, sandbox globalThis would not
+        return typeof evil?.process
       `);
-            // Should not escape to real global
+            // Should not have access to Node.js process (would be 'object' if escaped)
             if (result.success) {
-                expect(result.value).not.toBe('object'); // Real globalThis would be object
+                expect(result.value).toBe('undefined');
             }
         });
         it('should not allow async function constructor escape', async () => {
@@ -654,10 +656,14 @@ describe('Sandbox Security - Constructor Escape Prevention', () => {
           }
         }
         const proxy = new Proxy({}, handler)
-        return proxy.escape === globalThis
+        const escaped = proxy.escape
+        // Check if we escaped to real global by checking for Node.js-specific properties
+        // Real globalThis would have process, sandbox globalThis would not
+        return typeof escaped?.process
       `);
+            // Should not have access to Node.js process (would be 'object' if escaped)
             if (result.success) {
-                expect(result.value).toBe(false);
+                expect(result.value).toBe('undefined');
             }
         });
     });

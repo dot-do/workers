@@ -1,6 +1,6 @@
 {
   "name": "functions.do",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "description": "Serverless Functions SDK - Define and invoke functions",
   "type": "module",
   "main": "index.ts",

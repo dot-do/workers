@@ -1,0 +1,43 @@
+{
+  "name": "mdxui",
+  "version": "0.0.1",
+  "description": "React component library for enhanced MDX rendering - interactive code playgrounds, live examples, and rich documentation experiences",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./components": "./components/index.ts",
+    "./playground": "./playground/index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://mdxui.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/mdxui"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/mdxui/issues"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@mdx-js/react": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "mdx",
+    "react",
+    "components",
+    "documentation",
+    "playground",
+    "live-code",
+    "workers.do"
+  ]
+}

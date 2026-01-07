@@ -47,7 +47,8 @@ export interface StorageProvider {
 }
 
 /**
- * Type helper for constructors
+ * Type helper for constructors.
+ * Note: TypeScript requires any[] for mixin constructors (TS2545)
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T = object> = new (...args: any[]) => T

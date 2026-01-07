@@ -20,7 +20,6 @@ export function createMockId(name) {
  * Create a mock SQL cursor with optional data
  */
 export function createMockSqlCursor(data = []) {
-    let index = 0;
     return {
         columnNames: data.length > 0 ? Object.keys(data[0]) : [],
         rowsRead: data.length,
@@ -147,9 +146,13 @@ export function createMockStorage(options = {}) {
  */
 export function createMockState(idOrOptions) {
     // Support both: createMockState(id) and createMockState({ id, storage })
-    const options = idOrOptions && 'toString' in idOrOptions
-        ? { id: idOrOptions }
-        : (idOrOptions ?? {});
+    let options;
+    if (idOrOptions && 'toString' in idOrOptions) {
+        options = { id: idOrOptions };
+    }
+    else {
+        options = idOrOptions ?? {};
+    }
     const id = options.id ?? createMockId();
     const storage = options.storage ?? createMockStorage({
         initialData: options.initialData,

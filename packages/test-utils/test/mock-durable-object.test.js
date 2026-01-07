@@ -188,7 +188,7 @@ describe('Durable Object Mock Helpers', () => {
     describe('createMockDurableObjectStub', () => {
         it('should create a stub that can send fetch requests', async () => {
             const stub = createMockDurableObjectStub({
-                handler: async (request) => {
+                handler: async (_request) => {
                     return new Response('OK from DO');
                 },
             });

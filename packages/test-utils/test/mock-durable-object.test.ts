@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import {
   createMockDurableObjectStub,
   createMockDurableObjectState,
@@ -224,7 +224,7 @@ describe('Durable Object Mock Helpers', () => {
   describe('createMockDurableObjectStub', () => {
     it('should create a stub that can send fetch requests', async () => {
       const stub = createMockDurableObjectStub({
-        handler: async (request: Request) => {
+        handler: async (_request: Request) => {
           return new Response('OK from DO')
         },
       })

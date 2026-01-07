@@ -9,3 +9,4 @@ packages:
   - 'auth/*'
   - 'plugins/*'
   - 'primitives/packages/*'
+  - 'types'

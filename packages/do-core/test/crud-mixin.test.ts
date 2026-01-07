@@ -4,9 +4,9 @@
  * Tests for the CRUDMixin that provides CRUD operations for Durable Objects.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { DOCore, DOState, DOStorage, DOEnv } from '../src/index.js'
-import { CRUDMixin, CRUDBase, Document, StorageProvider } from '../src/crud-mixin.js'
+import { CRUDMixin, CRUDBase, Document } from '../src/crud-mixin.js'
 import { createMockState, createMockStorage } from './helpers.js'
 
 // Test document type

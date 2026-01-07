@@ -447,7 +447,9 @@ describe('Agent Inheritance Interface Contract', () => {
             });
             it('should support decorator-style method enhancement', async () => {
                 // Simulating decorator pattern for method enhancement
-                function logged(target, propertyKey, descriptor) {
+                // Note: This decorator is defined but not applied in this test -
+                // it demonstrates the pattern that could be used
+                const _logged = (_target, propertyKey, descriptor) => {
                     const original = descriptor.value;
                     descriptor.value = async function (...args) {
                         console.log(`Calling ${propertyKey}`);
@@ -456,7 +458,7 @@ describe('Agent Inheritance Interface Contract', () => {
                         return result;
                     };
                     return descriptor;
-                }
+                };
                 class LoggedAgent extends Agent {
                     logs = [];
                     async handleMessage(message) {
@@ -599,7 +601,7 @@ describe('Agent Inheritance Interface Contract', () => {
                     taskCount: 0,
                     lastError: null,
                 };
-                async getState() {
+                getState() {
                     return { ...this.customState };
                 }
                 async incrementTasks() {

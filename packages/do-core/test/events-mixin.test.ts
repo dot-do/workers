@@ -10,7 +10,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import {
   EventsMixin,
-  DomainEvent,
   DOState,
   DOStorage,
   DurableObjectId,

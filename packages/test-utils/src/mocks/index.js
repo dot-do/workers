@@ -407,11 +407,11 @@ export function createMockR2Bucket() {
 }
 export function createMockD1Database() {
     return {
-        prepare(query) {
-            let boundValues = [];
+        prepare(_query) {
+            let _boundValues = [];
             const statement = {
                 bind(...values) {
-                    boundValues = values;
+                    _boundValues = values;
                     return statement;
                 },
                 async first(_column) {
@@ -523,6 +523,7 @@ export function createMockExecutionContext(options) {
         _waitUntilPromises: waitUntilPromises,
         _passThroughOnException: passThroughOnException,
         abortController,
+        props: {},
         waitUntil(promise) {
             waitUntilPromises.push(promise);
         },

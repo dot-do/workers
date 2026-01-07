@@ -269,7 +269,7 @@ describe('ActionsMixin', () => {
     describe('Middleware Support', () => {
         it('should execute middleware before action', async () => {
             const order = [];
-            actions.useMiddleware(async (action, params, next) => {
+            actions.useMiddleware(async (_action, _params, next) => {
                 order.push('middleware-before');
                 const result = await next();
                 order.push('middleware-after');
@@ -286,13 +286,13 @@ describe('ActionsMixin', () => {
         });
         it('should chain multiple middleware', async () => {
             const order = [];
-            actions.useMiddleware(async (action, params, next) => {
+            actions.useMiddleware(async (_action, _params, next) => {
                 order.push('first-before');
                 const result = await next();
                 order.push('first-after');
                 return result;
             });
-            actions.useMiddleware(async (action, params, next) => {
+            actions.useMiddleware(async (_action, _params, next) => {
                 order.push('second-before');
                 const result = await next();
                 order.push('second-after');
@@ -314,7 +314,7 @@ describe('ActionsMixin', () => {
             ]);
         });
         it('should allow middleware to modify result', async () => {
-            actions.useMiddleware(async (action, params, next) => {
+            actions.useMiddleware(async (_action, _params, next) => {
                 const result = await next();
                 if (result.success) {
                     return { ...result, data: `modified: ${result.data}` };
@@ -350,8 +350,8 @@ describe('ActionsMixin', () => {
             expect(handlerCalled).toBe(false);
         });
         it('should clear all middleware', () => {
-            actions.useMiddleware(async (a, p, next) => next());
-            actions.useMiddleware(async (a, p, next) => next());
+            actions.useMiddleware(async (_a, _p, next) => next());
+            actions.useMiddleware(async (_a, _p, next) => next());
             actions.clearMiddleware();
             // Register a simple action to verify middleware is cleared
             actions.registerAction('simple', {
@@ -472,11 +472,11 @@ describe('ActionsMixin', () => {
             expect(result.error).toContain('timeout');
         });
         it('should cancel workflow', async () => {
-            let stepReached = false;
+            const stepReached = { value: false };
             actions.registerAction('delay', {
                 handler: async () => {
                     await new Promise((r) => setTimeout(r, 100));
-                    stepReached = true;
+                    stepReached.value = true;
                     return 'delayed';
                 },
             });

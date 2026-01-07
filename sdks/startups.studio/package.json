@@ -1,6 +1,6 @@
 {
   "name": "startups.studio",
-  "version": "0.0.1",
+  "version": "0.1.5",
   "description": "Build and manage your Autonomous Startup portfolio - the venture studio for Startup-as-Code",
   "type": "module",
   "main": "index.ts",

@@ -204,7 +204,8 @@ interface RunningWorkflow {
 // ============================================================================
 
 /**
- * Constructor type for mixin base class
+ * Constructor type for mixin base class.
+ * Note: TypeScript requires any[] for mixin constructors (TS2545)
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T = object> = new (...args: any[]) => T

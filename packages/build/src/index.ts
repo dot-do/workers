@@ -1296,3 +1296,546 @@ export function createNpmWorker(fetchImpl?: typeof fetch): NpmWorker {
 
 // Re-export source maps module
 export * from './source-maps.js'
+
+// ============================================================================
+// Build Caching Types and Implementation (REFACTOR Phase - workers-1qqj.5)
+// ============================================================================
+
+/**
+ * Cache storage interface for build results
+ * Compatible with Cloudflare KV Namespace API
+ */
+export interface BuildCacheStorage {
+  /**
+   * Get a cached value by key
+   * @param key - Cache key
+   * @param type - Type of value to retrieve
+   * @returns Cached value or null
+   */
+  get(key: string, type: 'json'): Promise<unknown | null>
+  get(key: string, type?: 'text'): Promise<string | null>
+
+  /**
+   * Store a value in the cache
+   * @param key - Cache key
+   * @param value - Value to store
+   * @param options - Cache options
+   */
+  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>
+
+  /**
+   * Delete a value from the cache
+   * @param key - Cache key
+   */
+  delete(key: string): Promise<void>
+}
+
+/**
+ * Cache statistics for monitoring
+ */
+export interface CacheStats {
+  /** Total number of cache hits */
+  hits: number
+  /** Total number of cache misses */
+  misses: number
+  /** Cache hit rate (hits / (hits + misses)) */
+  hitRate: number
+  /** Number of items currently in cache (if available) */
+  itemCount?: number
+  /** Total size of cached items in bytes (if available) */
+  totalBytes?: number
+}
+
+/**
+ * Configuration for the cached build worker
+ */
+export interface CachedBuildWorkerConfig {
+  /** Cache storage backend (KV namespace or compatible) */
+  cache?: BuildCacheStorage
+  /** Time-to-live for cached results in seconds (default: 86400 = 24 hours) */
+  cacheTtl?: number
+  /** Whether to enable caching (default: true) */
+  enableCache?: boolean
+  /** WASM URL for esbuild (optional) */
+  wasmUrl?: string
+  /** Prefix for cache keys (default: 'build:') */
+  cacheKeyPrefix?: string
+}
+
+/**
+ * File hash entry for incremental builds
+ */
+export interface FileHashEntry {
+  /** File path */
+  path: string
+  /** Content hash */
+  hash: string
+  /** Last modified timestamp */
+  timestamp: number
+}
+
+/**
+ * Incremental build context
+ */
+export interface IncrementalBuildContext {
+  /** Previous file hashes */
+  previousHashes: Map<string, string>
+  /** Current file hashes */
+  currentHashes: Map<string, string>
+  /** Files that changed since last build */
+  changedFiles: Set<string>
+  /** Files that were added since last build */
+  addedFiles: Set<string>
+  /** Files that were removed since last build */
+  removedFiles: Set<string>
+}
+
+/**
+ * Extended build result with cache metadata
+ */
+export interface CachedBuildResult extends BuildResult {
+  /** Whether the result was served from cache */
+  fromCache: boolean
+  /** Cache key used (if cached) */
+  cacheKey?: string
+  /** Time spent on build/cache lookup in milliseconds */
+  duration: number
+}
+
+/**
+ * Cached Build Worker interface
+ * Wraps ESBuildWorker with caching and incremental build support
+ */
+export interface CachedBuildWorker {
+  /**
+   * Initialize the worker (loads WASM module)
+   */
+  initialize(): Promise<void>
+
+  /**
+   * Check if the worker is initialized
+   */
+  isInitialized(): boolean
+
+  /**
+   * Compile source code with caching
+   * @param source - Source code to compile
+   * @param options - Build options
+   * @returns Build result with cache metadata
+   */
+  compile(source: string, options?: BuildOptions): Promise<CachedBuildResult>
+
+  /**
+   * Bundle multiple files with caching
+   * @param files - Map of filename to source code
+   * @param entryPoint - Entry point filename
+   * @param options - Build options
+   * @returns Build result with cache metadata
+   */
+  bundle(files: Record<string, string>, entryPoint: string, options?: BuildOptions): Promise<CachedBuildResult>
+
+  /**
+   * Perform incremental build - only rebuild changed files
+   * @param files - Map of filename to source code
+   * @param entryPoint - Entry point filename
+   * @param options - Build options
+   * @returns Build result with incremental build metadata
+   */
+  incrementalBuild(files: Record<string, string>, entryPoint: string, options?: BuildOptions): Promise<CachedBuildResult>
+
+  /**
+   * Detect which files have changed since last build
+   * @param files - Current files to compare
+   * @returns Incremental build context with change information
+   */
+  detectChanges(files: Record<string, string>): Promise<IncrementalBuildContext>
+
+  /**
+   * Get cache statistics
+   * @returns Current cache hit/miss statistics
+   */
+  getCacheStats(): CacheStats
+
+  /**
+   * Clear all cached build results
+   */
+  clearCache(): Promise<void>
+
+  /**
+   * Invalidate cache for specific source
+   * @param source - Source code to invalidate cache for
+   */
+  invalidateCache(source: string): Promise<void>
+
+  /**
+   * Dispose of the worker and clean up resources
+   */
+  dispose(): void
+}
+
+/**
+ * In-memory cache storage implementation for testing and local development
+ */
+class InMemoryBuildCacheStorage implements BuildCacheStorage {
+  private cache = new Map<string, { value: string; expiry: number }>()
+
+  get(key: string, type: 'json'): Promise<unknown | null>
+  get(key: string, type?: 'text'): Promise<string | null>
+  async get(key: string, type?: 'json' | 'text'): Promise<unknown | string | null> {
+    const entry = this.cache.get(key)
+    if (!entry) return null
+    if (entry.expiry > 0 && Date.now() > entry.expiry) {
+      this.cache.delete(key)
+      return null
+    }
+    if (type === 'json') {
+      return JSON.parse(entry.value) as unknown
+    }
+    return entry.value
+  }
+
+  async put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void> {
+    const expiry = options?.expirationTtl ? Date.now() + options.expirationTtl * 1000 : 0
+    this.cache.set(key, { value, expiry })
+  }
+
+  async delete(key: string): Promise<void> {
+    this.cache.delete(key)
+  }
+
+  clear(): void {
+    this.cache.clear()
+  }
+
+  get size(): number {
+    return this.cache.size
+  }
+}
+
+/**
+ * Compute a content hash for source code using Web Crypto API
+ * @param source - Source code to hash
+ * @returns SHA-256 hash as hex string
+ */
+async function hashSource(source: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(source)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+/**
+ * Compute a cache key for build options
+ * @param options - Build options
+ * @returns Options hash
+ */
+async function hashBuildOptions(options?: BuildOptions): Promise<string> {
+  if (!options) return 'default'
+  const optionsString = JSON.stringify(options, Object.keys(options).sort())
+  return hashSource(optionsString)
+}
+
+/**
+ * Compute a combined cache key for source and options
+ * @param sourceHash - Hash of source code
+ * @param optionsHash - Hash of build options
+ * @param prefix - Cache key prefix
+ * @returns Complete cache key
+ */
+function buildCacheKey(sourceHash: string, optionsHash: string, prefix: string): string {
+  return `${prefix}${sourceHash}:${optionsHash}`
+}
+
+/**
+ * Cached Build Worker Implementation
+ *
+ * Wraps the ESBuildWorker with content-addressable caching and
+ * incremental build support for improved performance.
+ */
+class CachedBuildWorkerImpl implements CachedBuildWorker {
+  private worker: ESBuildWorker
+  private cache: BuildCacheStorage
+  private inMemoryCache: InMemoryBuildCacheStorage
+  private cacheTtl: number
+  private enableCache: boolean
+  private cacheKeyPrefix: string
+  private stats: { hits: number; misses: number }
+  private previousFileHashes: Map<string, string>
+
+  constructor(config?: CachedBuildWorkerConfig) {
+    this.worker = createESBuildWorker(config?.wasmUrl)
+    this.inMemoryCache = new InMemoryBuildCacheStorage()
+    this.cache = config?.cache || this.inMemoryCache
+    this.cacheTtl = config?.cacheTtl ?? 86400 // 24 hours default
+    this.enableCache = config?.enableCache ?? true
+    this.cacheKeyPrefix = config?.cacheKeyPrefix ?? 'build:'
+    this.stats = { hits: 0, misses: 0 }
+    this.previousFileHashes = new Map()
+  }
+
+  async initialize(): Promise<void> {
+    await this.worker.initialize()
+  }
+
+  isInitialized(): boolean {
+    return this.worker.isInitialized()
+  }
+
+  async compile(source: string, options?: BuildOptions): Promise<CachedBuildResult> {
+    const startTime = Date.now()
+
+    if (this.enableCache) {
+      const sourceHash = await hashSource(source)
+      const optionsHash = await hashBuildOptions(options)
+      const cacheKey = buildCacheKey(sourceHash, optionsHash, this.cacheKeyPrefix)
+
+      // Try to get from cache
+      const cached = await this.cache.get(cacheKey, 'json') as BuildResult | null
+      if (cached) {
+        this.stats.hits++
+        return {
+          ...cached,
+          fromCache: true,
+          cacheKey,
+          duration: Date.now() - startTime,
+        }
+      }
+
+      this.stats.misses++
+
+      // Compile and cache the result
+      const result = await this.worker.compile(source, options)
+
+      // Only cache successful builds
+      if (result.errors.length === 0) {
+        await this.cache.put(cacheKey, JSON.stringify(result), {
+          expirationTtl: this.cacheTtl,
+        })
+      }
+
+      return {
+        ...result,
+        fromCache: false,
+        cacheKey,
+        duration: Date.now() - startTime,
+      }
+    }
+
+    // Caching disabled - compile directly
+    const result = await this.worker.compile(source, options)
+    return {
+      ...result,
+      fromCache: false,
+      duration: Date.now() - startTime,
+    }
+  }
+
+  async bundle(
+    files: Record<string, string>,
+    entryPoint: string,
+    options?: BuildOptions
+  ): Promise<CachedBuildResult> {
+    const startTime = Date.now()
+
+    if (this.enableCache) {
+      // Create a combined hash of all files and entry point
+      const fileHashes: string[] = []
+      for (const [path, content] of Object.entries(files).sort(([a], [b]) => a.localeCompare(b))) {
+        const hash = await hashSource(content)
+        fileHashes.push(`${path}:${hash}`)
+      }
+      const combinedSource = `${entryPoint}|${fileHashes.join('|')}`
+      const sourceHash = await hashSource(combinedSource)
+      const optionsHash = await hashBuildOptions(options)
+      const cacheKey = buildCacheKey(sourceHash, optionsHash, this.cacheKeyPrefix + 'bundle:')
+
+      // Try to get from cache
+      const cached = await this.cache.get(cacheKey, 'json') as BuildResult | null
+      if (cached) {
+        this.stats.hits++
+        return {
+          ...cached,
+          fromCache: true,
+          cacheKey,
+          duration: Date.now() - startTime,
+        }
+      }
+
+      this.stats.misses++
+
+      // Bundle and cache the result
+      const result = await this.worker.bundle(files, entryPoint, options)
+
+      // Only cache successful builds
+      if (result.errors.length === 0) {
+        await this.cache.put(cacheKey, JSON.stringify(result), {
+          expirationTtl: this.cacheTtl,
+        })
+      }
+
+      return {
+        ...result,
+        fromCache: false,
+        cacheKey,
+        duration: Date.now() - startTime,
+      }
+    }
+
+    // Caching disabled - bundle directly
+    const result = await this.worker.bundle(files, entryPoint, options)
+    return {
+      ...result,
+      fromCache: false,
+      duration: Date.now() - startTime,
+    }
+  }
+
+  async incrementalBuild(
+    files: Record<string, string>,
+    entryPoint: string,
+    options?: BuildOptions
+  ): Promise<CachedBuildResult> {
+    const startTime = Date.now()
+
+    // Detect changes
+    const context = await this.detectChanges(files)
+
+    // If no changes, try to get the previous build from cache
+    if (context.changedFiles.size === 0 && context.addedFiles.size === 0 && context.removedFiles.size === 0) {
+      // Try to find cached result for unchanged files
+      const result = await this.bundle(files, entryPoint, options)
+      return {
+        ...result,
+        duration: Date.now() - startTime,
+      }
+    }
+
+    // Update previous hashes for next incremental build
+    this.previousFileHashes = context.currentHashes
+
+    // Perform the build (with caching)
+    const result = await this.bundle(files, entryPoint, options)
+    return {
+      ...result,
+      duration: Date.now() - startTime,
+    }
+  }
+
+  async detectChanges(files: Record<string, string>): Promise<IncrementalBuildContext> {
+    const currentHashes = new Map<string, string>()
+    const changedFiles = new Set<string>()
+    const addedFiles = new Set<string>()
+    const removedFiles = new Set<string>()
+
+    // Compute hashes for all current files
+    for (const [path, content] of Object.entries(files)) {
+      const hash = await hashSource(content)
+      currentHashes.set(path, hash)
+    }
+
+    // Find changed and added files
+    for (const [path, hash] of currentHashes) {
+      const previousHash = this.previousFileHashes.get(path)
+      if (!previousHash) {
+        addedFiles.add(path)
+      } else if (previousHash !== hash) {
+        changedFiles.add(path)
+      }
+    }
+
+    // Find removed files
+    for (const path of this.previousFileHashes.keys()) {
+      if (!currentHashes.has(path)) {
+        removedFiles.add(path)
+      }
+    }
+
+    return {
+      previousHashes: this.previousFileHashes,
+      currentHashes,
+      changedFiles,
+      addedFiles,
+      removedFiles,
+    }
+  }
+
+  getCacheStats(): CacheStats {
+    const total = this.stats.hits + this.stats.misses
+    return {
+      hits: this.stats.hits,
+      misses: this.stats.misses,
+      hitRate: total === 0 ? 0 : this.stats.hits / total,
+      itemCount: this.inMemoryCache.size,
+    }
+  }
+
+  async clearCache(): Promise<void> {
+    this.inMemoryCache.clear()
+    this.stats = { hits: 0, misses: 0 }
+    this.previousFileHashes.clear()
+  }
+
+  async invalidateCache(source: string): Promise<void> {
+    const sourceHash = await hashSource(source)
+    // Invalidate with common options combinations
+    const optionsVariants = [undefined, { minify: true }, { minify: false }, { sourcemap: true }]
+    for (const opts of optionsVariants) {
+      const optionsHash = await hashBuildOptions(opts)
+      const cacheKey = buildCacheKey(sourceHash, optionsHash, this.cacheKeyPrefix)
+      await this.cache.delete(cacheKey)
+    }
+  }
+
+  dispose(): void {
+    this.worker.dispose()
+    this.inMemoryCache.clear()
+    this.stats = { hits: 0, misses: 0 }
+    this.previousFileHashes.clear()
+  }
+}
+
+/**
+ * Create a Cached Build Worker instance
+ *
+ * The cached build worker wraps ESBuildWorker with:
+ * - Content-addressable caching using SHA-256 hashes
+ * - KV-compatible storage backend
+ * - Incremental build support with change detection
+ * - Cache statistics for monitoring hit rates
+ *
+ * @param config - Configuration options for caching behavior
+ * @returns CachedBuildWorker instance
+ *
+ * @example
+ * ```typescript
+ * // Basic usage with in-memory cache
+ * const worker = createCachedBuildWorker()
+ * await worker.initialize()
+ *
+ * // First compile - cache miss
+ * const result1 = await worker.compile('const x: number = 42;')
+ * console.log(result1.fromCache) // false
+ *
+ * // Second compile - cache hit
+ * const result2 = await worker.compile('const x: number = 42;')
+ * console.log(result2.fromCache) // true
+ *
+ * // With KV storage in Cloudflare Workers
+ * const worker = createCachedBuildWorker({
+ *   cache: env.BUILD_CACHE, // KV namespace binding
+ *   cacheTtl: 86400, // 24 hours
+ * })
+ * ```
+ */
+export function createCachedBuildWorker(config?: CachedBuildWorkerConfig): CachedBuildWorker {
+  return new CachedBuildWorkerImpl(config)
+}
+
+/**
+ * Create an in-memory cache storage for testing
+ * @returns BuildCacheStorage compatible in-memory implementation
+ */
+export function createInMemoryCacheStorage(): BuildCacheStorage & { clear(): void; size: number } {
+  return new InMemoryBuildCacheStorage()
+}

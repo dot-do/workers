@@ -181,9 +181,11 @@ export { THINGS_SCHEMA_SQL } from './things-repository.js'
 // ============================================================================
 
 /**
- * Constructor type for mixin application
+ * Constructor type for mixin application.
+ * Note: TypeScript requires any[] for mixin constructors (TS2545)
  */
-type Constructor<T = object> = new (...args: unknown[]) => T
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Constructor<T = object> = new (...args: any[]) => T
 
 /**
  * Base interface required by ThingsMixin

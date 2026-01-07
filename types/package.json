@@ -1,0 +1,55 @@
+{
+  "name": "@dotdo/types",
+  "version": "0.0.1",
+  "description": "TypeScript type definitions for workers.do platform",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./template": "./template.ts",
+    "./rpc": "./rpc.ts",
+    "./do": "./do.ts",
+    "./sql": "./sql.ts",
+    "./ai": "./ai.ts",
+    "./workflows": "./workflows.ts",
+    "./database": "./database.ts",
+    "./workers": "./workers.ts",
+    "./agents": "./agents.ts",
+    "./humans": "./humans.ts",
+    "./function": "./function.ts"
+  },
+  "files": [
+    "*.ts",
+    "!*.test.ts"
+  ],
+  "peerDependencies": {
+    "typescript": ">=5.0",
+    "ai-functions": "*",
+    "ai-workflows": "*",
+    "ai-database": "*",
+    "digital-workers": "*",
+    "autonomous-agents": "*",
+    "human-in-the-loop": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "mdxld": "workspace:*",
+    "ai-functions": "workspace:*",
+    "ai-workflows": "workspace:*",
+    "ai-database": "workspace:*",
+    "digital-workers": "workspace:*",
+    "autonomous-agents": "workspace:*",
+    "human-in-the-loop": "workspace:*"
+  },
+  "keywords": [
+    "types",
+    "typescript",
+    "cloudflare",
+    "workers",
+    "durable-objects",
+    "rpc",
+    "ai",
+    "workflows",
+    "database"
+  ],
+  "license": "MIT"
+}

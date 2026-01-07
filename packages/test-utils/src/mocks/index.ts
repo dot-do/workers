@@ -624,12 +624,12 @@ export interface MockD1ExecResult {
 
 export function createMockD1Database(): MockD1Database {
   return {
-    prepare(query: string): MockD1PreparedStatement {
-      let boundValues: unknown[] = []
+    prepare(_query: string): MockD1PreparedStatement {
+      let _boundValues: unknown[] = []
 
       const statement: MockD1PreparedStatement = {
         bind(...values: unknown[]) {
-          boundValues = values
+          _boundValues = values
           return statement
         },
         async first<T = Record<string, unknown>>(_column?: string): Promise<T | null> {
@@ -792,6 +792,7 @@ export interface MockExecutionContext extends ExecutionContext {
   flushWaitUntil(): Promise<void>
   abortController: AbortController
   dispose(): void
+  props: Record<string, unknown>
 }
 
 export interface MockExecutionContextOptions {
@@ -808,6 +809,7 @@ export function createMockExecutionContext(options?: MockExecutionContextOptions
     _waitUntilPromises: waitUntilPromises,
     _passThroughOnException: passThroughOnException,
     abortController,
+    props: {},
 
     waitUntil(promise: Promise<unknown>): void {
       waitUntilPromises.push(promise)

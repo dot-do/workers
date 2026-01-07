@@ -185,43 +185,55 @@ describe('RateLimiter', () => {
             expect(result.retryAfter).toBeGreaterThan(0);
         });
         it('should reset after the window expires', async () => {
-            vi.useFakeTimers();
-            // Use up all requests
-            for (let i = 0; i < 10; i++) {
-                await limiter.check('user:123');
+            vi.useFakeTimers({ toFake: ['Date'] });
+            try {
+                // Create storage and limiter AFTER fake timers are set up
+                const { limiter: timedLimiter } = createSlidingWindowLimiter();
+                // Use up all requests
+                for (let i = 0; i < 10; i++) {
+                    await timedLimiter.check('user:123');
+                }
+                // Should be denied
+                let result = await timedLimiter.check('user:123');
+                expect(result.allowed).toBe(false);
+                // Advance past the window
+                vi.advanceTimersByTime(61000);
+                // Should be allowed again
+                result = await timedLimiter.check('user:123');
+                expect(result.allowed).toBe(true);
+                expect(result.remaining).toBe(9);
             }
-            // Should be denied
-            let result = await limiter.check('user:123');
-            expect(result.allowed).toBe(false);
-            // Advance past the window
-            vi.advanceTimersByTime(61000);
-            // Should be allowed again
-            result = await limiter.check('user:123');
-            expect(result.allowed).toBe(true);
-            expect(result.remaining).toBe(9);
-            vi.useRealTimers();
+            finally {
+                vi.useRealTimers();
+            }
         });
         it('should use sliding window logic for smooth rate limiting', async () => {
-            vi.useFakeTimers();
-            // Make 5 requests at the start
-            for (let i = 0; i < 5; i++) {
-                await limiter.check('user:123');
+            vi.useFakeTimers({ toFake: ['Date'] });
+            try {
+                // Create storage and limiter AFTER fake timers are set up
+                const { limiter: timedLimiter } = createSlidingWindowLimiter();
+                // Make 5 requests at the start
+                for (let i = 0; i < 5; i++) {
+                    await timedLimiter.check('user:123');
+                }
+                // Advance 30 seconds (halfway through window)
+                vi.advanceTimersByTime(30000);
+                // Make 5 more requests
+                for (let i = 0; i < 5; i++) {
+                    await timedLimiter.check('user:123');
+                }
+                // Should be at limit now
+                let result = await timedLimiter.check('user:123');
+                expect(result.allowed).toBe(false);
+                // Advance 31 more seconds (first 5 requests should slide out)
+                vi.advanceTimersByTime(31000);
+                // Should be allowed now as old requests slid out
+                result = await timedLimiter.check('user:123');
+                expect(result.allowed).toBe(true);
             }
-            // Advance 30 seconds (halfway through window)
-            vi.advanceTimersByTime(30000);
-            // Make 5 more requests
-            for (let i = 0; i < 5; i++) {
-                await limiter.check('user:123');
+            finally {
+                vi.useRealTimers();
             }
-            // Should be at limit now
-            let result = await limiter.check('user:123');
-            expect(result.allowed).toBe(false);
-            // Advance 31 more seconds (first 5 requests should slide out)
-            vi.advanceTimersByTime(31000);
-            // Should be allowed now as old requests slid out
-            result = await limiter.check('user:123');
-            expect(result.allowed).toBe(true);
-            vi.useRealTimers();
         });
     });
     describe('Fail-Closed Mode', () => {

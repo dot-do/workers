@@ -11,6 +11,6 @@
   },
   "scripts": {
     "build": "tsup",
-    "deploy": "workers.do snippets deploy"
+    "deploy": "workers.do snippets-deploy"
   }
 }

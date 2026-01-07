@@ -16,15 +16,12 @@
  * @see workers-kupw.8 - GREEN: Implement error boundary pattern
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createMockState, createMockStorage } from './helpers.js'
+import { describe, it, expect, vi } from 'vitest'
+import { createMockStorage } from './helpers.js'
 import {
   ErrorBoundary,
   createErrorBoundary,
   type ErrorContext,
-  type ErrorBoundaryOptions,
-  type ErrorBoundaryMetrics,
-  type IErrorBoundary,
 } from '../src/error-boundary.js'
 
 // ============================================================================
@@ -840,7 +837,7 @@ describe('Error Boundary Contract', () => {
     })
 
     it('should preserve context across storage operations', async () => {
-      const storage = createMockStorage()
+      const _storage = createMockStorage() // Demonstrates storage-related context
       let capturedContext: ErrorContext | undefined
 
       const boundary = createErrorBoundary({

@@ -24,16 +24,15 @@ export function createMockId(name?: string): DurableObjectId {
  * Create a mock SQL cursor with optional data
  */
 export function createMockSqlCursor<T>(data: T[] = []): SqlStorageCursor<T> {
-  let index = 0
   return {
     columnNames: data.length > 0 ? Object.keys(data[0] as object) : [],
     rowsRead: data.length,
     rowsWritten: 0,
     toArray: () => [...data],
     one: () => data[0] ?? null,
-    raw: function* () {
+    raw: function* <R extends unknown[] = unknown[]>(): IterableIterator<R> {
       for (const row of data) {
-        yield Object.values(row as object) as unknown[]
+        yield Object.values(row as object) as R
       }
     },
     [Symbol.iterator]: function* () {
@@ -194,9 +193,12 @@ export interface CreateMockStateOptions {
  */
 export function createMockState(idOrOptions?: DurableObjectId | CreateMockStateOptions): DOState {
   // Support both: createMockState(id) and createMockState({ id, storage })
-  const options: CreateMockStateOptions = idOrOptions && 'toString' in idOrOptions
-    ? { id: idOrOptions }
-    : (idOrOptions ?? {})
+  let options: CreateMockStateOptions
+  if (idOrOptions && 'toString' in idOrOptions) {
+    options = { id: idOrOptions as DurableObjectId }
+  } else {
+    options = (idOrOptions as CreateMockStateOptions | undefined) ?? {}
+  }
 
   const id = options.id ?? createMockId()
   const storage = options.storage ?? createMockStorage({

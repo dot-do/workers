@@ -1,6 +1,6 @@
 {
   "name": "rpc.do",
-  "version": "0.0.1",
+  "version": "0.1.5",
   "description": "Base CapnWeb RPC client for .do SDKs with tagged template SQL support",
   "type": "module",
   "main": "index.ts",

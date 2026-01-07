@@ -10,6 +10,7 @@
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import * as net from 'node:net'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const rootDir = join(__dirname, '..')
@@ -96,7 +97,7 @@ function extractDomainPackages(): string[] {
   return Array.from(domains).sort()
 }
 
-interface RdapResult {
+interface DomainCheckResult {
   registered: boolean
   expired: boolean
   expiresAt: Date | null
@@ -104,11 +105,118 @@ interface RdapResult {
   noRdap?: boolean
 }
 
-async function queryRdap(domain: string): Promise<RdapResult> {
+// WHOIS lookup for .do domains (Dominican Republic)
+// whois.nic.do is the authoritative WHOIS server for .do TLD
+async function queryWhois(domain: string, server: string = 'whois.nic.do'): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const socket = net.createConnection(43, server)
+    let data = ''
+
+    const timeout = setTimeout(() => {
+      socket.destroy()
+      reject(new Error('WHOIS timeout'))
+    }, 15000)
+
+    socket.on('data', (chunk: Buffer) => {
+      data += chunk.toString()
+    })
+
+    socket.on('end', () => {
+      clearTimeout(timeout)
+      resolve(data)
+    })
+
+    socket.on('error', (err: Error) => {
+      clearTimeout(timeout)
+      reject(err)
+    })
+
+    socket.write(domain + '\r\n')
+  })
+}
+
+interface WhoisParseResult {
+  registered: boolean
+  expiresAt: Date | null
+}
+
+function parseDoWhoisResponse(response: string): WhoisParseResult {
+  // Check for "NOT FOUND" or similar indicators of unregistered domain
+  const lowerResponse = response.toLowerCase()
+
+  if (lowerResponse.includes('no match') ||
+      lowerResponse.includes('not found') ||
+      lowerResponse.includes('no entries found') ||
+      lowerResponse.includes('no data found') ||
+      lowerResponse.includes('domain not found')) {
+    return { registered: false, expiresAt: null }
+  }
+
+  // Domain is registered - try to extract expiration date
+  // Common patterns: "Expiration Date:", "Registry Expiry Date:", "Expires:", etc.
+  let expiresAt: Date | null = null
+
+  // Try various date field patterns
+  const datePatterns = [
+    /expir(?:y|ation)\s*date\s*:\s*(.+)/i,
+    /registry\s+expiry\s+date\s*:\s*(.+)/i,
+    /expires\s*:\s*(.+)/i,
+    /expiration\s*:\s*(.+)/i,
+    /paid-till\s*:\s*(.+)/i,
+  ]
+
+  for (const pattern of datePatterns) {
+    const match = response.match(pattern)
+    if (match) {
+      const dateStr = match[1].trim()
+      const parsed = new Date(dateStr)
+      if (!isNaN(parsed.getTime())) {
+        expiresAt = parsed
+        break
+      }
+    }
+  }
+
+  return { registered: true, expiresAt }
+}
+
+async function checkDoDomain(domain: string): Promise<DomainCheckResult> {
+  try {
+    const whoisResponse = await queryWhois(domain)
+    const parsed = parseDoWhoisResponse(whoisResponse)
+
+    if (!parsed.registered) {
+      return { registered: false, expired: false, expiresAt: null }
+    }
+
+    // Check if expired
+    let expired = false
+    if (parsed.expiresAt) {
+      expired = parsed.expiresAt < new Date()
+    }
+
+    return {
+      registered: true,
+      expired,
+      expiresAt: parsed.expiresAt
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    return { registered: false, expired: false, expiresAt: null, error: `WHOIS error: ${errorMessage}` }
+  }
+}
+
+async function checkDomain(domain: string): Promise<DomainCheckResult> {
   const tld = getTld(domain)
+
+  // .do domains use WHOIS instead of RDAP
+  if (tld === '.do') {
+    return checkDoDomain(domain)
+  }
+
   const endpoint = RDAP_ENDPOINTS[tld]
 
-  // No RDAP support for this TLD
+  // No RDAP support for this TLD (and no WHOIS handler)
   if (!endpoint) {
     return { registered: true, expired: false, expiresAt: null, noRdap: true }
   }
@@ -218,22 +326,22 @@ async function main() {
   for (const domain of domains) {
     process.stdout.write(`  Checking ${domain}... `)
 
-    const result = await queryRdap(domain)
+    const result = await checkDomain(domain)
 
     if (result.noRdap) {
-      // TLD doesn't have RDAP - skip with notice
+      // TLD doesn't have RDAP or WHOIS handler - skip with notice
       results.push({
         domain,
         status: 'skipped',
-        message: 'no RDAP (manual check required)',
+        message: 'no RDAP/WHOIS (manual check required)',
       })
-      console.log('skipped (no RDAP)')
+      console.log('skipped (no RDAP/WHOIS)')
     } else if (result.error) {
-      // Treat RDAP errors as warnings, not blockers (server might be down)
+      // Treat lookup errors as warnings, not blockers (server might be down)
       results.push({
         domain,
         status: 'warning',
-        message: `RDAP error: ${result.error}`,
+        message: result.error,
       })
       console.log(`? (${result.error})`)
     } else if (!result.registered) {

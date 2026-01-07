@@ -2,6 +2,11 @@ import { describe, it, expect } from 'vitest'
 import {
   createMockEnv,
   createMockExecutionContext,
+  MockKVNamespace,
+  MockDurableObjectNamespace,
+  MockR2Bucket,
+  MockD1Database,
+  MockQueue,
 } from '../src/mocks/index.js'
 
 /**
@@ -21,7 +26,7 @@ describe('Environment and ExecutionContext Mocks', () => {
     })
 
     it('should support adding KV namespace bindings', () => {
-      const env = createMockEnv({
+      const env = createMockEnv<{ MY_KV: MockKVNamespace }>({
         bindings: {
           MY_KV: { type: 'kv' },
         },
@@ -32,7 +37,7 @@ describe('Environment and ExecutionContext Mocks', () => {
     })
 
     it('should support adding Durable Object namespace bindings', () => {
-      const env = createMockEnv({
+      const env = createMockEnv<{ MY_DO: MockDurableObjectNamespace }>({
         bindings: {
           MY_DO: { type: 'durable_object' },
         },
@@ -44,7 +49,7 @@ describe('Environment and ExecutionContext Mocks', () => {
     })
 
     it('should support adding R2 bucket bindings', () => {
-      const env = createMockEnv({
+      const env = createMockEnv<{ MY_BUCKET: MockR2Bucket }>({
         bindings: {
           MY_BUCKET: { type: 'r2' },
         },
@@ -57,7 +62,7 @@ describe('Environment and ExecutionContext Mocks', () => {
     })
 
     it('should support adding D1 database bindings', () => {
-      const env = createMockEnv({
+      const env = createMockEnv<{ MY_DB: MockD1Database }>({
         bindings: {
           MY_DB: { type: 'd1' },
         },
@@ -69,7 +74,7 @@ describe('Environment and ExecutionContext Mocks', () => {
     })
 
     it('should support adding Queue bindings', () => {
-      const env = createMockEnv({
+      const env = createMockEnv<{ MY_QUEUE: MockQueue }>({
         bindings: {
           MY_QUEUE: { type: 'queue' },
         },
@@ -93,7 +98,11 @@ describe('Environment and ExecutionContext Mocks', () => {
     })
 
     it('should support mixing binding types', () => {
-      const env = createMockEnv({
+      const env = createMockEnv<{
+        CACHE: MockKVNamespace
+        OBJECTS: MockDurableObjectNamespace
+        API_KEY: string
+      }>({
         bindings: {
           CACHE: { type: 'kv' },
           OBJECTS: { type: 'durable_object' },
@@ -212,7 +221,7 @@ describe('Environment and ExecutionContext Mocks', () => {
 
   describe('Durable Object Namespace Mock (via env)', () => {
     it('should create DurableObjectId from name', () => {
-      const env = createMockEnv({
+      const env = createMockEnv<{ MY_DO: MockDurableObjectNamespace }>({
         bindings: {
           MY_DO: { type: 'durable_object' },
         },
@@ -224,7 +233,7 @@ describe('Environment and ExecutionContext Mocks', () => {
     })
 
     it('should create DurableObjectId from string', () => {
-      const env = createMockEnv({
+      const env = createMockEnv<{ MY_DO: MockDurableObjectNamespace }>({
         bindings: {
           MY_DO: { type: 'durable_object' },
         },
@@ -237,7 +246,7 @@ describe('Environment and ExecutionContext Mocks', () => {
     })
 
     it('should generate new unique DurableObjectId', () => {
-      const env = createMockEnv({
+      const env = createMockEnv<{ MY_DO: MockDurableObjectNamespace }>({
         bindings: {
           MY_DO: { type: 'durable_object' },
         },
@@ -250,7 +259,7 @@ describe('Environment and ExecutionContext Mocks', () => {
     })
 
     it('should get DurableObjectStub from id', () => {
-      const env = createMockEnv({
+      const env = createMockEnv<{ MY_DO: MockDurableObjectNamespace }>({
         bindings: {
           MY_DO: { type: 'durable_object' },
         },
@@ -265,7 +274,7 @@ describe('Environment and ExecutionContext Mocks', () => {
     })
 
     it('should allow registering DO handler for testing', async () => {
-      const env = createMockEnv({
+      const env = createMockEnv<{ MY_DO: MockDurableObjectNamespace }>({
         bindings: {
           MY_DO: {
             type: 'durable_object',

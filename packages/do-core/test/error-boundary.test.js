@@ -641,7 +641,7 @@ describe('Error Boundary Contract', () => {
             expect(thingsResult).toHaveProperty('id');
         });
         it('should preserve context across storage operations', async () => {
-            const storage = createMockStorage();
+            const _storage = createMockStorage(); // Demonstrates storage-related context
             let capturedContext;
             const boundary = createErrorBoundary({
                 name: 'storage-boundary',

@@ -11,9 +11,9 @@
  * - Message handling interface
  */
 
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { DOState, DOStorage, DurableObjectId, SqlStorage, SqlStorageCursor } from '../src/index.js'
-import { Agent, AgentConfig, AgentMessage, AgentState, MessageHandler } from '../src/agent.js'
+import { describe, it, expect, vi } from 'vitest'
+import { DOState, DOStorage, DurableObjectId, SqlStorage, SqlStorageCursor, DOEnv } from '../src/index.js'
+import { Agent, AgentConfig, AgentMessage, AgentState } from '../src/agent.js'
 
 // Mock implementations for testing
 function createMockId(name?: string): DurableObjectId {
@@ -434,7 +434,7 @@ describe('Agent Inheritance Interface Contract', () => {
 
       it('should register a handler for a message type', async () => {
         class HandlerAgent extends Agent {
-          constructor(ctx: DOState, env: unknown) {
+          constructor(ctx: DOState, env: DOEnv) {
             super(ctx, env)
             this.registerHandler('greet', this.handleGreet.bind(this))
           }
@@ -476,7 +476,7 @@ describe('Agent Inheritance Interface Contract', () => {
 
       it('should return registered handler or undefined', () => {
         class HandlerAgent extends Agent {
-          constructor(ctx: DOState, env: unknown) {
+          constructor(ctx: DOState, env: DOEnv) {
             super(ctx, env)
             this.registerHandler('test', async () => 'test')
           }
@@ -498,7 +498,7 @@ describe('Agent Inheritance Interface Contract', () => {
 
       it('should remove a registered handler', () => {
         class HandlerAgent extends Agent {
-          constructor(ctx: DOState, env: unknown) {
+          constructor(ctx: DOState, env: DOEnv) {
             super(ctx, env)
             this.registerHandler('temp', async () => 'temp')
           }
@@ -553,11 +553,13 @@ describe('Agent Inheritance Interface Contract', () => {
 
       it('should support decorator-style method enhancement', async () => {
         // Simulating decorator pattern for method enhancement
-        function logged<T extends Agent>(
-          target: T,
+        // Note: This decorator is defined but not applied in this test -
+        // it demonstrates the pattern that could be used
+        const _logged = <T extends Agent>(
+          _target: T,
           propertyKey: string,
           descriptor: PropertyDescriptor
-        ): PropertyDescriptor {
+        ): PropertyDescriptor => {
           const original = descriptor.value
           descriptor.value = async function (this: T, ...args: unknown[]) {
             console.log(`Calling ${propertyKey}`)
@@ -597,7 +599,10 @@ describe('Agent Inheritance Interface Contract', () => {
           getLogs(): string[]
         }
 
-        function withLogging<T extends new (...args: unknown[]) => Agent>(Base: T) {
+        // Use a type that accepts specific DO constructor arguments
+        type AgentConstructor = new (ctx: DOState, env: DOEnv, config?: AgentConfig) => Agent
+
+        function withLogging<T extends AgentConstructor>(Base: T) {
           return class extends Base implements Loggable {
             private _logs: string[] = []
 
@@ -636,7 +641,7 @@ describe('Agent Inheritance Interface Contract', () => {
         class ComposedAgent extends Agent {
           private persistence: PersistenceTrait
 
-          constructor(ctx: DOState, env: unknown) {
+          constructor(ctx: DOState, env: DOEnv) {
             super(ctx, env)
             this.persistence = new PersistenceTrait(ctx.storage)
           }
@@ -748,14 +753,14 @@ describe('Agent Inheritance Interface Contract', () => {
         lastError: string | null
       }
 
-      class StatefulAgent extends Agent<unknown, CustomState> {
+      class StatefulAgent extends Agent<DOEnv, CustomState> {
         private customState: CustomState = {
           initialized: false,
           taskCount: 0,
           lastError: null,
         }
 
-        async getState(): Promise<CustomState> {
+        getState(): CustomState {
           return { ...this.customState }
         }
 

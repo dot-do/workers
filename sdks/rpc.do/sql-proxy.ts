@@ -23,6 +23,15 @@ import type {
 } from '@dotdo/types/sql'
 import type { RpcPromise } from '@dotdo/types/rpc'
 
+// Re-export types for convenience
+export type {
+  SerializableSqlQuery,
+  SqlResult,
+  SqlClientProxy,
+  SqlTransformOptions,
+  ParsedSqlTemplate,
+}
+
 // =============================================================================
 // Template Parsing
 // =============================================================================
@@ -294,14 +303,3 @@ export function withSqlProxy<T extends object>(
   }) as T & { sql: SqlClientProxy }
 }
 
-// =============================================================================
-// Exports
-// =============================================================================
-
-export type {
-  SerializableSqlQuery,
-  SqlResult,
-  SqlClientProxy,
-  SqlTransformOptions,
-  ParsedSqlTemplate,
-} from '@dotdo/types/sql'

@@ -6,7 +6,7 @@ This file provides context and guidance for AI assistants working on the workers
 
 workers.do is the platform for building **Autonomous Startups** - businesses that run on AI with human oversight. It provides:
 
-- **Business-as-Code** - Define entire businesses in code (MDX workers)
+- **Startup-as-Code** - Define entire startups in code (MDX workers)
 - **AI-delivered Services-as-Software** - AI agents deliver services humans used to provide
 - **Platform services** - Identity (WorkOS), Payments (Stripe), AI (llm.do) built in
 - **Multi-transport RPC** - REST, Workers RPC, CapnWeb, MCP from one definition

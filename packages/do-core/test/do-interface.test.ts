@@ -11,8 +11,8 @@
  * - Error handling and status codes
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { DOCore, type DOState, type DOStorage } from '../src/index.js'
+import { describe, it, expect, beforeEach } from 'vitest'
+import { DOCore, type DOState, DOEnv } from '../src/index.js'
 import { createMockState, createMockId } from './helpers.js'
 
 describe('DOCore Interface Contract', () => {
@@ -245,7 +245,7 @@ describe('DOCore Interface Contract', () => {
     })
 
     it('should allow subclasses to access protected env', async () => {
-      interface MyEnv {
+      interface MyEnv extends DOEnv {
         API_KEY: string
       }
 
@@ -256,7 +256,7 @@ describe('DOCore Interface Contract', () => {
       }
 
       const ctx = createMockState()
-      const instance = new MyDO(ctx, { API_KEY: 'secret' })
+      const instance = new MyDO(ctx, { API_KEY: 'secret' } as MyEnv)
       const response = await instance.fetch(new Request('https://example.com/'))
       const data = await response.json() as { hasKey: boolean }
 

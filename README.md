@@ -1,21 +1,19 @@
 # workers.do
 
-> The platform for building Autonomous Startups with Business-as-Code
+> The platform for building Autonomous Startups with Startup-as-Code
 
 workers.do is the complete platform for building **Autonomous Startups** - businesses that run on AI with human oversight. Define your entire business logic, services, and operations as code, and let AI agents deliver them as software.
 
 ## Vision
 
-**Build businesses, not just applications.**
+**Build startups that run themselves.**
 
-**Write objects, return data, let AI deliver services.**
+**Startup-as-Code**: Define your startup in code—born digital, not transformed.
+[Services-as-Software](https://services.as/software): AI agents deliver what humans used to.
 
-**Or just ask - and workers DO.**
+Identity, payments, and infrastructure are built in—you just write the logic.
 
-The name carries a triple meaning:
-1. **workers.do** - Cloudflare Workers on .do domains
-2. **workers DO** - Workers that can DO anything via integrated AI agents
-3. **Digital Workers** - The primitives.org.ai interface bridging autonomous agents and humans-in-the-loop
+Or just ask, and workers DO.
 
 ### The Startup Journey
 
@@ -83,7 +81,7 @@ export default {
 }
 ```
 
-**Business-as-Code** - Your entire business defined in code
+**Startup-as-Code** - Your entire startup defined in code
 **AI-delivered Services-as-Software** - AI agents deliver services humans used to provide
 **Autonomous Startups** - Businesses that run themselves with human oversight
 
@@ -364,6 +362,17 @@ import { studio } from 'startups.studio'
 import { games } from 'startup.games'
 
 // Platform services
+import { agi } from 'agi.do'
+import { as } from 'agi.as'
+import agents from 'agents.do'
+import { agent } from 'agent.as'
+import assistants from 'assistants.do'
+import { assistant } from 'assistant.as'
+import workflows from 'workflows.do'
+import { workflow } from 'workflow.as'
+import { db } from 'database.do'
+import { database } from 'database.as'
+import { sas } from 'services.as'
 import { llm } from 'llm.do'
 import { org } from 'org.ai'
 import { payments } from 'payments.do'
@@ -381,6 +390,17 @@ const myLLM = LLM({ apiKey: 'xxx', timeout: 60000 })
 
 | SDK | npm | Description |
 |-----|-----|-------------|
+| `agi.do` | `agi.do` | What do you want AGI to .do for you? |
+| `agi.as` | `agi.as` | What do you want AGI to .be for you? |
+| `agents.do` | `agents.do` | What do you want agents to .do for you? |
+| `agent.as` | `agent.as` | What do you want your agent to .be? |
+| `assistants.do` | `assistants.do` | What do you want assistants to .do for you? |
+| `assistant.as` | `assistant.as` | What do you want your assistant to .be? |
+| `workflows.do` | `workflows.do` | What do you want workflows to .do for you? |
+| `workflow.as` | `workflow.as` | What do you want your workflow to .be? |
+| `database.do` | `database.do` | What do you want your database to .do for you? |
+| `database.as` | `database.as` | What do you want your database to .be? |
+| `services.as` | `services.as` | [Services-as-Software](https://services.as/software) - AI delivers human services |
 | `startups.new` | `startups.new` | Launch Autonomous Startups instantly |
 | `startups.studio` | `startups.studio` | Build and manage your startup portfolio |
 | `startup.games` | `startup.games` | Gamified entrepreneurship - test and learn |
@@ -394,7 +414,6 @@ const myLLM = LLM({ apiKey: 'xxx', timeout: 60000 })
 | `actions.do` | `actions.do` | AI-powered actions |
 | `searches.do` | `searches.do` | Vector search and RAG |
 | `functions.do` | `functions.do` | Serverless functions |
-| `workflows.do` | `workflows.do` | Durable workflows |
 
 **Authentication:** Set `DO_API_KEY` or `ORG_AI_API_KEY` environment variable.
 

@@ -4,6 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "lib": ["ES2022"],
+    "types": ["@cloudflare/workers-types", "node"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -13,10 +14,12 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true
   },
   "references": [
-    { "path": "./packages/middleware" }
+    { "path": "./packages/health" },
+    { "path": "./packages/observability" }
   ],
   "exclude": ["node_modules", "dist"]
 }

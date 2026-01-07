@@ -1,0 +1,37 @@
+{
+  // Wrangler configuration for Cloudflare Workers
+  // Using JSONC format as recommended by Cloudflare best practices
+  "name": "workers-test",
+  "main": "packages/do/src/index.ts",
+  "compatibility_date": "2025-03-07",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Environment variables
+  "vars": {
+    "ENVIRONMENT": "test"
+  },
+
+  // Observability configuration
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+
+  // Durable Objects bindings
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "DO_NAMESPACE",
+        "class_name": "DO"
+      }
+    ]
+  },
+
+  // Migrations for Durable Objects with SQLite storage
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["DO"]
+    }
+  ]
+}

@@ -77,10 +77,15 @@ async function executeWithOptions(
       const promise = Promise.resolve(result)
 
       if (timeout) {
+        let timeoutId: ReturnType<typeof setTimeout>
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('Timeout')), timeout)
+          timeoutId = setTimeout(() => reject(new Error('Timeout')), timeout)
         })
-        return await Promise.race([promise, timeoutPromise])
+        try {
+          return await Promise.race([promise, timeoutPromise])
+        } finally {
+          clearTimeout(timeoutId!)
+        }
       }
 
       return await promise

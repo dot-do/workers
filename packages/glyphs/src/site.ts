@@ -236,21 +236,44 @@ function createSite(routes: Map<string, RouteHandler>): Site {
         return new Response(null, { status: 204 })
       }
 
-      // Content negotiation
-      const wantsJson =
-        acceptHeader.includes('application/json') ||
-        (!acceptHeader.includes('text/html') && typeof result === 'object')
+      // Content negotiation - prioritize explicit Accept header
+      const wantsHtml = acceptHeader.includes('text/html')
+      const wantsJson = acceptHeader.includes('application/json')
 
-      if (wantsJson || typeof result === 'object') {
+      // If client explicitly wants JSON, return JSON
+      // If client explicitly wants HTML, return HTML even if result is object
+      // If no preference and result is object, default to JSON
+      if (wantsJson && !wantsHtml) {
         return new Response(JSON.stringify(result), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },
         })
       }
 
-      // Default to HTML
-      const htmlContent = typeof result === 'string' ? result : JSON.stringify(result)
-      return new Response(htmlContent, {
+      if (wantsHtml) {
+        // Return HTML - if result is object, wrap it in HTML structure
+        const htmlContent =
+          typeof result === 'string'
+            ? result
+            : typeof result === 'object' && result !== null && 'body' in result
+              ? `<!DOCTYPE html><html><head><title>${(result as { title?: string }).title || ''}</title></head><body>${(result as { body: string }).body}</body></html>`
+              : `<pre>${JSON.stringify(result, null, 2)}</pre>`
+        return new Response(htmlContent, {
+          status: 200,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        })
+      }
+
+      // No explicit preference - default to JSON for objects, HTML for strings
+      if (typeof result === 'object') {
+        return new Response(JSON.stringify(result), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Default to HTML for string results
+      return new Response(String(result), {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8' },
       })

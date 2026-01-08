@@ -1,0 +1,39 @@
+{
+  "name": "prompt-diff.do",
+  "version": "0.0.1",
+  "description": "Prompt diff visualization - Compare and visualize changes between AI prompts",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://prompt-diff.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "typescript": "^5.0.0",
+    "vitest": "^3.0.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "prompt",
+    "diff",
+    "visualization",
+    "ai",
+    "llm",
+    "comparison",
+    "workers.do"
+  ]
+}

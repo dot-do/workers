@@ -126,7 +126,10 @@ describe('RateLimiter', () => {
     })
 
     it('should refill tokens over time', async () => {
-      vi.useFakeTimers({ toFake: ['Date'] })
+      const startTime = Date.now()
+      vi.useFakeTimers()
+      vi.setSystemTime(startTime)
+
       try {
         // Create storage and limiter AFTER fake timers are set up
         const { limiter: timedLimiter } = createTokenBucketLimiter()
@@ -137,7 +140,7 @@ describe('RateLimiter', () => {
         }
 
         // Advance time by 5 seconds (should refill 5 tokens)
-        vi.advanceTimersByTime(5000)
+        vi.setSystemTime(startTime + 5000)
 
         const result = await timedLimiter.check('user:123')
         expect(result.allowed).toBe(true)
@@ -164,7 +167,10 @@ describe('RateLimiter', () => {
     })
 
     it('should not exceed capacity when refilling', async () => {
-      vi.useFakeTimers({ toFake: ['Date'] })
+      const startTime = Date.now()
+      vi.useFakeTimers()
+      vi.setSystemTime(startTime)
+
       try {
         // Create storage and limiter AFTER fake timers are set up
         const { limiter: timedLimiter } = createTokenBucketLimiter()
@@ -173,7 +179,7 @@ describe('RateLimiter', () => {
         await timedLimiter.check('user:123')
 
         // Advance time by 100 seconds (way more than needed to refill)
-        vi.advanceTimersByTime(100000)
+        vi.setSystemTime(startTime + 100000)
 
         const result = await timedLimiter.check('user:123')
         expect(result.remaining).toBeLessThanOrEqual(9) // capacity - 1
@@ -225,7 +231,10 @@ describe('RateLimiter', () => {
     })
 
     it('should reset after the window expires', async () => {
-      vi.useFakeTimers({ toFake: ['Date'] })
+      const startTime = Date.now()
+      vi.useFakeTimers()
+      vi.setSystemTime(startTime)
+
       try {
         // Create storage and limiter AFTER fake timers are set up
         const { limiter: timedLimiter } = createSlidingWindowLimiter()
@@ -240,7 +249,7 @@ describe('RateLimiter', () => {
         expect(result.allowed).toBe(false)
 
         // Advance past the window
-        vi.advanceTimersByTime(61000)
+        vi.setSystemTime(startTime + 61000)
 
         // Should be allowed again
         result = await timedLimiter.check('user:123')
@@ -252,7 +261,10 @@ describe('RateLimiter', () => {
     })
 
     it('should use sliding window logic for smooth rate limiting', async () => {
-      vi.useFakeTimers({ toFake: ['Date'] })
+      const startTime = Date.now()
+      vi.useFakeTimers()
+      vi.setSystemTime(startTime)
+
       try {
         // Create storage and limiter AFTER fake timers are set up
         const { limiter: timedLimiter } = createSlidingWindowLimiter()
@@ -263,7 +275,7 @@ describe('RateLimiter', () => {
         }
 
         // Advance 30 seconds (halfway through window)
-        vi.advanceTimersByTime(30000)
+        vi.setSystemTime(startTime + 30000)
 
         // Make 5 more requests
         for (let i = 0; i < 5; i++) {
@@ -275,7 +287,7 @@ describe('RateLimiter', () => {
         expect(result.allowed).toBe(false)
 
         // Advance 31 more seconds (first 5 requests should slide out)
-        vi.advanceTimersByTime(31000)
+        vi.setSystemTime(startTime + 61000)
 
         // Should be allowed now as old requests slid out
         result = await timedLimiter.check('user:123')

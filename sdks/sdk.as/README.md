@@ -119,6 +119,38 @@ const stats = await sdk.stats('my-api')
 console.log(`${stats.downloads} downloads this week`)
 ```
 
+## Configuration
+
+### Environment Variables
+
+```bash
+# Primary API key (used by default)
+export DO_API_KEY="your-api-key"
+
+# Alternative: Organization API key
+export ORG_AI_API_KEY="your-org-key"
+```
+
+### Cloudflare Workers
+
+```typescript
+import 'rpc.do/env'
+import { sdk } from 'sdk.as'
+
+// Environment is automatically configured
+await sdk.generate({ name, source, language })
+```
+
+### Custom Configuration
+
+```typescript
+import { SDK } from 'sdk.as'
+
+const client = SDK({
+  baseURL: 'https://custom.example.com'
+})
+```
+
 ## Your API Deserves Great SDKs
 
 The best APIs feel native in every language. The best developer experiences have zero friction.

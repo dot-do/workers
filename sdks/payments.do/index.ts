@@ -133,9 +133,6 @@ export function Payments(options?: ClientOptions): PaymentsClient {
  */
 export const payments: PaymentsClient = Payments()
 
-// Named exports
-export { Payments, payments }
-
 // Default export = camelCase instance
 export default payments
 

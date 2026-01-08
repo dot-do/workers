@@ -475,6 +475,25 @@ export function createClient<T extends object>(
     },
   }
 
+  // Create a nested proxy for namespace support (e.g., client.health.check())
+  function createNestedProxy(path: string): object {
+    return new Proxy((() => {}) as object, {
+      get(_target, prop: string) {
+        // Handle Promise methods
+        if (prop === 'then' || prop === 'catch' || prop === 'finally') {
+          return undefined
+        }
+        // Build nested path (e.g., 'health.check')
+        const nestedPath = path ? `${path}.${prop}` : prop
+        return createNestedProxy(nestedPath)
+      },
+      apply(_target, _thisArg, args: unknown[]) {
+        // When called as function, make the RPC call with the built path
+        return call(path, args)
+      },
+    })
+  }
+
   // Create proxy that intercepts method calls and turns them into RPC requests
   return new Proxy(clientMethods as T & ClientMethods, {
     get(target, prop: string) {
@@ -488,10 +507,8 @@ export function createClient<T extends object>(
         return (target as Record<string, unknown>)[prop]
       }
 
-      // Return a function that makes the RPC call
-      return async (...args: unknown[]) => {
-        return call(prop, args)
-      }
+      // Return a nested proxy that supports both direct calls and namespace access
+      return createNestedProxy(prop)
     },
   })
 }

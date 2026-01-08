@@ -296,4 +296,226 @@ export const RateLimiter = {
   slidingWindow(config: SlidingWindowConfig): SlidingWindowRateLimiter {
     return new SlidingWindowRateLimiter(config)
   },
+
+  /**
+   * Create an in-memory rate limiter with automatic cleanup
+   */
+  inMemory(config: InMemoryRateLimiterConfig): InMemoryRateLimiter {
+    return new InMemoryRateLimiter(config)
+  },
+}
+
+/**
+ * Configuration for InMemoryRateLimitStorage
+ */
+export interface InMemoryRateLimitStorageConfig {
+  /** Interval in milliseconds for running cleanup of expired entries (default: 60000 - 1 minute) */
+  cleanupIntervalMs?: number
+}
+
+/**
+ * Entry stored in the in-memory storage
+ */
+interface StorageEntry<T> {
+  value: T
+  expiresAt: number | null // null means never expires
+}
+
+/**
+ * In-memory implementation of RateLimitStorage with automatic cleanup of expired entries.
+ *
+ * This implementation addresses the memory leak issue where entries accumulate
+ * indefinitely. It provides:
+ * - Lazy cleanup on get() - expired entries are removed when accessed
+ * - Periodic cleanup - a background interval removes expired entries
+ * - dispose() method - stops the cleanup interval when no longer needed
+ */
+export class InMemoryRateLimitStorage implements RateLimitStorage {
+  private entries: Map<string, StorageEntry<unknown>> = new Map()
+  private cleanupTimeoutId: ReturnType<typeof setTimeout> | null = null
+  private cleanupIntervalMs: number
+  private disposed = false
+
+  constructor(config: InMemoryRateLimitStorageConfig = {}) {
+    this.cleanupIntervalMs = config.cleanupIntervalMs ?? 60000 // Default: 1 minute
+
+    // Start periodic cleanup using setTimeout (more testable than setInterval)
+    this.scheduleCleanup()
+  }
+
+  /**
+   * Get the number of entries currently stored (for monitoring)
+   */
+  get size(): number {
+    return this.entries.size
+  }
+
+  async get<T>(key: string): Promise<T | null> {
+    const entry = this.entries.get(key)
+
+    if (!entry) {
+      return null
+    }
+
+    // Check if entry has expired
+    if (entry.expiresAt !== null && Date.now() > entry.expiresAt) {
+      this.entries.delete(key)
+      return null
+    }
+
+    return entry.value as T
+  }
+
+  async set<T>(key: string, value: T, ttlMs?: number): Promise<void> {
+    const expiresAt = ttlMs !== undefined ? Date.now() + ttlMs : null
+
+    this.entries.set(key, {
+      value,
+      expiresAt,
+    })
+  }
+
+  async delete(key: string): Promise<void> {
+    this.entries.delete(key)
+  }
+
+  /**
+   * Schedule the next cleanup using setTimeout (recursive pattern).
+   * This approach is more compatible with fake timers in tests than setInterval.
+   */
+  private scheduleCleanup(): void {
+    if (this.disposed) {
+      return
+    }
+
+    this.cleanupTimeoutId = setTimeout(() => {
+      if (!this.disposed) {
+        this.cleanupExpiredEntries()
+        this.scheduleCleanup() // Schedule next cleanup
+      }
+    }, this.cleanupIntervalMs)
+  }
+
+  /**
+   * Remove all expired entries from storage
+   */
+  private cleanupExpiredEntries(): void {
+    const now = Date.now()
+
+    for (const [key, entry] of this.entries) {
+      if (entry.expiresAt !== null && now > entry.expiresAt) {
+        this.entries.delete(key)
+      }
+    }
+  }
+
+  /**
+   * Stop the cleanup timeout and release resources
+   */
+  dispose(): void {
+    this.disposed = true
+    if (this.cleanupTimeoutId) {
+      clearTimeout(this.cleanupTimeoutId)
+      this.cleanupTimeoutId = null
+    }
+  }
+}
+
+/**
+ * Configuration for InMemoryRateLimiter
+ */
+export interface InMemoryRateLimiterConfig {
+  /** Maximum number of tokens in the bucket */
+  capacity: number
+  /** Number of tokens to add per refill */
+  refillRate: number
+  /** Time between refills in milliseconds */
+  refillInterval: number
+  /** How to handle storage errors (default: 'open') */
+  failMode?: FailMode
+  /** Interval in milliseconds for running cleanup of expired entries (default: 60000) */
+  cleanupIntervalMs?: number
+  /** TTL for bucket entries in milliseconds (default: 10 * refillInterval) */
+  bucketTtlMs?: number
+}
+
+/**
+ * In-Memory Token Bucket Rate Limiter with automatic cleanup
+ *
+ * This is a convenience class that combines TokenBucketRateLimiter with
+ * InMemoryRateLimitStorage, providing automatic cleanup of expired entries.
+ *
+ * Use this for:
+ * - Single-instance Workers or Durable Objects
+ * - Development and testing
+ * - Scenarios where distributed state isn't needed
+ *
+ * For distributed rate limiting, use TokenBucketRateLimiter with a shared
+ * storage backend (e.g., Durable Objects, KV).
+ */
+export class InMemoryRateLimiter {
+  private storage: InMemoryRateLimitStorage
+  private limiter: TokenBucketRateLimiter
+  private bucketTtlMs: number
+
+  constructor(config: InMemoryRateLimiterConfig) {
+    this.storage = new InMemoryRateLimitStorage({
+      cleanupIntervalMs: config.cleanupIntervalMs,
+    })
+
+    // Bucket TTL: how long to keep a bucket before considering it stale
+    // Default to 10x the refill interval, which means an inactive bucket
+    // will be cleaned up after 10 refill cycles
+    this.bucketTtlMs = config.bucketTtlMs ?? config.refillInterval * 10
+
+    this.limiter = new TokenBucketRateLimiter({
+      storage: this.createStorageWithTtl(),
+      capacity: config.capacity,
+      refillRate: config.refillRate,
+      refillInterval: config.refillInterval,
+      failMode: config.failMode,
+    })
+  }
+
+  /**
+   * Get the number of rate limit buckets currently stored (for monitoring)
+   */
+  get storageSize(): number {
+    return this.storage.size
+  }
+
+  /**
+   * Check if a request should be allowed
+   */
+  async check(key: string, options: CheckOptions = {}): Promise<RateLimitResult> {
+    return this.limiter.check(key, options)
+  }
+
+  /**
+   * Get HTTP headers for rate limit response
+   */
+  getHeaders(result: RateLimitResult): Record<string, string> {
+    return this.limiter.getHeaders(result)
+  }
+
+  /**
+   * Stop the cleanup interval and release resources
+   */
+  dispose(): void {
+    this.storage.dispose()
+  }
+
+  /**
+   * Create a storage wrapper that automatically sets TTL on entries
+   */
+  private createStorageWithTtl(): RateLimitStorage {
+    const storage = this.storage
+    const ttlMs = this.bucketTtlMs
+
+    return {
+      get: <T>(key: string) => storage.get<T>(key),
+      set: <T>(key: string, value: T) => storage.set(key, value, ttlMs),
+      delete: (key: string) => storage.delete(key),
+    }
+  }
 }

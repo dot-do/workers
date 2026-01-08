@@ -1,5 +1,5 @@
 /**
- * RED Phase Tests: JWKS Cache Memory Isolation
+ * GREEN Phase Tests: JWKS Cache Memory Isolation
  *
  * These tests verify that the JWKS (JSON Web Key Set) cache:
  * 1. Has proper TTL (Time-To-Live) for cache entries
@@ -7,39 +7,20 @@
  * 3. Maintains memory isolation between different tenants/DO instances
  * 4. Does not grow unbounded across multiple DO instances
  *
- * Issue: workers-vfkb
- * Status: RED - Tests should fail until implementation is complete
+ * Issue: workers-28tp (fix), workers-vfkb (original)
+ * Status: GREEN - Implementation complete
  *
- * The current JWKS cache uses a module-level Map which persists across
- * Durable Object instances, causing memory leaks and potential security
- * issues (cache entries from one tenant being accessible to another).
+ * The JWKS cache now uses a factory pattern with instance-isolated caches
+ * to prevent memory leaks and security issues between Durable Object instances.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-
-// Types for the JWKS cache module (to be implemented)
-interface JWKSCacheEntry {
-  keys: JsonWebKey[]
-  fetchedAt: number
-  expiresAt: number
-}
-
-interface JWKSCache {
-  get(uri: string): JWKSCacheEntry | undefined
-  set(uri: string, entry: JWKSCacheEntry): void
-  delete(uri: string): boolean
-  clear(): void
-  size(): number
-  cleanup(): void
-}
-
-interface JWKSCacheFactory {
-  createCache(instanceId: string): JWKSCache
-  getInstanceCache(instanceId: string): JWKSCache | undefined
-  destroyInstanceCache(instanceId: string): void
-  getAllInstanceIds(): string[]
-  getTotalCacheSize(): number
-}
+import {
+  createJWKSCacheFactory,
+  type JWKSCache,
+  type JWKSCacheFactory,
+  type JWKSCacheEntry,
+} from '../src/jwks-cache'
 
 // Mock JWKS response for testing
 const createMockJWKS = (keyId: string): JsonWebKey[] => [
@@ -54,16 +35,11 @@ const createMockJWKS = (keyId: string): JsonWebKey[] => [
 ]
 
 describe('JWKS Cache Memory Isolation', () => {
-  // These will be imported from the actual implementation once available
-  // For now, we're defining the expected interface
   let cacheFactory: JWKSCacheFactory
 
   beforeEach(() => {
     vi.useFakeTimers()
-    // In the GREEN phase, this will import from the actual implementation:
-    // cacheFactory = createJWKSCacheFactory()
-    // For RED phase, we expect this to be undefined/throw
-    cacheFactory = undefined as unknown as JWKSCacheFactory
+    cacheFactory = createJWKSCacheFactory()
   })
 
   afterEach(() => {
@@ -221,8 +197,13 @@ describe('JWKS Cache Memory Isolation', () => {
     })
 
     it('should not leak memory with many expired entries', () => {
+      // Create a factory with large enough limits for this test
+      const largeFactory = createJWKSCacheFactory({
+        maxEntriesPerInstance: 2000,
+        maxTotalEntries: 5000,
+      })
       const SHORT_TTL_MS = 60000 // 1 minute
-      const cache = cacheFactory.createCache('instance-memory')
+      const cache = largeFactory.createCache('instance-memory')
 
       const now = Date.now()
 
@@ -388,7 +369,12 @@ describe('JWKS Cache Memory Isolation', () => {
 
     it('should use LRU eviction when cache is full', () => {
       const MAX_ENTRIES = 5
-      const cache = cacheFactory.createCache('lru-test')
+      // Create a factory with a small cache limit for this test
+      const smallFactory = createJWKSCacheFactory({
+        maxEntriesPerInstance: MAX_ENTRIES,
+        maxTotalEntries: 1000,
+      })
+      const cache = smallFactory.createCache('lru-test')
 
       const now = Date.now()
 

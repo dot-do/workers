@@ -149,6 +149,38 @@ await directories.import('ai-tools', csvData, 'csv')
 const backup = await directories.export('ai-tools', 'json')
 ```
 
+## Configuration
+
+### Environment Variables
+
+```bash
+# Primary API key (used by default)
+export DO_API_KEY="your-api-key"
+
+# Alternative: Organization API key
+export ORG_AI_API_KEY="your-org-key"
+```
+
+### Cloudflare Workers
+
+```typescript
+import 'rpc.do/env'
+import { directories } from 'directories.as'
+
+// Environment is automatically configured
+await directories.create({ name, title, schema })
+```
+
+### Custom Configuration
+
+```typescript
+import { Directories } from 'directories.as'
+
+const client = Directories({
+  baseURL: 'https://custom.example.com'
+})
+```
+
 ## Own Your Traffic
 
 Every day you're not building owned audience is a day you're paying rent to platforms that don't care about you.

@@ -258,26 +258,6 @@ Then focus on what only you can do: vision, strategy, and the decisions that mat
 
 Your startup runs itself. You run your startup.
 
-## Alternative Patterns
-
-For simple, imperative workflows, you can also use event handlers:
-
-```typescript
-import { on } from 'workflows.do'
-
-// Event-driven pattern (use for simple cases)
-on.Customer.signedUp(async customer => {
-  await welcome(customer)
-  await setupAccount(customer)
-  await scheduleOnboarding(customer)
-})
-
-// For complex workflows with human checkpoints, use phases
-export const onboarding = Workflow({ ... })
-```
-
-Use event handlers for simple, linear processes. Use phases for complex workflows with branching, parallelism, and human checkpoints.
-
 ---
 
 [workflows.do](https://workflows.do) - [agents.do](https://agents.do) - [humans.do](https://humans.do)

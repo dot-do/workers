@@ -1,10 +1,9 @@
 // @dotdo/security - Bounded Set implementation for memory-safe branded type tracking
 //
-// RED PHASE STUB: This file contains type definitions and minimal stub implementations
-// that will cause tests to fail. The actual implementation will be done in GREEN phase.
+// This implementation provides bounded collections that prevent memory leaks
+// when tracking branded types like validated IDs, used tokens, or nonces.
 //
-// Issue: workers-z69c (RED phase)
-// Related: workers-21d2 (GREEN phase - implementation)
+// Issue: workers-dgfm (Memory leak fix)
 
 /**
  * Eviction policy for bounded collections
@@ -62,6 +61,17 @@ export interface BoundedMapOptions<K = unknown, V = unknown> {
 }
 
 /**
+ * Internal entry with timestamp for TTL and ordering
+ */
+interface TimestampedEntry<T> {
+  value: T
+  addedAt: number
+  accessedAt: number
+}
+
+const DEFAULT_MAX_SIZE = 10000
+
+/**
  * A Set implementation with bounded size to prevent memory leaks.
  *
  * Useful for tracking branded types like validated IDs, used tokens,
@@ -84,58 +94,165 @@ export interface BoundedMapOptions<K = unknown, V = unknown> {
  * ```
  */
 export class BoundedSet<T> implements Iterable<T> {
-  // TODO: Implement in GREEN phase (workers-21d2)
+  private readonly _maxSize: number
+  private readonly _evictionPolicy: EvictionPolicy
+  private readonly _ttlMs?: number
+  private readonly _refreshTtlOnAccess: boolean
+  private readonly _onEvict?: (value: T) => void
+  private readonly _entries: Map<T, TimestampedEntry<T>>
+  private readonly _insertionOrder: T[] // For FIFO eviction
+  private _evictionCount = 0
+  private _hitCount = 0
+  private _missCount = 0
+  private _cleanupIntervalId?: ReturnType<typeof setInterval>
 
-  constructor(_options?: BoundedSetOptions<T>) {
-    throw new Error('BoundedSet not implemented - RED phase stub')
+  constructor(options?: BoundedSetOptions<T>) {
+    const maxSize = options?.maxSize ?? DEFAULT_MAX_SIZE
+
+    // Validate maxSize
+    if (maxSize <= 0 || !Number.isFinite(maxSize)) {
+      throw new Error('maxSize must be a positive finite number')
+    }
+
+    this._maxSize = maxSize
+    this._evictionPolicy = options?.evictionPolicy ?? 'fifo'
+    this._ttlMs = options?.ttlMs
+    this._refreshTtlOnAccess = options?.refreshTtlOnAccess ?? false
+    this._onEvict = options?.onEvict
+    this._entries = new Map()
+    this._insertionOrder = []
+
+    // Setup automatic cleanup if configured
+    if (options?.cleanupIntervalMs && options.cleanupIntervalMs > 0) {
+      this._cleanupIntervalId = setInterval(() => {
+        this.cleanup()
+      }, options.cleanupIntervalMs)
+    }
   }
 
   get maxSize(): number {
-    throw new Error('Not implemented')
+    return this._maxSize
   }
 
   get size(): number {
-    throw new Error('Not implemented')
+    return this._entries.size
   }
 
   get stats(): BoundedSetStats {
-    throw new Error('Not implemented')
+    const total = this._hitCount + this._missCount
+    return {
+      evictionCount: this._evictionCount,
+      hitCount: this._hitCount,
+      missCount: this._missCount,
+      hitRate: total > 0 ? this._hitCount / total : 0,
+    }
   }
 
-  add(_value: T): this {
-    throw new Error('Not implemented')
+  add(value: T): this {
+    const now = Date.now()
+
+    // Check if already exists
+    const existing = this._entries.get(value)
+    if (existing) {
+      // Update access time for LRU and optionally refresh TTL
+      existing.accessedAt = now
+      if (this._refreshTtlOnAccess) {
+        existing.addedAt = now
+      }
+      // For LRU: move to end of insertion order
+      if (this._evictionPolicy === 'lru') {
+        const idx = this._insertionOrder.indexOf(value)
+        if (idx !== -1) {
+          this._insertionOrder.splice(idx, 1)
+          this._insertionOrder.push(value)
+        }
+      }
+      return this
+    }
+
+    // Evict if at capacity
+    while (this._entries.size >= this._maxSize) {
+      this._evictOne()
+    }
+
+    // Add new entry
+    this._entries.set(value, {
+      value,
+      addedAt: now,
+      accessedAt: now,
+    })
+    this._insertionOrder.push(value)
+
+    return this
   }
 
-  has(_value: T): boolean {
-    throw new Error('Not implemented')
+  has(value: T): boolean {
+    // First check if entry exists
+    const entry = this._entries.get(value)
+    if (!entry) {
+      this._missCount++
+      return false
+    }
+
+    // Check TTL if configured
+    if (this._ttlMs !== undefined) {
+      const age = Date.now() - entry.addedAt
+      if (age > this._ttlMs) {
+        // Entry expired - remove it
+        this._removeEntry(value)
+        this._missCount++
+        return false
+      }
+    }
+
+    // Update access time for LRU
+    entry.accessedAt = Date.now()
+    if (this._evictionPolicy === 'lru') {
+      // Move to end for LRU tracking
+      const idx = this._insertionOrder.indexOf(value)
+      if (idx !== -1) {
+        this._insertionOrder.splice(idx, 1)
+        this._insertionOrder.push(value)
+      }
+    }
+
+    this._hitCount++
+    return true
   }
 
-  delete(_value: T): boolean {
-    throw new Error('Not implemented')
+  delete(value: T): boolean {
+    return this._removeEntry(value)
   }
 
   clear(): void {
-    throw new Error('Not implemented')
+    this._entries.clear()
+    this._insertionOrder.length = 0
   }
 
-  forEach(_callback: (value: T, value2: T, set: BoundedSet<T>) => void): void {
-    throw new Error('Not implemented')
+  forEach(callback: (value: T, value2: T, set: BoundedSet<T>) => void): void {
+    for (const [value] of this._entries) {
+      callback(value, value, this)
+    }
   }
 
-  values(): IterableIterator<T> {
-    throw new Error('Not implemented')
+  *values(): IterableIterator<T> {
+    for (const [value] of this._entries) {
+      yield value
+    }
   }
 
-  keys(): IterableIterator<T> {
-    throw new Error('Not implemented')
+  *keys(): IterableIterator<T> {
+    yield* this.values()
   }
 
-  entries(): IterableIterator<[T, T]> {
-    throw new Error('Not implemented')
+  *entries(): IterableIterator<[T, T]> {
+    for (const [value] of this._entries) {
+      yield [value, value]
+    }
   }
 
   [Symbol.iterator](): Iterator<T> {
-    throw new Error('Not implemented')
+    return this.values()
   }
 
   /**
@@ -143,22 +260,86 @@ export class BoundedSet<T> implements Iterable<T> {
    * @returns Number of entries removed
    */
   cleanup(): number {
-    throw new Error('Not implemented')
+    if (this._ttlMs === undefined) {
+      return 0
+    }
+
+    const now = Date.now()
+    let removed = 0
+
+    for (const [value, entry] of this._entries) {
+      const age = now - entry.addedAt
+      if (age > this._ttlMs) {
+        this._removeEntry(value)
+        removed++
+      }
+    }
+
+    return removed
   }
 
   /**
    * Reset statistics counters
    */
   resetStats(): void {
-    throw new Error('Not implemented')
+    this._evictionCount = 0
+    this._hitCount = 0
+    this._missCount = 0
   }
 
   /**
    * Destroy the set and cleanup resources (timers, etc.)
    */
   destroy(): void {
-    throw new Error('Not implemented')
+    if (this._cleanupIntervalId !== undefined) {
+      clearInterval(this._cleanupIntervalId)
+      this._cleanupIntervalId = undefined
+    }
+    this.clear()
   }
+
+  private _evictOne(): void {
+    if (this._insertionOrder.length === 0) return
+
+    let valueToEvict: T
+
+    if (this._evictionPolicy === 'fifo') {
+      // FIFO: remove first inserted
+      valueToEvict = this._insertionOrder[0]
+    } else {
+      // LRU: remove least recently accessed (first in our reordered list)
+      valueToEvict = this._insertionOrder[0]
+    }
+
+    const entry = this._entries.get(valueToEvict)
+    if (entry) {
+      this._onEvict?.(entry.value)
+    }
+
+    this._removeEntry(valueToEvict)
+    this._evictionCount++
+  }
+
+  private _removeEntry(value: T): boolean {
+    const existed = this._entries.delete(value)
+    if (existed) {
+      const idx = this._insertionOrder.indexOf(value)
+      if (idx !== -1) {
+        this._insertionOrder.splice(idx, 1)
+      }
+    }
+    return existed
+  }
+}
+
+/**
+ * Internal map entry with timestamp for TTL and ordering
+ */
+interface TimestampedMapEntry<K, V> {
+  key: K
+  value: V
+  addedAt: number
+  accessedAt: number
 }
 
 /**
@@ -177,62 +358,200 @@ export class BoundedSet<T> implements Iterable<T> {
  * ```
  */
 export class BoundedMap<K, V> implements Iterable<[K, V]> {
-  // TODO: Implement in GREEN phase (workers-21d2)
+  private readonly _maxSize: number
+  private readonly _evictionPolicy: EvictionPolicy
+  private readonly _ttlMs?: number
+  private readonly _refreshTtlOnAccess: boolean
+  private readonly _onEvict?: (key: K, value: V) => void
+  private readonly _entries: Map<K, TimestampedMapEntry<K, V>>
+  private readonly _insertionOrder: K[] // For FIFO eviction
+  private _evictionCount = 0
+  private _hitCount = 0
+  private _missCount = 0
+  private _cleanupIntervalId?: ReturnType<typeof setInterval>
 
-  constructor(_options?: BoundedMapOptions<K, V>) {
-    throw new Error('BoundedMap not implemented - RED phase stub')
+  constructor(options?: BoundedMapOptions<K, V>) {
+    const maxSize = options?.maxSize ?? DEFAULT_MAX_SIZE
+
+    // Validate maxSize
+    if (maxSize <= 0 || !Number.isFinite(maxSize)) {
+      throw new Error('maxSize must be a positive finite number')
+    }
+
+    this._maxSize = maxSize
+    this._evictionPolicy = options?.evictionPolicy ?? 'fifo'
+    this._ttlMs = options?.ttlMs
+    this._refreshTtlOnAccess = options?.refreshTtlOnAccess ?? false
+    this._onEvict = options?.onEvict
+    this._entries = new Map()
+    this._insertionOrder = []
+
+    // Setup automatic cleanup if configured
+    if (options?.cleanupIntervalMs && options.cleanupIntervalMs > 0) {
+      this._cleanupIntervalId = setInterval(() => {
+        this.cleanup()
+      }, options.cleanupIntervalMs)
+    }
   }
 
   get maxSize(): number {
-    throw new Error('Not implemented')
+    return this._maxSize
   }
 
   get size(): number {
-    throw new Error('Not implemented')
+    return this._entries.size
   }
 
   get stats(): BoundedSetStats {
-    throw new Error('Not implemented')
+    const total = this._hitCount + this._missCount
+    return {
+      evictionCount: this._evictionCount,
+      hitCount: this._hitCount,
+      missCount: this._missCount,
+      hitRate: total > 0 ? this._hitCount / total : 0,
+    }
   }
 
-  set(_key: K, _value: V): this {
-    throw new Error('Not implemented')
+  set(key: K, value: V): this {
+    const now = Date.now()
+
+    // Check if already exists
+    const existing = this._entries.get(key)
+    if (existing) {
+      // Update value and access time
+      existing.value = value
+      existing.accessedAt = now
+      if (this._refreshTtlOnAccess) {
+        existing.addedAt = now
+      }
+      // For LRU: move to end of insertion order
+      if (this._evictionPolicy === 'lru') {
+        const idx = this._insertionOrder.indexOf(key)
+        if (idx !== -1) {
+          this._insertionOrder.splice(idx, 1)
+          this._insertionOrder.push(key)
+        }
+      }
+      return this
+    }
+
+    // Evict if at capacity
+    while (this._entries.size >= this._maxSize) {
+      this._evictOne()
+    }
+
+    // Add new entry
+    this._entries.set(key, {
+      key,
+      value,
+      addedAt: now,
+      accessedAt: now,
+    })
+    this._insertionOrder.push(key)
+
+    return this
   }
 
-  get(_key: K): V | undefined {
-    throw new Error('Not implemented')
+  get(key: K): V | undefined {
+    const entry = this._entries.get(key)
+    if (!entry) {
+      this._missCount++
+      return undefined
+    }
+
+    // Check TTL if configured
+    if (this._ttlMs !== undefined) {
+      const age = Date.now() - entry.addedAt
+      if (age > this._ttlMs) {
+        // Entry expired - remove it
+        this._removeEntry(key)
+        this._missCount++
+        return undefined
+      }
+    }
+
+    // Update access time for LRU
+    entry.accessedAt = Date.now()
+    if (this._evictionPolicy === 'lru') {
+      // Move to end for LRU tracking
+      const idx = this._insertionOrder.indexOf(key)
+      if (idx !== -1) {
+        this._insertionOrder.splice(idx, 1)
+        this._insertionOrder.push(key)
+      }
+    }
+
+    this._hitCount++
+    return entry.value
   }
 
-  has(_key: K): boolean {
-    throw new Error('Not implemented')
+  has(key: K): boolean {
+    const entry = this._entries.get(key)
+    if (!entry) {
+      this._missCount++
+      return false
+    }
+
+    // Check TTL if configured
+    if (this._ttlMs !== undefined) {
+      const age = Date.now() - entry.addedAt
+      if (age > this._ttlMs) {
+        // Entry expired - remove it
+        this._removeEntry(key)
+        this._missCount++
+        return false
+      }
+    }
+
+    // Update access time for LRU
+    entry.accessedAt = Date.now()
+    if (this._evictionPolicy === 'lru') {
+      const idx = this._insertionOrder.indexOf(key)
+      if (idx !== -1) {
+        this._insertionOrder.splice(idx, 1)
+        this._insertionOrder.push(key)
+      }
+    }
+
+    this._hitCount++
+    return true
   }
 
-  delete(_key: K): boolean {
-    throw new Error('Not implemented')
+  delete(key: K): boolean {
+    return this._removeEntry(key)
   }
 
   clear(): void {
-    throw new Error('Not implemented')
+    this._entries.clear()
+    this._insertionOrder.length = 0
   }
 
-  forEach(_callback: (value: V, key: K, map: BoundedMap<K, V>) => void): void {
-    throw new Error('Not implemented')
+  forEach(callback: (value: V, key: K, map: BoundedMap<K, V>) => void): void {
+    for (const [key, entry] of this._entries) {
+      callback(entry.value, key, this)
+    }
   }
 
-  keys(): IterableIterator<K> {
-    throw new Error('Not implemented')
+  *keys(): IterableIterator<K> {
+    for (const [key] of this._entries) {
+      yield key
+    }
   }
 
-  values(): IterableIterator<V> {
-    throw new Error('Not implemented')
+  *values(): IterableIterator<V> {
+    for (const [, entry] of this._entries) {
+      yield entry.value
+    }
   }
 
-  entries(): IterableIterator<[K, V]> {
-    throw new Error('Not implemented')
+  *entries(): IterableIterator<[K, V]> {
+    for (const [key, entry] of this._entries) {
+      yield [key, entry.value]
+    }
   }
 
   [Symbol.iterator](): Iterator<[K, V]> {
-    throw new Error('Not implemented')
+    return this.entries()
   }
 
   /**
@@ -240,21 +559,68 @@ export class BoundedMap<K, V> implements Iterable<[K, V]> {
    * @returns Number of entries removed
    */
   cleanup(): number {
-    throw new Error('Not implemented')
+    if (this._ttlMs === undefined) {
+      return 0
+    }
+
+    const now = Date.now()
+    let removed = 0
+
+    for (const [key, entry] of this._entries) {
+      const age = now - entry.addedAt
+      if (age > this._ttlMs) {
+        this._removeEntry(key)
+        removed++
+      }
+    }
+
+    return removed
   }
 
   /**
    * Reset statistics counters
    */
   resetStats(): void {
-    throw new Error('Not implemented')
+    this._evictionCount = 0
+    this._hitCount = 0
+    this._missCount = 0
   }
 
   /**
    * Destroy the map and cleanup resources (timers, etc.)
    */
   destroy(): void {
-    throw new Error('Not implemented')
+    if (this._cleanupIntervalId !== undefined) {
+      clearInterval(this._cleanupIntervalId)
+      this._cleanupIntervalId = undefined
+    }
+    this.clear()
+  }
+
+  private _evictOne(): void {
+    if (this._insertionOrder.length === 0) return
+
+    // Both FIFO and LRU evict from the front (oldest/least-recently-accessed)
+    const keyToEvict = this._insertionOrder[0]
+
+    const entry = this._entries.get(keyToEvict)
+    if (entry) {
+      this._onEvict?.(entry.key, entry.value)
+    }
+
+    this._removeEntry(keyToEvict)
+    this._evictionCount++
+  }
+
+  private _removeEntry(key: K): boolean {
+    const existed = this._entries.delete(key)
+    if (existed) {
+      const idx = this._insertionOrder.indexOf(key)
+      if (idx !== -1) {
+        this._insertionOrder.splice(idx, 1)
+      }
+    }
+    return existed
   }
 }
 

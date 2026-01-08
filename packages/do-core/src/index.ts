@@ -71,3 +71,27 @@ export * from './two-phase-search.js'
 
 // Re-export ParquetSerializer (Parquet-compatible binary serialization)
 export * from './parquet-serializer.js'
+
+// Re-export TierIndex (lakehouse tier tracking)
+export * from './tier-index.js'
+
+// Re-export MigrationPolicy (tiered storage migration policies)
+// Note: StorageTier is already exported from tier-index.js
+export {
+  type MigrationPriority,
+  type HotToWarmPolicy,
+  type WarmToColdPolicy,
+  type BatchSizeConfig,
+  type MigrationPolicy,
+  type MigrationPolicyConfig,
+  type MigrationDecision,
+  type MigrationCandidate,
+  type TierUsage,
+  type AccessStats,
+  type BatchSelection,
+  type MigrationStatistics,
+  MigrationPolicyEngine,
+} from './migration-policy.js'
+
+// Re-export ClusterManager (K-means cluster assignment for R2 partitioning)
+export * from './cluster-manager.js'

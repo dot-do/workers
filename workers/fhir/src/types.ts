@@ -308,6 +308,18 @@ export interface Observation {
     }
     text?: string
   }>
+  interpretation?: Array<{
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }>
+  specimen?: {
+    reference: string
+    display?: string
+  }
 }
 
 /**

@@ -562,3 +562,14 @@ export { Analytics, analytics }
 export default analytics
 
 export type { ClientOptions } from 'rpc.do'
+
+// Dashboard layout and section management
+export {
+  DashboardLayout,
+  createDashboard,
+  WIDGET_SIZE_PRESETS,
+  type DashboardSection,
+  type GridConfig,
+  type LayoutStrategy,
+  type WidgetSizePreset,
+} from './dashboard'

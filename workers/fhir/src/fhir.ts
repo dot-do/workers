@@ -167,6 +167,80 @@ export class FHIRDO {
   }
 
   /**
+   * Search for Patient resources
+   */
+  async searchPatients(params: {
+    identifier?: string
+    name?: string
+    family?: string
+    given?: string
+    birthdate?: string
+    gender?: string
+  }): Promise<Bundle<Patient>> {
+    const allPatients = await this.ctx.storage.list<Patient>({ prefix: 'Patient:' })
+    let patients = Array.from(allPatients.entries())
+      .filter(([key]) => !key.includes(':_history:'))
+      .map(([, value]) => value)
+
+    if (params.identifier) {
+      patients = patients.filter(patient =>
+        patient.identifier?.some(id => id.value === params.identifier)
+      )
+    }
+
+    if (params.family) {
+      const familyLower = params.family.toLowerCase()
+      patients = patients.filter(patient =>
+        patient.name?.some(name =>
+          name.family?.toLowerCase() === familyLower
+        )
+      )
+    }
+
+    if (params.given) {
+      const givenLower = params.given.toLowerCase()
+      patients = patients.filter(patient =>
+        patient.name?.some(name =>
+          name.given?.some(g => g.toLowerCase() === givenLower)
+        )
+      )
+    }
+
+    if (params.name) {
+      const nameLower = params.name.toLowerCase()
+      patients = patients.filter(patient =>
+        patient.name?.some(name =>
+          name.family?.toLowerCase().includes(nameLower) ||
+          name.given?.some(g => g.toLowerCase().includes(nameLower))
+        )
+      )
+    }
+
+    if (params.birthdate) {
+      patients = patients.filter(patient => patient.birthDate === params.birthdate)
+    }
+
+    if (params.gender) {
+      patients = patients.filter(patient => patient.gender === params.gender)
+    }
+
+    const bundle: Bundle<Patient> = {
+      resourceType: 'Bundle',
+      type: 'searchset',
+      total: patients.length,
+      entry: patients.map(resource => ({
+        fullUrl: `Patient/${resource.id}`,
+        resource,
+        search: {
+          mode: 'match'
+        }
+      }))
+    }
+
+    return bundle
+  }
+
+  /**
    * Read an Encounter resource by ID
    */
   async readEncounter(id: string): Promise<Encounter | null> {
@@ -1022,6 +1096,180 @@ export class FHIRDO {
   /**
    * Delete an AllergyIntolerance resource
    */
+
+  /**
+   * Create a new Immunization resource
+   */
+  async createImmunization(immunization: Omit<Immunization, 'id' | 'meta'>): Promise<Immunization> {
+    // Generate a unique ID for the immunization
+    const id = `imm-${this.generateToken().substring(0, 16)}`
+
+    // Create metadata
+    const now = new Date().toISOString()
+    const meta = {
+      versionId: '1',
+      lastUpdated: now
+    }
+
+    // Create the full immunization resource
+    const newImmunization: Immunization = {
+      ...immunization,
+      id,
+      meta
+    }
+
+    // Store the immunization
+    await this.ctx.storage.put(`Immunization:${id}`, newImmunization)
+    await this.ctx.storage.put(`Immunization:${id}:_history:1`, newImmunization)
+
+    return newImmunization
+  }
+
+  /**
+   * Read an Immunization resource by ID
+   */
+  async readImmunization(id: string): Promise<Immunization | null> {
+    const immunization = await this.ctx.storage.get<Immunization>(`Immunization:${id}`)
+    return immunization || null
+  }
+
+  /**
+   * Update an Immunization resource
+   */
+  async updateImmunization(id: string, updates: Partial<Immunization>): Promise<Immunization | null> {
+    // Get existing immunization
+    const existing = await this.readImmunization(id)
+    if (!existing) {
+      return null
+    }
+
+    // Increment version
+    const currentVersion = parseInt(existing.meta.versionId)
+    const newVersion = (currentVersion + 1).toString()
+
+    // Create updated immunization
+    const updated: Immunization = {
+      ...existing,
+      ...updates,
+      id, // Preserve ID
+      meta: {
+        versionId: newVersion,
+        lastUpdated: new Date().toISOString()
+      }
+    }
+
+    // Store updated immunization
+    await this.ctx.storage.put(`Immunization:${id}`, updated)
+    await this.ctx.storage.put(`Immunization:${id}:_history:${newVersion}`, updated)
+
+    return updated
+  }
+
+  /**
+   * Delete an Immunization resource
+   */
+  async deleteImmunization(id: string): Promise<boolean> {
+    const existing = await this.readImmunization(id)
+    if (!existing) {
+      return false
+    }
+
+    await this.ctx.storage.delete(`Immunization:${id}`)
+    return true
+  }
+
+  /**
+   * Search for Immunization resources
+   */
+  async searchImmunizations(params: {
+    patient?: string
+    status?: string
+    date?: string
+    vaccine?: string
+    location?: string
+    performer?: string
+    lotNumber?: string
+  }): Promise<Immunization[]> {
+    // Get all immunizations from storage
+    const allImmunizations = await this.ctx.storage.list<Immunization>({ prefix: 'Immunization:' })
+
+    // Filter out history entries (only get current versions)
+    let immunizations = Array.from(allImmunizations.entries())
+      .filter(([key]) => !key.includes(':_history:'))
+      .map(([, value]) => value)
+
+    // Filter by patient
+    if (params.patient) {
+      const patientRef = params.patient.startsWith('Patient/')
+        ? params.patient
+        : `Patient/${params.patient}`
+      immunizations = immunizations.filter(imm => imm.patient.reference === patientRef)
+    }
+
+    // Filter by status
+    if (params.status) {
+      immunizations = immunizations.filter(imm => imm.status === params.status)
+    }
+
+    // Filter by vaccine code
+    if (params.vaccine) {
+      immunizations = immunizations.filter(imm =>
+        imm.vaccineCode.coding.some(coding => coding.code === params.vaccine)
+      )
+    }
+
+    // Filter by location
+    if (params.location) {
+      immunizations = immunizations.filter(imm =>
+        imm.location?.reference === params.location || imm.location?.reference === `Location/${params.location}`
+      )
+    }
+
+    // Filter by performer
+    if (params.performer) {
+      immunizations = immunizations.filter(imm =>
+        imm.performer?.some(p => p.actor.reference === params.performer || p.actor.reference.includes(params.performer))
+      )
+    }
+
+    // Filter by lot number
+    if (params.lotNumber) {
+      immunizations = immunizations.filter(imm => imm.lotNumber === params.lotNumber)
+    }
+
+    // Filter by date
+    if (params.date) {
+      const dateMatch = params.date.match(/^(eq|ne|lt|le|gt|ge)?(.+)$/)
+      if (dateMatch) {
+        const [, prefix = 'eq', dateStr] = dateMatch
+        const searchDate = new Date(dateStr).getTime()
+
+        immunizations = immunizations.filter(imm => {
+          if (!imm.occurrenceDateTime) return false
+          const immunizationDate = new Date(imm.occurrenceDateTime).getTime()
+
+          switch (prefix) {
+            case 'eq':
+              return immunizationDate === searchDate
+            case 'ne':
+              return immunizationDate !== searchDate
+            case 'lt':
+              return immunizationDate < searchDate
+            case 'le':
+              return immunizationDate <= searchDate
+            case 'gt':
+              return immunizationDate > searchDate
+            case 'ge':
+              return immunizationDate >= searchDate
+            default:
+              return false
+          }
+        })
+      }
+    }
+
+    return immunizations
+  }
   async deleteAllergyIntolerance(id: string): Promise<boolean> {
     const existing = await this.readAllergyIntolerance(id)
     if (!existing) {
@@ -1111,6 +1359,11 @@ export class FHIRDO {
         return this.handleTokenEndpoint(request)
       }
 
+
+      // FHIR Patient search endpoint
+      if (path === '/fhir/r4/Patient' && method === 'GET') {
+        return this.handlePatientSearch(request, url)
+      }
       // FHIR Patient read endpoint
       if (path.match(/^\/fhir\/r4\/Patient\/[\w-]+$/) && method === 'GET') {
         return this.handlePatientRead(request, path)
@@ -1119,6 +1372,16 @@ export class FHIRDO {
       // FHIR Patient version read endpoint
       if (path.match(/^\/fhir\/r4\/Patient\/[\w-]+\/_history\/\d+$/) && method === 'GET') {
         return this.handlePatientVersionRead(request, path)
+
+      // FHIR Patient create endpoint
+      if (path === '/fhir/r4/Patient' && method === 'POST') {
+        return this.handlePatientCreate(request)
+      }
+
+      // FHIR Patient update endpoint
+      if (path.match(/^\/fhir\/r4\/Patient\/[\w-]+$/) && method === 'PUT') {
+        return this.handlePatientUpdate(request, path)
+      }
       }
 
       // FHIR Encounter search endpoint
@@ -1343,6 +1606,27 @@ export class FHIRDO {
   /**
    * Handle FHIR Patient read
    */
+
+  /**
+   * Handle FHIR Patient search
+   */
+  private async handlePatientSearch(request: Request, url: URL): Promise<Response> {
+    const params = {
+      identifier: url.searchParams.get('identifier') || undefined,
+      name: url.searchParams.get('name') || undefined,
+      family: url.searchParams.get('family') || undefined,
+      given: url.searchParams.get('given') || undefined,
+      birthdate: url.searchParams.get('birthdate') || undefined,
+      gender: url.searchParams.get('gender') || undefined,
+    }
+
+    const bundle = await this.searchPatients(params)
+
+    return new Response(JSON.stringify(bundle), {
+      status: 200,
+      headers: { 'Content-Type': 'application/fhir+json' },
+    })
+  }
   private async handlePatientRead(request: Request, path: string): Promise<Response> {
     const match = path.match(/^\/fhir\/r4\/Patient\/([\w-]+)$/)
     if (!match) {

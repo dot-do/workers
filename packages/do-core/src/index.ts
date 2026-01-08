@@ -71,3 +71,9 @@ export * from './two-phase-search.js'
 
 // Re-export ParquetSerializer (Parquet-compatible binary serialization)
 export * from './parquet-serializer.js'
+
+// Re-export SearchRepository (vector embeddings repository)
+export * from './search-repository.js'
+
+// Re-export FullTextSearchRepository (FTS5-based text search)
+export * from './full-text-search.js'

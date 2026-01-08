@@ -623,8 +623,12 @@ export class OAuthDO {
     const newAccessToken = this.generateToken()
     const expiresIn = 3600 // 1 hour
 
-    // Optionally rotate refresh token
+    // Rotate refresh token (always rotate for security)
     const newRefreshToken = this.generateToken()
+
+    // Invalidate old refresh token to prevent reuse (token rotation security)
+    tokenData.revoked = true
+    await this.ctx.storage.put(`token:${refreshToken}`, tokenData)
 
     // Store new tokens
     await this.storeToken(newAccessToken, {

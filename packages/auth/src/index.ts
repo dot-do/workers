@@ -4,6 +4,9 @@
 // Export JWKS cache functionality
 export * from './jwks-cache'
 
+// Export RLS (Row Level Security) functionality
+export * from './rls'
+
 /**
  * Permission string type - can be simple ('read') or namespaced ('documents:read')
  * Supports wildcards: '*' for all permissions, 'namespace:*' for all in namespace

@@ -149,6 +149,38 @@ const disputes = await marketplace.openDispute('design-talent', orderId,
 const payouts = await marketplace.payoutReport('design-talent', '2024-01')
 ```
 
+## Configuration
+
+### Environment Variables
+
+```bash
+# Primary API key (used by default)
+export DO_API_KEY="your-api-key"
+
+# Alternative: Organization API key
+export ORG_AI_API_KEY="your-org-key"
+```
+
+### Cloudflare Workers
+
+```typescript
+import 'rpc.do/env'
+import { marketplace } from 'marketplace.as'
+
+// Environment is automatically configured
+await marketplace.create({ name, title, type })
+```
+
+### Custom Configuration
+
+```typescript
+import { Marketplace } from 'marketplace.as'
+
+const client = Marketplace({
+  baseURL: 'https://custom.example.com'
+})
+```
+
 ## Your Platform. Your Network Effect.
 
 The best businesses are platforms. Platforms are winner-take-all. The earlier you start, the stronger your moat.

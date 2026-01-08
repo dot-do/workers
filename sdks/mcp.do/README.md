@@ -204,6 +204,38 @@ interface MCPPrompt {
 }
 ```
 
+## Configuration
+
+### Environment Variables
+
+```bash
+# Primary API key (used by default)
+export DO_API_KEY="your-api-key"
+
+# Alternative: Organization API key
+export ORG_AI_API_KEY="your-org-key"
+```
+
+### Cloudflare Workers
+
+```typescript
+import 'rpc.do/env'
+import { mcp } from 'mcp.do'
+
+// Environment is automatically configured
+mcp.stdio(mySDK, 'my-tools')
+```
+
+### Custom Configuration
+
+```typescript
+import { MCP } from 'mcp.do'
+
+const client = MCP({
+  baseURL: 'https://custom.example.com'
+})
+```
+
 ## Make AI Work With Your Code
 
 Every SDK should be AI-accessible. Now it can be.

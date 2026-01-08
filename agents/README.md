@@ -7,7 +7,7 @@ You're a founder. You have the vision. But right now it's just you, or maybe a t
 Meet your team:
 
 ```typescript
-import { priya, ralph, tom } from 'agents.do'
+import { priya, ralph, tom, rae, mark, sally, quinn } from 'agents.do'
 
 priya`what should we build first?`
 ralph`build that for me`
@@ -40,6 +40,38 @@ ralph`fix that bug where users can't upload images`
 tom`review what Ralph just built`
 tom`is this architecture going to scale?`
 tom`check for security issues`
+```
+
+**Rae** is your frontend specialist. She makes it beautiful and accessible.
+
+```typescript
+rae`design the user dashboard`
+rae`make this form more intuitive`
+rae`ensure our app is accessible`
+```
+
+**Mark** is your marketing voice. He writes copy that converts.
+
+```typescript
+mark`write the landing page copy`
+mark`create documentation for this API`
+mark`draft the launch announcement`
+```
+
+**Sally** is your sales closer. She helps you land customers.
+
+```typescript
+sally`reach out to these leads: ${prospects}`
+sally`prepare a demo for this customer`
+sally`help me close this deal`
+```
+
+**Quinn** is your QA engineer. She finds the bugs before your users do.
+
+```typescript
+quinn`test the checkout flow`
+quinn`what edge cases are we missing?`
+quinn`verify this works on mobile`
 ```
 
 ## Talk Like They're Real
@@ -82,9 +114,13 @@ const feedback = await Promise.all([
 When Tom reviews your PR, you'll see `@tom-do` commenting. When Ralph pushes code, it's from his account. They're real team members with real identities.
 
 ```typescript
-tom.github   // 'tom-do'
-ralph.github // 'ralph-do'
 priya.github // 'priya-do'
+ralph.github // 'ralph-do'
+tom.github   // 'tom-do'
+rae.github   // 'rae-do'
+mark.github  // 'mark-do'
+sally.github // 'sally-do'
+quinn.github // 'quinn-do'
 ```
 
 ## Your Journey
@@ -115,4 +151,4 @@ They're not replacing the humans you'll eventually hire. They're giving you leve
 
 Welcome to your team.
 
-[agents.do](https://agents.do) | [priya.do](https://priya.do) | [ralph.do](https://ralph.do) | [tom.do](https://tom.do)
+[agents.do](https://agents.do) | [priya.do](https://priya.do) | [ralph.do](https://ralph.do) | [tom.do](https://tom.do) | [rae.do](https://rae.do) | [mark.do](https://mark.do) | [sally.do](https://sally.do) | [quinn.do](https://quinn.do)

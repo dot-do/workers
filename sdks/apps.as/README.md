@@ -48,12 +48,13 @@ npm install apps.as
 ### 2. Deploy
 
 ```typescript
+import 'rpc.do/env'
 import { apps } from 'apps.as'
 
 const deployment = await apps.deploy({
   name: 'my-startup',
   source: './dist',
-  env: { DATABASE_URL: process.env.DATABASE_URL }
+  env: { DATABASE_URL: 'your-database-url' }
 })
 
 console.log(`Live at: ${deployment.url}`)

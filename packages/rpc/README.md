@@ -19,6 +19,33 @@ npm install @dotdo/rpc
 pnpm add @dotdo/rpc
 ```
 
+## Tree-Shakable Imports
+
+Every package should have multiple entry points for different use cases:
+
+| Entry Point | Description | Size |
+|-------------|-------------|------|
+| `@dotdo/rpc` | Full featured | ~12kB |
+| `@dotdo/rpc/tiny` | Minimal, no dependencies | ~4kB |
+| `@dotdo/rpc/worker` | Worker-specific usage | ~8kB |
+| `@dotdo/rpc/client` | Client-side usage | ~6kB |
+
+### Individual Imports
+
+```typescript
+// Full package
+import { RPC } from '@dotdo/rpc'
+
+// Minimal version
+import { RPC } from '@dotdo/rpc/tiny'
+
+// Worker-specific (uses service bindings)
+import { RPC } from '@dotdo/rpc/worker'
+
+// Client-side
+import { RPC } from '@dotdo/rpc/client'
+```
+
 ## Quick Start
 
 Three lines to expose any package:

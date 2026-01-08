@@ -132,6 +132,38 @@ console.log(`Top page: ${metrics.topPages[0].slug}`)
 const pdf = await wiki.export('acme-docs', 'pdf')
 ```
 
+## Configuration
+
+### Environment Variables
+
+```bash
+# Primary API key (used by default)
+export DO_API_KEY="your-api-key"
+
+# Alternative: Organization API key
+export ORG_AI_API_KEY="your-org-key"
+```
+
+### Cloudflare Workers
+
+```typescript
+import 'rpc.do/env'
+import { wiki } from 'wiki.as'
+
+// Environment is automatically configured
+await wiki.create({ name, title })
+```
+
+### Custom Configuration
+
+```typescript
+import { Wiki } from 'wiki.as'
+
+const client = Wiki({
+  baseURL: 'https://custom.example.com'
+})
+```
+
 ## Stop Repeating Yourself
 
 Every hour your team spends answering questions is an hour they're not building.

@@ -66,10 +66,9 @@ interface PaymentAPI {
 ### 2. Create Your Client
 
 ```typescript
-// Create a typed client
-const payments = createClient<PaymentAPI>('https://payments.do', {
-  apiKey: process.env.DO_API_KEY
-})
+// Create a typed client - auth handled automatically
+import 'rpc.do/env'
+const payments = createClient<PaymentAPI>('https://payments.do')
 ```
 
 ### 3. Call Methods Like Functions
@@ -114,16 +113,12 @@ const charge = await payments.charge(2999, 'usd')
 ### Automatic Authentication
 
 ```typescript
-// Reads from environment automatically
+// Import env adapter - reads from environment automatically
 // Checks: DO_API_KEY, DO_TOKEN, ORG_AI_API_KEY, ORG_AI_TOKEN
+import 'rpc.do/env'
 
 const client = createClient<API>('https://api.do')
-// Auth headers added automatically
-
-// Or pass explicitly
-const client = createClient<API>('https://api.do', {
-  apiKey: 'your-api-key'
-})
+// Auth headers added automatically from environment
 ```
 
 ### Built-in Retry Logic

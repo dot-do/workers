@@ -16,6 +16,33 @@ with a fraction of the bundle size.
 pnpm add @dotdo/react-compat hono
 ```
 
+## Tree-Shakable Imports
+
+Every package should have multiple entry points for different use cases:
+
+| Entry Point | Description | Size |
+|-------------|-------------|------|
+| `@dotdo/react-compat` | Full featured (hooks + context) | ~2.8kB |
+| `@dotdo/react-compat/dom` | DOM rendering | ~1.2kB |
+| `@dotdo/react-compat/jsx-runtime` | JSX runtime | ~0.8kB |
+| `@dotdo/react-compat/tiny` | Minimal hooks only | ~1.5kB |
+
+### Individual Imports
+
+```typescript
+// Full package
+import { useState, useEffect, createContext } from '@dotdo/react-compat'
+
+// DOM rendering
+import { render, createRoot } from '@dotdo/react-compat/dom'
+
+// JSX runtime (configured in bundler)
+import { jsx, jsxs } from '@dotdo/react-compat/jsx-runtime'
+
+// Minimal hooks only
+import { useState, useEffect } from '@dotdo/react-compat/tiny'
+```
+
 ## Usage
 
 ### As React Alias

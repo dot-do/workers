@@ -135,6 +135,38 @@ const csv = await waitlist.export('beta', 'csv')
 await waitlist.close('beta')
 ```
 
+## Configuration
+
+### Environment Variables
+
+```bash
+# Primary API key (used by default)
+export DO_API_KEY="your-api-key"
+
+# Alternative: Organization API key
+export ORG_AI_API_KEY="your-org-key"
+```
+
+### Cloudflare Workers
+
+```typescript
+import 'rpc.do/env'
+import { waitlist } from 'waitlist.as'
+
+// Environment is automatically configured
+await waitlist.create({ name, title })
+```
+
+### Custom Configuration
+
+```typescript
+import { Waitlist } from 'waitlist.as'
+
+const client = Waitlist({
+  baseURL: 'https://custom.example.com'
+})
+```
+
 ## Your Launch Starts Before Your Product
 
 The best launches aren't luck. They're engineered.

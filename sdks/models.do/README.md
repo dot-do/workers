@@ -197,9 +197,9 @@ import { models } from 'models.do'
 // Or use factory with custom config
 import { Models } from 'models.do'
 const customModels = Models({
-  baseURL: 'https://custom.example.com',
-  apiKey: 'your-api-key'
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from MODELS_API_KEY or DO_API_KEY
 ```
 
 Set `MODELS_API_KEY` or `DO_API_KEY` in your environment.

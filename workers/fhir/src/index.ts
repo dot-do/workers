@@ -5,5 +5,5 @@
  */
 
 export { FHIRDO } from './fhir.js'
-export type { Patient, OperationOutcome } from './types.js'
+export type { Patient, Encounter, Bundle, OperationOutcome } from './types.js'
 export { createNotFoundOutcome, createErrorOutcome } from './types.js'

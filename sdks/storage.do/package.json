@@ -1,0 +1,46 @@
+{
+  "name": "storage.do",
+  "version": "0.0.1",
+  "description": "Storage SDK - Data migration system for Durable Object storage",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://storage.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "dotdo": "workspace:*",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0",
+    "@cloudflare/vitest-pool-workers": "^0.5.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "storage",
+    "migrations",
+    "durable-objects",
+    "sdk",
+    "workers.do",
+    "cloudflare",
+    "workers",
+    "data-migration",
+    "versioning",
+    "schema"
+  ]
+}

@@ -436,17 +436,38 @@ export class BoundedSet<T> implements Iterable<T> {
 }
 
 /**
- * Internal map entry with timestamp for TTL and ordering
+ * Doubly-linked list node for BoundedMap with O(1) LRU operations
  */
-interface TimestampedMapEntry<K, V> {
+interface LinkedMapNode<K, V> {
   key: K
   value: V
   addedAt: number
-  accessedAt: number
+  prev: LinkedMapNode<K, V> | null
+  next: LinkedMapNode<K, V> | null
+}
+
+/**
+ * Extended statistics for BoundedMap including memory metrics
+ */
+export interface BoundedMapExtendedStats extends BoundedSetStats {
+  /** Current number of entries */
+  size: number
+  /** Maximum allowed entries */
+  maxSize: number
+  /** Estimated memory usage in bytes (approximate) */
+  estimatedMemoryBytes: number
+  /** Fill ratio (size / maxSize) */
+  fillRatio: number
 }
 
 /**
  * A Map implementation with bounded size to prevent memory leaks.
+ *
+ * Memory Optimization (workers-igay):
+ * - Uses doubly-linked list for O(1) LRU operations (vs O(n) with array)
+ * - Single Map lookup for all operations
+ * - No array resizing/copying overhead during eviction
+ * - Provides memory estimation for monitoring
  *
  * Similar to BoundedSet but for key-value pairs.
  *
@@ -458,6 +479,10 @@ interface TimestampedMapEntry<K, V> {
  *   maxSize: 10000,
  *   ttlMs: 3600000, // 1 hour TTL
  * })
+ *
+ * // Monitor memory usage
+ * const stats = sessions.extendedStats
+ * console.log(`Memory: ${stats.estimatedMemoryBytes} bytes`)
  * ```
  */
 export class BoundedMap<K, V> implements Iterable<[K, V]> {
@@ -466,8 +491,15 @@ export class BoundedMap<K, V> implements Iterable<[K, V]> {
   private readonly _ttlMs?: number
   private readonly _refreshTtlOnAccess: boolean
   private readonly _onEvict?: (key: K, value: V) => void
-  private readonly _entries: Map<K, TimestampedMapEntry<K, V>>
-  private readonly _insertionOrder: K[] // For FIFO eviction
+
+  // O(1) lookup: key -> linked list node
+  private readonly _nodeMap: Map<K, LinkedMapNode<K, V>>
+
+  // Doubly-linked list head/tail for O(1) eviction and reordering
+  private _head: LinkedMapNode<K, V> | null = null
+  private _tail: LinkedMapNode<K, V> | null = null
+
+  // Statistics
   private _evictionCount = 0
   private _hitCount = 0
   private _missCount = 0
@@ -486,8 +518,7 @@ export class BoundedMap<K, V> implements Iterable<[K, V]> {
     this._ttlMs = options?.ttlMs
     this._refreshTtlOnAccess = options?.refreshTtlOnAccess ?? false
     this._onEvict = options?.onEvict
-    this._entries = new Map()
-    this._insertionOrder = []
+    this._nodeMap = new Map()
 
     // Setup automatic cleanup if configured
     if (options?.cleanupIntervalMs && options.cleanupIntervalMs > 0) {
@@ -502,7 +533,7 @@ export class BoundedMap<K, V> implements Iterable<[K, V]> {
   }
 
   get size(): number {
-    return this._entries.size
+    return this._nodeMap.size
   }
 
   get stats(): BoundedSetStats {
@@ -515,105 +546,120 @@ export class BoundedMap<K, V> implements Iterable<[K, V]> {
     }
   }
 
+  /**
+   * Extended statistics including memory metrics for monitoring
+   */
+  get extendedStats(): BoundedMapExtendedStats {
+    const baseStats = this.stats
+    const size = this._nodeMap.size
+
+    // Estimate memory: Map overhead + node overhead per entry + key/value size
+    // LinkedMapNode overhead: ~64 bytes (key ref, value ref, addedAt, prev, next)
+    // Map entry overhead: ~48 bytes per entry
+    let estimatedMemoryBytes = 64 // Base object overhead
+
+    for (const [key, node] of this._nodeMap) {
+      estimatedMemoryBytes += 48 + 64 + estimateValueMemory(key) + estimateValueMemory(node.value)
+    }
+
+    return {
+      ...baseStats,
+      size,
+      maxSize: this._maxSize,
+      estimatedMemoryBytes,
+      fillRatio: this._maxSize > 0 ? size / this._maxSize : 0,
+    }
+  }
+
   set(key: K, value: V): this {
     const now = Date.now()
 
-    // Check if already exists
-    const existing = this._entries.get(key)
-    if (existing) {
-      // Update value and access time
-      existing.value = value
-      existing.accessedAt = now
+    // Check if already exists - O(1) lookup
+    const existingNode = this._nodeMap.get(key)
+    if (existingNode) {
+      // Update value
+      existingNode.value = value
       if (this._refreshTtlOnAccess) {
-        existing.addedAt = now
+        existingNode.addedAt = now
       }
-      // For LRU: move to end of insertion order
+      // For LRU: move to tail (most recently used) - O(1)
       if (this._evictionPolicy === 'lru') {
-        const idx = this._insertionOrder.indexOf(key)
-        if (idx !== -1) {
-          this._insertionOrder.splice(idx, 1)
-          this._insertionOrder.push(key)
-        }
+        this._moveToTail(existingNode)
       }
       return this
     }
 
-    // Evict if at capacity
-    while (this._entries.size >= this._maxSize) {
+    // Evict if at capacity - O(1) per eviction
+    while (this._nodeMap.size >= this._maxSize) {
       this._evictOne()
     }
 
-    // Add new entry
-    this._entries.set(key, {
+    // Create and add new node - O(1)
+    const node: LinkedMapNode<K, V> = {
       key,
       value,
       addedAt: now,
-      accessedAt: now,
-    })
-    this._insertionOrder.push(key)
+      prev: null,
+      next: null,
+    }
+    this._nodeMap.set(key, node)
+    this._appendToTail(node)
 
     return this
   }
 
   get(key: K): V | undefined {
-    const entry = this._entries.get(key)
-    if (!entry) {
+    // O(1) lookup
+    const node = this._nodeMap.get(key)
+    if (!node) {
       this._missCount++
       return undefined
     }
 
     // Check TTL if configured
     if (this._ttlMs !== undefined) {
-      const age = Date.now() - entry.addedAt
+      const age = Date.now() - node.addedAt
       if (age > this._ttlMs) {
-        // Entry expired - remove it
-        this._removeEntry(key)
+        // Entry expired - remove it - O(1)
+        this._removeNode(node)
+        this._nodeMap.delete(key)
         this._missCount++
         return undefined
       }
     }
 
-    // Update access time for LRU
-    entry.accessedAt = Date.now()
+    // For LRU: move to tail (most recently used) - O(1)
     if (this._evictionPolicy === 'lru') {
-      // Move to end for LRU tracking
-      const idx = this._insertionOrder.indexOf(key)
-      if (idx !== -1) {
-        this._insertionOrder.splice(idx, 1)
-        this._insertionOrder.push(key)
-      }
+      this._moveToTail(node)
     }
 
     this._hitCount++
-    return entry.value
+    return node.value
   }
 
   has(key: K): boolean {
-    const entry = this._entries.get(key)
-    if (!entry) {
+    // O(1) lookup
+    const node = this._nodeMap.get(key)
+    if (!node) {
       this._missCount++
       return false
     }
 
     // Check TTL if configured
     if (this._ttlMs !== undefined) {
-      const age = Date.now() - entry.addedAt
+      const age = Date.now() - node.addedAt
       if (age > this._ttlMs) {
-        // Entry expired - remove it
-        this._removeEntry(key)
+        // Entry expired - remove it - O(1)
+        this._removeNode(node)
+        this._nodeMap.delete(key)
         this._missCount++
         return false
       }
     }
 
-    // Update access time for LRU
-    entry.accessedAt = Date.now()
+    // For LRU: move to tail (most recently used) - O(1)
     if (this._evictionPolicy === 'lru') {
-      const idx = this._insertionOrder.indexOf(key)
-      if (idx !== -1) {
-        this._insertionOrder.splice(idx, 1)
-        this._insertionOrder.push(key)
-      }
+      this._moveToTail(node)
     }
 
     this._hitCount++
@@ -621,35 +667,42 @@ export class BoundedMap<K, V> implements Iterable<[K, V]> {
   }
 
   delete(key: K): boolean {
-    return this._removeEntry(key)
+    const node = this._nodeMap.get(key)
+    if (!node) {
+      return false
+    }
+    this._removeNode(node)
+    this._nodeMap.delete(key)
+    return true
   }
 
   clear(): void {
-    this._entries.clear()
-    this._insertionOrder.length = 0
+    this._nodeMap.clear()
+    this._head = null
+    this._tail = null
   }
 
   forEach(callback: (value: V, key: K, map: BoundedMap<K, V>) => void): void {
-    for (const [key, entry] of this._entries) {
-      callback(entry.value, key, this)
+    for (const [key, node] of this._nodeMap) {
+      callback(node.value, key, this)
     }
   }
 
   *keys(): IterableIterator<K> {
-    for (const [key] of this._entries) {
+    for (const [key] of this._nodeMap) {
       yield key
     }
   }
 
   *values(): IterableIterator<V> {
-    for (const [, entry] of this._entries) {
-      yield entry.value
+    for (const [, node] of this._nodeMap) {
+      yield node.value
     }
   }
 
   *entries(): IterableIterator<[K, V]> {
-    for (const [key, entry] of this._entries) {
-      yield [key, entry.value]
+    for (const [key, node] of this._nodeMap) {
+      yield [key, node.value]
     }
   }
 
@@ -669,12 +722,17 @@ export class BoundedMap<K, V> implements Iterable<[K, V]> {
     const now = Date.now()
     let removed = 0
 
-    for (const [key, entry] of this._entries) {
-      const age = now - entry.addedAt
+    // Iterate from head (oldest) for efficient TTL cleanup
+    let current = this._head
+    while (current) {
+      const next = current.next
+      const age = now - current.addedAt
       if (age > this._ttlMs) {
-        this._removeEntry(key)
+        this._removeNode(current)
+        this._nodeMap.delete(current.key)
         removed++
       }
+      current = next
     }
 
     return removed
@@ -700,30 +758,59 @@ export class BoundedMap<K, V> implements Iterable<[K, V]> {
     this.clear()
   }
 
-  private _evictOne(): void {
-    if (this._insertionOrder.length === 0) return
+  // === Linked List Operations (all O(1)) ===
 
-    // Both FIFO and LRU evict from the front (oldest/least-recently-accessed)
-    const keyToEvict = this._insertionOrder[0]
-
-    const entry = this._entries.get(keyToEvict)
-    if (entry) {
-      this._onEvict?.(entry.key, entry.value)
+  private _appendToTail(node: LinkedMapNode<K, V>): void {
+    if (!this._tail) {
+      // Empty list
+      this._head = node
+      this._tail = node
+    } else {
+      // Append to end
+      node.prev = this._tail
+      this._tail.next = node
+      this._tail = node
     }
-
-    this._removeEntry(keyToEvict)
-    this._evictionCount++
   }
 
-  private _removeEntry(key: K): boolean {
-    const existed = this._entries.delete(key)
-    if (existed) {
-      const idx = this._insertionOrder.indexOf(key)
-      if (idx !== -1) {
-        this._insertionOrder.splice(idx, 1)
-      }
+  private _removeNode(node: LinkedMapNode<K, V>): void {
+    if (node.prev) {
+      node.prev.next = node.next
+    } else {
+      // Node was head
+      this._head = node.next
     }
-    return existed
+
+    if (node.next) {
+      node.next.prev = node.prev
+    } else {
+      // Node was tail
+      this._tail = node.prev
+    }
+
+    // Clear references for GC
+    node.prev = null
+    node.next = null
+  }
+
+  private _moveToTail(node: LinkedMapNode<K, V>): void {
+    if (node === this._tail) {
+      // Already at tail
+      return
+    }
+    this._removeNode(node)
+    this._appendToTail(node)
+  }
+
+  private _evictOne(): void {
+    if (!this._head) return
+
+    // Always evict from head (oldest for FIFO, least recently used for LRU)
+    const nodeToEvict = this._head
+    this._onEvict?.(nodeToEvict.key, nodeToEvict.value)
+    this._removeNode(nodeToEvict)
+    this._nodeMap.delete(nodeToEvict.key)
+    this._evictionCount++
   }
 }
 

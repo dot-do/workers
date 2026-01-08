@@ -451,7 +451,7 @@ describe('Drizzle Migrations Contract', () => {
 
   describe('Migration Table Management', () => {
     it('should create migrations table if not exists', async () => {
-      const migrations = createMigrations()
+      const migrations = createMigrations({ sql })
 
       await migrations.getStatus()
 
@@ -464,6 +464,7 @@ describe('Drizzle Migrations Contract', () => {
     it('should use custom migrations table name', async () => {
       const migrations = createMigrations({
         migrationsTable: 'custom_migrations',
+        sql,
       })
 
       await migrations.getStatus()
@@ -474,7 +475,7 @@ describe('Drizzle Migrations Contract', () => {
     })
 
     it('should store migration metadata in table', async () => {
-      const migrations = createMigrations()
+      const migrations = createMigrations({ sql })
 
       await migrations.runSingle('20240101000000_initial')
 
@@ -486,7 +487,7 @@ describe('Drizzle Migrations Contract', () => {
     })
 
     it('should remove migration metadata on rollback', async () => {
-      const migrations = createMigrations()
+      const migrations = createMigrations({ sql })
 
       await migrations.run()
       await migrations.rollback()

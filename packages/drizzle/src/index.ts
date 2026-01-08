@@ -168,10 +168,12 @@ function sanitizeName(name: string): string {
 // ============================================
 
 export class DrizzleMigrations {
-  private config: Required<MigrationConfig>
+  private config: Required<Omit<MigrationConfig, 'sql'>> & { sql?: SqlStorage }
   private migrations: Map<string, Migration> = new Map()
   private appliedMigrations: Set<string> = new Set()
   private isRunning: boolean = false
+  private sql?: SqlStorage
+  private tableCreated: boolean = false
 
   constructor(config?: MigrationConfig) {
     this.config = {
@@ -179,9 +181,24 @@ export class DrizzleMigrations {
       migrationsTable: config?.migrationsTable ?? '_drizzle_migrations',
       transactional: config?.transactional ?? true,
     }
+    this.sql = config?.sql
 
     // Initialize with some built-in migrations for testing
     this.initializeBuiltInMigrations()
+  }
+
+  /**
+   * Ensure migrations table exists
+   */
+  private ensureTable(): void {
+    if (this.sql && !this.tableCreated) {
+      this.sql.exec(`CREATE TABLE IF NOT EXISTS ${this.config.migrationsTable} (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        applied_at TEXT NOT NULL
+      )`)
+      this.tableCreated = true
+    }
   }
 
   private initializeBuiltInMigrations(): void {
@@ -350,11 +367,24 @@ export class DrizzleMigrations {
       throw new Error('Migration already applied')
     }
 
+    // Ensure table exists before running migration
+    this.ensureTable()
+
     const start = Date.now()
 
     try {
       await this.executeMigration(migration)
       this.appliedMigrations.add(migrationId)
+
+      // Record migration in SQL storage
+      if (this.sql) {
+        this.sql.exec(
+          `INSERT INTO ${this.config.migrationsTable} (id, name, applied_at) VALUES (?, ?, ?)`,
+          migrationId,
+          migration.name,
+          new Date().toISOString()
+        )
+      }
 
       return {
         success: true,
@@ -416,6 +446,14 @@ export class DrizzleMigrations {
         // Execute rollback (in real implementation, run down SQL)
         this.appliedMigrations.delete(migration.id)
 
+        // Remove from SQL storage
+        if (this.sql) {
+          this.sql.exec(
+            `DELETE FROM ${this.config.migrationsTable} WHERE id = ?`,
+            migration.id
+          )
+        }
+
         results.push({
           success: true,
           migration,
@@ -476,6 +514,9 @@ export class DrizzleMigrations {
    * Get status of all migrations
    */
   async getStatus(): Promise<MigrationStatus[]> {
+    // Ensure migrations table exists when using SQL storage
+    this.ensureTable()
+
     const status: MigrationStatus[] = []
 
     for (const [id, migration] of this.migrations) {

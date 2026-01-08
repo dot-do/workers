@@ -1,5 +1,21 @@
-// RBAC Permission Checking - Types and Implementations
 // @dotdo/auth - Role-Based Access Control for Cloudflare Workers
+//
+// This package provides:
+// - RBAC Permission Checking - Types and Implementations
+// - JWKS Cache - Instance-isolated JWT Key Set caching with metrics
+
+// Re-export JWKS cache types and functions
+export {
+  type JWKSCacheEntry,
+  type JWKSCacheMetrics,
+  type JWKSCacheAggregateMetrics,
+  type JWKSCache,
+  type JWKSCacheFactory,
+  type JWKSCacheFactoryOptions,
+  createJWKSCacheFactory,
+  getDefaultFactory,
+  resetDefaultFactory,
+} from './jwks-cache'
 
 /**
  * Permission string type - can be simple ('read') or namespaced ('documents:read')

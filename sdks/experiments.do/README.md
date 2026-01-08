@@ -221,9 +221,9 @@ import { experiments } from 'experiments.do'
 // Or use factory with custom config
 import { Experiments } from 'experiments.do'
 const customExperiments = Experiments({
-  baseURL: 'https://custom.example.com',
-  apiKey: 'your-api-key'
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from EXPERIMENTS_API_KEY or DO_API_KEY
 ```
 
 Set `EXPERIMENTS_API_KEY` or `DO_API_KEY` in your environment.

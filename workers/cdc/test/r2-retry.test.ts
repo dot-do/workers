@@ -74,12 +74,15 @@ function createFailingR2Bucket(failCount: number): {
   const putCalls: Array<{ key: string; timestamp: number }> = []
   let attemptCount = 0
 
+  // Internal store for data persistence across put/get calls
+  const store = new Map<string, { data: ArrayBuffer; metadata?: { httpMetadata?: { contentType?: string }; customMetadata?: Record<string, string> } }>()
+
   const bucket = createMockR2Bucket()
 
   // Override the put mock to fail N times
   const originalPut = bucket.put as Mock
   originalPut.mockImplementation(
-    async (key: string, value: ArrayBuffer | ReadableStream | string): Promise<MockR2Object> => {
+    async (key: string, value: ArrayBuffer | ReadableStream | string, options?: { httpMetadata?: { contentType?: string }; customMetadata?: Record<string, string> }): Promise<MockR2Object> => {
       putCalls.push({ key, timestamp: Date.now() })
       attemptCount++
 
@@ -87,9 +90,12 @@ function createFailingR2Bucket(failCount: number): {
         throw new Error(`R2 upload failed (attempt ${attemptCount}): Internal Server Error`)
       }
 
-      // Success case - return mock R2Object
+      // Success case - store the data and return mock R2Object
       const data =
         typeof value === 'string' ? new TextEncoder().encode(value).buffer : value instanceof ArrayBuffer ? value : new ArrayBuffer(0)
+
+      // Store the data so get() can retrieve it
+      store.set(key, { data: data as ArrayBuffer, metadata: options })
 
       return {
         key,
@@ -102,6 +108,25 @@ function createFailingR2Bucket(failCount: number): {
       }
     }
   )
+
+  // Override the get mock to return data from our store
+  const originalGet = bucket.get as Mock
+  originalGet.mockImplementation(async (key: string): Promise<MockR2Object | null> => {
+    const entry = store.get(key)
+    if (!entry) return null
+
+    return {
+      key,
+      size: entry.data.byteLength,
+      etag: `etag-${Date.now()}`,
+      uploaded: new Date(),
+      httpMetadata: entry.metadata?.httpMetadata,
+      customMetadata: entry.metadata?.customMetadata,
+      arrayBuffer: async () => entry.data,
+      text: async () => new TextDecoder().decode(entry.data),
+      json: async <T>() => JSON.parse(new TextDecoder().decode(entry.data)) as T,
+    }
+  })
 
   return { bucket, putCalls }
 }

@@ -133,12 +133,11 @@ console.log(`Event ${event.type} at ${event.timestamp}`)
 ## Built for Real Systems
 
 ```typescript
+import 'rpc.do/env'
 import { Events, type Event, type Subscription } from 'events.do'
 
 // Custom client configuration
-const events = Events({
-  apiKey: 'your_api_key'
-})
+const events = Events()
 
 // Full TypeScript support
 interface OrderEvent {
@@ -163,23 +162,20 @@ console.log(`Subscription active: ${subscription.status}`)
 
 ## Configuration
 
-Set your API key via environment variable:
-
-```bash
-export EVENTS_API_KEY=your_api_key
-```
-
-Or configure the client directly:
-
 ```typescript
-import { Events } from 'events.do'
+// Workers - import env adapter for automatic env resolution
+import 'rpc.do/env'
+import { events } from 'events.do'
 
-const events = Events({
-  apiKey: 'your-api-key'
+// Or use factory with custom config
+import { Events } from 'events.do'
+const customEvents = Events({
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from EVENTS_API_KEY or DO_API_KEY
 ```
 
-For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based configuration.
+Set `EVENTS_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Types
 

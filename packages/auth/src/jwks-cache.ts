@@ -117,37 +117,81 @@ interface InternalCacheEntry extends JWKSCacheEntry {
 }
 
 /**
- * Per-instance cache implementation with TTL and LRU eviction
+ * Internal metrics tracking structure
+ */
+interface MetricsTracker {
+  hits: number
+  misses: number
+  evictions: number
+  expirations: number
+  sets: number
+  deletes: number
+}
+
+/**
+ * Create initial metrics
+ */
+function createInitialMetrics(): MetricsTracker {
+  return {
+    hits: 0,
+    misses: 0,
+    evictions: 0,
+    expirations: 0,
+    sets: 0,
+    deletes: 0,
+  }
+}
+
+/**
+ * Calculate hit rate from metrics
+ */
+function calculateHitRate(metrics: MetricsTracker): number {
+  const total = metrics.hits + metrics.misses
+  return total === 0 ? 0 : metrics.hits / total
+}
+
+/**
+ * Per-instance cache implementation with TTL, LRU eviction, and metrics
  */
 class JWKSCacheImpl implements JWKSCache {
   private readonly entries: Map<string, InternalCacheEntry> = new Map()
   private readonly maxEntries: number
   private readonly onSizeChange: (delta: number) => void
   private readonly evictGlobalLRU: () => boolean
+  private readonly onEviction: () => void
+  private metrics: MetricsTracker = createInitialMetrics()
 
   constructor(
     maxEntries: number,
     onSizeChange: (delta: number) => void,
-    evictGlobalLRU: () => boolean
+    evictGlobalLRU: () => boolean,
+    onEviction: () => void
   ) {
     this.maxEntries = maxEntries
     this.onSizeChange = onSizeChange
     this.evictGlobalLRU = evictGlobalLRU
+    this.onEviction = onEviction
   }
 
   get(uri: string): JWKSCacheEntry | undefined {
     const entry = this.entries.get(uri)
-    if (!entry) return undefined
+    if (!entry) {
+      this.metrics.misses++
+      return undefined
+    }
 
     // Check if expired
     if (Date.now() > entry.expiresAt) {
       this.entries.delete(uri)
       this.onSizeChange(-1)
+      this.metrics.expirations++
+      this.metrics.misses++ // Expired entry counts as a miss
       return undefined
     }
 
     // Update last accessed time for LRU
     entry.lastAccessedAt = Date.now()
+    this.metrics.hits++
 
     // Return without internal tracking field
     return {
@@ -180,6 +224,7 @@ class JWKSCacheImpl implements JWKSCache {
     }
 
     this.entries.set(uri, internalEntry)
+    this.metrics.sets++
 
     if (!existing) {
       this.onSizeChange(1)
@@ -190,6 +235,7 @@ class JWKSCacheImpl implements JWKSCache {
     const existed = this.entries.delete(uri)
     if (existed) {
       this.onSizeChange(-1)
+      this.metrics.deletes++
     }
     return existed
   }
@@ -217,7 +263,19 @@ class JWKSCacheImpl implements JWKSCache {
     for (const uri of toDelete) {
       this.entries.delete(uri)
       this.onSizeChange(-1)
+      this.metrics.expirations++
     }
+  }
+
+  getMetrics(): JWKSCacheMetrics {
+    return {
+      ...this.metrics,
+      hitRate: calculateHitRate(this.metrics),
+    }
+  }
+
+  resetMetrics(): void {
+    this.metrics = createInitialMetrics()
   }
 
   /**
@@ -239,6 +297,8 @@ class JWKSCacheImpl implements JWKSCache {
     if (oldestUri) {
       this.entries.delete(oldestUri)
       this.onSizeChange(-1)
+      this.metrics.evictions++
+      this.onEviction()
       return true
     }
     return false
@@ -268,6 +328,7 @@ class JWKSCacheFactoryImpl implements JWKSCacheFactory {
   private readonly maxEntriesPerInstance: number
   private readonly maxTotalEntries: number
   private totalEntries = 0
+  private globalEvictions = 0 // Track evictions triggered at the factory level
 
   constructor(options: JWKSCacheFactoryOptions = {}) {
     this.maxEntriesPerInstance = options.maxEntriesPerInstance ?? 100
@@ -319,7 +380,11 @@ class JWKSCacheFactoryImpl implements JWKSCacheFactory {
         this.totalEntries += delta
       },
       // Callback to evict globally when limit is exceeded
-      () => this.evictGlobalLRU()
+      () => this.evictGlobalLRU(),
+      // Callback when eviction happens (for global tracking)
+      () => {
+        this.globalEvictions++
+      }
     )
 
     this.caches.set(instanceId, cache)
@@ -345,6 +410,50 @@ class JWKSCacheFactoryImpl implements JWKSCacheFactory {
 
   getTotalCacheSize(): number {
     return this.totalEntries
+  }
+
+  getAggregateMetrics(): JWKSCacheAggregateMetrics {
+    const byInstance = new Map<string, JWKSCacheMetrics>()
+    let totalHits = 0
+    let totalMisses = 0
+    let totalEvictions = 0
+    let totalExpirations = 0
+    let totalSets = 0
+    let totalDeletes = 0
+
+    for (const [instanceId, cache] of this.caches) {
+      const metrics = cache.getMetrics()
+      byInstance.set(instanceId, metrics)
+      totalHits += metrics.hits
+      totalMisses += metrics.misses
+      totalEvictions += metrics.evictions
+      totalExpirations += metrics.expirations
+      totalSets += metrics.sets
+      totalDeletes += metrics.deletes
+    }
+
+    const totalLookups = totalHits + totalMisses
+    const hitRate = totalLookups === 0 ? 0 : totalHits / totalLookups
+
+    return {
+      hits: totalHits,
+      misses: totalMisses,
+      evictions: totalEvictions,
+      expirations: totalExpirations,
+      sets: totalSets,
+      deletes: totalDeletes,
+      hitRate,
+      instanceCount: this.caches.size,
+      totalEntries: this.totalEntries,
+      byInstance,
+    }
+  }
+
+  resetAllMetrics(): void {
+    for (const cache of this.caches.values()) {
+      cache.resetMetrics()
+    }
+    this.globalEvictions = 0
   }
 }
 

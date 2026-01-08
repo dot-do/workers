@@ -24,11 +24,8 @@ import {
   Suspense,
   createElement,
   Fragment,
+  lazy,
 } from '../src/index'
-
-// Import lazy - THIS WILL FAIL until implemented
-// @ts-expect-error - lazy not yet exported
-import { lazy } from '../src/index'
 
 describe('lazy() function', () => {
   it('should be exported as a function', () => {

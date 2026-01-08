@@ -224,9 +224,9 @@ import { benchmarks } from 'benchmarks.do'
 // Or use factory with custom config
 import { Benchmarks } from 'benchmarks.do'
 const customBenchmarks = Benchmarks({
-  baseURL: 'https://custom.example.com',
-  apiKey: 'your-api-key'
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from BENCHMARKS_API_KEY or DO_API_KEY
 ```
 
 Set `BENCHMARKS_API_KEY` or `DO_API_KEY` in your environment.

@@ -311,6 +311,28 @@ export const RateLimiter = {
 export interface InMemoryRateLimitStorageConfig {
   /** Interval in milliseconds for running cleanup of expired entries (default: 60000 - 1 minute) */
   cleanupIntervalMs?: number
+  /** Maximum number of entries to clean up per cycle (default: 1000) - prevents blocking */
+  maxCleanupBatchSize?: number
+}
+
+/**
+ * Memory usage metrics for monitoring
+ */
+export interface MemoryMetrics {
+  /** Total number of entries in storage */
+  totalEntries: number
+  /** Number of entries with TTL set */
+  entriesWithTTL: number
+  /** Number of entries without TTL (permanent) */
+  permanentEntries: number
+  /** Estimated memory usage in bytes (approximate) */
+  estimatedBytes: number
+  /** Number of entries in the expiry index */
+  expiryIndexSize: number
+  /** Total entries cleaned up since creation */
+  totalCleaned: number
+  /** Entries cleaned in last cleanup cycle */
+  lastCleanupCount: number
 }
 
 /**
@@ -322,22 +344,47 @@ interface StorageEntry<T> {
 }
 
 /**
+ * Expiry index entry for efficient cleanup
+ */
+interface ExpiryEntry {
+  key: string
+  expiresAt: number
+}
+
+/**
  * In-memory implementation of RateLimitStorage with automatic cleanup of expired entries.
  *
  * This implementation addresses the memory leak issue where entries accumulate
  * indefinitely. It provides:
  * - Lazy cleanup on get() - expired entries are removed when accessed
- * - Periodic cleanup - a background interval removes expired entries
+ * - Periodic cleanup with expiry heap - O(1) to find expired entries
+ * - Batch-limited cleanup - prevents blocking the event loop
  * - dispose() method - stops the cleanup interval when no longer needed
+ * - Memory metrics for monitoring
+ *
+ * Memory Optimization Features:
+ * - Expiry heap for O(1) expired entry detection (vs O(n) full scan)
+ * - Batch-limited cleanup to prevent event loop blocking
+ * - Accurate memory metrics for capacity planning
  */
 export class InMemoryRateLimitStorage implements RateLimitStorage {
   private entries: Map<string, StorageEntry<unknown>> = new Map()
   private cleanupTimeoutId: ReturnType<typeof setTimeout> | null = null
   private cleanupIntervalMs: number
+  private maxCleanupBatchSize: number
   private disposed = false
+
+  // Expiry index: sorted array for efficient expired entry lookup
+  // Entries are sorted by expiresAt ascending, allowing O(1) check for expired entries
+  private expiryIndex: ExpiryEntry[] = []
+
+  // Metrics tracking
+  private totalCleaned = 0
+  private lastCleanupCount = 0
 
   constructor(config: InMemoryRateLimitStorageConfig = {}) {
     this.cleanupIntervalMs = config.cleanupIntervalMs ?? 60000 // Default: 1 minute
+    this.maxCleanupBatchSize = config.maxCleanupBatchSize ?? 1000 // Default: 1000 entries per cycle
 
     // Start periodic cleanup using setTimeout (more testable than setInterval)
     this.scheduleCleanup()
@@ -350,6 +397,64 @@ export class InMemoryRateLimitStorage implements RateLimitStorage {
     return this.entries.size
   }
 
+  /**
+   * Get detailed memory usage metrics
+   */
+  getMetrics(): MemoryMetrics {
+    let entriesWithTTL = 0
+    let estimatedBytes = 0
+
+    // Calculate metrics from entries
+    for (const [key, entry] of this.entries) {
+      // Estimate key size (2 bytes per char for UTF-16)
+      estimatedBytes += key.length * 2
+
+      // Estimate value size (rough approximation)
+      estimatedBytes += this.estimateValueSize(entry.value)
+
+      // Overhead per entry (object properties, map entry overhead)
+      estimatedBytes += 64 // Approximate overhead
+
+      if (entry.expiresAt !== null) {
+        entriesWithTTL++
+      }
+    }
+
+    // Add expiry index overhead
+    estimatedBytes += this.expiryIndex.length * 48 // key ref + number + object overhead
+
+    return {
+      totalEntries: this.entries.size,
+      entriesWithTTL,
+      permanentEntries: this.entries.size - entriesWithTTL,
+      estimatedBytes,
+      expiryIndexSize: this.expiryIndex.length,
+      totalCleaned: this.totalCleaned,
+      lastCleanupCount: this.lastCleanupCount,
+    }
+  }
+
+  /**
+   * Estimate the size of a value in bytes
+   */
+  private estimateValueSize(value: unknown): number {
+    if (value === null || value === undefined) return 8
+    if (typeof value === 'boolean') return 4
+    if (typeof value === 'number') return 8
+    if (typeof value === 'string') return value.length * 2
+    if (Array.isArray(value)) {
+      return value.reduce((sum: number, v) => sum + this.estimateValueSize(v), 16)
+    }
+    if (typeof value === 'object') {
+      let size = 16 // Object overhead
+      for (const [k, v] of Object.entries(value)) {
+        size += k.length * 2 + this.estimateValueSize(v)
+      }
+      return size
+    }
+    return 8 // Default for unknown types
+  }
+
   async get<T>(key: string): Promise<T | null> {
     const entry = this.entries.get(key)
 
@@ -357,9 +462,10 @@ export class InMemoryRateLimitStorage implements RateLimitStorage {
       return null
     }
 
-    // Check if entry has expired
+    // Check if entry has expired (lazy cleanup)
     if (entry.expiresAt !== null && Date.now() > entry.expiresAt) {
       this.entries.delete(key)
+      // Note: expiry index will be cleaned up in next scheduled cleanup
       return null
     }
 
@@ -367,16 +473,54 @@ export class InMemoryRateLimitStorage implements RateLimitStorage {
   }
 
   async set<T>(key: string, value: T, ttlMs?: number): Promise<void> {
-    const expiresAt = ttlMs !== undefined ? Date.now() + ttlMs : null
+    const now = Date.now()
+    const expiresAt = ttlMs !== undefined ? now + ttlMs : null
+
+    // Remove old expiry index entry if updating existing key with TTL
+    const existingEntry = this.entries.get(key)
+    if (existingEntry?.expiresAt !== null) {
+      // Mark for lazy removal (actual cleanup happens during cleanupExpiredEntries)
+      // This is more efficient than maintaining perfect index consistency
+    }
 
     this.entries.set(key, {
       value,
       expiresAt,
     })
+
+    // Add to expiry index if TTL is set
+    if (expiresAt !== null) {
+      this.insertIntoExpiryIndex(key, expiresAt)
+    }
+  }
+
+  /**
+   * Insert entry into expiry index maintaining sorted order
+   * Uses binary search for O(log n) insertion
+   */
+  private insertIntoExpiryIndex(key: string, expiresAt: number): void {
+    const entry: ExpiryEntry = { key, expiresAt }
+
+    // Binary search for insertion point
+    let left = 0
+    let right = this.expiryIndex.length
+
+    while (left < right) {
+      const mid = (left + right) >>> 1
+      if (this.expiryIndex[mid].expiresAt < expiresAt) {
+        left = mid + 1
+      } else {
+        right = mid
+      }
+    }
+
+    // Insert at the correct position
+    this.expiryIndex.splice(left, 0, entry)
   }
 
   async delete(key: string): Promise<void> {
     this.entries.delete(key)
+    // Expiry index entry will be cleaned up lazily during cleanup cycle
   }
 
   /**
@@ -397,16 +541,74 @@ export class InMemoryRateLimitStorage implements RateLimitStorage {
   }
 
   /**
-   * Remove all expired entries from storage
+   * Remove expired entries from storage using the expiry index.
+   * Uses batch-limited cleanup to prevent blocking the event loop.
+   *
+   * Optimization: Only checks entries from the expiry index that have
+   * expired, rather than scanning all entries. O(k) where k is number
+   * of expired entries, vs O(n) for full scan.
    */
   private cleanupExpiredEntries(): void {
     const now = Date.now()
+    let cleaned = 0
+    let indexCleaned = 0
 
-    for (const [key, entry] of this.entries) {
-      if (entry.expiresAt !== null && now > entry.expiresAt) {
-        this.entries.delete(key)
+    // Process expired entries from the beginning of the sorted index
+    while (
+      this.expiryIndex.length > 0 &&
+      cleaned < this.maxCleanupBatchSize
+    ) {
+      const entry = this.expiryIndex[0]
+
+      // Stop if we've reached non-expired entries
+      if (entry.expiresAt > now) {
+        break
+      }
+
+      // Remove from expiry index
+      this.expiryIndex.shift()
+      indexCleaned++
+
+      // Check if entry still exists and is actually expired
+      // (it might have been updated with a new TTL)
+      const storageEntry = this.entries.get(entry.key)
+      if (storageEntry && storageEntry.expiresAt !== null && storageEntry.expiresAt <= now) {
+        this.entries.delete(entry.key)
+        cleaned++
       }
     }
+
+    // Update metrics
+    this.lastCleanupCount = cleaned
+    this.totalCleaned += cleaned
+
+    // Compact expiry index if it has too many stale entries
+    // (entries that no longer exist in storage)
+    if (indexCleaned > cleaned * 2 && this.expiryIndex.length > 100) {
+      this.compactExpiryIndex()
+    }
+  }
+
+  /**
+   * Remove stale entries from the expiry index.
+   * Called when the index has accumulated too many orphaned entries.
+   */
+  private compactExpiryIndex(): void {
+    this.expiryIndex = this.expiryIndex.filter(entry => {
+      const storageEntry = this.entries.get(entry.key)
+      // Keep if entry exists and expiry time matches
+      return storageEntry && storageEntry.expiresAt === entry.expiresAt
+    })
+  }
+
+  /**
+   * Force immediate cleanup of all expired entries (for testing)
+   */
+  forceCleanup(): void {
+    const savedBatchSize = this.maxCleanupBatchSize
+    this.maxCleanupBatchSize = Infinity
+    this.cleanupExpiredEntries()
+    this.maxCleanupBatchSize = savedBatchSize
   }
 
   /**

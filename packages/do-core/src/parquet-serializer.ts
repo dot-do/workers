@@ -970,7 +970,12 @@ export class ParquetSerializer implements IParquetSerializer {
     // Read metadata
     const metadataBytes = view.slice(8, 8 + metadataLength)
     const metadataJson = bytesToString(metadataBytes)
-    const metadata: InternalMetadata = JSON.parse(metadataJson)
+    let metadata: InternalMetadata
+    try {
+      metadata = JSON.parse(metadataJson)
+    } catch (error) {
+      throw new Error(`Failed to parse Parquet metadata: ${error instanceof Error ? error.message : String(error)}`)
+    }
 
     return {
       rowCount: metadata.rowCount,

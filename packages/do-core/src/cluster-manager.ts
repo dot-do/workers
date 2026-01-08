@@ -498,7 +498,13 @@ export class ClusterManager {
    * Deserialize centroids from JSON string.
    */
   async deserializeCentroids(json: string): Promise<void> {
-    const centroids: Centroid[] = JSON.parse(json)
+    let centroids: Centroid[]
+    try {
+      centroids = JSON.parse(json)
+    } catch (error) {
+      console.error('Failed to deserialize centroids from JSON:', error)
+      throw new Error(`Failed to deserialize centroids: ${error instanceof Error ? error.message : String(error)}`)
+    }
     await this.setCentroids(centroids)
   }
 

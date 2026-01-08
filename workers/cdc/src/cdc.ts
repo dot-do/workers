@@ -12,8 +12,58 @@
  */
 
 // ============================================================================
+// Errors
+// ============================================================================
+
+/**
+ * ValidationError for input validation failures
+ */
+export class ValidationError extends Error {
+  constructor(
+    message: string,
+    public readonly field?: string,
+    public readonly code?: string
+  ) {
+    super(message)
+    this.name = 'ValidationError'
+  }
+}
+
+// ============================================================================
 // Types and Interfaces
 // ============================================================================
+
+/**
+ * CDC Batch creation options
+ */
+export interface CreateCDCBatchOptions {
+  /** Pipeline to create batch for */
+  pipelineId: string
+  /** Start of time range for events to include */
+  startTime: number
+  /** End of time range for events to include */
+  endTime: number
+  /** Optional batch ID (auto-generated if not provided) */
+  batchId?: string
+  /** Optional filters for event selection */
+  filters?: {
+    sources?: string[]
+    types?: string[]
+  }
+}
+
+/**
+ * CDC Batch result
+ */
+export interface CDCBatchResult {
+  batchId: string
+  pipelineId: string
+  eventCount: number
+  startTime: number
+  endTime: number
+  createdAt: number
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+}
 
 /**
  * CDC Pipeline configuration

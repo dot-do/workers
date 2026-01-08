@@ -122,8 +122,9 @@ describe('ESLint Configuration Validation', () => {
 
     try {
       // Run ESLint on the org.ai auth.ts file which has @ts-ignore
+      // Note: ESLint flat config (v9+) uses --config without --no-eslintrc
       execSync(
-        `npx eslint "${join(ROOT_DIR, 'sdks/org.ai/src/auth.ts')}" --no-eslintrc --config "${join(ROOT_DIR, 'eslint.config.mjs')}" 2>&1`,
+        `npx eslint "${join(ROOT_DIR, 'sdks/org.ai/src/auth.ts')}" 2>&1`,
         { encoding: 'utf-8', cwd: ROOT_DIR }
       )
 
@@ -142,7 +143,7 @@ describe('ESLint Configuration Validation', () => {
         return
       }
 
-      // Some other ESLint error - log it
+      // Some other ESLint error - log it but don't fail on unrelated issues
       console.log('ESLint error (not ban-ts-comment):', output)
     }
 

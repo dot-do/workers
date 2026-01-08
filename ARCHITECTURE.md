@@ -371,20 +371,185 @@ The CLI deploys to Workers for Platforms for multi-tenant hosting:
 
 ## primitives/ Submodule
 
-Git submodule from `github.com/dot-org-ai/primitives.org.ai`:
+Git submodule from `github.com/dot-org-ai/primitives.org.ai`. This is a **separate monorepo** containing AI primitives that are shared across projects.
+
+### Structure
 
 ```
-primitives/packages/
-├── ai-database/          # Database interfaces
-├── ai-functions/         # Function interfaces
-├── ai-workflows/         # Workflow interfaces
-├── ai-providers/         # Provider interfaces
-├── digital-workers/      # Worker interfaces
-├── autonomous-agents/    # Agent interfaces
-└── ...                   # 19 total interface packages
+primitives/
+├── packages/              # 19 npm packages (AI primitives)
+│   ├── ai-functions/      # Core AI function primitives (AI(), ai(), ai.do(), etc.)
+│   ├── ai-database/       # AI-powered database interface (DB(), db.list(), etc.)
+│   ├── ai-workflows/      # Event-driven workflows (Workflow(), on(), every())
+│   ├── ai-providers/      # LLM provider interfaces
+│   ├── ai-experiments/    # A/B testing & experiments
+│   ├── ai-evaluate/       # Eval framework
+│   ├── ai-tests/          # Test utilities
+│   ├── ai-props/          # AI component props
+│   ├── ai4/               # AI SDK v4 compatibility
+│   ├── autonomous-agents/ # Agent(), Role(), Team()
+│   ├── business-as-code/  # Business(), Vision(), Goals()
+│   ├── digital-workers/   # Role(), Team(), Goals()
+│   ├── digital-products/  # Product(), App(), API(), Site()
+│   ├── digital-tools/     # Tool interface & registry
+│   ├── digital-tasks/     # Task = Function + metadata, queues
+│   ├── human-in-the-loop/ # Human(), approve(), ask()
+│   ├── language-models/   # Model selection & routing
+│   ├── services-as-software/ # Service(), deliver(), subscribe()
+│   └── config/            # Shared ESLint/TypeScript config
+│
+├── types/                 # primitives.org.ai - comprehensive type definitions
+│   ├── core/              # Thing, Noun, Verb, Event, Action, Domain
+│   ├── org/               # Database, Function, Goal, Plan, Workflow
+│   ├── app/               # App, API, CLI, Dashboard, SDK
+│   ├── business/          # Business, Agent, Human
+│   ├── product/           # Product, Feature, Epic, Story, Bug
+│   ├── service/           # Service, SaaS
+│   ├── finance/           # Account, Transaction, Invoice
+│   ├── hr/                # Employee, Department, Performance
+│   ├── sales/             # Lead, Opportunity, Pipeline
+│   ├── ops/               # Inventory, Warehouse, Fulfillment
+│   ├── legal/             # Contract, Compliance, Audit
+│   ├── marketing/         # Campaign, Audience, Content
+│   ├── support/           # Ticket, SLA, KnowledgeBase
+│   ├── auth/              # User, Session, Role, Permission
+│   ├── collab/            # Message, Channel, Meeting
+│   ├── analytics/         # Metric, Dashboard, Report
+│   ├── equity/            # Investor, Share, CapTable
+│   ├── engineering/       # Sprint, Release, Deployment
+│   └── governance/        # Board, Advisor, Founder
+│
+├── content/               # MDX documentation content (26 items)
+│   ├── function/          # Function documentation
+│   ├── database/          # Database documentation
+│   ├── workflow/          # Workflow documentation
+│   └── ...                # Domain-specific content
+│
+├── examples/              # Real-world business examples (12 examples)
+│   ├── saas/              # B2B SaaS analytics (CloudMetrics)
+│   ├── api-business/      # Developer API platform (APIHub)
+│   ├── directory/         # Software tools directory (TechDirectory)
+│   ├── marketplace/       # Freelance marketplace (TalentHub)
+│   ├── startup-studio/    # Venture builder (VentureForge)
+│   └── vc-firm/           # Enterprise VC (Catalyst Ventures)
+│
+├── site/                  # Fumadocs documentation site (Next.js)
+│   ├── app/               # Next.js app router
+│   ├── content/           # Site-specific content
+│   └── lib/               # Site utilities
+│
+├── tools/                 # Git submodule (tools.org.ai)
+├── pnpm-workspace.yaml    # Workspace: packages/*, examples, site
+├── turbo.json             # Turborepo build config
+└── package.json           # Root package (private: true)
 ```
 
-These TypeScript interfaces define contracts that `dotdo` and workers implement.
+### Relationship with workers.do
+
+The primitives submodule integrates with workers.do in three ways:
+
+#### 1. Workspace Integration
+
+The root `pnpm-workspace.yaml` includes primitives packages:
+
+```yaml
+packages:
+  - 'primitives/packages/*'  # All 19 primitive packages
+```
+
+This means all primitives packages are part of the workers.do workspace and can be referenced with `workspace:*`:
+
+```json
+// primitives/packages/ai-database/package.json
+{
+  "dependencies": {
+    "ai-functions": "workspace:*",
+    "rpc.do": "workspace:*"
+  }
+}
+```
+
+#### 2. Type Re-exports
+
+The `packages/types/` directory in workers.do re-exports types from primitives:
+
+```typescript
+// packages/types/ai.ts
+export type {
+  AIFunctionDefinition,
+  AIGenerateOptions,
+  AIClient,
+  // ... 30+ types
+} from 'ai-functions'
+
+// packages/types/database.ts
+export type {
+  ThingFlat, ThingExpanded,
+  DBClient, DBClientExtended,
+  // ... 50+ types
+} from 'ai-database'
+```
+
+This provides:
+- Centralized type management in `@dotdo/types`
+- RPC-enhanced versions (e.g., `RpcAIClient` with pipelining)
+- Platform-specific extensions
+
+#### 3. Package Naming
+
+| primitives package | npm name | Purpose |
+|--------------------|----------|---------|
+| `ai-functions` | `ai-functions` | Core AI primitives |
+| `ai-database` | `ai-database` | Database interfaces |
+| `ai-workflows` | `ai-workflows` | Workflow definitions |
+| `types/` | `primitives.org.ai` | Comprehensive business types |
+
+### Using Primitives
+
+**In workers.do packages:**
+```typescript
+// Direct import from primitives package
+import { AI, ai } from 'ai-functions'
+import { DB, db } from 'ai-database'
+import { Workflow, on } from 'ai-workflows'
+
+// Or via @dotdo/types for platform integration
+import type { RpcAIClient, RpcPromise } from '@dotdo/types'
+```
+
+**In external projects (via npm):**
+```typescript
+// Install published packages
+import { AI } from 'ai-functions'
+import { DB } from 'ai-database'
+import type { Thing, Action } from 'primitives.org.ai'
+import type { Employee } from 'primitives.org.ai/hr'
+```
+
+### Why a Submodule?
+
+1. **Shared Core** - Primitives define platform-agnostic AI interfaces usable across projects
+2. **Independent Versioning** - primitives.org.ai has its own release cycle and changelogs
+3. **Documentation Site** - The `site/` folder powers https://primitives.org.ai
+4. **Business-as-Code** - The `types/` package provides comprehensive business domain modeling
+5. **Examples** - Real-world business templates demonstrate patterns
+
+### Key Dependencies
+
+Primitives packages reference workers.do packages via workspace:
+
+```
+ai-functions  ──► rpc.do (workspace:*)
+              ──► language-models (workspace:^)
+              ──► ai-providers (workspace:^)
+
+ai-database   ──► ai-functions (workspace:*)
+              ──► rpc.do (workspace:*)
+```
+
+This creates a bidirectional relationship where:
+- Primitives provide **interfaces and implementations**
+- workers.do provides **RPC transport** (`rpc.do`) and **platform bindings**
 
 ## Build System
 

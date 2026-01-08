@@ -6,9 +6,8 @@ const __dirname = new URL('.', import.meta.url).pathname
 export default defineConfig({
   test: {
     globals: true,
-    // Use node environment - no DOM needed for RED phase tests
-    // The tests verify API contracts, not DOM rendering
-    environment: 'node',
+    // Use happy-dom for class component tests that need DOM access
+    environment: 'happy-dom',
     root: resolve(__dirname),
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     testTimeout: 10000,

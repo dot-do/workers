@@ -18,7 +18,6 @@
     "url": "https://github.com/dot-do/workers/issues"
   },
   "dependencies": {
-    "ai-workflows": "workspace:*",
     "rpc.do": "workspace:*"
   },
   "devDependencies": {

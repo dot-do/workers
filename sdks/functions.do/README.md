@@ -155,23 +155,20 @@ await functions.define('wasm', { code, runtime: 'wasm' })
 
 ## Configuration
 
-Set your API key via environment variable:
-
-```bash
-export FUNCTIONS_API_KEY=your_api_key
-```
-
-Or configure explicitly:
-
 ```typescript
-import { Functions } from 'functions.do'
+// Workers - import env adapter for automatic env resolution
+import 'rpc.do/env'
+import { functions } from 'functions.do'
 
-const functions = Functions({
-  apiKey: 'your-api-key'
+// Or use factory with custom config
+import { Functions } from 'functions.do'
+const customFunctions = Functions({
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from FUNCTIONS_API_KEY or DO_API_KEY
 ```
 
-For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based configuration.
+Set `FUNCTIONS_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Your Functions, Your Focus
 

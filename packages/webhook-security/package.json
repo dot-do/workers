@@ -1,0 +1,19 @@
+{
+  "name": "@dotdo/middleware-webhook-security",
+  "version": "0.0.1",
+  "description": "Webhook signature verification middleware for Hono with HMAC-SHA1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}

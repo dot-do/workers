@@ -872,20 +872,23 @@ describe('Transactional Migration Support', () => {
       transactional: true,
     })
 
-    // First apply some migrations
+    // Run all pending migrations successfully first
     await migrations.run()
 
-    // Now try to run the special failing migration - which should fail
-    // In transactional mode, when runSingle fails it only affects that migration
-    // The run() behavior was already demonstrated - it runs all pending and stops on first failure
-    // For this test, we verify that after run() completes, any failure in transactional mode
-    // should have cleared applied migrations. Since run() succeeded (no failing migrations in pending),
-    // we test the transactional property more directly.
+    // Verify migrations were applied
+    let applied = await migrations.getApplied()
+    expect(applied.length).toBeGreaterThan(0)
 
-    // This test verifies the transactional config is properly set
-    // and that run() can complete without errors in transactional mode
-    const applied = await migrations.getApplied()
-    // In transactional mode, successful run should have applied all pending migrations
+    // Now try to run the special failing migration directly
+    // This tests the behavior of runSingle when in transactional mode
+    const result = await migrations.runSingle('failing_migration')
+
+    // The runSingle should return a failure result (not throw)
+    expect(result.success).toBe(false)
+
+    // The previously applied migrations should still be there
+    // (transactional behavior for run() batches, not individual runSingle calls)
+    applied = await migrations.getApplied()
     expect(applied.length).toBeGreaterThan(0)
   })
 

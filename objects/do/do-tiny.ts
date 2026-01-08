@@ -340,12 +340,70 @@ export class DO<Env extends DOEnv = DOEnv> implements StorageProvider {
   /**
    * Create an error response
    *
-   * @param message - Error message
-   * @param status - HTTP status code
+   * Accepts either a DOError instance, a string message, or any error.
+   * DOError instances are serialized with their full structure including
+   * error codes and details. Other errors are wrapped appropriately.
+   *
+   * @param error - DOError, Error, or error message string
+   * @param status - HTTP status code (only used for string messages)
    * @returns JSON error Response
+   *
+   * @example
+   * ```typescript
+   * // Using DOError (preferred)
+   * return this.errorResponse(new NotFoundError('user', userId))
+   *
+   * // Using string message (legacy)
+   * return this.errorResponse('Something went wrong', 500)
+   *
+   * // From catch block
+   * catch (error) {
+   *   return this.errorResponse(error)
+   * }
+   * ```
    */
-  protected errorResponse(message: string, status = 500): Response {
-    return this.jsonResponse({ error: message }, status)
+  protected errorResponse(error: DOError | Error | string, status = 500): Response {
+    // Handle DOError instances directly
+    if (error instanceof DOError) {
+      return error.toResponse()
+    }
+    // Use the utility for other error types
+    if (error instanceof Error) {
+      return errorToResponse(error)
+    }
+    // Legacy string message support
+    return this.jsonResponse({ error }, status)
+  }
+
+  /**
+   * Create a WebSocket error message
+   *
+   * Converts any error into a standardized WebSocket error message format.
+   *
+   * @param error - DOError, Error, or error message string
+   * @param requestId - Optional request ID for correlation
+   * @returns WebSocket error message object
+   *
+   * @example
+   * ```typescript
+   * ws.send(JSON.stringify(this.wsErrorMessage(new ValidationError('Invalid input'))))
+   * ```
+   */
+  protected wsErrorMessage(
+    error: DOError | Error | string,
+    requestId?: string | number
+  ): WebSocketErrorMessage {
+    if (error instanceof DOError || error instanceof Error) {
+      return errorToWebSocketMessage(error, requestId)
+    }
+    return {
+      type: 'error',
+      id: requestId,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: error,
+      },
+    }
   }
 
   /**

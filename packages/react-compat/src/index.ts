@@ -9,6 +9,7 @@
 
 // Import Fragment separately so we can use it for StrictMode alias
 import { Fragment as HonoFragment } from 'hono/jsx/dom'
+import { createElement } from 'hono/jsx/dom'
 
 // Re-export hooks from hono/jsx/dom
 export {
@@ -47,7 +48,6 @@ export {
   Fragment,
 
   // React 18+ features
-  Suspense,
   use,
 
   // Misc
@@ -55,8 +55,46 @@ export {
   flushSync,
 } from 'hono/jsx/dom'
 
+// Suspense from hono/jsx
+export { Suspense } from 'hono/jsx'
+
+// lazy() implementation for code splitting
+export function lazy<T extends ComponentType<any>>(
+  factory: () => Promise<{ default: T }>
+): React.LazyExoticComponent<T> {
+  let Component: T | null = null
+  let promise: Promise<void> | null = null
+  let error: any = null
+
+  const LazyComponent = (props: any) => {
+    if (error) throw error
+    if (Component) return createElement(Component, props)
+
+    if (!promise) {
+      promise = factory()
+        .then(mod => { Component = mod.default })
+        .catch(e => { error = e })
+    }
+    throw promise
+  }
+
+  LazyComponent.preload = () => {
+    if (!promise) {
+      promise = factory()
+        .then(mod => { Component = mod.default })
+        .catch(e => { error = e })
+    }
+    return promise
+  }
+
+  return LazyComponent as any
+}
+
 // Re-export types
 export type { Context } from 'hono/jsx/dom'
+
+// Class components
+export { Component, PureComponent } from './class-components'
 
 // Additional React compatibility exports
 export const StrictMode = HonoFragment
@@ -72,6 +110,7 @@ export const __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
 
 // Types for TypeScript compatibility
 export type FC<P = object> = (props: P) => JSX.Element | null
+export type ComponentType<P = any> = FC<P> | ((props: P) => JSX.Element)
 export type ReactNode = JSX.Element | string | number | boolean | null | undefined
 export type ReactElement = JSX.Element
 export type Ref<T> = { current: T | null }
@@ -80,3 +119,11 @@ export type MutableRefObject<T> = { current: T }
 export type Dispatch<A> = (action: A) => void
 export type SetStateAction<S> = S | ((prevState: S) => S)
 export type Reducer<S, A> = (prevState: S, action: A) => S
+
+// React namespace for compatibility
+export namespace React {
+  export type LazyExoticComponent<T extends ComponentType<any>> = {
+    (props: any): JSX.Element | null
+    preload: () => Promise<void>
+  }
+}

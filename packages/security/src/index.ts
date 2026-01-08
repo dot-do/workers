@@ -10,6 +10,9 @@ export * from './prototype-pollution'
 // Re-export Security Audit/Event Logging utilities
 export * from './audit'
 
+// Re-export Security Incident Management utilities
+export * from './incidents'
+
 /**
  * Result of SQL injection detection
  */

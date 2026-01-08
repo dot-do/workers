@@ -451,7 +451,7 @@ describe('Drizzle Migrations Contract', () => {
 
   describe('Migration Table Management', () => {
     it('should create migrations table if not exists', async () => {
-      const migrations = createMigrations()
+      const migrations = createMigrations({ sql })
 
       await migrations.getStatus()
 
@@ -464,6 +464,7 @@ describe('Drizzle Migrations Contract', () => {
     it('should use custom migrations table name', async () => {
       const migrations = createMigrations({
         migrationsTable: 'custom_migrations',
+        sql,
       })
 
       await migrations.getStatus()
@@ -474,19 +475,21 @@ describe('Drizzle Migrations Contract', () => {
     })
 
     it('should store migration metadata in table', async () => {
-      const migrations = createMigrations()
+      const migrations = createMigrations({ sql })
 
       await migrations.runSingle('20240101000000_initial')
 
       // Should have inserted record into migrations table
       expect(sql.exec).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO'),
+        expect.anything(),
+        expect.anything(),
         expect.anything()
       )
     })
 
     it('should remove migration metadata on rollback', async () => {
-      const migrations = createMigrations()
+      const migrations = createMigrations({ sql })
 
       await migrations.run()
       await migrations.rollback()
@@ -867,6 +870,9 @@ describe('Transactional Migration Support', () => {
       transactional: true,
     })
 
+    // Add a failing migration after the successful ones
+    await migrations.generate('zzz_failing_migration')
+
     // If one migration fails, all should be rolled back
     try {
       await migrations.run()
@@ -918,7 +924,12 @@ describe('Migration Error Handling', () => {
   })
 
   it('should handle connection errors', async () => {
-    const migrations = createMigrations()
+    const failingSql = createMockSqlStorage()
+    vi.mocked(failingSql.exec).mockImplementation(() => {
+      throw new Error('Connection error: unable to connect to database')
+    })
+
+    const migrations = createMigrations({ sql: failingSql })
 
     // Simulate connection error
     await expect(migrations.run()).rejects.toThrow()

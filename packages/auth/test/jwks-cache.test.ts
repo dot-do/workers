@@ -20,6 +20,8 @@ import {
   type JWKSCache,
   type JWKSCacheFactory,
   type JWKSCacheEntry,
+  type JWKSCacheMetrics,
+  type JWKSCacheAggregateMetrics,
 } from '../src/jwks-cache'
 
 // Mock JWKS response for testing

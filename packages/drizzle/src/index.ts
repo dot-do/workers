@@ -599,3 +599,122 @@ export function createMigrations(config?: MigrationConfig, sql?: any): DrizzleMi
 export function createSchemaValidator(): SchemaValidator {
   return new SchemaValidator()
 }
+
+// ============================================
+// D1 Database Adapter
+// ============================================
+
+export interface D1DatabaseAdapter {
+  /** The D1Database instance */
+  readonly db: D1Database
+  /** Execute a query and return all rows */
+  query<T = Record<string, unknown>>(sql: string, ...bindings: unknown[]): Promise<T[]>
+  /** Execute a query and return the first row or undefined */
+  queryOne<T = Record<string, unknown>>(sql: string, ...bindings: unknown[]): Promise<T | undefined>
+  /** Execute a statement (INSERT, UPDATE, DELETE) */
+  execute(sql: string, ...bindings: unknown[]): Promise<D1ExecResult>
+  /** Execute multiple statements in a batch */
+  batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>
+  /** Create a prepared statement */
+  prepare(sql: string): D1PreparedStatement
+}
+
+export interface D1Database {
+  prepare(query: string): D1PreparedStatement
+  dump(): Promise<ArrayBuffer>
+  batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>
+  exec(query: string): Promise<D1ExecResult>
+}
+
+export interface D1PreparedStatement {
+  bind(...values: unknown[]): D1PreparedStatement
+  first<T = unknown>(colName?: string): Promise<T | null>
+  run(): Promise<D1Result>
+  all<T = unknown>(): Promise<D1Result<T>>
+  raw<T = unknown>(): Promise<T[]>
+}
+
+export interface D1Result<T = unknown> {
+  results: T[]
+  success: boolean
+  meta: {
+    duration: number
+    size_after: number
+    rows_read: number
+    rows_written: number
+  }
+}
+
+export interface D1ExecResult {
+  count: number
+  duration: number
+}
+
+export class D1Adapter implements D1DatabaseAdapter {
+  readonly db: D1Database
+  private preparedStatementsCache: Map<string, D1PreparedStatement>
+
+  constructor(db: D1Database) {
+    this.db = db
+    this.preparedStatementsCache = new Map()
+  }
+
+  async query<T = Record<string, unknown>>(
+    sql: string,
+    ...bindings: unknown[]
+  ): Promise<T[]> {
+    const stmt = this.prepare(sql)
+    const bound = bindings.length > 0 ? stmt.bind(...bindings) : stmt
+    const result = await bound.all<T>()
+    return result.results
+  }
+
+  async queryOne<T = Record<string, unknown>>(
+    sql: string,
+    ...bindings: unknown[]
+  ): Promise<T | undefined> {
+    const stmt = this.prepare(sql)
+    const bound = bindings.length > 0 ? stmt.bind(...bindings) : stmt
+    const result = await bound.first<T>()
+    return result ?? undefined
+  }
+
+  async execute(sql: string, ...bindings: unknown[]): Promise<D1ExecResult> {
+    const stmt = this.prepare(sql)
+    const bound = bindings.length > 0 ? stmt.bind(...bindings) : stmt
+    const result = await bound.run()
+    return {
+      count: result.meta.rows_written,
+      duration: result.meta.duration,
+    }
+  }
+
+  async batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
+    return await this.db.batch<T>(statements)
+  }
+
+  prepare(sql: string): D1PreparedStatement {
+    // Check cache first for performance
+    if (this.preparedStatementsCache.has(sql)) {
+      return this.preparedStatementsCache.get(sql)!
+    }
+
+    const stmt = this.db.prepare(sql)
+    this.preparedStatementsCache.set(sql, stmt)
+    return stmt
+  }
+
+  /** Clear the prepared statements cache */
+  clearCache(): void {
+    this.preparedStatementsCache.clear()
+  }
+
+  /** Get cache size */
+  getCacheSize(): number {
+    return this.preparedStatementsCache.size
+  }
+}
+
+export function createD1Adapter(db: D1Database): D1Adapter {
+  return new D1Adapter(db)
+}

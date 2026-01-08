@@ -1,0 +1,46 @@
+{
+  "name": "@dotdo/execution",
+  "version": "0.0.1",
+  "description": "Execution orchestration with retry logic and rate limiting - Handle tasks with automatic retries, exponential backoff, and rate limiting",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./tiny": "./tiny.ts"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240925.0",
+    "@cloudflare/vitest-pool-workers": "^0.5.23",
+    "tsup": "^8.5.1",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "^0.36.0"
+  },
+  "peerDependenciesMeta": {
+    "drizzle-orm": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "execution",
+    "retry",
+    "rate-limit",
+    "backoff",
+    "durable",
+    "cloudflare",
+    "workers",
+    "durable-objects"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dotdo/workers",
+    "directory": "objects/execution"
+  },
+  "license": "MIT"
+}

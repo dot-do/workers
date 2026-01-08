@@ -153,6 +153,110 @@ await functions.define('ml', { code, runtime: 'python' })
 await functions.define('wasm', { code, runtime: 'wasm' })
 ```
 
+## Error Handling
+
+Handle function errors gracefully with typed exceptions:
+
+```typescript
+import { functions } from 'functions.do'
+import { RPCError } from 'rpc.do'
+
+try {
+  const result = await functions.invoke('processData', { input: data })
+} catch (error) {
+  if (error instanceof RPCError) {
+    switch (error.code) {
+      case 404:
+        console.error('Function not found')
+        break
+      case 408:
+        console.error('Function timed out')
+        break
+      case 500:
+        console.error('Function execution error:', error.data)
+        break
+      default:
+        console.error(`Function error ${error.code}: ${error.message}`)
+    }
+  }
+  throw error
+}
+```
+
+### Common Error Codes
+
+| Code | Meaning | What to Do |
+|------|---------|------------|
+| 400 | Invalid input | Check function parameters |
+| 401 | Authentication failed | Verify your API key |
+| 404 | Function not found | Verify function is deployed |
+| 408 | Timeout | Increase timeout or optimize function |
+| 413 | Payload too large | Reduce input size |
+| 429 | Rate limited | Wait and retry with backoff |
+| 500 | Execution error | Check function logs |
+| 507 | Memory exceeded | Increase memory limit |
+
+### Safe Invocation Pattern
+
+```typescript
+import { functions } from 'functions.do'
+import { RPCError } from 'rpc.do'
+
+async function safeInvoke<T>(name: string, input: unknown): Promise<T | null> {
+  try {
+    return await functions.invoke(name, input)
+  } catch (error) {
+    if (error instanceof RPCError) {
+      // Log for monitoring
+      console.error(`Function ${name} failed:`, {
+        code: error.code,
+        message: error.message
+      })
+
+      // Return null for retriable errors
+      if ([408, 429, 500].includes(error.code)) {
+        return null
+      }
+    }
+    throw error
+  }
+}
+```
+
+### Async Invocation with Status Polling
+
+```typescript
+import { functions } from 'functions.do'
+import { RPCError } from 'rpc.do'
+
+async function invokeAndWait(name: string, input: unknown, timeoutMs = 30000) {
+  const { invocationId } = await functions.invokeAsync(name, input)
+  const deadline = Date.now() + timeoutMs
+
+  while (Date.now() < deadline) {
+    try {
+      const status = await functions.status(invocationId)
+
+      if (status.state === 'completed') {
+        return status.result
+      }
+      if (status.state === 'failed') {
+        throw new Error(`Function failed: ${status.error}`)
+      }
+
+      await new Promise(r => setTimeout(r, 500))
+    } catch (error) {
+      if (error instanceof RPCError && error.code === 404) {
+        throw new Error('Invocation not found - may have expired')
+      }
+      throw error
+    }
+  }
+
+  throw new Error('Function invocation timed out')
+}
+```
+
 ## Configuration
 
 ```typescript

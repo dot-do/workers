@@ -178,6 +178,108 @@ await payments.invoices.finalize(invoice.id)
 // Customer receives invoice, pays online
 ```
 
+## Error Handling
+
+Handle payment errors gracefully with typed exceptions:
+
+```typescript
+import { payments } from 'payments.do'
+import { RPCError } from 'rpc.do'
+
+try {
+  await payments.charges.create({
+    amount: 9900,
+    currency: 'usd',
+    customer: 'cus_123'
+  })
+} catch (error) {
+  if (error instanceof RPCError) {
+    switch (error.code) {
+      case 402:
+        console.error('Card declined:', error.message)
+        // Prompt user for different payment method
+        break
+      case 404:
+        console.error('Customer not found')
+        break
+      case 409:
+        console.error('Duplicate charge detected')
+        break
+      default:
+        console.error(`Payment error ${error.code}: ${error.message}`)
+    }
+  }
+  throw error
+}
+```
+
+### Common Error Codes
+
+| Code | Meaning | What to Do |
+|------|---------|------------|
+| 400 | Invalid request | Check amount, currency, and customer ID |
+| 401 | Authentication failed | Verify your API key |
+| 402 | Payment failed | Card declined - request different payment method |
+| 404 | Resource not found | Verify customer/subscription exists |
+| 409 | Conflict | Duplicate request - check idempotency key |
+| 429 | Rate limited | Wait and retry with backoff |
+| 500 | Server error | Retry after a brief delay |
+
+### Safe Payment Pattern
+
+```typescript
+import { payments } from 'payments.do'
+import { RPCError } from 'rpc.do'
+
+async function safeCharge(customerId: string, amount: number) {
+  try {
+    return await payments.charges.create({
+      amount,
+      currency: 'usd',
+      customer: customerId
+    })
+  } catch (error) {
+    if (error instanceof RPCError) {
+      // Log for monitoring
+      console.error('Payment failed:', {
+        code: error.code,
+        message: error.message,
+        data: error.data
+      })
+
+      // Return user-friendly result
+      if (error.code === 402) {
+        return { success: false, reason: 'card_declined' }
+      }
+    }
+    throw error
+  }
+}
+```
+
+### Subscription Error Recovery
+
+```typescript
+import { payments } from 'payments.do'
+import { RPCError } from 'rpc.do'
+
+async function updateSubscription(subId: string, newPrice: string) {
+  try {
+    return await payments.subscriptions.update(subId, { price: newPrice })
+  } catch (error) {
+    if (error instanceof RPCError && error.code === 404) {
+      // Subscription was cancelled - create new one
+      console.log('Subscription not found, creating new...')
+      return await payments.subscriptions.create({
+        customer: 'cus_from_context',
+        price: newPrice
+      })
+    }
+    throw error
+  }
+}
+```
+
 ## Configuration
 
 Set your API key via environment variable:

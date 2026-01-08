@@ -199,6 +199,96 @@ const org = await org.organizations.create({
 const enterprises = await org.organizations.list()
 ```
 
+## Error Handling
+
+Handle authentication errors gracefully with typed exceptions:
+
+```typescript
+import { org } from 'org.ai'
+import { RPCError } from 'rpc.do'
+
+try {
+  const { profile } = await org.sso.getProfile(authCode)
+} catch (error) {
+  if (error instanceof RPCError) {
+    switch (error.code) {
+      case 400:
+        console.error('Invalid auth code - may be expired')
+        // Redirect user to login again
+        break
+      case 401:
+        console.error('SSO configuration invalid')
+        break
+      case 404:
+        console.error('Organization not found')
+        break
+      default:
+        console.error(`Auth error ${error.code}: ${error.message}`)
+    }
+  }
+  throw error
+}
+```
+
+### Common Error Codes
+
+| Code | Meaning | What to Do |
+|------|---------|------------|
+| 400 | Invalid request | Auth code expired or malformed - restart flow |
+| 401 | Authentication failed | Check API key and SSO configuration |
+| 403 | Access denied | User not allowed in this organization |
+| 404 | Resource not found | Organization or user doesn't exist |
+| 409 | Conflict | User already exists with different IdP |
+| 422 | Validation failed | Domain not verified for organization |
+| 429 | Rate limited | Wait and retry with backoff |
+
+### SSO Error Recovery
+
+```typescript
+import { org } from 'org.ai'
+import { RPCError } from 'rpc.do'
+
+async function handleSSOCallback(code: string, state: string) {
+  try {
+    const { profile, token } = await org.sso.getProfile(code)
+    return { success: true, profile, token }
+  } catch (error) {
+    if (error instanceof RPCError) {
+      if (error.code === 400) {
+        // Auth code expired - redirect to login
+        return { success: false, redirect: '/login', reason: 'expired' }
+      }
+      if (error.code === 403) {
+        // User not authorized for this org
+        return { success: false, redirect: '/unauthorized', reason: 'forbidden' }
+      }
+    }
+    throw error
+  }
+}
+```
+
+### Vault Operations with Fallback
+
+```typescript
+import { org } from 'org.ai'
+import { RPCError } from 'rpc.do'
+
+async function getSecret(orgId: string, key: string, fallback?: string) {
+  try {
+    return await org.vault.get(orgId, key)
+  } catch (error) {
+    if (error instanceof RPCError && error.code === 404) {
+      if (fallback !== undefined) {
+        console.warn(`Secret ${key} not found, using fallback`)
+        return fallback
+      }
+    }
+    throw error
+  }
+}
+```
+
 ## Configuration
 
 ```typescript

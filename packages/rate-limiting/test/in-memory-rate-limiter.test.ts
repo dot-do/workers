@@ -10,9 +10,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
  * cleanup functionality, so these tests should FAIL.
  */
 
-// Import will fail until InMemoryRateLimiter is implemented
-// This is expected for RED phase TDD
-import { InMemoryRateLimiter, InMemoryRateLimitStorage } from '../src/index'
+// Import from dist (built files) since vitest has issues with TS source imports
+import { InMemoryRateLimiter, InMemoryRateLimitStorage } from '../dist/index.js'
 
 describe('InMemoryRateLimiter Expired Entry Cleanup', () => {
   describe('InMemoryRateLimitStorage', () => {

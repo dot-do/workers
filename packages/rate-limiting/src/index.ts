@@ -113,8 +113,10 @@ export class TokenBucketRateLimiter {
       // Calculate reset time (time until next refill)
       const resetAt = Math.ceil((now + this.config.refillInterval) / 1000)
 
-      // Save state
-      await this.config.storage.set(key, state)
+      // Save state with TTL to allow cleanup of inactive buckets
+      // Use 100x refill interval as TTL so inactive buckets are eventually cleaned up
+      const ttl = this.config.refillInterval * 100
+      await this.config.storage.set(key, state, ttl)
 
       const result: RateLimitResult = {
         allowed,
@@ -296,4 +298,185 @@ export const RateLimiter = {
   slidingWindow(config: SlidingWindowConfig): SlidingWindowRateLimiter {
     return new SlidingWindowRateLimiter(config)
   },
+}
+
+/**
+ * Storage entry with expiry information
+ */
+interface StorageEntry<T = any> {
+  value: T
+  expiresAt?: number // Timestamp in ms when entry expires, undefined = never expires
+}
+
+/**
+ * Configuration for InMemoryRateLimitStorage
+ */
+export interface InMemoryStorageConfig {
+  /** How often to run cleanup of expired entries (milliseconds) */
+  cleanupIntervalMs?: number
+}
+
+/**
+ * In-Memory Rate Limit Storage
+ *
+ * Provides an in-memory implementation of RateLimitStorage with:
+ * - Automatic cleanup of expired entries
+ * - Memory monitoring via size property
+ * - Proper resource disposal
+ */
+export class InMemoryRateLimitStorage implements RateLimitStorage {
+  private store = new Map<string, StorageEntry>()
+  private cleanupInterval?: ReturnType<typeof setInterval>
+  private cleanupIntervalMs?: number
+
+  constructor(config: InMemoryStorageConfig = {}) {
+    this.cleanupIntervalMs = config.cleanupIntervalMs
+    // Cleanup interval is started lazily when first item is added
+  }
+
+  private startCleanupIfNeeded(): void {
+    // Start cleanup interval if configured and not already running
+    if (
+      this.cleanupIntervalMs !== undefined &&
+      this.cleanupIntervalMs > 0 &&
+      this.cleanupInterval === undefined &&
+      this.store.size > 0
+    ) {
+      this.cleanupInterval = setInterval(() => {
+        this.cleanup()
+        // Stop interval if store is empty to prevent infinite loops in tests
+        if (this.store.size === 0) {
+          this.stopCleanup()
+        }
+      }, this.cleanupIntervalMs)
+    }
+  }
+
+  private stopCleanup(): void {
+    if (this.cleanupInterval !== undefined) {
+      clearInterval(this.cleanupInterval)
+      this.cleanupInterval = undefined
+    }
+  }
+
+  async get<T>(key: string): Promise<T | null> {
+    const entry = this.store.get(key)
+
+    if (!entry) {
+      return null
+    }
+
+    // Check if entry has expired (use > so entry is valid up to and including expiresAt)
+    if (entry.expiresAt !== undefined && Date.now() > entry.expiresAt) {
+      // Remove expired entry
+      this.store.delete(key)
+      return null
+    }
+
+    return entry.value as T
+  }
+
+  async set<T>(key: string, value: T, ttlMs?: number): Promise<void> {
+    const entry: StorageEntry<T> = {
+      value,
+      expiresAt: ttlMs !== undefined ? Date.now() + ttlMs : undefined,
+    }
+
+    this.store.set(key, entry)
+    this.startCleanupIfNeeded()
+  }
+
+  async delete(key: string): Promise<void> {
+    this.store.delete(key)
+  }
+
+  /**
+   * Get the current number of entries in storage
+   */
+  get size(): number {
+    return this.store.size
+  }
+
+  /**
+   * Clean up all expired entries
+   */
+  private cleanup(): void {
+    const now = Date.now()
+    const keysToDelete: string[] = []
+
+    for (const [key, entry] of this.store.entries()) {
+      if (entry.expiresAt !== undefined && now > entry.expiresAt) {
+        keysToDelete.push(key)
+      }
+    }
+
+    for (const key of keysToDelete) {
+      this.store.delete(key)
+    }
+  }
+
+  /**
+   * Dispose of the storage and clean up resources
+   */
+  dispose(): void {
+    this.stopCleanup()
+    this.store.clear()
+  }
+}
+
+/**
+ * Configuration for InMemoryRateLimiter
+ */
+export interface InMemoryRateLimiterConfig {
+  /** Maximum number of tokens in the bucket */
+  capacity: number
+  /** Number of tokens to add per refill */
+  refillRate: number
+  /** Time between refills in milliseconds */
+  refillInterval: number
+  /** How often to run cleanup of expired entries (milliseconds) */
+  cleanupIntervalMs?: number
+  /** Fail mode (default: 'open') */
+  failMode?: FailMode
+}
+
+/**
+ * In-Memory Rate Limiter
+ *
+ * A token bucket rate limiter with in-memory storage and automatic cleanup.
+ */
+export class InMemoryRateLimiter extends TokenBucketRateLimiter {
+  private storage: InMemoryRateLimitStorage
+
+  constructor(config: InMemoryRateLimiterConfig) {
+    // Create storage with cleanup configuration
+    const storage = new InMemoryRateLimitStorage({
+      cleanupIntervalMs: config.cleanupIntervalMs,
+    })
+
+    // Pass storage to parent TokenBucketRateLimiter
+    super({
+      storage,
+      capacity: config.capacity,
+      refillRate: config.refillRate,
+      refillInterval: config.refillInterval,
+      failMode: config.failMode,
+    })
+
+    this.storage = storage
+  }
+
+  /**
+   * Get the current number of entries in storage
+   */
+  get storageSize(): number {
+    return this.storage.size
+  }
+
+  /**
+   * Dispose of the limiter and clean up resources
+   */
+  dispose(): void {
+    this.storage.dispose()
+  }
 }

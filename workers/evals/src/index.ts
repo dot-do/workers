@@ -6,3 +6,6 @@
 
 // Export scoring functionality
 export * from './scoring/index.js'
+
+// Export storage functionality
+export * from './storage/index.js'

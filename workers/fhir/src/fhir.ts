@@ -159,6 +159,101 @@ export class FHIRDO {
   }
 
   /**
+   * Create a new Patient resource
+   */
+  async createPatient(patient: Omit<Patient, 'id' | 'meta'>): Promise<Patient> {
+    // Validate resourceType
+    if (patient.resourceType !== 'Patient') {
+      throw new Error('Invalid resource type. Expected Patient')
+    }
+
+    // Check for duplicate by identifier
+    if (patient.identifier && patient.identifier.length > 0) {
+      const allPatients = await this.ctx.storage.list<Patient>({ prefix: 'Patient:' })
+
+      for (const [key, existingPatient] of allPatients.entries()) {
+        // Skip history entries
+        if (key.includes(':_history:')) continue
+
+        if (existingPatient.identifier) {
+          for (const newId of patient.identifier) {
+            for (const existingId of existingPatient.identifier) {
+              if (newId.system === existingId.system && newId.value === existingId.value) {
+                throw new Error(`Duplicate patient identifier: ${newId.system}|${newId.value}`)
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Generate a unique ID
+    const id = `patient-${this.generateToken().substring(0, 16)}`
+
+    // Create metadata
+    const now = new Date().toISOString()
+    const meta = {
+      versionId: '1',
+      lastUpdated: now
+    }
+
+    // Create the full patient resource
+    const newPatient: Patient = {
+      ...patient,
+      id,
+      meta
+    }
+
+    // Store the patient
+    await this.ctx.storage.put(`Patient:${id}`, newPatient)
+    await this.ctx.storage.put(`Patient:${id}:_history:1`, newPatient)
+
+    return newPatient
+  }
+
+  /**
+   * Update an existing Patient resource
+   */
+  async updatePatient(id: string, updates: Partial<Patient>, ifMatch?: string): Promise<Patient | null> {
+    // Get existing patient
+    const existing = await this.readPatient(id)
+    if (!existing) {
+      return null
+    }
+
+    // Check If-Match condition (optimistic locking)
+    if (ifMatch) {
+      // Extract version from ETag format (W/"version")
+      const matchVersion = ifMatch.replace(/^W\/"/, '').replace(/"$/, '')
+      if (existing.meta.versionId !== matchVersion) {
+        throw new Error(`Version conflict: expected ${matchVersion} but current is ${existing.meta.versionId}`)
+      }
+    }
+
+    // Increment version
+    const currentVersion = parseInt(existing.meta.versionId)
+    const newVersion = (currentVersion + 1).toString()
+
+    // Create updated patient
+    const updated: Patient = {
+      ...existing,
+      ...updates,
+      id, // Preserve ID
+      resourceType: 'Patient', // Preserve resourceType
+      meta: {
+        versionId: newVersion,
+        lastUpdated: new Date().toISOString()
+      }
+    }
+
+    // Store updated patient
+    await this.ctx.storage.put(`Patient:${id}`, updated)
+    await this.ctx.storage.put(`Patient:${id}:_history:${newVersion}`, updated)
+
+    return updated
+  }
+
+  /**
    * Read a specific version of a Patient resource
    */
   async readPatientVersion(id: string, versionId: string): Promise<Patient | null> {
@@ -327,6 +422,66 @@ export class FHIRDO {
     }
 
     return bundle
+  }
+
+  /**
+   * Create a new Encounter resource
+   */
+  async createEncounter(encounter: Omit<Encounter, 'id' | 'meta'>): Promise<Encounter> {
+    // Generate a unique ID for the encounter
+    const id = `enc-${this.generateToken().substring(0, 16)}`
+
+    // Create metadata
+    const now = new Date().toISOString()
+    const meta = {
+      versionId: '1',
+      lastUpdated: now
+    }
+
+    // Create the full encounter resource
+    const newEncounter: Encounter = {
+      ...encounter,
+      id,
+      meta
+    }
+
+    // Store the encounter
+    await this.ctx.storage.put(`Encounter:${id}`, newEncounter)
+    await this.ctx.storage.put(`Encounter:${id}:_history:1`, newEncounter)
+
+    return newEncounter
+  }
+
+  /**
+   * Update an Encounter resource
+   */
+  async updateEncounter(id: string, updates: Partial<Encounter>): Promise<Encounter | null> {
+    // Get existing encounter
+    const existing = await this.readEncounter(id)
+    if (!existing) {
+      return null
+    }
+
+    // Increment version
+    const currentVersion = parseInt(existing.meta.versionId)
+    const newVersion = (currentVersion + 1).toString()
+
+    // Create updated encounter
+    const updated: Encounter = {
+      ...existing,
+      ...updates,
+      id, // Preserve ID
+      meta: {
+        versionId: newVersion,
+        lastUpdated: new Date().toISOString()
+      }
+    }
+
+    // Store updated encounter
+    await this.ctx.storage.put(`Encounter:${id}`, updated)
+    await this.ctx.storage.put(`Encounter:${id}:_history:${newVersion}`, updated)
+
+    return updated
   }
 
   /**
@@ -1372,6 +1527,7 @@ export class FHIRDO {
       // FHIR Patient version read endpoint
       if (path.match(/^\/fhir\/r4\/Patient\/[\w-]+\/_history\/\d+$/) && method === 'GET') {
         return this.handlePatientVersionRead(request, path)
+      }
 
       // FHIR Patient create endpoint
       if (path === '/fhir/r4/Patient' && method === 'POST') {
@@ -1382,16 +1538,25 @@ export class FHIRDO {
       if (path.match(/^\/fhir\/r4\/Patient\/[\w-]+$/) && method === 'PUT') {
         return this.handlePatientUpdate(request, path)
       }
-      }
 
       // FHIR Encounter search endpoint
       if (path === '/fhir/r4/Encounter' && method === 'GET') {
         return this.handleEncounterSearch(request, url)
       }
 
+      // FHIR Encounter create endpoint
+      if (path === '/fhir/r4/Encounter' && method === 'POST') {
+        return this.handleEncounterCreate(request)
+      }
+
       // FHIR Encounter read endpoint
       if (path.match(/^\/fhir\/r4\/Encounter\/[\w-]+$/) && method === 'GET') {
         return this.handleEncounterRead(request, path)
+      }
+
+      // FHIR Encounter update endpoint
+      if (path.match(/^\/fhir\/r4\/Encounter\/[\w-]+$/) && method === 'PUT') {
+        return this.handleEncounterUpdate(request, path)
       }
 
       // FHIR Observation search endpoint
@@ -2631,6 +2796,194 @@ export class FHIRDO {
     return new Response(null, {
       status: 204,
     })
+  }
+
+  /**
+   * Handle FHIR Patient create
+   */
+  private async handlePatientCreate(request: Request): Promise<Response> {
+    try {
+      const body = await request.json() as Omit<Patient, 'id' | 'meta'>
+
+      // Validate required fields
+      if (!body.resourceType || body.resourceType !== 'Patient') {
+        return this.createOperationOutcome(
+          'error',
+          'invalid',
+          'Request body must be a Patient resource',
+          400
+        )
+      }
+
+      const patient = await this.createPatient(body)
+
+      return new Response(JSON.stringify(patient), {
+        status: 201,
+        headers: {
+          'Content-Type': 'application/fhir+json',
+          'Location': `/fhir/r4/Patient/${patient.id}`,
+          'ETag': `W/"${patient.meta.versionId}"`
+        },
+      })
+    } catch (error) {
+      const errorMessage = (error as Error).message
+
+      // Check if it's a duplicate error
+      if (errorMessage.toLowerCase().includes('duplicate')) {
+        return this.createOperationOutcome(
+          'error',
+          'duplicate',
+          errorMessage,
+          409
+        )
+      }
+
+      return this.createOperationOutcome(
+        'error',
+        'processing',
+        `Failed to create Patient: ${errorMessage}`,
+        400
+      )
+    }
+  }
+
+  /**
+   * Handle FHIR Patient update
+   */
+  private async handlePatientUpdate(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/Patient\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const patientId = match[1]
+
+    try {
+      const body = await request.json() as Partial<Patient>
+      const ifMatch = request.headers.get('If-Match')
+
+      const updated = await this.updatePatient(patientId, body, ifMatch || undefined)
+
+      if (!updated) {
+        return this.createOperationOutcome(
+          'error',
+          'not-found',
+          `Patient resource with id ${patientId} not found`,
+          404
+        )
+      }
+
+      return new Response(JSON.stringify(updated), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/fhir+json',
+          'ETag': `W/"${updated.meta.versionId}"`
+        },
+      })
+    } catch (error) {
+      const errorMessage = (error as Error).message
+
+      // Check if it's a version conflict error
+      if (errorMessage.toLowerCase().includes('conflict') || errorMessage.toLowerCase().includes('version')) {
+        return this.createOperationOutcome(
+          'error',
+          'version-conflict',
+          errorMessage,
+          409
+        )
+      }
+
+      return this.createOperationOutcome(
+        'error',
+        'processing',
+        `Failed to update Patient: ${errorMessage}`,
+        400
+      )
+    }
+  }
+
+  /**
+   * Handle FHIR Encounter create
+   */
+  private async handleEncounterCreate(request: Request): Promise<Response> {
+    try {
+      const body = await request.json() as Omit<Encounter, 'id' | 'meta'>
+
+      // Validate required fields
+      if (!body.status) {
+        return this.createOperationOutcome(
+          'error',
+          'invalid',
+          'Encounter must have a status',
+          400
+        )
+      }
+
+      if (!body.class) {
+        return this.createOperationOutcome(
+          'error',
+          'invalid',
+          'Encounter must have a class',
+          400
+        )
+      }
+
+      const encounter = await this.createEncounter(body)
+
+      return new Response(JSON.stringify(encounter), {
+        status: 201,
+        headers: {
+          'Content-Type': 'application/fhir+json',
+          'Location': `/fhir/r4/Encounter/${encounter.id}`
+        },
+      })
+    } catch (error) {
+      return this.createOperationOutcome(
+        'error',
+        'processing',
+        `Failed to create Encounter: ${(error as Error).message}`,
+        400
+      )
+    }
+  }
+
+  /**
+   * Handle FHIR Encounter update
+   */
+  private async handleEncounterUpdate(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/Encounter\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const encounterId = match[1]
+
+    try {
+      const body = await request.json() as Partial<Encounter>
+
+      const updated = await this.updateEncounter(encounterId, body)
+
+      if (!updated) {
+        return this.createOperationOutcome(
+          'error',
+          'not-found',
+          `Encounter resource with id ${encounterId} not found`,
+          404
+        )
+      }
+
+      return new Response(JSON.stringify(updated), {
+        status: 200,
+        headers: { 'Content-Type': 'application/fhir+json' },
+      })
+    } catch (error) {
+      return this.createOperationOutcome(
+        'error',
+        'processing',
+        `Failed to update Encounter: ${(error as Error).message}`,
+        400
+      )
+    }
   }
 
   /**

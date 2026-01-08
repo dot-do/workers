@@ -84,6 +84,39 @@ describe('embeddings.do SDK', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    // Reset the mock implementations for each test
+    mockClientInstance.embed.mockResolvedValue({
+      embedding: new Array(1536).fill(0).map(() => Math.random()),
+      model: 'text-embedding-3-small',
+      usage: { tokens: 10 },
+      cached: false,
+    })
+    mockClientInstance.embedBatch.mockImplementation(async (input: string[] | { texts: string[] }) => {
+      const texts = Array.isArray(input) ? input : input.texts
+      return {
+        embeddings: texts.map(() => new Array(1536).fill(0).map(() => Math.random())),
+        model: 'text-embedding-3-small',
+        usage: { tokens: texts.length * 10 },
+        cached: texts.map(() => false),
+      }
+    })
+    mockClientInstance.similarity.mockResolvedValue({ score: 0.85 })
+    mockClientInstance.cached.mockResolvedValue({
+      embedding: new Array(1536).fill(0).map(() => Math.random()),
+      model: 'text-embedding-3-small',
+      usage: { tokens: 0 },
+      cached: true,
+    })
+    mockClientInstance.cacheStats.mockResolvedValue({
+      hits: 100,
+      misses: 50,
+      hitRate: 0.667,
+      size: 150,
+    })
+    mockClientInstance.clearCache.mockResolvedValue({ cleared: 150 })
+    mockClientInstance.models.mockResolvedValue(['text-embedding-3-small', 'text-embedding-3-large', 'text-embedding-ada-002'])
+
     mockCreateClient.mockReturnValue(mockClientInstance)
   })
 

@@ -304,13 +304,6 @@ export function Embeddings(options?: ClientOptions): EmbeddingsClient {
  */
 export const embeddings: EmbeddingsClient = Embeddings()
 
-// =============================================================================
-// Exports
-// =============================================================================
-
-// Named exports
-export { Embeddings, embeddings }
-
 // Default export = camelCase instance
 export default embeddings
 

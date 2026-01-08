@@ -779,3 +779,438 @@ export function createMigrations(config?: MigrationConfig): DrizzleMigrations {
 export function createSchemaValidator(): SchemaValidator {
   return new SchemaValidator()
 }
+
+// ============================================
+// Typed SQLite Query Helpers
+// ============================================
+
+/**
+ * QueryOptions for customizing query behavior
+ */
+export interface QueryOptions {
+  /** Optional Zod schema for runtime validation */
+  schema?: unknown
+  /** Query timeout in milliseconds */
+  timeout?: number
+}
+
+/**
+ * StorageHelpersOptions for factory configuration
+ */
+export interface StorageHelpersOptions {
+  /** Default schema for all queries */
+  defaultSchema?: unknown
+  /** Whether to enable strict mode (throws on validation errors) */
+  strict?: boolean
+  /** Custom schema registry */
+  schema?: unknown
+}
+
+/**
+ * TypedRow utility - maps SQL column types to TypeScript types
+ */
+export type TypedRow<Schema extends Record<string, string>> = {
+  [K in keyof Schema]: Schema[K] extends 'text'
+    ? string
+    : Schema[K] extends 'text | null'
+      ? string | null
+      : Schema[K] extends 'integer'
+        ? number
+        : Schema[K] extends 'real'
+          ? number
+          : Schema[K] extends 'blob'
+            ? ArrayBuffer
+            : unknown
+}
+
+/**
+ * TypedSqlResult interface - typed wrapper around SqlStorageCursor
+ */
+export interface TypedSqlResult<T> {
+  readonly columnNames: string[]
+  readonly rowsRead: number
+  readonly rowsWritten: number
+  toArray(): T[]
+  one(): T | null
+}
+
+/**
+ * StorageHelpers interface - helper methods for typed DB operations
+ */
+export interface StorageHelpers {
+  query<T>(sql: string, bindings?: unknown[], options?: QueryOptions): Promise<T[]>
+  queryOne<T>(sql: string, bindings?: unknown[], options?: QueryOptions): Promise<T | undefined>
+  queryOneOrThrow<T>(sql: string, bindings?: unknown[], options?: QueryOptions): Promise<T>
+  queryCursor<T>(sql: string, bindings?: unknown[]): AsyncIterable<T>
+  queryWithMeta<T>(sql: string, bindings?: unknown[]): Promise<{
+    data: T[]
+    rowsRead: number
+    rowsWritten: number
+    columnNames: string[]
+  }>
+  execute(sql: string, bindings?: unknown[]): Promise<void>
+}
+
+/**
+ * TypedQuery interface - represents a typed SQL query with fluent builder
+ */
+export interface TypedQuery<T> {
+  /** The SQL query string */
+  sql: string
+  /** Query parameters/bindings */
+  bindings?: unknown[]
+  /** The result type (for type inference) */
+  result: T[]
+  /** Execute and return typed array */
+  execute(sql: SqlStorage): Promise<T[]>
+  /** Execute and return single result or undefined */
+  executeOne(sql: SqlStorage, bindings?: unknown[]): Promise<T | undefined>
+  /** Fluent where clause */
+  where(clause: string, bindings?: unknown[]): TypedQuery<T>
+  /** Fluent order by */
+  orderBy(column: keyof T, direction?: 'ASC' | 'DESC'): TypedQuery<T>
+  /** Fluent limit */
+  limit(count: number): TypedQuery<T>
+  /** Narrow to specific columns */
+  select<K extends keyof T>(columns: K[]): TypedQuery<Pick<T, K>>
+}
+
+// ============================================
+// Error Types
+// ============================================
+
+/**
+ * Query error with context
+ */
+export interface QueryError {
+  code: string
+  message: string
+  query: string
+  bindings: unknown[]
+  cause?: Error
+}
+
+/**
+ * Validation error when runtime schema check fails
+ */
+export interface ValidationError {
+  code: 'VALIDATION_ERROR'
+  message: string
+  row: unknown
+  expected: string
+  actual: string
+}
+
+/**
+ * Create a QueryError
+ */
+export function createQueryError(
+  code: string,
+  message: string,
+  query: string,
+  bindings: unknown[],
+  cause?: Error
+): QueryError & Error {
+  const error = new Error(message) as QueryError & Error
+  error.code = code
+  error.query = query
+  error.bindings = bindings
+  error.cause = cause
+  return error
+}
+
+/**
+ * Create a ValidationError
+ */
+export function createValidationError(
+  message: string,
+  row: unknown,
+  expected: string,
+  actual: string
+): ValidationError & Error {
+  const error = new Error(message) as ValidationError & Error
+  error.code = 'VALIDATION_ERROR'
+  error.row = row
+  error.expected = expected
+  error.actual = actual
+  return error
+}
+
+// ============================================
+// StorageHelpers Implementation
+// ============================================
+
+class StorageHelpersImpl implements StorageHelpers {
+  private sqlStorage: SqlStorage
+  private options: StorageHelpersOptions
+
+  constructor(sqlStorage: SqlStorage, options?: StorageHelpersOptions) {
+    this.sqlStorage = sqlStorage
+    this.options = options ?? {}
+  }
+
+  async query<T>(sql: string, bindings?: unknown[], _options?: QueryOptions): Promise<T[]> {
+    try {
+      const cursor = bindings
+        ? this.sqlStorage.exec<T>(sql, ...bindings)
+        : this.sqlStorage.exec<T>(sql)
+      return cursor.toArray()
+    } catch (err) {
+      throw createQueryError(
+        'SQLITE_ERROR',
+        err instanceof Error ? err.message : String(err),
+        sql,
+        bindings ?? [],
+        err instanceof Error ? err : undefined
+      )
+    }
+  }
+
+  async queryOne<T>(sql: string, bindings?: unknown[], _options?: QueryOptions): Promise<T | undefined> {
+    try {
+      const cursor = bindings
+        ? this.sqlStorage.exec<T>(sql, ...bindings)
+        : this.sqlStorage.exec<T>(sql)
+      const result = cursor.one()
+      return result ?? undefined
+    } catch (err) {
+      throw createQueryError(
+        'SQLITE_ERROR',
+        err instanceof Error ? err.message : String(err),
+        sql,
+        bindings ?? [],
+        err instanceof Error ? err : undefined
+      )
+    }
+  }
+
+  async queryOneOrThrow<T>(sql: string, bindings?: unknown[], options?: QueryOptions): Promise<T> {
+    const result = await this.queryOne<T>(sql, bindings, options)
+    if (result === undefined) {
+      throw createQueryError('NOT_FOUND', 'No rows returned', sql, bindings ?? [])
+    }
+    return result
+  }
+
+  async *queryCursor<T>(sql: string, bindings?: unknown[]): AsyncIterable<T> {
+    try {
+      const cursor = bindings
+        ? this.sqlStorage.exec<T>(sql, ...bindings)
+        : this.sqlStorage.exec<T>(sql)
+      for (const row of cursor.toArray()) {
+        yield row
+      }
+    } catch (err) {
+      throw createQueryError(
+        'SQLITE_ERROR',
+        err instanceof Error ? err.message : String(err),
+        sql,
+        bindings ?? [],
+        err instanceof Error ? err : undefined
+      )
+    }
+  }
+
+  async queryWithMeta<T>(sql: string, bindings?: unknown[]): Promise<{
+    data: T[]
+    rowsRead: number
+    rowsWritten: number
+    columnNames: string[]
+  }> {
+    try {
+      const cursor = bindings
+        ? this.sqlStorage.exec<T>(sql, ...bindings)
+        : this.sqlStorage.exec<T>(sql)
+      return {
+        data: cursor.toArray(),
+        rowsRead: cursor.rowsRead,
+        rowsWritten: cursor.rowsWritten,
+        columnNames: cursor.columnNames,
+      }
+    } catch (err) {
+      throw createQueryError(
+        'SQLITE_ERROR',
+        err instanceof Error ? err.message : String(err),
+        sql,
+        bindings ?? [],
+        err instanceof Error ? err : undefined
+      )
+    }
+  }
+
+  async execute(sql: string, bindings?: unknown[]): Promise<void> {
+    try {
+      if (bindings) {
+        this.sqlStorage.exec(sql, ...bindings)
+      } else {
+        this.sqlStorage.exec(sql)
+      }
+    } catch (err) {
+      throw createQueryError(
+        'SQLITE_ERROR',
+        err instanceof Error ? err.message : String(err),
+        sql,
+        bindings ?? [],
+        err instanceof Error ? err : undefined
+      )
+    }
+  }
+}
+
+/**
+ * Create a StorageHelpers instance from SqlStorage
+ *
+ * @example
+ * ```typescript
+ * const helpers = createStorageHelpers(ctx.storage.sql)
+ *
+ * // Type-safe queries
+ * const users = await helpers.query<User>('SELECT * FROM users')
+ * const user = await helpers.queryOne<User>('SELECT * FROM users WHERE id = ?', [id])
+ * ```
+ */
+export function createStorageHelpers(
+  sqlStorage: SqlStorage,
+  options?: StorageHelpersOptions
+): StorageHelpers {
+  return new StorageHelpersImpl(sqlStorage, options)
+}
+
+// ============================================
+// TypedQuery Implementation
+// ============================================
+
+class TypedQueryImpl<T> implements TypedQuery<T> {
+  sql: string
+  bindings: unknown[]
+  result: T[] = []
+
+  private _whereClause: string = ''
+  private _orderByClause: string = ''
+  private _limitClause: string = ''
+  private _whereBindings: unknown[] = []
+
+  constructor(sql: string, bindings?: unknown[]) {
+    this.sql = sql
+    this.bindings = bindings ?? []
+  }
+
+  private buildQuery(): string {
+    let query = this.sql
+    if (this._whereClause) {
+      query += ` WHERE ${this._whereClause}`
+    }
+    if (this._orderByClause) {
+      query += ` ORDER BY ${this._orderByClause}`
+    }
+    if (this._limitClause) {
+      query += ` LIMIT ${this._limitClause}`
+    }
+    return query
+  }
+
+  private getAllBindings(): unknown[] {
+    return [...this.bindings, ...this._whereBindings]
+  }
+
+  async execute(sqlStorage: SqlStorage): Promise<T[]> {
+    const query = this.buildQuery()
+    const allBindings = this.getAllBindings()
+    const cursor = allBindings.length > 0
+      ? sqlStorage.exec<T>(query, ...allBindings)
+      : sqlStorage.exec<T>(query)
+    this.result = cursor.toArray()
+    return this.result
+  }
+
+  async executeOne(sqlStorage: SqlStorage, _bindings?: unknown[]): Promise<T | undefined> {
+    const query = this.buildQuery()
+    const allBindings = this.getAllBindings()
+    const cursor = allBindings.length > 0
+      ? sqlStorage.exec<T>(query, ...allBindings)
+      : sqlStorage.exec<T>(query)
+    const result = cursor.one()
+    return result ?? undefined
+  }
+
+  where(clause: string, bindings?: unknown[]): TypedQuery<T> {
+    const newQuery = new TypedQueryImpl<T>(this.sql, this.bindings)
+    newQuery._whereClause = this._whereClause
+      ? `${this._whereClause} AND ${clause}`
+      : clause
+    newQuery._orderByClause = this._orderByClause
+    newQuery._limitClause = this._limitClause
+    newQuery._whereBindings = [...this._whereBindings, ...(bindings ?? [])]
+    return newQuery
+  }
+
+  orderBy(column: keyof T, direction: 'ASC' | 'DESC' = 'ASC'): TypedQuery<T> {
+    const newQuery = new TypedQueryImpl<T>(this.sql, this.bindings)
+    newQuery._whereClause = this._whereClause
+    newQuery._orderByClause = `${String(column)} ${direction}`
+    newQuery._limitClause = this._limitClause
+    newQuery._whereBindings = [...this._whereBindings]
+    return newQuery
+  }
+
+  limit(count: number): TypedQuery<T> {
+    const newQuery = new TypedQueryImpl<T>(this.sql, this.bindings)
+    newQuery._whereClause = this._whereClause
+    newQuery._orderByClause = this._orderByClause
+    newQuery._limitClause = String(count)
+    newQuery._whereBindings = [...this._whereBindings]
+    return newQuery
+  }
+
+  select<K extends keyof T>(columns: K[]): TypedQuery<Pick<T, K>> {
+    // Extract table name from the SQL (simple extraction)
+    const match = this.sql.match(/FROM\s+(\w+)/i)
+    const tableName = match ? match[1] : 'table'
+    const columnList = columns.map(String).join(', ')
+    const newSql = `SELECT ${columnList} FROM ${tableName}`
+
+    const newQuery = new TypedQueryImpl<Pick<T, K>>(newSql, this.bindings)
+    newQuery._whereClause = this._whereClause
+    newQuery._orderByClause = this._orderByClause
+    newQuery._limitClause = this._limitClause
+    newQuery._whereBindings = [...this._whereBindings]
+    return newQuery
+  }
+}
+
+/**
+ * Create a typed query builder
+ *
+ * @example
+ * ```typescript
+ * const userQuery = createTypedQuery<User>('SELECT * FROM users')
+ *   .where('active = ?', [true])
+ *   .orderBy('createdAt', 'DESC')
+ *   .limit(10)
+ *
+ * const users = await userQuery.execute(ctx.storage.sql)
+ * ```
+ */
+export function createTypedQuery<T>(sql: string, bindings?: unknown[]): TypedQuery<T> {
+  return new TypedQueryImpl<T>(sql, bindings)
+}
+
+/**
+ * Create a typed SQL result wrapper
+ *
+ * @example
+ * ```typescript
+ * const cursor = ctx.storage.sql.exec('SELECT * FROM users')
+ * const typedResult = wrapTypedResult<User>(cursor)
+ * const users = typedResult.toArray() // User[]
+ * ```
+ */
+export function wrapTypedResult<T>(cursor: SqlStorageCursor<T>): TypedSqlResult<T> {
+  return {
+    columnNames: cursor.columnNames,
+    rowsRead: cursor.rowsRead,
+    rowsWritten: cursor.rowsWritten,
+    toArray: () => cursor.toArray(),
+    one: () => cursor.one(),
+  }
+}

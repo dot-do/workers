@@ -149,6 +149,89 @@ const models = await llm.models()
 // ['claude-3-opus', 'claude-3-sonnet', 'gpt-4', 'gpt-4-turbo', 'gemini-pro', ...]
 ```
 
+## Error Handling
+
+Handle errors gracefully with typed exceptions:
+
+```typescript
+import { llm } from 'llm.do'
+import { RPCError } from 'rpc.do'
+
+try {
+  const result = await llm.complete({
+    model: 'claude-3-opus',
+    prompt: 'Generate a response'
+  })
+} catch (error) {
+  if (error instanceof RPCError) {
+    switch (error.code) {
+      case 401:
+        console.error('Invalid API key')
+        break
+      case 429:
+        console.error('Rate limited - try again later')
+        break
+      case 503:
+        console.error('Model temporarily unavailable')
+        break
+      default:
+        console.error(`LLM error ${error.code}: ${error.message}`)
+    }
+  }
+  throw error
+}
+```
+
+### Common Error Codes
+
+| Code | Meaning | What to Do |
+|------|---------|------------|
+| 400 | Invalid request | Check your prompt and parameters |
+| 401 | Authentication failed | Verify your API key is correct |
+| 403 | Access denied | Check your plan supports this model |
+| 429 | Rate limited | Wait and retry with exponential backoff |
+| 500 | Server error | Retry after a brief delay |
+| 503 | Model unavailable | Try a different model or retry later |
+
+### Graceful Degradation
+
+```typescript
+import { llm } from 'llm.do'
+import { RPCError } from 'rpc.do'
+
+async function generateWithFallback(prompt: string) {
+  const models = ['claude-3-opus', 'gpt-4', 'claude-3-sonnet']
+
+  for (const model of models) {
+    try {
+      return await llm.complete({ model, prompt })
+    } catch (error) {
+      if (error instanceof RPCError && error.code === 503) {
+        console.log(`${model} unavailable, trying next...`)
+        continue
+      }
+      throw error
+    }
+  }
+  throw new Error('All models unavailable')
+}
+```
+
+### Retry Configuration
+
+```typescript
+import { LLM } from 'llm.do'
+
+const llm = LLM({
+  retry: {
+    attempts: 5,        // Max retry attempts
+    delay: 1000,        // Initial delay in ms
+    backoff: 'exponential'  // 1s, 2s, 4s, 8s, 16s
+  },
+  timeout: 60000  // Request timeout in ms
+})
+```
+
 ## Your AI Strategy, Simplified
 
 New models launch every week. Pricing changes constantly. Providers have outages.

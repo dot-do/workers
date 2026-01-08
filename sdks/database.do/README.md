@@ -1,8 +1,43 @@
 # database.do
 
-> Data that generates itself.
+**Your database should build itself.**
 
-You define the shape. AI fills it in. One call creates everything.
+```bash
+npm install database.do
+```
+
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { db } from 'database.do'
+
+// Or use the factory for custom config
+import { Database } from 'database.do'
+const db = Database({ baseURL: 'https://custom.example.com' })
+```
+
+---
+
+## You Have a Business to Build (Not a Schema to Babysit)
+
+You've got a startup idea. You know what your business does.
+
+But before you can build anything, you need a database. And that means:
+
+- Designing tables that might be wrong
+- Arguing about foreign keys
+- Writing migrations for every change
+- Manually entering test data
+- Realizing your schema doesn't match reality
+- Redesigning everything. Again.
+
+**You wanted to launch a product. Now you're a database administrator.**
+
+Schema design is a bottleneck. It slows you down when you should be shipping.
+
+## What If You Could Just Describe Your Business?
 
 ```typescript
 import { DB } from 'database.do'
@@ -27,11 +62,18 @@ const db = DB({
 const blog = await db.Blog('AI Startups')
 ```
 
-## Installation
+You define the shape. AI fills it in. One call creates everything.
 
-```bash
-npm install database.do
-```
+**database.do** is data that generates itself:
+
+- **Describe your things** - Blog, Topic, Post, Lead, Company, whatever your business needs
+- **Define relationships** - Arrows show how things connect and cascade
+- **Generate everything** - One call creates your entire data graph
+- **Query naturally** - Ask questions in plain language
+
+This is how [startups.new](https://startups.new) works. You describe your business idea. AI generates the database, the schema, the test data. You go from concept to working product in minutes, not months.
+
+---
 
 ## The Magic: Cascading Generation
 

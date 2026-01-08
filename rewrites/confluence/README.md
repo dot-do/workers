@@ -6,6 +6,61 @@ Confluence became the default for team documentation. It also became the place w
 
 **confluence.do** reimagines team knowledge for the AI era. AI writes docs from your code. AI keeps docs in sync. AI answers questions. Your wiki finally works.
 
+## AI-Native API
+
+```typescript
+import { confluence } from 'confluence.do'           // Full SDK
+import { confluence } from 'confluence.do/tiny'      // Minimal client
+import { confluence } from 'confluence.do/search'    // Search-only operations
+```
+
+Natural language for knowledge workflows:
+
+```typescript
+import { confluence } from 'confluence.do'
+
+// Talk to it like a colleague
+const answer = await confluence`how do we handle authentication?`
+const stale = await confluence`outdated docs in Engineering`
+const api = await confluence`pages mentioning API redesign`
+
+// Chain like sentences
+await confluence`docs about payments`
+  .notify(`Please review for accuracy`)
+
+// Documentation that writes itself
+await confluence`document the auth system from code`
+  .review()            // AI checks accuracy
+  .publish()           // your approval
+```
+
+### Promise Pipelining with Agents
+
+Chain work without Promise.all:
+
+```typescript
+import { confluence } from 'confluence.do'
+import { mark, tom, priya } from 'agents.do'
+
+// Keep docs in sync with code
+await confluence`docs about authentication`
+  .map(doc => tom`verify ${doc} against codebase`)
+  .map(doc => mark`update ${doc} if stale`)
+  .map(doc => priya`review ${doc}`)
+
+// Generate docs from code changes
+await git`recent commits to ${repo}`
+  .map(commit => mark`document ${commit}`)
+  .map(doc => confluence`publish ${doc} to Engineering`)
+
+// Close documentation gaps at scale
+await confluence`stale docs in Engineering`
+  .map(doc => mark`update ${doc} from current code`)
+  .each(doc => doc.publish())
+```
+
+One network round trip. Record-replay pipelining. Workers working for you.
+
 ## The Problem
 
 Atlassian bundled Confluence with Jira, and companies got stuck:
@@ -50,174 +105,77 @@ npx create-dotdo confluence
 
 Your team wiki. Running on Cloudflare. AI-native.
 
-```bash
-# Or add to existing workers.do project
-npx dotdo add confluence
-```
-
-## The workers.do Way
-
-You're building a product. Your team needs documentation. Confluence wants $70k/year for a wiki where knowledge goes to die. Your engineers can't find anything. Docs drift from reality. There's a better way.
-
-**Natural language. Tagged templates. AI agents that work.**
-
 ```typescript
-import { confluence } from 'confluence.do'
-import { mark, tom, priya } from 'agents.do'
+import { Confluence } from 'confluence.do'
 
-// Talk to your wiki like a human
-const docs = await confluence`search ${query} in ${space}`
-const answer = await confluence`how do we handle authentication?`
-const stale = await confluence`find outdated documentation`
+export default Confluence({
+  name: 'acme-wiki',
+  domain: 'wiki.acme.com',
+  spaces: ['Engineering', 'Product', 'Design'],
+})
 ```
-
-**Promise pipelining - chain work without Promise.all:**
-
-```typescript
-// Keep docs in sync with code
-const synced = await confluence`find docs about ${feature}`
-  .map(doc => tom`verify ${doc} against codebase`)
-  .map(doc => mark`update ${doc} if stale`)
-  .map(doc => priya`review ${doc}`)
-
-// Generate docs from code changes
-const documented = await git`recent commits to ${repo}`
-  .map(commit => mark`document ${commit}`)
-  .map(doc => confluence`publish ${doc} to ${space}`)
-```
-
-One network round trip. Record-replay pipelining. Workers working for you.
 
 ## Features
 
 ### Spaces & Pages
 
-Organize knowledge naturally:
+```typescript
+// Create naturally
+await confluence`create space "Engineering" for technical docs`
+await confluence`create page "Auth Architecture" in Engineering under Architecture`
+
+// Or just write content
+await confluence`
+  page "API Guidelines" in Engineering:
+
+  # API Guidelines
+
+  All APIs must be RESTful with JSON responses...
+`
+```
+
+### Search & Discovery
 
 ```typescript
-import { Space, Page } from 'confluence.do'
+// Find anything
+const authDocs = await confluence`pages about authentication`
+const stale = await confluence`docs not updated in 6 months`
+const byAlice = await confluence`pages Alice wrote last month`
 
-// Create a space
-const engineeringSpace = Space.create({
-  key: 'ENG',
-  name: 'Engineering',
-  description: 'Technical documentation and decisions',
-})
-
-// Create pages
-const page = Page.create({
-  space: 'ENG',
-  title: 'Authentication Architecture',
-  parent: 'Architecture',
-  content: `
-# Authentication Architecture
-
-Our auth system uses JWT tokens with refresh rotation...
-
-## Components
-
-\`\`\`mermaid
-graph TD
-  A[Client] --> B[API Gateway]
-  B --> C[Auth Service]
-  C --> D[User Database]
-\`\`\`
-
-## Decision Record
-
-| Date | Decision | Rationale |
-|------|----------|-----------|
-| 2024-01-15 | JWT over sessions | Stateless scaling |
-| 2024-02-20 | Refresh rotation | Security hardening |
-  `,
-})
+// AI infers what you need
+await confluence`authentication`           // returns relevant pages
+await confluence`how do we deploy?`        // returns answer with sources
+await confluence`what did we decide about caching?`  // finds ADRs
 ```
 
 ### Real-Time Collaboration
 
-Multiple editors, zero conflicts:
+Multiple editors, zero conflicts. CRDT-based editing syncs instantly.
 
 ```typescript
-// Subscribe to page changes
-page.subscribe((event) => {
-  if (event.type === 'content.changed') {
-    console.log(`${event.user} edited at ${event.position}`)
-  }
-})
-
-// Presence awareness
-page.onPresence((users) => {
-  console.log(`${users.length} people viewing this page`)
-  users.forEach(u => console.log(`${u.name} - cursor at ${u.position}`))
-})
-
-// Collaborative editing with CRDT
-const doc = page.getCollaborativeDoc()
-doc.on('change', (delta) => {
-  // Real-time sync across all editors
-})
+// Presence just works
+// See who's editing, where their cursor is
+// Changes merge automatically
 ```
 
 ### Page Trees & Navigation
 
-Hierarchical organization with instant access:
-
 ```typescript
-// Get the full page tree
-const tree = await Space.getPageTree('ENG')
-
-// Smart breadcrumbs
-const breadcrumbs = await page.getBreadcrumbs()
-// ['Engineering', 'Architecture', 'Authentication Architecture']
-
-// Related pages
-const related = await page.getRelated()
-// AI finds semantically similar pages
+// Navigate naturally
+await confluence`Engineering page tree`
+await confluence`pages under Architecture`
+await confluence`related to Auth Architecture`
 ```
 
 ### Templates
 
-Define reusable templates:
-
 ```typescript
-import { Template } from 'confluence.do'
+// Use templates by name
+await confluence`new ADR "Use PostgreSQL for User Data"`
+await confluence`new runbook for payment-service`
+await confluence`new meeting notes from standup`
 
-export const adrTemplate = Template({
-  name: 'Architecture Decision Record',
-  labels: ['adr', 'architecture'],
-  schema: {
-    status: { type: 'select', options: ['Proposed', 'Accepted', 'Deprecated'] },
-    deciders: { type: 'users' },
-    date: { type: 'date' },
-  },
-  content: `
-# {title}
-
-**Status:** {status}
-**Deciders:** {deciders}
-**Date:** {date}
-
-## Context
-
-What is the issue that we're seeing that is motivating this decision?
-
-## Decision
-
-What is the change that we're proposing?
-
-## Consequences
-
-What becomes easier or more difficult because of this change?
-  `,
-})
-
-// Create page from template
-await Page.createFromTemplate(adrTemplate, {
-  title: 'Use PostgreSQL for User Data',
-  status: 'Proposed',
-  deciders: ['@alice', '@bob'],
-  date: '2025-01-15',
-})
+// AI fills in context automatically
 ```
 
 ## AI-Native Documentation
@@ -229,19 +187,16 @@ The real magic. AI that keeps your documentation alive.
 Search that actually understands:
 
 ```typescript
-import { ai, search } from 'confluence.do'
-
 // Semantic search - not just keywords
-const results = await search`how do we handle authentication?`
+await confluence`how do we handle authentication?`
 // Finds pages about auth, JWT, login, sessions - even without those exact words
 
-// Question answering
-const answer = await ai.ask`What database do we use for user data?`
+// Question answering with sources
+await confluence`what database do we use for user data?`
 // Returns: "PostgreSQL, as decided in ADR-042. The users table schema is defined in..."
 
-// With source citations
-const { answer, sources } = await ai.askWithSources`How do I deploy to production?`
-// sources: [{ page: 'Deployment Guide', section: 'Production', relevance: 0.94 }]
+// Complex queries
+await confluence`how do I deploy to production? show sources`
 ```
 
 ### AI Writes Documentation
@@ -250,28 +205,16 @@ Stop staring at blank pages:
 
 ```typescript
 // Generate docs from code
-const apiDocs = await ai.documentCode({
-  repo: 'github.com/company/api',
-  path: 'src/routes/',
-  style: 'technical',
-})
+await confluence`document the API routes in src/routes/`
+await confluence`write technical docs for payment-service`
 
-// Generate from template + context
-const runbook = await ai.generate({
-  template: 'incident-runbook',
-  context: {
-    service: 'payment-service',
-    oncall: '@backend-team',
-    dependencies: ['stripe', 'postgres', 'redis'],
-  },
-})
+// Generate from context
+await confluence`write runbook for payment-service with @backend-team oncall`
 
-// Generate meeting notes from transcript
-const notes = await ai.meetingNotes({
-  transcript: meetingTranscript,
-  attendees: ['alice', 'bob', 'carol'],
-  template: 'decision-meeting',
-})
+// Generate meeting notes
+await confluence`meeting notes from standup recording`
+  .review()     // you approve
+  .publish()    // done
 ```
 
 ### AI Freshness Verification
@@ -280,32 +223,12 @@ Know if your docs are current:
 
 ```typescript
 // AI checks documentation freshness
-const freshness = await ai.checkFreshness(page, {
-  compareToCode: true,     // Diff against source code
-  checkLinks: true,        // Find broken links
-  detectContradictions: true,  // Find conflicting information
-})
+await confluence`check freshness of API docs against code`
+await confluence`find broken links in Engineering`
+await confluence`docs that contradict each other`
 
-// Returns:
-{
-  status: 'stale',
-  confidence: 0.87,
-  issues: [
-    {
-      type: 'code_drift',
-      section: 'API Endpoints',
-      detail: 'Documentation shows POST /users but code has POST /api/v2/users',
-      suggestion: 'Update endpoint path to /api/v2/users'
-    },
-    {
-      type: 'broken_link',
-      section: 'References',
-      detail: 'Link to old-architecture.md returns 404'
-    }
-  ],
-  lastVerified: '2025-01-15T10:30:00Z',
-  suggestedUpdate: '...'  // AI-generated fix
-}
+// Or just ask
+await confluence`is the deployment guide current?`
 ```
 
 ### AI Doc Sync
@@ -313,29 +236,14 @@ const freshness = await ai.checkFreshness(page, {
 Keep docs and code in sync automatically:
 
 ```typescript
-import { DocSync } from 'confluence.do'
-
 // Sync API docs with OpenAPI spec
-DocSync.register({
-  source: 'github.com/company/api/openapi.yaml',
-  target: 'ENG/API Reference',
-  transform: 'openapi-to-markdown',
-  schedule: 'on-push',  // or 'daily', 'weekly'
-})
+await confluence`sync API Reference from openapi.yaml on every push`
 
 // Sync README with wiki
-DocSync.register({
-  source: 'github.com/company/service/README.md',
-  target: 'ENG/Services/Payment Service',
-  bidirectional: true,  // Changes sync both ways
-})
+await confluence`sync payment-service README bidirectionally`
 
-// Auto-generate changelog from commits
-DocSync.register({
-  source: 'github.com/company/app/commits',
-  target: 'PRODUCT/Changelog',
-  transform: 'conventional-commits-to-changelog',
-})
+// Auto-generate changelog
+await confluence`generate changelog from commits weekly`
 ```
 
 ### AI Q&A Bot
@@ -343,13 +251,8 @@ DocSync.register({
 Answer questions from your wiki:
 
 ```typescript
-import { QABot } from 'confluence.do'
-
-// Deploy a Q&A bot for your wiki
-const bot = QABot.create({
-  spaces: ['ENG', 'PRODUCT', 'DESIGN'],
-  channels: ['slack:#engineering', 'discord:#help'],
-})
+// Deploy a Q&A bot - one line
+await confluence`deploy bot to #engineering and #help`
 
 // In Slack: "@wiki-bot how do we deploy to production?"
 // Bot responds with synthesized answer + source links
@@ -363,16 +266,13 @@ Seamless connection with your issue tracker:
 // Auto-link issues mentioned in docs
 // Writing "BACKEND-123" in a page automatically links to jira.do
 
-// Create doc from issue
-const issue = await jira.getIssue('BACKEND-500')
-const designDoc = await ai.generateDesignDoc(issue)
-await Page.create({
-  space: 'ENG',
-  parent: 'Design Documents',
-  title: designDoc.title,
-  content: designDoc.content,
-  linkedIssues: ['BACKEND-500'],
-})
+// Create design doc from issue
+await confluence`design doc for BACKEND-500`
+
+// Or chain from jira
+await jira`BACKEND-500`
+  .map(issue => confluence`write design doc for ${issue}`)
+  .map(doc => confluence`publish to Design Documents`)
 
 // Embed issue status in docs
 // {% jira BACKEND-500 %} shows live status
@@ -385,58 +285,30 @@ Rich components for modern documentation:
 ### Diagrams
 
 ```typescript
-// Mermaid diagrams
-\`\`\`mermaid
-sequenceDiagram
-  Client->>API: POST /login
-  API->>Auth: validate(credentials)
-  Auth-->>API: token
-  API-->>Client: 200 OK + JWT
-\`\`\`
+// Generate diagrams naturally
+await confluence`diagram the auth flow`
+await confluence`architecture diagram for payment-service`
 
-// Excalidraw embeds
-\`\`\`excalidraw
-{
-  "type": "excalidraw",
-  "id": "arch-diagram-001"
-}
-\`\`\`
+// Or embed Mermaid/Excalidraw directly in content
 ```
 
 ### Code Blocks
 
 ```typescript
-// Syntax highlighted code
-\`\`\`typescript
-import { User } from './models'
+// Live code from GitHub - always current
+await confluence`embed src/models/user.ts lines 10-25`
 
-export async function createUser(data: UserInput): Promise<User> {
-  return db.users.insert(data)
-}
-\`\`\`
-
-// Live code from GitHub
-\`\`\`github
-repo: company/api
-path: src/models/user.ts
-lines: 10-25
-\`\`\`
+// Code stays in sync automatically
 ```
 
 ### Tables & Databases
 
 ```typescript
-// Dynamic tables
-{% table %}
-  {% query project = "BACKEND" AND type = "Bug" AND status = "Open" %}
-{% /table %}
+// Dynamic tables from queries
+await confluence`table of open bugs in BACKEND`
 
 // Embedded databases (Notion-style)
-{% database id="features-db" %}
-  columns: [Name, Status, Owner, Priority, Sprint]
-  filter: Status != Done
-  sort: Priority DESC
-{% /database %}
+await confluence`database of features with status, owner, priority`
 ```
 
 ### Callouts & Panels
@@ -453,10 +325,6 @@ Be careful when modifying production data.
 {% danger %}
 This action cannot be undone.
 {% /danger %}
-
-{% success %}
-Your deployment completed successfully.
-{% /success %}
 ```
 
 ## API Compatible
@@ -475,17 +343,7 @@ GET    /wiki/rest/api/content/{id}/child/page
 GET    /wiki/rest/api/content/search?cql={query}
 ```
 
-Existing Confluence integrations work:
-
-```typescript
-// Your existing confluence client
-const client = new ConfluenceClient({
-  host: 'your-org.confluence.do',  // Just change the host
-  // ... rest stays the same
-})
-
-const page = await client.getPage('123456')
-```
+Existing Confluence integrations work. Just change the host.
 
 ## Architecture
 
@@ -522,16 +380,23 @@ Both operations merge automatically:
 
 ### Storage Tiers
 
-```typescript
-// Hot: SQLite in Durable Object
-// Current pages, recent edits, page tree
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Current pages, recent edits | <10ms |
+| **Warm** | R2 + Index | Attachments, page history | <100ms |
+| **Cold** | R2 Archive | Old versions, deleted content | <1s |
 
-// Warm: R2 object storage
-// Attachments, images, page history
+## vs Atlassian Confluence
 
-// Cold: R2 archive
-// Old versions, deleted content (retention)
-```
+| Feature | Atlassian Confluence | confluence.do |
+|---------|---------------------|---------------|
+| **Annual Cost** | $69,300 (500 users) | ~$50/month |
+| **Search** | Keyword matching | AI semantic search |
+| **Freshness** | Manual verification | AI-verified |
+| **Documentation** | Write everything | AI generates from code |
+| **Architecture** | Centralized cloud | Edge-native, global |
+| **Data Location** | Atlassian's servers | Your Cloudflare account |
+| **Lock-in** | Years of migration | MIT licensed |
 
 ## Migration from Confluence
 
@@ -594,12 +459,17 @@ Key areas:
 
 ## License
 
-MIT License - Use it however you want. Build your business on it. Fork it. Make it your own.
+MIT License - For teams who deserve better documentation.
 
 ---
 
 <p align="center">
-  <strong>confluence.do</strong> is part of the <a href="https://dotdo.dev">dotdo</a> platform.
+  <strong>The $70k wiki ends here.</strong>
   <br />
-  <a href="https://confluence.do">Website</a> | <a href="https://docs.confluence.do">Docs</a> | <a href="https://discord.gg/dotdo">Discord</a>
+  AI-native. Always fresh. Knowledge that works.
+  <br /><br />
+  <a href="https://confluence.do">Website</a> |
+  <a href="https://docs.confluence.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/confluence.do">GitHub</a>
 </p>

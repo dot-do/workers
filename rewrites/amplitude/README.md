@@ -1,54 +1,82 @@
 # amplitude.do
 
-> The product analytics platform. Now open source. AI-native.
+> Product Analytics. Edge-Native. Open by Default. AI-First.
 
-Amplitude powers product-led growth for thousands of companies. But at $50k+/year for Growth plans, with per-MTU pricing that explodes at scale, and critical features locked behind enterprise tiers, it's time for a new approach.
+Amplitude built a $50k+/year product analytics empire. Per-MTU pricing that explodes at scale. Behavioral cohorts locked behind Growth tier. Experiments gated to Enterprise. Data retention capped. Your own data held hostage.
 
-**amplitude.do** reimagines product analytics for the AI era. Every event captured. Every funnel analyzed. Every cohort defined. Zero MTU pricing.
+**amplitude.do** is the open-source alternative. Zero MTU pricing. Unlimited events. AI-powered insights. Deploys in minutes, not sales calls.
+
+## AI-Native API
+
+```typescript
+import { amplitude } from 'amplitude.do'           // Full SDK
+import { amplitude } from 'amplitude.do/tiny'      // Minimal client
+import { amplitude } from 'amplitude.do/analytics' // Analytics only
+```
+
+Natural language for product analytics:
+
+```typescript
+import { amplitude } from 'amplitude.do'
+
+// Talk to it like a PM
+const funnel = await amplitude`signup to purchase funnel this month`
+const cohort = await amplitude`power users: 10+ sessions this week`
+const drop = await amplitude`why did signups drop last Tuesday?`
+
+// Chain like sentences
+await amplitude`users who signed up but never purchased`
+  .notify(`Complete your first purchase for 20% off`)
+
+// Events that capture themselves
+await amplitude`user-123 clicked signup button`
+await amplitude`sarah@acme.com upgraded to pro plan`
+await amplitude`track pageview /dashboard for user-456`
+```
 
 ## The Problem
 
-Amplitude built a product analytics empire on:
+Amplitude dominates product analytics with aggressive pricing:
 
-- **Per-MTU pricing** - Monthly Tracked Users that scale costs with success
-- **Feature gating** - Behavioral cohorts, predictions, experiments on Growth+
-- **Data retention limits** - Historical data access requires higher tiers
-- **Governance lock** - Data taxonomy and governance tools are enterprise-only
-- **Identity resolution** - Cross-device user stitching costs extra
-- **Raw data access** - Exporting your own data requires premium plans
+| What Amplitude Charges | The Reality |
+|------------------------|-------------|
+| **Per-MTU Pricing** | Costs explode with success |
+| **Growth Plan** | $50k+/year minimum |
+| **Enterprise Plan** | $100k+/year+ |
+| **Behavioral Cohorts** | Locked behind Growth tier |
+| **Predictions** | Enterprise only |
+| **Experiments** | Enterprise only |
+| **Data Retention** | Capped by tier |
 
-10 million MTUs? You're looking at **$100k+/year**. And that's before experiments.
+### The MTU Tax
 
-## The workers.do Way
+10 million Monthly Tracked Users? You're paying $100k+/year. And that's before:
 
-You're scaling fast. Your analytics bill just hit $100k/year. Every tracked user costs money. Every funnel you analyze, every cohort you build, every experiment you run - another line item on a bill that grows with your success.
+- Behavioral cohorts
+- Churn predictions
+- A/B experiments
+- Raw data export
+- SSO/SAML
 
-What if analytics was just a conversation?
+Every successful feature launch increases your analytics bill.
 
-```typescript
-import { amplitude, priya } from 'workers.do'
+### The Feature Lock
 
-// Natural language analytics
-const funnel = await amplitude`show signup funnel for ${cohort}`
-const retention = await amplitude`analyze retention for users who ${action}`
-const insights = await amplitude`why did signups drop on ${date}?`
+The most valuable analytics capabilities are paywalled:
 
-// Chain analytics into product decisions
-const roadmap = await amplitude`analyze user activation patterns`
-  .map(patterns => amplitude`identify friction points in ${patterns}`)
-  .map(friction => priya`recommend product changes for ${friction}`)
-```
+- **Behavioral cohorts** - Define users by what they do, not who they are
+- **Predictions** - Churn risk, conversion likelihood, LTV
+- **Experiments** - A/B testing with statistical rigor
+- **Root cause** - AI explaining why metrics changed
 
-One import. Natural language. AI-powered insights that chain into action.
-
-That's analytics that works for you.
+Growth companies need these most. Amplitude charges them extra.
 
 ## The Solution
 
-**amplitude.do** is Amplitude reimagined:
+**amplitude.do** reimagines product analytics:
 
 ```
-Traditional Amplitude           amplitude.do
+Amplitude                       amplitude.do
 -----------------------------------------------------------------
 Per-MTU pricing                 Flat: pay for storage, not users
 $50k/year Growth                $0 - run your own
@@ -66,38 +94,12 @@ npx create-dotdo amplitude
 
 Your own Amplitude instance. Running on Cloudflare. Zero MTU fees.
 
-## Product Analytics That Scale
-
-Track every user action without worrying about costs:
-
 ```typescript
-import { amplitude } from 'amplitude.do'
+import { Amplitude } from 'amplitude.do'
 
-// Track events (unlimited)
-amplitude.track('Button Clicked', {
-  button_name: 'Sign Up',
-  page: 'landing',
-  variant: 'blue',
-})
-
-// Identify users
-amplitude.identify('user-123', {
-  email: 'user@example.com',
-  plan: 'pro',
-  company: 'Acme Corp',
-})
-
-// Track revenue
-amplitude.revenue({
-  productId: 'pro-plan',
-  price: 99,
-  quantity: 1,
-})
-
-// Group users (accounts/companies)
-amplitude.group('company', 'acme-corp', {
-  industry: 'Technology',
-  employees: 500,
+export default Amplitude({
+  name: 'my-product',
+  domain: 'analytics.my-product.com',
 })
 ```
 
@@ -105,366 +107,202 @@ amplitude.group('company', 'acme-corp', {
 
 ### Event Tracking
 
-Comprehensive event capture:
+```typescript
+// Just say it
+await amplitude`user-123 clicked signup button`
+await amplitude`sarah@acme.com viewed pricing page`
+await amplitude`user-456 completed checkout $99`
+
+// AI infers the event structure
+await amplitude`user-123 clicked signup button`
+// → { event: 'Button Clicked', properties: { button: 'signup' }, user_id: 'user-123' }
+
+// Batch events read like a log
+await amplitude`
+  user-123:
+  - viewed landing page
+  - clicked signup
+  - completed registration
+  - started onboarding
+`
+```
+
+### User Identification
 
 ```typescript
-import { Amplitude } from 'amplitude.do'
+// Identify naturally
+await amplitude`user-123 is sarah@acme.com on pro plan at Acme Corp`
+await amplitude`sarah works at Acme, 500 employees, Technology`
 
-const amplitude = new Amplitude({
-  apiKey: env.AMPLITUDE_KEY,  // Your instance
-})
-
-// Standard events
-amplitude.track('Page Viewed', {
-  page: '/dashboard',
-  referrer: document.referrer,
-})
-
-// Custom events
-amplitude.track('Feature Used', {
-  feature_name: 'export',
-  format: 'csv',
-  row_count: 1000,
-})
-
-// Event with timestamp
-amplitude.track('Purchase Completed', {
-  product_id: 'widget-pro',
-  amount: 49.99,
-}, {
-  time: Date.parse('2024-01-15T10:30:00Z'),
-})
-
-// Batch events
-amplitude.trackBatch([
-  { event: 'Step 1 Completed', properties: { ... } },
-  { event: 'Step 2 Completed', properties: { ... } },
-  { event: 'Step 3 Completed', properties: { ... } },
-])
+// AI links identities
+await amplitude`link user-123 to device-abc`
+await amplitude`merge anonymous-456 into user-123`
 ```
 
 ### Funnels
 
-Analyze conversion through any sequence:
-
 ```typescript
-import { Funnel } from 'amplitude.do/analytics'
+// Funnels are one line
+const funnel = await amplitude`signup to purchase funnel this month`
+const mobile = await amplitude`iOS signup funnel last week`
+const checkout = await amplitude`cart to checkout to payment funnel`
 
-// Define a funnel
-const signupFunnel = Funnel({
-  name: 'Signup Flow',
-  steps: [
-    { event: 'Landing Page Viewed' },
-    { event: 'Sign Up Started' },
-    { event: 'Email Verified' },
-    { event: 'Profile Completed' },
-    { event: 'First Action Taken' },
-  ],
-  timeWindow: '7 days',
-})
+// AI infers the steps
+await amplitude`signup to purchase funnel`
+// → Landing → Signup → Email Verified → First Purchase
 
-// Query funnel metrics
-const results = await signupFunnel.query({
-  dateRange: { start: '2024-01-01', end: '2024-03-31' },
-  segmentBy: 'platform',
-})
+// Segment naturally
+await amplitude`signup funnel by platform`
+await amplitude`checkout funnel iOS vs Android`
+await amplitude`onboarding funnel for enterprise users`
 
-// Returns conversion at each step
-console.log(results)
-// {
-//   steps: [
-//     { name: 'Landing Page Viewed', count: 100000, rate: 1.0 },
-//     { name: 'Sign Up Started', count: 35000, rate: 0.35 },
-//     { name: 'Email Verified', count: 28000, rate: 0.80 },
-//     { name: 'Profile Completed', count: 21000, rate: 0.75 },
-//     { name: 'First Action Taken', count: 15000, rate: 0.71 },
-//   ],
-//   overallConversion: 0.15,
-//   medianTimeToConvert: '2.3 days',
-//   segments: {
-//     'ios': { overallConversion: 0.18 },
-//     'android': { overallConversion: 0.14 },
-//     'web': { overallConversion: 0.12 },
-//   }
-// }
+// Find the leaks
+await amplitude`where do users drop in checkout?`
+await amplitude`biggest drop in signup funnel`
 ```
 
 ### Retention
 
-Understand user stickiness:
-
 ```typescript
-import { Retention } from 'amplitude.do/analytics'
+// Retention curves naturally
+await amplitude`day 1 7 30 retention this quarter`
+await amplitude`retention for users who completed onboarding`
+await amplitude`retention iOS vs Android`
 
-// N-day retention
-const retention = await Retention.nDay({
-  startEvent: 'Signed Up',
-  returnEvent: 'Any Active Event',
-  dateRange: { start: '2024-01-01', end: '2024-01-31' },
-  days: [1, 3, 7, 14, 30],
-})
+// Compare cohorts
+await amplitude`retention: Jan signups vs Feb signups`
+await amplitude`do power users retain better?`
 
-// Returns retention curve
-console.log(retention)
-// {
-//   cohortSize: 5000,
-//   retention: {
-//     day1: 0.45,
-//     day3: 0.32,
-//     day7: 0.25,
-//     day14: 0.20,
-//     day30: 0.15,
-//   }
-// }
-
-// Unbounded retention (return on or after day N)
-const unbounded = await Retention.unbounded({
-  startEvent: 'Signed Up',
-  returnEvent: 'Purchase Completed',
-  dateRange: { start: '2024-01-01', end: '2024-03-31' },
-})
-
-// Bracket retention (custom time windows)
-const brackets = await Retention.bracket({
-  startEvent: 'Signed Up',
-  returnEvent: 'Any Active Event',
-  brackets: ['0-1 days', '2-7 days', '8-30 days', '31-90 days'],
-})
+// Unbounded retention
+await amplitude`users who ever purchased after signup`
 ```
 
 ### Cohorts
 
-Define and analyze user segments:
-
 ```typescript
-import { Cohort } from 'amplitude.do/analytics'
+// Behavioral cohorts in plain English
+const power = await amplitude`power users: 10+ sessions this week`
+const dormant = await amplitude`users inactive for 30 days`
+const churning = await amplitude`users likely to churn`
 
-// Behavioral cohort
-const powerUsers = Cohort({
-  name: 'Power Users',
-  definition: {
-    all: [
-      { event: 'Any Active Event', count: { gte: 10 }, within: '7 days' },
-      { property: 'plan', operator: 'is', value: 'pro' },
-    ],
-  },
-})
+// Combine conditions naturally
+await amplitude`pro users who haven't used feature X`
+await amplitude`signed up last month but never purchased`
+await amplitude`mobile users with 5+ sessions this week`
 
-// Query cohort size over time
-const trend = await powerUsers.sizeTrend({
-  dateRange: { start: '2024-01-01', end: '2024-03-31' },
-  granularity: 'week',
-})
+// Lifecycle cohorts just work
+await amplitude`new users this week`
+await amplitude`resurrected users`
+await amplitude`users at risk of churning`
 
-// Export cohort for targeting
-const users = await powerUsers.export({ limit: 10000 })
-
-// Use cohort in analysis
-const funnel = await signupFunnel.query({
-  cohort: powerUsers,
-})
-
-// Lifecycle cohorts (built-in)
-const newUsers = Cohort.new({ within: '7 days' })
-const activeUsers = Cohort.active({ within: '7 days' })
-const dormantUsers = Cohort.dormant({ after: '30 days' })
-const resurrectedUsers = Cohort.resurrected({ after: '30 days', active: '7 days' })
+// Act on cohorts
+await amplitude`users who signed up but never purchased`
+  .notify(`Complete your first purchase for 20% off`)
+  .each(user => amplitude`flag ${user} for sales outreach`)
 ```
 
 ### User Journeys
 
-Visualize paths through your product:
-
 ```typescript
-import { Journey } from 'amplitude.do/analytics'
+// See how users flow
+await amplitude`paths from signup to purchase`
+await amplitude`what do users do after checkout?`
+await amplitude`how do power users navigate?`
 
-// Most common paths
-const paths = await Journey.paths({
-  startEvent: 'App Opened',
-  endEvent: 'Purchase Completed',
-  steps: 5,
-  dateRange: { start: '2024-01-01', end: '2024-03-31' },
-})
-
-// Pathfinder (Sankey diagram)
-const pathfinder = await Journey.pathfinder({
-  startEvent: 'Landing Page Viewed',
-  depth: 4,
-  minPercentage: 0.01,  // Show paths with >1% of users
-})
-
-// Session replay (if enabled)
-const sessions = await Journey.sessions({
-  userId: 'user-123',
-  dateRange: { start: '2024-03-01', end: '2024-03-31' },
-})
+// Find friction
+await amplitude`where do users get stuck?`
+await amplitude`dead ends in the product`
+await amplitude`rage clicks this week`
 ```
 
-### Experiments (A/B Testing)
-
-Run and analyze experiments:
+### Experiments
 
 ```typescript
-import { Experiment } from 'amplitude.do/experiments'
+// A/B tests are questions
+await amplitude`new checkout vs control`
+await amplitude`which pricing page converts better?`
+await amplitude`is dark mode increasing engagement?`
 
-// Create experiment
-const checkoutExperiment = Experiment({
-  name: 'New Checkout Flow',
-  variants: [
-    { name: 'control', weight: 50 },
-    { name: 'new_flow', weight: 50 },
-  ],
-  targetCohort: 'all_users',
-  primaryMetric: {
-    event: 'Purchase Completed',
-    type: 'conversion',
-  },
-  secondaryMetrics: [
-    { event: 'Purchase Completed', property: 'amount', type: 'sum' },
-    { event: 'Checkout Abandoned', type: 'conversion' },
-  ],
-})
+// Run experiments naturally
+await amplitude`run experiment: blue button vs green button`
+  .on(`signup page visitors`)
+  .measure(`signups`)
 
-// Assign variant
-const variant = await checkoutExperiment.getVariant('user-123')
-// 'control' or 'new_flow'
+// Get results
+await amplitude`checkout experiment results`
+// → { winner: 'new_flow', lift: '+20%', confidence: 95% }
 
-// Track exposure
-amplitude.track('$exposure', {
-  experiment: 'new_checkout_flow',
-  variant: variant,
-})
-
-// Query results
-const results = await checkoutExperiment.results({
-  dateRange: { start: '2024-03-01', end: '2024-03-31' },
-})
-
-// Returns statistical analysis
-console.log(results)
-// {
-//   variants: {
-//     control: {
-//       users: 5000,
-//       conversions: 500,
-//       rate: 0.10
-//     },
-//     new_flow: {
-//       users: 5000,
-//       conversions: 600,
-//       rate: 0.12
-//     },
-//   },
-//   lift: 0.20,  // 20% improvement
-//   confidence: 0.95,
-//   winner: 'new_flow',
-//   sampleSizeReached: true,
-// }
+// Feature flags
+await amplitude`should user-123 see new feature?`
+await amplitude`roll out dark mode to 10% of users`
 ```
 
-## AI-Native Features
+## AI-Native Analytics
 
-### Natural Language Analytics
-
-Ask questions about your product:
+### Root Cause Analysis
 
 ```typescript
-import { ask } from 'amplitude.do'
+// Ask why, get answers
+await amplitude`why did signups drop last Tuesday?`
+// → { factors: ['ad campaign ended', 'homepage A/B test'], confidence: 0.85 }
 
-// Simple questions
-const answer1 = await ask('how many users signed up last week?')
-// Returns: { value: 3500, trend: '+12%', visualization: <chart> }
-
-// Funnel questions
-const answer2 = await ask('what is our checkout funnel conversion?')
-// Returns: { funnel: [...], overallConversion: 0.15, visualization: <funnel> }
-
-// Comparative questions
-const answer3 = await ask('how does iOS retention compare to Android?')
-// Returns: { comparison: {...}, visualization: <comparison chart> }
-
-// Root cause questions
-const answer4 = await ask('why did signups drop last Tuesday?')
-// Returns: { factors: [...], narrative: "...", visualization: <breakdown> }
+await amplitude`what changed when conversion improved?`
+await amplitude`why is iOS retention higher than Android?`
+await amplitude`what do power users do differently?`
 ```
 
 ### Predictive Analytics
 
-AI-powered predictions:
-
 ```typescript
-import { predict } from 'amplitude.do'
+// Predictions as questions
+await amplitude`will user-123 churn?`
+// → { probability: 0.72, factors: ['no login in 14 days', 'support ticket open'] }
 
-// Churn prediction
-const churnRisk = await predict.churn({
-  userId: 'user-123',
-  timeframe: '30 days',
-})
-// { probability: 0.72, factors: ['no login in 14 days', 'support ticket open'] }
+await amplitude`likelihood user-123 purchases this week`
+await amplitude`predicted LTV for user-123`
 
-// Conversion prediction
-const conversionLikelihood = await predict.conversion({
-  userId: 'user-123',
-  event: 'Purchase Completed',
-  timeframe: '7 days',
-})
-// { probability: 0.35, factors: ['viewed pricing 3x', 'pro plan interest'] }
-
-// LTV prediction
-const ltv = await predict.ltv({
-  userId: 'user-123',
-  timeframe: '12 months',
-})
-// { predicted: 450, confidence: 0.8, cohortAverage: 380 }
+// Batch predictions
+await amplitude`users likely to churn this month`
+  .each(user => amplitude`flag ${user} for retention outreach`)
 ```
 
 ### Auto-Instrumentation
 
-AI captures events automatically:
-
 ```typescript
-import { autoTrack } from 'amplitude.do'
-
-// Auto-track all user interactions
-autoTrack({
-  clicks: true,      // Button clicks, links
-  forms: true,       // Form submissions
-  pageViews: true,   // Page navigation
-  scrollDepth: true, // Scroll percentage
-  rage: true,        // Rage clicks (frustration)
-  errors: true,      // JavaScript errors
-})
+// AI captures everything automatically
+await amplitude`auto-track my-app.com`
 
 // AI names events semantically
-// "Submit Button Clicked" instead of "click_btn_abc123"
+// "Submit Button Clicked" not "click_btn_abc123"
+// "Pricing Page Viewed" not "pageview_/pricing"
+
+// Rage click detection automatic
+// Dead click detection automatic
+// Session recording optional
 ```
 
 ### AI Agents as Analysts
 
-AI agents can analyze your product:
-
 ```typescript
 import { priya, quinn } from 'agents.do'
-import { amplitude } from 'amplitude.do'
 
-// Product manager analyzes user behavior
-const analysis = await priya`
-  analyze our user activation funnel and identify
-  the biggest drop-off points with recommendations
-`
+// PM analyzes user behavior
+await priya`analyze our activation funnel and recommend changes`
+  .map(recommendations => amplitude`create issues for ${recommendations}`)
 
 // QA finds issues through event patterns
-const issues = await quinn`
-  look for anomalies in our event data that might
-  indicate bugs or UX problems
-`
+await quinn`find anomalies in our event data`
+  .map(anomalies => amplitude`alert on-call for ${anomalies}`)
+
+// Chain insights into action
+await amplitude`weekly product insights`
+  .map(insights => priya`prioritize these for Q2`)
+  .map(priorities => amplitude`create dashboard for ${priorities}`)
 ```
 
 ## Architecture
 
-### Event Ingestion
-
-High-throughput event pipeline:
+### Event Pipeline
 
 ```
 Client SDK  -->  Edge Worker  -->  Event DO  -->  Storage Tiers
@@ -475,115 +313,91 @@ Client SDK  -->  Edge Worker  -->  Event DO  -->  Storage Tiers
          (Schema)      (GeoIP, UA)
 ```
 
-### Durable Objects
+### Durable Object per Product
 
 ```
-                    +------------------------+
-                    |   amplitude.do Worker  |
-                    |   (API + Ingestion)    |
-                    +------------------------+
-                              |
-              +---------------+---------------+
-              |               |               |
-    +------------------+ +------------------+ +------------------+
-    | UserDO           | | EventStoreDO     | | AnalyticsDO      |
-    | (Identity Graph) | | (Event Buffer)   | | (Query Engine)   |
-    +------------------+ +------------------+ +------------------+
-              |               |               |
-              +---------------+---------------+
-                              |
-         +--------------------+--------------------+
-         |                    |                    |
-    +----------+       +-----------+        +------------+
-    |    D1    |       |     R2    |        | Analytics  |
-    | (Users)  |       | (Events)  |        | Engine     |
-    +----------+       +-----------+        +------------+
+ProductDO (config, users, events)
+  |
+  +-- UsersDO (identity graph)
+  |     |-- SQLite: User profiles
+  |     +-- Identity resolution
+  |
+  +-- EventsDO (event buffer)
+  |     |-- SQLite: Recent events (7 days)
+  |     +-- R2: Historical events (Parquet)
+  |
+  +-- AnalyticsDO (query engine)
+  |     |-- Analytics Engine: Real-time aggregations
+  |     +-- Cohort definitions
+  |
+  +-- ExperimentsDO (A/B testing)
+        |-- SQLite: Experiment configs
+        +-- Variant assignments
 ```
 
 ### Storage Tiers
 
-- **Hot (SQLite/D1)** - Recent events (7 days), user profiles, cohort definitions
-- **Warm (R2 Parquet)** - Historical events, queryable
-- **Cold (R2 Archive)** - Long-term retention, compressed
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Recent events (7 days) | <10ms |
+| **Warm** | R2 Parquet | Historical events (months) | <100ms |
+| **Cold** | R2 Archive | Long-term retention (years) | <1s |
 
 ### Query Engine
 
-Built on Cloudflare Analytics Engine for real-time aggregations:
+Real-time aggregations on Analytics Engine. Billions of events. Sub-second queries.
+
+## vs Amplitude
+
+| Feature | Amplitude | amplitude.do |
+|---------|-----------|--------------|
+| **Pricing** | Per-MTU ($50k+/year) | Flat storage cost |
+| **Cohorts** | Growth tier only | Free |
+| **Predictions** | Enterprise only | Free |
+| **Experiments** | Enterprise only | Free |
+| **Data Retention** | Tier-limited | Unlimited |
+| **Raw Data Export** | Premium only | Your data, always |
+| **Architecture** | Centralized | Edge-native, global |
+| **Data Location** | Amplitude's cloud | Your Cloudflare account |
+| **Lock-in** | Years of data trapped | MIT licensed |
+
+## Use Cases
+
+### Product Analytics
 
 ```typescript
-// Analytics Engine handles high-cardinality aggregations
-AnalyticsEngine.write({
-  indexes: [userId, eventName, timestamp],
-  blobs: [JSON.stringify(properties)],
-})
-
-// Query across billions of events
-AnalyticsEngine.query({
-  timeRange: { start: '-30d' },
-  metrics: ['count', 'uniqueUsers'],
-  dimensions: ['eventName', 'platform'],
-  filters: [{ dimension: 'country', value: 'US' }],
-})
+// Complete product analytics in natural language
+await amplitude`daily active users this month`
+await amplitude`feature adoption for new feature X`
+await amplitude`power users vs casual users comparison`
 ```
 
-## SDKs
-
-### Browser SDK
+### Growth Experiments
 
 ```typescript
-import { Amplitude } from 'amplitude.do/browser'
-
-const amplitude = new Amplitude({
-  apiKey: 'your-api-key',
-  serverUrl: 'https://your-org.amplitude.do',
-})
-
-amplitude.init()
-amplitude.track('Event Name', { property: 'value' })
+// Run experiments, ship winners
+await amplitude`onboarding A vs B experiment results`
+  .map(result => amplitude`roll out ${result.winner} to 100%`)
 ```
 
-### React SDK
-
-```tsx
-import { AmplitudeProvider, useTrack, useIdentify } from 'amplitude.do/react'
-
-function App() {
-  return (
-    <AmplitudeProvider apiKey="your-key" serverUrl="https://your-org.amplitude.do">
-      <MyComponent />
-    </AmplitudeProvider>
-  )
-}
-
-function MyComponent() {
-  const track = useTrack()
-  const identify = useIdentify()
-
-  return (
-    <button onClick={() => track('Button Clicked')}>
-      Click Me
-    </button>
-  )
-}
-```
-
-### Node.js SDK
+### Churn Prevention
 
 ```typescript
-import { Amplitude } from 'amplitude.do/node'
+// Find and save at-risk users
+await amplitude`users likely to churn this month`
+  .map(users => amplitude`create cohort at-risk from ${users}`)
+  .map(cohort => amplitude`notify ${cohort} with retention offer`)
+```
 
-const amplitude = new Amplitude({
-  apiKey: 'your-api-key',
-  serverUrl: 'https://your-org.amplitude.do',
-})
+### Product-Led Growth
 
-// Server-side tracking
-amplitude.track('Server Event', { userId: 'user-123' })
+```typescript
+// Activation insights
+await amplitude`users who activated vs didn't - what's different?`
+  .map(insights => priya`recommend onboarding changes`)
 ```
 
 ## Migration from Amplitude
-
-### Export Your Data
 
 ```bash
 # Export from Amplitude
@@ -595,43 +409,42 @@ npx amplitude-migrate import ./export.json
 
 ### API Compatibility
 
-Drop-in replacement for Amplitude HTTP API:
-
-```
-Endpoint                        Status
------------------------------------------------------------------
-POST /2/httpapi                 Supported
-POST /batch                     Supported
-POST /identify                  Supported
-POST /groupidentify             Supported
-GET /userprofile                Supported
-POST /export                    Supported
-```
-
-### Taxonomy Migration
-
-```bash
-# Export event taxonomy
-npx amplitude-migrate export-taxonomy --source amplitude
-
-# Import to amplitude.do
-npx amplitude-migrate import-taxonomy ./taxonomy.json
-```
+Drop-in replacement for Amplitude HTTP API. All endpoints supported.
 
 ## Roadmap
 
-- [x] Event tracking (browser, Node.js, React)
-- [x] Funnel analysis
-- [x] Retention analysis
-- [x] Cohort builder
-- [x] User journeys (paths)
-- [x] Natural language queries
-- [ ] A/B testing (full)
-- [ ] Predictions (churn, LTV)
-- [ ] Session replay
-- [ ] Feature flags integration
-- [ ] Data governance
-- [ ] Real-time alerts
+### Core Analytics
+- [x] Event Tracking
+- [x] User Identification
+- [x] Identity Resolution
+- [x] Funnels
+- [x] Retention
+- [x] Cohorts
+- [x] User Journeys
+- [ ] Session Replay
+- [ ] Heatmaps
+
+### AI
+- [x] Natural Language Queries
+- [x] Root Cause Analysis
+- [x] Predictive Analytics
+- [x] Auto-Instrumentation
+- [ ] Anomaly Detection
+- [ ] AI Insights Digest
+
+### Experiments
+- [x] A/B Testing
+- [x] Statistical Analysis
+- [x] Feature Flags
+- [ ] Holdout Groups
+- [ ] Multi-Armed Bandits
+
+### Platform
+- [x] Real-time Streaming
+- [x] Batch Import
+- [x] Data Export
+- [ ] Warehouse Sync
+- [ ] Reverse ETL
 
 ## Why Open Source?
 
@@ -644,14 +457,30 @@ Product analytics shouldn't cost more as you succeed:
 
 Amplitude showed the world what product analytics could be. **amplitude.do** makes it accessible to everyone.
 
+## Contributing
+
+amplitude.do is open source under the MIT license.
+
+```bash
+git clone https://github.com/dotdo/amplitude.do
+cd amplitude.do
+pnpm install
+pnpm test
+```
+
 ## License
 
-MIT License - Use it however you want. Track all the events. Run all the experiments.
+MIT License - Track all the events. Run all the experiments.
 
 ---
 
 <p align="center">
-  <strong>amplitude.do</strong> is part of the <a href="https://dotdo.dev">dotdo</a> platform.
+  <strong>The $50k/year tax ends here.</strong>
   <br />
-  <a href="https://amplitude.do">Website</a> | <a href="https://docs.amplitude.do">Docs</a> | <a href="https://discord.gg/dotdo">Discord</a>
+  Zero MTU. Unlimited events. AI-first.
+  <br /><br />
+  <a href="https://amplitude.do">Website</a> |
+  <a href="https://docs.amplitude.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/amplitude.do">GitHub</a>
 </p>

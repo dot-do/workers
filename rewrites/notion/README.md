@@ -6,6 +6,36 @@ Notion changed how teams think about tools. Docs, wikis, databases, projects - a
 
 **notion.do** is Notion reimagined. Block-based editing. Databases with formulas. AI built into every block. Deploy your own. Own your data.
 
+## AI-Native API
+
+```typescript
+import { notion } from 'notion.do'           // Full SDK
+import { notion } from 'notion.do/tiny'      // Minimal client
+import { notion } from 'notion.do/blocks'    // Block operations only
+```
+
+Natural language for your workspace:
+
+```typescript
+import { notion } from 'notion.do'
+
+// Talk to it like a colleague
+const tasks = await notion`my tasks not done, sorted by priority`
+const overdue = await notion`what's overdue this week?`
+const blockers = await notion`which team has the most blockers?`
+
+// Chain like sentences
+await notion`feature requests from users`
+  .map(request => notion`prioritize ${request}`)
+  .map(feature => notion`add to roadmap`)
+
+// Meetings that document themselves
+await notion`start meeting notes for Q1 planning`
+  .listen()           // captures discussion
+  .summarize()        // key points extracted
+  .actionItems()      // tasks assigned automatically
+```
+
 ## The Problem
 
 Notion became essential infrastructure. Then came the pricing:
@@ -49,75 +79,38 @@ npx create-dotdo notion
 
 Your own Notion. Running on Cloudflare. AI everywhere.
 
-```bash
-# Or add to existing workers.do project
-npx dotdo add notion
-```
-
-## The workers.do Way
-
-You're building a product. Your team needs an everything workspace. Notion wants $30k/year with AI as a premium add-on, and it gets slower as you scale. There's a better way.
-
-**Natural language. Tagged templates. AI agents that work.**
-
 ```typescript
-import { notion } from 'notion.do'
-import { priya, ralph, mark } from 'agents.do'
+import { Notion } from 'notion.do'
 
-// Talk to your workspace like a human
-const tasks = await notion`show my tasks for ${week}`
-const projects = await notion`find projects over budget`
-const insights = await notion`which team has the most blockers?`
+export default Notion({
+  name: 'my-workspace',
+  domain: 'wiki.my-startup.com',
+  ai: {
+    enabled: true,
+    model: 'claude-3-opus',
+  },
+})
 ```
-
-**Promise pipelining - chain work without Promise.all:**
-
-```typescript
-// Product planning pipeline
-const planned = await notion`get feature requests`
-  .map(request => priya`prioritize ${request}`)
-  .map(feature => ralph`estimate ${feature}`)
-  .map(feature => notion`add ${feature} to roadmap`)
-
-// Meeting to action items
-const actioned = await notion`get meeting notes from ${meeting}`
-  .map(notes => priya`extract action items from ${notes}`)
-  .map(item => notion`create task for ${item}`)
-```
-
-One network round trip. Record-replay pipelining. Workers working for you.
 
 ## Features
 
-### Block-Based Editor
-
-Everything is a block. Blocks compose infinitely:
+### Pages & Blocks
 
 ```typescript
-import { Block, Page } from 'notion.do'
+// Find and navigate
+const page = await notion`Q1 roadmap`
+const meetings = await notion`meeting notes from last week`
+const docs = await notion`engineering docs about auth`
 
-const page = Page.create({
-  title: 'Product Roadmap Q1 2025',
-  icon: '🚀',
-  cover: '/covers/gradient-purple.png',
-  blocks: [
-    Block.heading1('Q1 2025 Roadmap'),
-    Block.paragraph('Our focus areas for the quarter.'),
-    Block.callout('💡', 'This is a living document. Update as priorities shift.'),
-    Block.toggle('Key Metrics', [
-      Block.bulletList([
-        'DAU: 50k → 100k',
-        'Revenue: $1M ARR → $2M ARR',
-        'NPS: 45 → 60',
-      ]),
-    ]),
-    Block.heading2('Features'),
-    Block.database('features-db'),  // Embedded database
-    Block.divider(),
-    Block.heading2('Timeline'),
-    Block.embed('timeline-view', { database: 'features-db' }),
-  ],
-})
+// Create naturally
+await notion`new page: Product Roadmap Q1 2025`
+await notion`add a callout: this is a living document`
+await notion`insert a toggle with key metrics`
+
+// AI infers what you need
+await notion`Q1 roadmap`                    // returns page
+await notion`summarize Q1 roadmap`          // returns summary
+await notion`tasks from Q1 roadmap`         // returns linked tasks
 ```
 
 ### Block Types
@@ -136,37 +129,19 @@ const page = Page.create({
 The killer feature. Spreadsheet meets database:
 
 ```typescript
-import { Database, Property } from 'notion.do'
+// Create databases naturally
+await notion`create Tasks database with status, priority, assignee, due date`
+await notion`add Projects database with budget, timeline, owner`
 
-const tasksDb = Database.create({
-  name: 'Tasks',
-  properties: {
-    Name: Property.title(),
-    Status: Property.select(['Not Started', 'In Progress', 'Done']),
-    Priority: Property.select(['Low', 'Medium', 'High', 'Critical']),
-    Assignee: Property.person(),
-    Due: Property.date(),
-    Sprint: Property.relation('sprints-db'),
-    Points: Property.number({ format: 'number' }),
-    Tags: Property.multiSelect(['bug', 'feature', 'chore', 'docs']),
-    Created: Property.createdTime(),
-    Updated: Property.lastEditedTime(),
-  },
-})
+// Query with plain language
+const myTasks = await notion`my tasks not done, sorted by priority`
+const urgent = await notion`high priority bugs assigned to me`
+const overdue = await notion`tasks past due date`
 
-// Query the database
-const myTasks = await tasksDb.query({
-  filter: {
-    and: [
-      { property: 'Assignee', person: { contains: currentUser.id } },
-      { property: 'Status', select: { does_not_equal: 'Done' } },
-    ],
-  },
-  sort: [
-    { property: 'Priority', direction: 'descending' },
-    { property: 'Due', direction: 'ascending' },
-  ],
-})
+// Views just work
+await notion`show Tasks as kanban by status`
+await notion`show Projects as timeline by deadline`
+await notion`show Bugs as calendar by due date`
 ```
 
 ### Database Views
@@ -174,95 +149,42 @@ const myTasks = await tasksDb.query({
 Same data, infinite perspectives:
 
 ```typescript
-// Table view (default)
-const tableView = View.table({
-  properties: ['Name', 'Status', 'Priority', 'Assignee', 'Due'],
-  filter: { property: 'Status', select: { does_not_equal: 'Done' } },
-})
+// Switch views naturally
+await notion`Tasks as table`
+await notion`Tasks as board grouped by status`
+await notion`Tasks as calendar by due date`
+await notion`Tasks as timeline by assignee`
+await notion`Tasks as gallery with cover images`
 
-// Kanban board
-const boardView = View.board({
-  groupBy: 'Status',
-  properties: ['Priority', 'Assignee', 'Due'],
-})
-
-// Calendar
-const calendarView = View.calendar({
-  dateProperty: 'Due',
-  properties: ['Status', 'Priority'],
-})
-
-// Timeline (Gantt)
-const timelineView = View.timeline({
-  dateProperty: 'Due',
-  groupBy: 'Assignee',
-})
-
-// Gallery
-const galleryView = View.gallery({
-  coverProperty: 'Cover',
-  properties: ['Name', 'Status'],
-})
-
-// List
-const listView = View.list({
-  properties: ['Status', 'Priority'],
-})
+// Filter and sort
+await notion`Tasks where status is not done, sorted by priority desc`
+await notion`Projects where budget > 100k, by deadline`
 ```
 
-### Formulas
-
-Computed properties with full formula language:
+### Formulas & Rollups
 
 ```typescript
-const projectsDb = Database.create({
-  name: 'Projects',
-  properties: {
-    Name: Property.title(),
-    Budget: Property.number({ format: 'dollar' }),
-    Spent: Property.rollup({
-      relation: 'expenses',
-      property: 'Amount',
-      function: 'sum',
-    }),
-    Remaining: Property.formula('Budget - Spent'),
-    PercentUsed: Property.formula('round(Spent / Budget * 100)'),
-    Status: Property.formula(`
-      if(PercentUsed >= 100, "Over Budget",
-        if(PercentUsed >= 80, "Warning",
-          if(PercentUsed >= 50, "On Track", "Under Budget")))
-    `),
-    Health: Property.formula(`
-      if(Status == "Over Budget", "🔴",
-        if(Status == "Warning", "🟡", "🟢"))
-    `),
-  },
-})
+// Formulas in plain language
+await notion`add Progress formula: completed points / total points`
+await notion`add Health indicator: red if over budget, green otherwise`
+await notion`add Days Until Due: due date minus today`
+
+// Rollups across relations
+await notion`add Total Points rollup from Tasks`
+await notion`add Completed Count: count of done tasks`
 ```
 
-### Relations & Rollups
-
-Connect databases together:
+### Relations
 
 ```typescript
-// Projects have many Tasks
-const projectsDb = Database.create({
-  properties: {
-    Tasks: Property.relation('tasks-db', { type: 'dual' }),
-    TotalPoints: Property.rollup({
-      relation: 'Tasks',
-      property: 'Points',
-      function: 'sum',
-    }),
-    CompletedPoints: Property.rollup({
-      relation: 'Tasks',
-      property: 'Points',
-      filter: { Status: 'Done' },
-      function: 'sum',
-    }),
-    Progress: Property.formula('round(CompletedPoints / TotalPoints * 100) + "%"'),
-  },
-})
+// Connect databases naturally
+await notion`link Tasks to Projects`
+await notion`add Sprint relation to Tasks`
+
+// Query across relations
+await notion`tasks for Project Alpha`
+await notion`projects with overdue tasks`
+await notion`sprints with most incomplete work`
 ```
 
 ## AI-Native Workspace
@@ -271,89 +193,55 @@ AI isn't an add-on. It's woven into every block.
 
 ### AI Writing
 
-Every text block has AI capabilities:
-
 ```typescript
-// AI writing assistant in any block
-Block.paragraph({
-  content: 'Draft the quarterly update email...',
-  aiAssist: {
-    draft: true,        // AI drafts based on context
-    tone: 'professional',
-    length: 'medium',
-  },
-})
+// Just ask
+await notion`draft the quarterly update email`
+await notion`make this more concise`
+await notion`translate to Spanish`
+await notion`fix grammar and improve clarity`
 
-// AI continues writing
-await block.aiContinue()
-
-// AI improves existing text
-await block.aiImprove({
-  action: 'make-concise',  // or 'make-longer', 'fix-grammar', 'change-tone'
-})
-
-// AI translates
-await block.aiTranslate('spanish')
+// Continue or improve
+await notion`continue writing`
+await notion`make it longer with more detail`
+await notion`change tone to professional`
 ```
 
-### AI Blocks
-
-Special blocks powered by AI:
+### AI Understanding
 
 ```typescript
-// AI Summary Block - auto-summarizes page content
-Block.aiSummary({
-  source: 'page',  // or 'database', 'selection'
-  length: 'short',
-  update: 'on-change',  // Keep summary fresh
-})
+// Summarize anything
+await notion`summarize this page`
+await notion`what were the key decisions?`
+await notion`give me the TLDR`
 
-// AI Q&A Block - answers questions from page content
-Block.aiQA({
-  question: 'What are the key decisions?',
-  source: ['this-page', 'linked-pages'],
-})
+// Extract insights
+await notion`what action items came from this meeting?`
+await notion`who owns what from these notes?`
+await notion`what are the blockers mentioned?`
 
-// AI Action Items Block - extracts todos from meeting notes
-Block.aiActionItems({
-  source: 'page',
-  assignees: 'auto-detect',  // AI figures out who owns what
-})
-
-// AI Table Block - generates tables from prompts
-Block.aiTable({
-  prompt: 'Compare React, Vue, and Svelte frameworks',
-  columns: ['Framework', 'Learning Curve', 'Performance', 'Ecosystem', 'Best For'],
-})
+// Compare and analyze
+await notion`compare Q1 and Q2 roadmaps`
+await notion`what changed since last planning session?`
 ```
 
 ### AI Database Operations
 
-AI helps manage your data:
-
 ```typescript
-// AI fills in missing data
-await db.aiFill({
-  property: 'Description',
-  basedOn: ['Name', 'Tags'],
-})
+// Fill in missing data
+await notion`fill in descriptions based on titles and tags`
+await notion`categorize these entries as feature, bug, or improvement`
 
-// AI categorizes entries
-await db.aiCategorize({
-  entries: newEntries,
-  property: 'Category',
-  options: ['Feature', 'Bug', 'Improvement', 'Docs'],
-})
-
-// AI suggests new entries
-const suggestions = await db.aiSuggest({
-  context: 'What features should we build next quarter?',
-  basedOn: ['user-feedback-db', 'competitors-db'],
-})
-
-// AI creates entries from natural language
-await db.aiCreate('Add a high priority bug about login failing on mobile')
+// Create from natural language
+await notion`add high priority bug: login failing on mobile`
 // Creates: { Name: 'Login failing on mobile', Priority: 'High', Tags: ['bug'] }
+
+// Bulk operations
+await notion`mark all tasks from last sprint as done`
+await notion`move stale items to backlog`
+
+// AI suggestions
+await notion`what features should we build next quarter?`
+await notion`suggest priorities based on user feedback`
 ```
 
 ### Natural Language Queries
@@ -361,18 +249,18 @@ await db.aiCreate('Add a high priority bug about login failing on mobile')
 Query your workspace with plain English:
 
 ```typescript
-import { ai } from 'notion.do'
-
-// Natural language database queries
-const urgent = await ai.query`what tasks are due this week?`
-const projects = await ai.query`show me all projects over budget`
-const insights = await ai.query`which team member has the most open tasks?`
+// Find anything
+await notion`what did we decide about pricing?`
+await notion`when is the launch date?`
+await notion`who's responsible for onboarding?`
 
 // Cross-database analysis
-const analysis = await ai.analyze`
-  Compare our planned features against user feedback.
-  What are we missing?
-`
+await notion`compare planned features against user feedback, what are we missing?`
+await notion`which projects are at risk based on task completion?`
+
+// Workspace-wide search
+await notion`everything about the mobile app`
+await notion`decisions made in December`
 ```
 
 ### AI Workspace Assistant
@@ -380,103 +268,62 @@ const analysis = await ai.analyze`
 Chat with your entire workspace:
 
 ```typescript
-const chat = await ai.chat({
-  workspace: true,  // Access all workspace content
-})
+const insights = await notion`
+  analyze our velocity this quarter
+  compared to last quarter
+  and identify bottlenecks
+`
 
-await chat.ask('What did we decide about the pricing model?')
-// AI searches across all pages and databases, synthesizes answer
+const brief = await notion`
+  draft a project brief for the mobile app
+  based on our roadmap and user feedback
+`
 
-await chat.ask('Draft a project brief for the mobile app based on our roadmap')
-// AI uses context from multiple sources to generate content
-
-await chat.ask('What are the blockers for the Q1 launch?')
-// AI finds related tasks, documents, and surfaces issues
+const blockers = await notion`
+  what are the blockers for the Q1 launch?
+  who needs to unblock what?
+`
 ```
 
 ## Real-Time Collaboration
 
-Built for teams working together:
-
 ```typescript
-// Subscribe to page changes
-page.subscribe((event) => {
-  if (event.type === 'block.changed') {
-    console.log(`${event.user} edited block at ${event.path}`)
-  }
-})
-
-// Presence awareness
-page.onPresence((users) => {
-  users.forEach(user => {
-    console.log(`${user.name} is viewing ${user.blockId}`)
-  })
-})
+// See who's working
+await notion`who's viewing this page?`
+await notion`what's Alice working on?`
 
 // Comments and discussions
-await block.addComment({
-  content: 'Should we reconsider this approach?',
-  mentions: ['@alice'],
-})
+await notion`comment: should we reconsider this approach? @alice`
+await notion`resolve all comments on this section`
 
-// Reactions
-await block.addReaction('👍')
+// Track changes
+await notion`what changed today?`
+await notion`show edit history for this page`
 ```
 
 ## Synced Blocks
 
-Reuse content across pages:
-
 ```typescript
-// Create a synced block
-const syncedBlock = await Block.createSynced({
-  content: [
-    Block.callout('📢', 'This content appears on multiple pages.'),
-    Block.paragraph('Edit once, update everywhere.'),
-  ],
-})
+// Create reusable content
+await notion`create synced block: company mission statement`
 
-// Use in multiple pages
-await page1.addBlock(Block.syncedReference(syncedBlock.id))
-await page2.addBlock(Block.syncedReference(syncedBlock.id))
+// Use everywhere
+await notion`insert company mission synced block here`
 
 // Changes sync automatically
+await notion`update company mission`  // updates everywhere
 ```
 
 ## Templates
 
-Create reusable templates:
-
 ```typescript
-import { Template } from 'notion.do'
+// Create templates naturally
+await notion`create Meeting Notes template with agenda, notes, action items`
+await notion`create Bug Report template with severity, steps to reproduce, expected behavior`
 
-const meetingTemplate = Template.create({
-  name: 'Meeting Notes',
-  icon: '📝',
-  blocks: [
-    Block.heading1('{{title}}'),
-    Block.properties({
-      Date: '{{date}}',
-      Attendees: '{{attendees}}',
-      Type: '{{type}}',
-    }),
-    Block.heading2('Agenda'),
-    Block.bulletList(['Topic 1', 'Topic 2', 'Topic 3']),
-    Block.heading2('Notes'),
-    Block.paragraph(''),
-    Block.heading2('Action Items'),
-    Block.database('action-items-template'),
-    Block.aiActionItems({ source: 'notes-section' }),
-  ],
-})
-
-// Create page from template
-const meeting = await Template.create('meetingTemplate', {
-  title: 'Q1 Planning Meeting',
-  date: '2025-01-15',
-  attendees: ['@alice', '@bob', '@carol'],
-  type: 'Planning',
-})
+// Use templates
+await notion`new page from Meeting Notes template for Q1 Planning`
+await notion`create bug report: checkout button unresponsive`
 ```
 
 ## API Compatible
@@ -593,6 +440,12 @@ npx notion-do migrate \
   --workspace=your_workspace_id
 ```
 
+Or just ask:
+
+```typescript
+await notion`import my Notion workspace`
+```
+
 Imports:
 - All pages and databases
 - Block content and formatting
@@ -626,6 +479,19 @@ npm install
 npm run dev     # Local development
 npm run deploy  # Production deployment
 ```
+
+## vs Notion
+
+| Feature | Notion | notion.do |
+|---------|--------|-----------|
+| **Cost** | $10-25/user/month | $0 - run your own |
+| **AI** | +$10/user add-on | Built into every block |
+| **Performance** | Slow at scale | Edge computing, instant |
+| **Data Location** | Their servers | Your Cloudflare account |
+| **Format** | Proprietary | Open, exportable |
+| **Block Limits** | Artificial scarcity | Unlimited |
+| **Self-Hosting** | Impossible | One command |
+| **API** | Rate limited | Your infrastructure |
 
 ## Roadmap
 

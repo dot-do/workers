@@ -6,62 +6,86 @@ Tableau revolutionized how businesses see data. But at $70/user/month for Creato
 
 **tableau.do** reimagines data visualization for the AI era. Natural language to charts. One-click deploy. No per-seat licensing.
 
+## AI-Native API
+
+```typescript
+import { tableau } from 'tableau.do'           // Full SDK
+import { tableau } from 'tableau.do/tiny'      // Minimal client
+import { tableau } from 'tableau.do/viz'       // Visualization-only
+```
+
+Natural language for data visualization:
+
+```typescript
+import { tableau } from 'tableau.do'
+
+// Talk to it like a colleague
+const sales = await tableau`sales by region this quarter`
+const trend = await tableau`revenue trend last 12 months`
+const compare = await tableau`compare Q3 vs Q4 by product`
+
+// Chain like sentences
+await tableau`customers at risk of churn`
+  .visualize(`heatmap by segment and tenure`)
+
+// Dashboards that build themselves
+await tableau`executive dashboard`
+  .add(`revenue this quarter`)
+  .add(`top customers by lifetime value`)
+  .add(`churn risk by segment`)
+  .publish()
+```
+
 ## The Problem
 
 Salesforce acquired Tableau for $15.7B and built an empire on:
 
-- **Per-seat pricing** - Creator ($70), Explorer ($42), Viewer ($15) per user/month
-- **Role-based paywalls** - Want to make a chart? Pay for Creator. Want to explore? Pay for Explorer.
-- **AI as premium upsell** - "Ask Data" and AI features require additional licensing
-- **Server complexity** - Tableau Server requires dedicated infrastructure and admins
-- **Data extracts** - Performance requires pre-computing extracts, not live queries
-- **Salesforce lock-in** - Einstein integration ties you deeper into the ecosystem
+| What Tableau Charges | The Reality |
+|---------------------|-------------|
+| **Creator** | $70/user/month to make charts |
+| **Explorer** | $42/user/month to interact |
+| **Viewer** | $15/user/month just to look |
+| **AI Features** | Premium tier upsell |
+| **Server** | Dedicated infrastructure + admin |
+| **Lock-in** | Einstein ties you to Salesforce |
+
+### The Salesforce Tax
+
+Since the acquisition:
+
+- Per-seat pricing at every tier
+- AI features locked behind premium
+- Einstein integration push
+- Server complexity unchanged
+- Data extracts still required
 
 A 50-person analytics team? **$50k+/year** before you connect a single data source.
 
-## The workers.do Way
+### The Visualization Gap
 
-Your investors want dashboards. Your team needs metrics. Tableau wants $50k/year and a dedicated admin just to show bar charts.
+Tableau talks "self-service." But:
 
-**What if visualization was as simple as asking?**
+- Creator license to make a chart
+- Explorer license to interact
+- Viewer license just to see it
+- Premium for AI-powered insights
+- Server for any collaboration
 
-```typescript
-import { tableau } from 'tableau.do'
-import { priya, mark } from 'agents.do'
-
-// Natural language to visualization
-const chart = await tableau`show ${metric} by ${dimension} over time`
-const dashboard = await tableau`build executive dashboard from ${salesModel}`
-const insight = await tableau`what's driving the Q3 decline?`
-
-// AI agents as analysts
-const analysis = await priya`analyze funnel conversion and visualize drop-off`
-const report = await mark`create board deck with revenue trends`
-```
-
-**Promise pipelining** - chain operations without `Promise.all`:
-
-```typescript
-const deck = await tableau`query ${salesData}`
-  .map(data => tableau`visualize ${data} as ${chartType}`)
-  .map(viz => [priya, mark].map(r => r`review ${viz} for board`))
-```
-
-One network round trip. Natural language. Your data, visualized.
+Everyone should see their data. Not just licensed "Creators."
 
 ## The Solution
 
-**tableau.do** is Tableau reimagined:
+**tableau.do** reimagines visualization for everyone:
 
 ```
 Traditional Tableau              tableau.do
 -----------------------------------------------------------------
-$15-70/user/month               $0 - run your own
+$70/user/month Creator          $0 - run your own
+$42/user/month Explorer         Everyone explores
+$15/user/month Viewer           Everyone views
 "Ask Data" premium              Natural language built-in
 Tableau Server                  Cloudflare Workers
 Data extracts                   Live queries at the edge
-Desktop app required            Browser-first, PWA optional
-VizQL proprietary               VizQL-compatible (open)
 ```
 
 ## One-Click Deploy
@@ -70,428 +94,233 @@ VizQL proprietary               VizQL-compatible (open)
 npx create-dotdo tableau
 ```
 
-Your own Tableau Server. Running on Cloudflare. Zero per-seat fees.
-
-## Natural Language to Visualization
-
-Skip the drag-and-drop. Just ask:
+Your own visualization platform. Running on Cloudflare. Zero per-seat fees.
 
 ```typescript
-import { tableau } from 'tableau.do'
+import { Tableau } from 'tableau.do'
 
-// Natural language creates visualizations
-const chart = await tableau`show me sales by region over time`
-const dashboard = await tableau`create a dashboard showing customer metrics`
-const insight = await tableau`what's driving the decline in Q3?`
-
-// Returns both visualization spec and rendered output
-console.log(chart.spec)      // VegaLite/VizQL spec
-console.log(chart.svg)       // Rendered SVG
-console.log(chart.png)       // Rendered PNG
-console.log(chart.insight)   // AI-generated narrative
+export default Tableau({
+  name: 'acme-analytics',
+  domain: 'viz.acme.com',
+  theme: 'brand',
+})
 ```
 
 ## Features
 
 ### Data Connections
 
-Connect to any data source:
-
-| Source | Status | Description |
-|--------|--------|-------------|
-| **D1/SQLite** | Built-in | Native Cloudflare integration |
-| **PostgreSQL** | Supported | Via Hyperdrive connection pooling |
-| **MySQL** | Supported | Via Hyperdrive |
-| **Snowflake** | Supported | Direct query |
-| **BigQuery** | Supported | Direct query |
-| **REST APIs** | Supported | Any JSON/CSV endpoint |
-| **R2/S3** | Supported | Parquet, CSV, JSON files |
-| **Spreadsheets** | Supported | Excel, Google Sheets |
-
 ```typescript
-import { DataSource } from 'tableau.do'
+// Natural as describing your data
+const sales = await tableau`connect postgres with orders, customers, products`
+const logs = await tableau`connect parquet files in analytics bucket`
+const sheets = await tableau`import Q4 forecast from Google Sheets`
 
-// Connect to your data
-const sales = DataSource.postgres({
-  connectionString: env.DATABASE_URL,
-  schema: 'public',
-  tables: ['orders', 'customers', 'products'],
-})
-
-// Or connect to files
-const logs = DataSource.parquet({
-  bucket: env.R2_BUCKET,
-  prefix: 'logs/',
-})
+// AI infers what you need
+await tableau`orders`              // connects to orders table
+await tableau`sales data`          // finds relevant datasource
+await tableau`last year revenue`   // queries the right tables
 ```
 
-### Visualization Types
-
-All the charts you need:
+### Visualizations
 
 ```typescript
-import { Chart } from 'tableau.do'
+// Just describe what you want to see
+await tableau`sales by region as bar chart`
+await tableau`revenue trend over 12 months`
+await tableau`customers by state on a map`
+await tableau`traffic by hour and day as heatmap`
 
-// Bar charts
-Chart.bar({ x: 'region', y: 'sales', color: 'product' })
-
-// Line charts with trends
-Chart.line({ x: 'date', y: 'revenue', trendline: true })
-
-// Scatter plots
-Chart.scatter({ x: 'price', y: 'quantity', size: 'profit', color: 'category' })
-
-// Geographic maps
-Chart.map({ geo: 'state', value: 'customers', type: 'choropleth' })
-
-// Treemaps
-Chart.treemap({ path: ['category', 'subcategory'], value: 'sales' })
-
-// Heat maps
-Chart.heatmap({ x: 'hour', y: 'day', value: 'traffic' })
-
-// Bullet charts
-Chart.bullet({ measure: 'actual', target: 'goal', ranges: [0, 50, 75, 100] })
+// AI picks the right chart type
+await tableau`show me the distribution`         // histogram
+await tableau`compare categories`               // bar chart
+await tableau`show the trend`                   // line chart
+await tableau`show relationships`               // scatter plot
 ```
 
 ### Dashboards
 
-Compose visualizations into interactive dashboards:
-
 ```typescript
-import { Dashboard } from 'tableau.do'
+// Dashboards are just sentences
+await tableau`sales dashboard`
+  .add(`revenue this quarter`)
+  .add(`orders by region`)
+  .add(`top 10 customers`)
 
-export const SalesDashboard = Dashboard({
-  name: 'Sales Performance',
-  layout: 'responsive',
-  sections: [
-    {
-      title: 'KPIs',
-      items: [
-        { type: 'metric', field: 'total_revenue', format: 'currency' },
-        { type: 'metric', field: 'order_count', format: 'number' },
-        { type: 'metric', field: 'avg_order_value', format: 'currency' },
-      ],
-    },
-    {
-      title: 'Trends',
-      items: [
-        { type: 'chart', chart: 'revenue_over_time', span: 2 },
-        { type: 'chart', chart: 'orders_by_region', span: 1 },
-      ],
-    },
-    {
-      title: 'Details',
-      items: [
-        { type: 'table', source: 'recent_orders', pageSize: 20 },
-      ],
-    },
-  ],
-  filters: [
-    { field: 'date_range', type: 'dateRange', default: 'last30Days' },
-    { field: 'region', type: 'multiSelect', source: 'regions' },
-    { field: 'product', type: 'search', source: 'products' },
-  ],
-})
-```
+// Or one-shot
+await tableau`executive dashboard with revenue, orders, and customer metrics`
 
-### VizQL Compatibility
-
-Write VizQL queries directly:
-
-```typescript
-import { vizql } from 'tableau.do'
-
-// VizQL query syntax
-const result = await vizql`
-  SELECT
-    [Region],
-    SUM([Sales]) AS [Total Sales],
-    AVG([Profit]) AS [Avg Profit]
-  FROM [Orders]
-  WHERE [Order Date] >= #2024-01-01#
-  GROUP BY [Region]
-  ORDER BY [Total Sales] DESC
-`
-
-// Renders to visualization spec
-console.log(result.visualization)
+// Interactive filters just work
+await tableau`sales dashboard filtered by region and date`
 ```
 
 ### Calculated Fields
 
-Create calculations without writing SQL:
-
 ```typescript
-import { Field } from 'tableau.do'
+// Define calculations naturally
+const margin = await tableau`profit margin as [Profit] / [Revenue] in percent`
+const segment = await tableau`customer segment: Enterprise if LTV > 10k, Business if > 1k, else Consumer`
+const rolling = await tableau`7-day moving average of revenue by region`
 
-const profitMargin = Field.calculated({
-  name: 'Profit Margin',
-  formula: '[Profit] / [Revenue]',
-  format: 'percent',
-})
-
-const customerSegment = Field.calculated({
-  name: 'Customer Segment',
-  formula: `
-    IF [Lifetime Value] > 10000 THEN 'Enterprise'
-    ELSEIF [Lifetime Value] > 1000 THEN 'Business'
-    ELSE 'Consumer'
-    END
-  `,
-})
-
-const rollingAvg = Field.calculated({
-  name: '7-Day Moving Average',
-  formula: 'WINDOW_AVG(SUM([Revenue]), -6, 0)',
-  partitionBy: ['Region'],
-})
+// Or ask for them
+await tableau`add year-over-year growth calculation`
+await tableau`add running total to sales`
+await tableau`rank customers by revenue within each region`
 ```
 
 ### Table Calculations
 
-Window functions and analytics:
-
 ```typescript
-// Rank by sales within each region
-Field.calculation('Sales Rank', 'RANK(SUM([Sales]))', {
-  partitionBy: 'Region',
-  orderBy: 'Sales DESC'
-})
+// Window functions as natural language
+await tableau`rank by sales within each region`
+await tableau`running total of revenue`
+await tableau`percent of total by category`
+await tableau`compare to previous year`
 
-// Running total
-Field.calculation('Running Total', 'RUNNING_SUM(SUM([Revenue]))')
-
-// Percent of total
-Field.calculation('% of Total', 'SUM([Sales]) / TOTAL(SUM([Sales]))')
-
-// Year-over-year growth
-Field.calculation('YoY Growth', '(ZN(SUM([Sales])) - LOOKUP(ZN(SUM([Sales])), -1)) / ABS(LOOKUP(ZN(SUM([Sales])), -1))')
+// Complex analytics
+await tableau`show month-over-month change`
+await tableau`add trend line to revenue chart`
+await tableau`forecast next 3 months based on trend`
 ```
 
-## AI-Native Features
+## AI-Native Analytics
 
 ### Ask Data
 
-Natural language queries that understand your data:
-
 ```typescript
-import { askData } from 'tableau.do'
+// Just ask questions
+await tableau`what were total sales last month?`
+await tableau`which products are underperforming?`
+await tableau`what will sales be next quarter?`
 
-// Simple questions
-const answer1 = await askData('What were total sales last month?')
-// Returns: { value: 1234567, visualization: <bar chart>, narrative: "Total sales..." }
-
-// Complex analysis
-const answer2 = await askData('Which products are underperforming compared to last year?')
-// Returns: { data: [...], visualization: <comparison chart>, narrative: "..." }
-
-// Predictive
-const answer3 = await askData('What will sales be next quarter based on current trends?')
-// Returns: { prediction: {...}, confidence: 0.85, visualization: <forecast chart> }
+// AI returns answers with visualizations
+const answer = await tableau`why did churn spike in Q3?`
+// Returns chart + narrative + contributing factors
 ```
 
 ### Explain Data
 
-AI-powered anomaly detection and explanation:
-
 ```typescript
-import { explainData } from 'tableau.do'
+// Ask why things changed
+await tableau`why did revenue drop in February?`
+await tableau`what's driving the Q3 decline?`
+await tableau`explain the spike in signups last week`
 
-// Why did this metric change?
-const explanation = await explainData({
-  metric: 'revenue',
-  period: { from: '2024-01-01', to: '2024-03-31' },
-  question: 'Why did revenue drop in February?',
-})
-
-// Returns contributing factors with visualizations
-console.log(explanation.factors)
-// [
-//   { factor: 'Marketing spend decreased 40%', impact: -0.35, viz: <chart> },
-//   { factor: 'Key product out of stock', impact: -0.25, viz: <chart> },
-//   { factor: 'Seasonal trend', impact: -0.15, viz: <chart> },
-// ]
+// AI surfaces contributing factors automatically
+// - Marketing spend decreased 40%
+// - Key product out of stock
+// - Seasonal trend
 ```
 
 ### Auto-Insights
 
-Automatic discovery of interesting patterns:
+```typescript
+// Surface patterns automatically
+await tableau`what's interesting in sales data?`
+await tableau`anomalies in the last 30 days`
+await tableau`trends I should know about`
+
+// AI proactively finds insights
+// "Revenue up 23% in West region"
+// "Churn correlated with support tickets"
+// "Tuesday orders 40% higher than average"
+```
+
+### Promise Pipelining
+
+Chain operations without `Promise.all`:
 
 ```typescript
-import { autoInsights } from 'tableau.do'
+const deck = await tableau`sales data`
+  .map(data => tableau`visualize ${data} by region`)
+  .map(viz => [priya, mark].map(r => r`review ${viz} for board`))
 
-const insights = await autoInsights({
-  datasource: 'sales',
-  focus: ['revenue', 'customers', 'churn'],
-})
-
-// Returns ranked insights with visualizations
-for (const insight of insights) {
-  console.log(insight.headline)      // "Revenue up 23% in West region"
-  console.log(insight.significance)  // 0.95
-  console.log(insight.visualization) // <chart>
-  console.log(insight.narrative)     // "The West region saw significant..."
-}
+// One network round trip. Natural language. Your data, visualized.
 ```
 
 ### AI Agents as Analysts
 
-AI agents can create and iterate on visualizations:
-
 ```typescript
 import { priya, mark } from 'agents.do'
-import { tableau } from 'tableau.do'
 
 // Product manager analyzes metrics
-const analysis = await priya`
-  analyze our funnel conversion rates and create a dashboard
-  showing where users are dropping off
-`
+await priya`analyze funnel conversion and visualize drop-off`
 
 // Marketing creates campaign dashboard
-const campaign = await mark`
-  build a real-time dashboard showing our launch campaign performance
-  with social metrics, signups, and revenue attribution
-`
+await mark`real-time dashboard for launch campaign with social, signups, revenue`
+
+// They iterate naturally
+await priya`this chart is confusing, simplify it`
+await mark`add comparison to last quarter`
 ```
 
 ## Architecture
 
-### Edge-First Rendering
-
-Visualizations render at the edge, close to your users:
+### Durable Object per Dashboard
 
 ```
-                    +------------------------+
-                    |    tableau.do Worker   |
-                    |  (Query + Render)      |
-                    +------------------------+
-                              |
-              +---------------+---------------+
-              |               |               |
-    +------------------+ +------------------+ +------------------+
-    | DashboardDO      | | DataSourceDO     | | ChartDO          |
-    | (Layout + State) | | (Connection)     | | (Spec + Cache)   |
-    +------------------+ +------------------+ +------------------+
-              |               |               |
-              +---------------+---------------+
-                              |
-         +--------------------+--------------------+
-         |                    |                    |
-    +----------+       +-----------+        +------------+
-    |    D1    |       | Hyperdrive |        |     R2     |
-    | (Metadata)|      | (Postgres) |        | (Exports)  |
-    +----------+       +-----------+        +------------+
+TableauDO (config, theme, permissions)
+  |
+  +-- DashboardsDO (layouts, filters, state)
+  |     |-- SQLite: Dashboard definitions
+  |     +-- R2: Exported snapshots
+  |
+  +-- DataSourcesDO (connections, schemas)
+  |     |-- SQLite: Connection metadata
+  |     +-- Hyperdrive: Live queries
+  |
+  +-- ChartsDO (specs, cache, renders)
+        |-- SQLite: Chart specs
+        +-- KV: Rendered outputs (SVG/PNG)
 ```
 
 ### Storage Tiers
 
-- **Hot (SQLite/D1)** - Dashboard metadata, user preferences, recent queries
-- **Warm (Hyperdrive)** - Live connections to external databases
-- **Cold (R2)** - Exported data, snapshots, large datasets
-
-### Rendering Pipeline
-
-```typescript
-// Query -> Spec -> Render -> Cache
-NaturalLanguage | VizQL | ChartBuilder
-        ↓
-   Query Engine (SQL generation)
-        ↓
-   Data Fetch (Hyperdrive/D1/R2)
-        ↓
-   VegaLite Spec Generation
-        ↓
-   Server-Side Render (SVG/PNG/PDF)
-        ↓
-   Edge Cache (KV)
-        ↓
-   Client Delivery
-```
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Dashboard metadata, preferences | <10ms |
+| **Warm** | Hyperdrive | Live database queries | <100ms |
+| **Cold** | R2 | Exports, snapshots, large datasets | <1s |
 
 ## Embedding
 
-Embed visualizations anywhere:
-
-### iframe Embed
-
-```html
-<iframe
-  src="https://your-org.tableau.do/embed/dashboard/sales?theme=light"
-  width="100%"
-  height="600"
-></iframe>
-```
-
-### JavaScript SDK
-
 ```typescript
-import { TableauEmbed } from 'tableau.do/embed'
+// Embed anywhere
+await tableau`sales dashboard`.embed('div#chart')
 
-const viz = new TableauEmbed({
-  container: document.getElementById('viz'),
-  dashboard: 'sales-performance',
-  filters: {
-    region: ['West', 'East'],
-    date: { start: '2024-01-01', end: '2024-03-31' },
-  },
-  onSelect: (data) => console.log('Selected:', data),
-})
+// Or as iframe
+await tableau`sales dashboard`.iframe({ width: '100%', height: 600 })
 
-// Programmatic interaction
-await viz.applyFilter('product', ['Widget A', 'Widget B'])
-const image = await viz.export('png')
-const data = await viz.getData()
-```
-
-### React Component
-
-```tsx
+// React component
 import { Tableau } from 'tableau.do/react'
 
-function AnalyticsDashboard() {
-  return (
-    <Tableau
-      dashboard="sales-performance"
-      height={600}
-      filters={{ region: selectedRegion }}
-      onDataSelect={handleSelection}
-      theme="dark"
-    />
-  )
-}
+<Tableau query="sales by region" height={400} />
 ```
 
-## MCP Tools
-
-Every visualization capability exposed as MCP tools:
+### Interactive Features
 
 ```typescript
-import { tableauTools } from 'tableau.do/mcp'
+// Filters are natural language
+await tableau`sales dashboard`
+  .filter(`West and East regions`)
+  .filter(`Q1 2024`)
 
-// Available tools
-tableauTools.map(t => t.name)
-// [
-//   'create_chart',
-//   'create_dashboard',
-//   'query_data',
-//   'ask_data',
-//   'explain_data',
-//   'export_visualization',
-//   'list_datasources',
-//   'connect_datasource',
-// ]
-
-// AI can create visualizations
-await invokeTool('create_chart', {
-  type: 'bar',
-  datasource: 'sales',
-  x: 'region',
-  y: 'sum(revenue)',
-  title: 'Revenue by Region',
-})
+// Export anywhere
+await tableau`executive dashboard`.export('pdf')
+await tableau`revenue chart`.export('png')
+await tableau`customer data`.export('csv')
 ```
+
+## vs Tableau
+
+| Feature | Tableau | tableau.do |
+|---------|---------|-----------|
+| **Pricing** | $15-70/user/month | $0 - run your own |
+| **AI** | Premium tier | Built-in |
+| **Architecture** | Server + Desktop | Edge-native |
+| **Data** | Extracts required | Live queries |
+| **Deploy** | Months | Minutes |
+| **Lock-in** | Salesforce ecosystem | MIT licensed |
 
 ## Deployment Options
 
@@ -499,7 +328,6 @@ await invokeTool('create_chart', {
 
 ```bash
 npx create-dotdo tableau
-# Deploys to your Cloudflare account
 ```
 
 ### Docker
@@ -512,73 +340,102 @@ docker run -p 8787:8787 dotdo/tableau
 
 ```bash
 git clone https://github.com/dotdo/tableau.do
-cd tableau.do
-npm install
-npm run dev    # Local development
-npm run deploy # Production deployment
+cd tableau.do && pnpm install && pnpm dev
 ```
 
 ## Migration from Tableau
 
-### Export Your Workbooks
+```typescript
+// Import existing workbooks
+await tableau`import workbooks from Tableau Server`
 
-```bash
-# Export from Tableau Server/Online
-tableau export --server your-server.tableau.com --workbooks all
-
-# Import to tableau.do
-npx tableau-migrate import --source ./exports
+// VizQL expressions work directly
+await tableau`SUM([Sales]) by [Region]`           // same syntax
+await tableau`WINDOW_AVG(SUM([X]), -6, 0)`        // same functions
+await tableau`DATETRUNC('month', [Order Date])`   // same date math
 ```
 
-### VizQL Compatibility
+## Use Cases
 
-Most VizQL expressions work directly:
+### Executive Dashboards
 
+```typescript
+await tableau`executive dashboard`
+  .add(`revenue this quarter vs target`)
+  .add(`top 10 customers by ARR`)
+  .add(`churn by segment`)
+  .share(`board@company.com`)
 ```
-Tableau                         tableau.do
------------------------------------------------------------------
-[Sales]                         [Sales]                    (same)
-SUM([Revenue])                  SUM([Revenue])             (same)
-DATETRUNC('month', [Date])      DATETRUNC('month', [Date]) (same)
-WINDOW_AVG(SUM([X]), -6, 0)     WINDOW_AVG(SUM([X]), -6, 0)(same)
-ZN([Value])                     ZN([Value])                (same)
-LOOKUP(SUM([X]), -1)            LOOKUP(SUM([X]), -1)       (same)
+
+### Sales Analytics
+
+```typescript
+await tableau`sales pipeline by stage and owner`
+await tableau`conversion rates by lead source`
+await tableau`forecast vs actual by quarter`
+```
+
+### Product Analytics
+
+```typescript
+await tableau`user funnel from signup to paid`
+await tableau`feature usage by cohort`
+await tableau`retention curve by acquisition channel`
 ```
 
 ## Roadmap
 
-- [x] Core chart types (bar, line, scatter, map, etc.)
-- [x] Dashboard builder
-- [x] VizQL query engine
+### Core
 - [x] Natural language queries
+- [x] Chart types (bar, line, scatter, map)
+- [x] Dashboard builder
 - [x] Calculated fields
 - [x] Table calculations
 - [ ] Storytelling (guided narratives)
-- [ ] Prep (data transformation flows)
-- [ ] Mobile app (PWA)
+- [ ] Prep (data transformation)
 - [ ] Alerting and subscriptions
-- [ ] Collaboration (comments, annotations)
-- [ ] Data modeling layer
+
+### AI
+- [x] Ask Data
+- [x] Explain Data
+- [x] Auto-Insights
+- [ ] Predictive analytics
+- [ ] Anomaly detection
+- [ ] Natural language alerts
 
 ## Why Open Source?
 
-Data visualization is too important to be locked behind per-seat pricing:
+Data visualization shouldn't require a license for every viewer:
 
 1. **Your insights** - Understanding your business shouldn't cost $70/user
 2. **Your data** - Visualizations should run where your data lives
-3. **Your AI** - Natural language analytics should be built-in, not premium
-4. **Your team** - Everyone should be able to explore data, not just "Creators"
+3. **Your AI** - Natural language should be built-in, not premium
+4. **Your team** - Everyone should explore data, not just "Creators"
 
 Tableau showed the world what visual analytics could be. **tableau.do** makes it accessible to everyone.
 
+## Contributing
+
+```bash
+git clone https://github.com/dotdo/tableau.do
+cd tableau.do
+pnpm install
+pnpm test
+```
+
 ## License
 
-MIT License - Use it however you want. Build dashboards. Embed in your product. Sell it to clients.
+MIT License - Build dashboards. Embed in your product. Visualize anything.
 
 ---
 
 <p align="center">
-  <strong>tableau.do</strong> is part of the <a href="https://dotdo.dev">dotdo</a> platform.
+  <strong>The $15B visualization platform ends here.</strong>
   <br />
-  <a href="https://tableau.do">Website</a> | <a href="https://docs.tableau.do">Docs</a> | <a href="https://discord.gg/dotdo">Discord</a>
+  Natural language. AI-native. Everyone's an analyst.
+  <br /><br />
+  <a href="https://tableau.do">Website</a> |
+  <a href="https://docs.tableau.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/tableau.do">GitHub</a>
 </p>

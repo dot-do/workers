@@ -1,57 +1,210 @@
 # algolia.do
 
-Algolia on Cloudflare Durable Objects - Search-as-a-Service for AI agents.
+> Search-as-a-Service. Edge-Native. AI-First. Natural Language.
+
+Algolia charges $290/month for 100K documents. Typesense Cloud charges $60. algolia.do costs $1. Same features. 100x cheaper. Because search belongs at the edge.
+
+**algolia.do** is search reimagined for AI agents. Natural language queries. No configuration objects. Just say what you want to find.
+
+## AI-Native API
+
+```typescript
+import { algolia } from 'algolia.do'           // Full SDK
+import { algolia } from 'algolia.do/tiny'      // Minimal client
+import { algolia } from 'algolia.do/instant'   // InstantSearch compatible
+```
+
+Natural language for search:
+
+```typescript
+import { algolia } from 'algolia.do'
+
+// Talk to it like a colleague
+const headphones = await algolia`wireless headphones under $200`
+const trending = await algolia`best selling products this week`
+const similar = await algolia`products similar to AirPods Pro`
+
+// Chain like sentences
+await algolia`products needing reviews`
+  .notify(`Your review would help other customers`)
+
+// Index without boilerplate
+await algolia`index products from catalog`
+await algolia`add SKU-12345 to products: Wireless Headphones $99`
+await algolia`remove discontinued items from inventory`
+```
 
 ## The Problem
 
-AI agents need fast, typo-tolerant search. Millions of indexes. Each isolated. Each with their own ranking.
+Algolia dominates search:
 
-Traditional search services were built for humans:
-- One shared cluster for many users
-- Centralized infrastructure
-- Manual scaling
-- Expensive per-index
+| What Algolia Charges | The Reality |
+|----------------------|-------------|
+| **Search Operations** | $1.50 per 1,000 requests |
+| **Records** | $0.40 per 1,000 records/month |
+| **Index Replicas** | Each replica costs extra |
+| **AI Features** | Premium tier only |
+| **Support** | Enterprise pricing for priority |
+| **Overages** | Surprise bills when you scale |
 
-AI agents need the opposite:
-- One index per agent (or per project)
-- Distributed by default
-- Infinite automatic scaling
-- Free at the index level, pay for usage
+### The Hidden Costs
 
-## The Vision
+Beyond the pricing page:
+- Vendor lock-in (proprietary query syntax)
+- Limited semantic search
+- AI features gated behind enterprise
+- Cold start latency on shared infrastructure
+- Per-index pricing kills multi-tenant apps
 
-Every AI agent gets their own Algolia.
+### What AI Agents Need
 
-```typescript
-import { tom, ralph, priya } from 'agents.do'
-import { Algolia } from 'algolia.do'
+AI agents search differently:
+- Natural language, not query DSL
+- One index per agent or project
+- Semantic understanding built-in
+- Infinite indexes without infinite cost
+- Edge latency, not datacenter latency
 
-// Each agent has their own isolated search index
-const tomSearch = Algolia.for(tom)
-const ralphSearch = Algolia.for(ralph)
-const priyaSearch = Algolia.for(priya)
+## The Solution
 
-// Full Algolia API
-await tomSearch.initIndex('reviews').saveObjects([
-  { objectID: 'pr-123', title: 'Auth refactor', status: 'approved' }
-])
+**algolia.do** reimagines search for AI:
 
-const { hits } = await tomSearch.initIndex('reviews').search('auth')
+```
+Algolia                          algolia.do
+-----------------------------------------------------------------
+$290/month for 100K docs         ~$1/month
+Proprietary query syntax         Natural language
+Shared infrastructure            Your Durable Object
+Manual index management          Just describe what you want
+AI features = enterprise         AI-first by default
+Cold starts                      Sub-10ms edge latency
+Per-index pricing                Pay for compute, not indexes
 ```
 
-Not a shared index with API keys. Not a multi-tenant nightmare. Each agent has their own complete Algolia instance.
+## One-Click Deploy
+
+```bash
+npx create-dotdo algolia
+```
+
+Search infrastructure on your Cloudflare account. Your data. Your control.
+
+```typescript
+import { Algolia } from 'algolia.do'
+
+export default Algolia({
+  name: 'my-search',
+  domain: 'search.myapp.com',
+  semantic: true,
+})
+```
 
 ## Features
 
-- **Hybrid Search** - FTS5 keyword + Vectorize semantic search
-- **Typo Tolerance** - Fuzzy matching out of the box
-- **Faceting** - Counts, refinement, hierarchical facets
-- **Custom Ranking** - Configure ranking formulas per index
-- **InstantSearch Compatible** - Works with Algolia's React/JS libraries
-- **Sub-10ms Latency** - Edge-deployed with KV caching
-- **MCP Tools** - Model Context Protocol for AI-native search
+### Searching
+
+```typescript
+// Just say what you want
+const results = await algolia`wireless headphones`
+const filtered = await algolia`Sony headphones under $150`
+const semantic = await algolia`comfortable audio for long flights`
+
+// AI infers what you need
+await algolia`headphones`                    // returns products
+await algolia`headphones by brand`           // returns faceted results
+await algolia`headphones trending`           // returns sorted by popularity
+```
+
+### Indexing
+
+```typescript
+// Index naturally
+await algolia`index products from catalog`
+await algolia`add to products: Wireless Earbuds $79 category:audio`
+await algolia`update SKU-12345 price to $89`
+await algolia`remove out-of-stock items`
+
+// Bulk operations read like instructions
+await algolia`
+  products index:
+  - SKU-001: Wireless Headphones $99
+  - SKU-002: Bluetooth Speaker $49
+  - SKU-003: USB-C Cable $15
+`
+```
+
+### Faceting
+
+```typescript
+// Natural facet queries
+const brands = await algolia`headphones by brand`
+const priceRanges = await algolia`headphones grouped by price range`
+const categories = await algolia`all product categories with counts`
+
+// Filter like you'd say it
+await algolia`Sony or Bose headphones under $200`
+await algolia`4+ star products in electronics`
+```
+
+### Synonyms and Rules
+
+```typescript
+// Configure with natural language
+await algolia`synonyms: headphones = earbuds = earphones`
+await algolia`synonyms: tv = television = flatscreen`
+await algolia`boost: promoted products should rank higher`
+await algolia`rule: searches for "cheap" should filter under $50`
+```
+
+### Hybrid Search
+
+```typescript
+// Semantic search is natural
+await algolia`good headphones for noisy offices`
+await algolia`something to block out airplane noise`
+await algolia`gift for someone who loves music`
+
+// AI understands intent, not just keywords
+```
+
+### Real-time Updates
+
+```typescript
+// Live search that updates
+const search = await algolia`wireless headphones`.live()
+
+search.on('update', (results) => {
+  // New products matching query
+})
+
+// Or with React
+await algolia`trending products`
+  .subscribe(products => setProducts(products))
+```
+
+## Pipeline Chains
+
+Chain operations without Promise.all:
+
+```typescript
+// Find, analyze, act
+await algolia`low stock products`
+  .map(product => algolia`suppliers for ${product.sku}`)
+  .map(suppliers => suppliers.notify(`Restock needed`))
+
+// Search across multiple indexes
+await algolia`search all indexes for "wireless"`
+  .map(result => result.boost())
+
+// Batch operations
+await algolia`products without images`
+  .map(product => product.generateImage())
+  .map(product => product.save())
+```
 
 ## Architecture
+
+### Durable Object per Index
 
 ```
                     +-----------------------+
@@ -75,70 +228,72 @@ Not a shared index with API keys. Not a multi-tenant nightmare. Each agent has t
                     +-------------------+
 ```
 
-**Key insight**: Durable Objects provide single-threaded, strongly consistent state. Each agent's index is a Durable Object. SQLite FTS5 handles keyword search. Vectorize handles semantic search.
+Each agent, project, or tenant gets their own Durable Object. SQLite FTS5 for keyword search. Vectorize for semantic search. No shared infrastructure.
 
-## Installation
+### Storage Tiers
 
-```bash
-npm install algolia.do
-```
+| Tier | Storage | Use Case | Latency |
+|------|---------|----------|---------|
+| **Hot** | SQLite FTS5 | Active indexes | <10ms |
+| **Warm** | KV Cache | Frequent queries | <5ms |
+| **Cold** | R2 | Index snapshots | <100ms |
 
-## Quick Start
+## vs Algolia
 
-### Basic Search
+| Feature | Algolia | algolia.do |
+|---------|---------|------------|
+| **100K docs** | ~$290/month | ~$1/month |
+| **Query syntax** | Proprietary DSL | Natural language |
+| **Semantic search** | Enterprise only | Built-in |
+| **Latency** | 50-100ms | <10ms edge |
+| **Multi-tenant** | Expensive | Free (per-DO) |
+| **AI features** | Premium tier | Native |
+| **Lock-in** | Proprietary | Open source |
+| **InstantSearch** | Official | Compatible |
 
-```typescript
-import { algoliasearch } from 'algolia.do'
+## Use Cases
 
-const client = algoliasearch('your-app-id', 'your-api-key')
-const index = client.initIndex('products')
-
-// Index documents
-await index.saveObjects([
-  { objectID: '1', title: 'Wireless Headphones', price: 99 },
-  { objectID: '2', title: 'Bluetooth Speaker', price: 49 }
-])
-
-// Search
-const { hits } = await index.search('wireless', {
-  filters: 'price < 100',
-  hitsPerPage: 20
-})
-```
-
-### Faceted Search
+### E-commerce
 
 ```typescript
-const { hits, facets } = await index.search('headphones', {
-  facets: ['brand', 'category'],
-  facetFilters: [['brand:Sony', 'brand:Bose']]
-})
+// Product search
+await algolia`red running shoes size 10`
+await algolia`gifts under $50 for runners`
 
-// facets = { brand: { Sony: 15, Bose: 12 }, category: { audio: 27 } }
+// Inventory management
+await algolia`low stock items needing reorder`
+  .notify(`Restock alert`)
 ```
 
-### Hybrid Search
+### Documentation
 
 ```typescript
-const { hits } = await index.search('comfortable travel audio', {
-  semantic: true,        // Enable vector search
-  hybrid: {
-    alpha: 0.7           // 70% semantic, 30% keyword
-  }
-})
+// Search docs naturally
+await algolia`how to configure authentication`
+await algolia`examples of rate limiting`
+await algolia`errors related to permissions`
 ```
 
-### With InstantSearch
+### AI Agents
+
+```typescript
+import { tom, ralph, priya } from 'agents.do'
+
+// Each agent has isolated search
+await algolia.for(tom)`my reviewed PRs`
+await algolia.for(ralph)`components I built`
+await algolia.for(priya)`features in the roadmap`
+```
+
+## InstantSearch Compatible
 
 ```typescript
 import { InstantSearch, SearchBox, Hits } from 'react-instantsearch'
-import { algoliasearch } from 'algolia.do'
-
-const client = algoliasearch('your-app-id', 'your-api-key')
+import { algolia } from 'algolia.do'
 
 function App() {
   return (
-    <InstantSearch searchClient={client} indexName="products">
+    <InstantSearch searchClient={algolia.client} indexName="products">
       <SearchBox />
       <Hits />
     </InstantSearch>
@@ -146,51 +301,22 @@ function App() {
 }
 ```
 
-## API Reference
+Works with Algolia's React, Vue, Angular, and vanilla JS libraries.
 
-### Client
+## MCP Tools
 
-```typescript
-algoliasearch(appId: string, apiKey: string): AlgoliaClient
-```
-
-### Index Operations
+AI-native search through Model Context Protocol:
 
 ```typescript
-// Initialize index
-const index = client.initIndex('products')
+// Available as MCP tool
+await mcp.search({
+  index: 'products',
+  query: 'wireless headphones under $200'
+})
 
-// Indexing
-await index.saveObjects(objects)
-await index.saveObject(object)
-await index.partialUpdateObjects(objects)
-await index.deleteObjects(objectIDs)
-await index.clearObjects()
-
-// Search
-await index.search(query, params)
-await index.searchForFacetValues(facetName, facetQuery, params)
-
-// Settings
-await index.setSettings(settings)
-await index.getSettings()
+// Or natural language
+await mcp.algolia`find me noise cancelling headphones`
 ```
-
-### Search Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `query` | string | Search query |
-| `filters` | string | Filter expression |
-| `facetFilters` | array | Facet filter array |
-| `numericFilters` | array | Numeric filter array |
-| `hitsPerPage` | number | Results per page (default: 20) |
-| `page` | number | Page number (0-indexed) |
-| `facets` | array | Facets to retrieve |
-| `attributesToRetrieve` | array | Fields to return |
-| `attributesToHighlight` | array | Fields to highlight |
-| `semantic` | boolean | Enable semantic search |
-| `hybrid.alpha` | number | Semantic vs keyword weight (0-1) |
 
 ## The Rewrites Ecosystem
 
@@ -205,26 +331,58 @@ algolia.do is part of the rewrites family:
 | [mongo.do](https://mongo.do) | MongoDB | Document database for AI |
 | [kafka.do](https://kafka.do) | Kafka | Event streaming for AI |
 
-## Cost Comparison
+## Roadmap
 
-### Scenario: 100K documents, 500K searches/month
+### Search
+- [x] Full-text search (FTS5)
+- [x] Semantic search (Vectorize)
+- [x] Hybrid search
+- [x] Faceting
+- [x] Typo tolerance
+- [x] Synonyms
+- [ ] Geo search
+- [ ] Personalization
 
-| Platform | Monthly Cost |
-|----------|--------------|
-| Algolia | ~$290 |
-| Typesense Cloud | ~$60 |
-| **algolia.do** | **~$1** |
+### Features
+- [x] Natural language queries
+- [x] Real-time updates
+- [x] InstantSearch compatible
+- [x] MCP tools
+- [ ] Query suggestions
+- [ ] A/B testing
+- [ ] Analytics
 
-100x+ cost reduction at scale.
+### AI
+- [x] Semantic understanding
+- [x] Intent detection
+- [ ] Query expansion
+- [ ] Result re-ranking
+- [ ] Conversational search
 
-## Why Durable Objects?
+## Contributing
 
-1. **Single-threaded consistency** - No race conditions in ranking
-2. **Per-index isolation** - Each agent's data is separate
-3. **Automatic scaling** - Millions of indexes, zero configuration
-4. **Global distribution** - Search at the edge
-5. **SQLite FTS5** - Real full-text search, real performance
+algolia.do is open source under the MIT license.
+
+```bash
+git clone https://github.com/dotdo/algolia.do
+cd algolia.do
+pnpm install
+pnpm test
+```
 
 ## License
 
-MIT
+MIT License - Search belongs at the edge.
+
+---
+
+<p align="center">
+  <strong>100x cheaper. Natural language. Edge-native.</strong>
+  <br />
+  Search reimagined for AI.
+  <br /><br />
+  <a href="https://algolia.do">Website</a> |
+  <a href="https://docs.algolia.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/algolia.do">GitHub</a>
+</p>

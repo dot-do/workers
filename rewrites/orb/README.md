@@ -1,312 +1,399 @@
 # orb.do
 
-Usage-based billing on Cloudflare Durable Objects - Metering at the edge for AI agents.
+> Usage-Based Billing. Edge-Native. AI-First.
+
+Orb charges $30K-100K+/year for usage-based billing. Complex pricing models, metering APIs, and entitlement checks locked behind enterprise contracts. Implementations take months. Billing becomes another vendor dependency.
+
+**orb.do** is the open-source alternative. Deploy in minutes. Run on your Cloudflare account. Natural language billing that finance people can understand.
+
+## AI-Native API
+
+```typescript
+import { orb } from 'orb.do'           // Full SDK
+import { orb } from 'orb.do/tiny'      // Minimal client
+import { orb } from 'orb.do/metering'  // Metering-only operations
+```
+
+Natural language for billing workflows:
+
+```typescript
+import { orb } from 'orb.do'
+
+// Talk to it like a finance person
+await orb`bill ralph for 1500 tokens on gpt-4`
+await orb`bill customer for API usage this month`
+await orb`charge startup-xyz for 50GB storage`
+
+// Chain like sentences
+await orb`customers over usage limit`
+  .notify(`You've exceeded your plan limits`)
+
+// Invoices that generate themselves
+await orb`invoice acme-corp for January`
+  .calculate()    // usage aggregation
+  .generate()     // PDF creation
+  .send()         // email delivery
+```
 
 ## The Problem
 
-Usage-based billing is hard:
-- High-volume event ingestion (thousands/second)
-- Complex pricing models (tiered, graduated, volume)
-- Real-time invoice amounts
-- Sub-millisecond entitlement checks
-- Proration for mid-cycle changes
+Orb dominates usage-based billing:
 
-Traditional billing platforms were built for centralized infrastructure. AI agents need billing that scales to millions of isolated instances.
+| What Orb Charges | The Reality |
+|------------------|-------------|
+| **Platform Fee** | $30K-100K+/year |
+| **Per-Event Fee** | $0.0001+ per metered event |
+| **Implementation** | Weeks of engineering |
+| **Pricing Models** | Limited to their abstractions |
+| **Entitlements** | Separate add-on costs |
+| **Lock-in** | Years of billing data trapped |
 
-## The Vision
+### The SaaS Tax
 
-Every AI agent gets their own billing meter.
+Modern billing platforms:
+- Complex SDKs requiring significant integration
+- Event schemas that don't match your domain
+- Pricing changes require engineering work
+- Finance can't self-serve
+
+AI agents bill millions of micro-transactions. Traditional platforms weren't built for this scale.
+
+## The Solution
+
+**orb.do** reimagines billing for the AI era:
+
+```
+Orb                                 orb.do
+-----------------------------------------------------------------
+$30K-100K+/year                     $0 - run your own
+Weeks of implementation             Deploy in minutes
+Complex SDK integration             Natural language API
+Engineering-driven pricing          Finance-friendly syntax
+Separate entitlements               Entitlements included
+Vendor lock-in                      Open source, MIT licensed
+```
+
+## One-Click Deploy
+
+```bash
+npx create-dotdo orb
+```
+
+A complete billing system. Running on infrastructure you control. Usage-based from day one.
 
 ```typescript
-import { tom, ralph, priya } from 'agents.do'
 import { Orb } from 'orb.do'
 
-// Each agent has their own metering
-const tomBilling = Orb.for(tom)
-const ralphBilling = Orb.for(ralph)
-
-// Ingest usage events
-await tomBilling.meter.ingest({
-  eventType: 'api_call',
-  customerId: 'cust_123',
-  idempotencyKey: 'req_abc',
-  timestamp: Date.now(),
-  properties: { endpoint: '/review', tokens: 1500 }
+export default Orb({
+  name: 'my-saas',
+  domain: 'billing.my-saas.com',
 })
-
-// Check entitlements in <1ms
-const canAccess = await tomBilling.entitlements.hasFeature('cust_123', 'advanced_review')
-
-// Real-time invoice amounts
-const invoice = await tomBilling.invoices.preview('sub_xyz')
 ```
 
 ## Features
 
-- **High-Volume Metering** - 1000+ events/sec per Durable Object
-- **Flexible Pricing** - Per-unit, tiered, graduated, volume, package
-- **Real-Time Invoices** - Amounts update as events stream in
-- **Sub-ms Entitlements** - KV-cached feature gating at the edge
-- **Proration** - Automatic mid-cycle upgrade/downgrade handling
-- **Idempotency** - Built-in duplicate event detection
-- **PDF Generation** - Invoice PDFs stored in R2
-
-## Installation
-
-```bash
-npm install orb.do
-# or
-npm install @dotdo/orb
-```
-
-## Quick Start
-
-### Event Ingestion
+### Metering
 
 ```typescript
-import { Orb } from 'orb.do'
+// Bill for anything
+await orb`bill ralph for 1500 tokens on gpt-4`
+await orb`charge acme for 100 API calls`
+await orb`record 50GB storage for customer-xyz`
 
-const orb = new Orb(env.ORB)
+// AI infers the meter
+await orb`ralph used the API`               // increments api_calls
+await orb`ralph used 1500 tokens`           // records token usage
+await orb`ralph stored 50GB`                // records storage
 
-// Single event
-await orb.meter.ingest({
-  eventType: 'api_request',
-  customerId: 'cust_123',
-  idempotencyKey: crypto.randomUUID(),
-  timestamp: Date.now(),
-  properties: {
-    model: 'gpt-4',
-    tokens: 1500
-  }
-})
-
-// Batch ingestion
-await orb.meter.ingestBatch([
-  { eventType: 'storage', customerId: 'cust_123', ... },
-  { eventType: 'storage', customerId: 'cust_456', ... },
-])
-
-// Query usage
-const usage = await orb.meter.getUsage('cust_123', 'tokens', {
-  start: periodStart,
-  end: periodEnd
-})
+// Query usage naturally
+await orb`ralph usage this month`
+await orb`acme token usage since Monday`
+await orb`all customers over 10000 API calls`
 ```
 
-### Pricing Models
+### Pricing
 
 ```typescript
-// Per-unit pricing
-const perUnit = await orb.prices.create({
-  productId: 'prod_api',
-  type: 'metered',
-  billingScheme: 'per_unit',
-  unitAmount: 10, // $0.10 per unit
-  meterId: 'api_calls'
-})
+// Pricing as natural language
+await orb`$0.10 per API call`
+await orb`$0.001 per token`
+await orb`$5 per GB per month`
 
-// Tiered pricing
-const tiered = await orb.prices.create({
-  productId: 'prod_api',
-  type: 'metered',
-  billingScheme: 'tiered',
-  tiers: [
-    { upTo: 1000, unitAmount: 10 },      // First 1000: $0.10/unit
-    { upTo: 10000, unitAmount: 8 },       // Next 9000: $0.08/unit
-    { upTo: null, unitAmount: 5 }         // Beyond: $0.05/unit
-  ],
-  meterId: 'api_calls'
-})
+// Tiered pricing reads like a rate card
+await orb`
+  API calls:
+  - first 1000 at $0.10
+  - next 9000 at $0.08
+  - beyond at $0.05
+`
 
-// Calculate price for usage
-const amount = await orb.prices.calculate('price_xyz', 5000)
+// Volume discounts
+await orb`20% off over 100000 API calls`
+
+// Package pricing
+await orb`$99/month includes 10000 API calls`
 ```
 
 ### Subscriptions
 
 ```typescript
-// Create subscription
-const subscription = await orb.subscriptions.create({
-  customerId: 'cust_123',
-  planId: 'plan_pro',
-  items: [
-    { priceId: 'price_base', quantity: 1 },
-    { priceId: 'price_seats', quantity: 5 }
-  ]
-})
+// Create subscriptions naturally
+await orb`subscribe acme to Pro plan`
+await orb`subscribe ralph to Enterprise with 10 seats`
 
-// Update (with proration)
-await orb.subscriptions.update(subscription.id, {
-  planId: 'plan_enterprise',
-  prorate: true
-})
+// Changes just work
+await orb`upgrade acme to Enterprise`        // automatic proration
+await orb`add 5 seats to acme`               // mid-cycle adjustment
+await orb`cancel acme at period end`         // graceful cancellation
 
-// Cancel at period end
-await orb.subscriptions.cancel(subscription.id, {
-  atPeriodEnd: true
-})
+// Query subscriptions
+await orb`acme subscription status`
+await orb`customers on Pro plan`
+await orb`subscriptions expiring this week`
 ```
 
 ### Invoicing
 
 ```typescript
-// Generate invoice
-const invoice = await orb.invoices.create({
-  customerId: 'cust_123',
-  subscriptionId: 'sub_xyz'
-})
+// Generate invoices naturally
+await orb`invoice acme for January`
+await orb`invoice all customers for this month`
 
-// Finalize and send
-await orb.invoices.finalize(invoice.id)
+// Invoice lifecycle
+await orb`invoice acme`
+  .calculate()    // aggregate usage
+  .generate()     // create PDF
+  .send()         // email to customer
 
-// Get PDF
-const pdfUrl = await orb.invoices.getPdfUrl(invoice.id)
+// Query invoices
+await orb`acme unpaid invoices`
+await orb`overdue invoices`
+await orb`invoices over $10000`
 ```
 
 ### Entitlements
 
 ```typescript
-// Check boolean feature
-const hasFeature = await orb.entitlements.hasFeature('cust_123', 'advanced_analytics')
+// Entitlements as questions
+const can = await orb`can ralph use advanced_analytics`
+const limit = await orb`ralph API call limit`
+const remaining = await orb`ralph remaining API calls`
 
-// Check numeric limit
-const limit = await orb.entitlements.getLimit('cust_123', 'api_calls')
+// Check before action
+if (await orb`can acme use premium_features`) {
+  // grant access
+}
 
-// Check usage against limit
-const usage = await orb.entitlements.checkUsage('cust_123', 'api_calls')
-// { current: 8500, limit: 10000, remaining: 1500, exceeded: false }
+// Usage against limits
+await orb`ralph usage vs limits`
+// { api_calls: { used: 8500, limit: 10000, remaining: 1500 } }
+```
 
-// Hono middleware
-app.use('/api/*', requireFeature('api_access'))
-app.use('/api/*', checkUsageLimit('api_calls'))
+### Real-Time Updates
+
+```typescript
+// Stream usage as it happens
+await orb`stream ralph usage`
+  .on('usage', u => updateDashboard(u))
+
+// Alerts when approaching limits
+await orb`alert when ralph exceeds 80% of API limit`
+
+// Webhooks for billing events
+await orb`notify on invoice.created, payment.failed`
+```
+
+## Promise Pipelining
+
+Chain operations without waiting:
+
+```typescript
+// Find customers, calculate bills, send invoices - one round trip
+await orb`customers with usage this month`
+  .map(customer => orb`invoice ${customer}`)
+  .map(invoice => invoice.send())
+
+// Overage handling as a pipeline
+await orb`customers over limit`
+  .map(customer => orb`suspend ${customer} API access`)
+  .map(customer => orb`notify ${customer} about overage`)
+```
+
+## Agent Billing
+
+Every AI agent gets their own billing meter:
+
+```typescript
+import { tom, ralph, priya } from 'agents.do'
+import { orb } from 'orb.do'
+
+// Bill per agent naturally
+await orb`bill tom for code review: 2000 tokens`
+await orb`bill ralph for implementation: 5000 tokens`
+await orb`bill priya for product planning: 1500 tokens`
+
+// Query by agent
+await orb`tom usage this week`
+await orb`which agent used the most tokens`
+
+// Team billing
+await orb`engineering team usage this month`
 ```
 
 ## Architecture
 
+### Durable Object per Customer
+
 ```
-                    +-------------------+
-                    |      orb.do       |
-                    | (Cloudflare Worker)|
-                    +-------------------+
-                            |
-        +-------------------+-------------------+
-        |                   |                   |
-+---------------+   +---------------+   +---------------+
-|   MeterDO     |   | SubscriptionDO|   |  InvoiceDO   |
-|   (SQLite)    |   |   (SQLite)    |   |   (SQLite)   |
-+---------------+   +---------------+   +---------------+
-        |                   |                   |
-        +-------------------+-------------------+
-                            |
-                    +---------------+
-                    |  KV (Cache)   |
-                    | Entitlements  |
-                    +---------------+
-                            |
-                    +---------------+
-                    |      R2       |
-                    | Invoice PDFs  |
-                    +---------------+
+CustomerDO (billing configuration)
+  |
+  +-- MeterDO (usage events)
+  |     |-- SQLite: Events (high-volume append)
+  |     +-- Aggregations (real-time rollups)
+  |
+  +-- SubscriptionDO (subscription state)
+  |     |-- SQLite: Subscription records
+  |     +-- Proration calculations
+  |
+  +-- InvoiceDO (invoicing)
+  |     |-- SQLite: Invoice records
+  |     +-- R2: PDF storage
+  |
+  +-- EntitlementDO (feature gating)
+        |-- KV: Sub-ms lookups
 ```
 
-**Key Components:**
+### Storage Tiers
 
-| Component | Storage | Purpose |
-|-----------|---------|---------|
-| MeterDO | SQLite | Event ingestion, aggregation |
-| PricingDO | SQLite | Price definitions, calculations |
-| SubscriptionDO | SQLite | Subscription state, proration |
-| InvoiceDO | SQLite | Invoice generation, line items |
-| KV | Edge Cache | Sub-ms entitlement checks |
-| R2 | Object Storage | Invoice PDFs, archives |
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Current period events | <10ms |
+| **Warm** | R2 + Index | Historical billing (2-7 years) | <100ms |
+| **Cold** | R2 Archive | Compliance retention (7+ years) | <1s |
 
-## API Reference
+## vs Orb
 
-### Metering
+| Feature | Orb | orb.do |
+|---------|-----|--------|
+| **Annual Cost** | $30K-100K+ | ~$50/month |
+| **Implementation** | Weeks | Minutes |
+| **API** | Complex SDK | Natural language |
+| **Pricing Changes** | Engineering required | Finance self-serve |
+| **Entitlements** | Separate product | Included |
+| **Data Location** | Their servers | Your Cloudflare |
+| **Customization** | Limited | Fully customizable |
+| **Lock-in** | Years of data | MIT licensed |
 
-| Method | Description |
-|--------|-------------|
-| `meter.ingest(event)` | Ingest single usage event |
-| `meter.ingestBatch(events)` | Ingest multiple events |
-| `meter.getUsage(customerId, metricId, period)` | Query aggregated usage |
+## Use Cases
 
-### Pricing
-
-| Method | Description |
-|--------|-------------|
-| `prices.create(params)` | Create a price |
-| `prices.get(id)` | Get price details |
-| `prices.calculate(priceId, quantity)` | Calculate amount for usage |
-
-### Subscriptions
-
-| Method | Description |
-|--------|-------------|
-| `subscriptions.create(params)` | Create subscription |
-| `subscriptions.get(id)` | Get subscription |
-| `subscriptions.update(id, params)` | Update subscription |
-| `subscriptions.cancel(id, options)` | Cancel subscription |
-
-### Invoices
-
-| Method | Description |
-|--------|-------------|
-| `invoices.create(params)` | Create draft invoice |
-| `invoices.finalize(id)` | Finalize for payment |
-| `invoices.pay(id)` | Mark as paid |
-| `invoices.getPdfUrl(id)` | Get signed PDF URL |
-
-### Entitlements
-
-| Method | Description |
-|--------|-------------|
-| `entitlements.hasFeature(customerId, featureKey)` | Boolean check |
-| `entitlements.getLimit(customerId, featureKey)` | Numeric limit |
-| `entitlements.checkUsage(customerId, featureKey)` | Usage vs limit |
-
-## The Rewrites Ecosystem
-
-orb.do is part of the rewrites family - reimplementations of popular infrastructure on Cloudflare Durable Objects:
-
-| Rewrite | Original | Purpose |
-|---------|----------|---------|
-| [fsx.do](https://fsx.do) | fs (Node.js) | Filesystem for AI |
-| [gitx.do](https://gitx.do) | git | Version control for AI |
-| [supabase.do](https://supabase.do) | Supabase | Postgres/BaaS for AI |
-| **orb.do** | Orb | Usage-based billing for AI |
-| mongo.do | MongoDB | Document database for AI |
-| kafka.do | Kafka | Event streaming for AI |
-
-## The workers.do Platform
-
-orb.do is a core service of [workers.do](https://workers.do) - the platform for building Autonomous Startups.
+### SaaS Platforms
 
 ```typescript
-import { priya, ralph, tom } from 'agents.do'
-import { Orb } from 'orb.do'
+// Bill customers for API usage
+await orb`bill ${customer} for ${tokens} tokens`
 
-// AI agents with usage-based billing
-const startup = {
-  product: priya,
-  engineering: ralph,
-  tech: tom,
-}
-
-// Track usage per agent
-for (const [role, agent] of Object.entries(startup)) {
-  const billing = Orb.for(agent)
-  await billing.meter.ingest({
-    eventType: 'agent_task',
-    customerId: startup.customerId,
-    idempotencyKey: `${role}-${Date.now()}`,
-    timestamp: Date.now(),
-    properties: { role, tokens: agent.lastTokenCount }
-  })
+// Enforce rate limits
+if (await orb`${customer} over API limit`) {
+  return { error: 'Rate limit exceeded' }
 }
 ```
 
-Both kinds of workers. Working for you.
+### AI Agent Platforms
+
+```typescript
+// Per-model billing
+await orb`bill ${customer} for gpt-4: ${tokens} tokens at $0.03/1k`
+await orb`bill ${customer} for claude: ${tokens} tokens at $0.01/1k`
+
+// Track by agent
+await orb`tom usage by model this month`
+```
+
+### Multi-Tenant Applications
+
+```typescript
+// Tenant-isolated billing
+await orb`bill tenant-${id} for ${storage}GB storage`
+await orb`tenant-${id} total spend this month`
+```
+
+## Deployment Options
+
+### Cloudflare Workers
+
+```bash
+npx create-dotdo orb
+# Deploys to your Cloudflare account
+```
+
+### Self-Hosted
+
+```bash
+# Docker
+docker run -p 8787:8787 dotdo/orb
+
+# Kubernetes
+kubectl apply -f orb-do.yaml
+```
+
+## Roadmap
+
+### Core Billing
+- [x] Usage Metering
+- [x] Tiered Pricing
+- [x] Volume Pricing
+- [x] Package Pricing
+- [x] Subscriptions
+- [x] Proration
+- [x] Invoice Generation
+- [x] PDF Invoices
+- [ ] Credit Grants
+- [ ] Prepaid Balances
+
+### Entitlements
+- [x] Boolean Features
+- [x] Numeric Limits
+- [x] Usage-Based Limits
+- [ ] Time-Based Access
+- [ ] Seat-Based Licensing
+
+### Integrations
+- [x] Stripe Payments
+- [x] Webhooks
+- [ ] QuickBooks Sync
+- [ ] Xero Sync
+- [ ] Salesforce Sync
+
+### AI
+- [x] Natural Language Queries
+- [x] Usage Prediction
+- [ ] Anomaly Detection
+- [ ] Revenue Forecasting
+
+## Contributing
+
+orb.do is open source under the MIT license.
+
+```bash
+git clone https://github.com/dotdo/orb.do
+cd orb.do
+pnpm install
+pnpm test
+```
 
 ## License
 
-MIT
+MIT License - Bill everything, own nothing.
+
+---
+
+<p align="center">
+  <strong>Usage-based billing without the enterprise tax.</strong>
+  <br />
+  Natural language. Real-time. Edge-native.
+  <br /><br />
+  <a href="https://orb.do">Website</a> |
+  <a href="https://docs.orb.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/orb.do">GitHub</a>
+</p>

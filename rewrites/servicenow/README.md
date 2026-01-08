@@ -6,27 +6,77 @@ ServiceNow built a $150B+ company charging $100+ per user per month for IT Servi
 
 **servicenow.do** is the open-source alternative. Deploy your own instance in one click. AI agents are first-class citizens. Table API compatible - your existing integrations just work.
 
+## AI-Native API
+
+```typescript
+import { servicenow } from 'servicenow.do'           // Full SDK
+import { servicenow } from 'servicenow.do/tiny'      // Minimal client
+import { servicenow } from 'servicenow.do/table'     // Table API only
+```
+
+Natural language for IT service management:
+
+```typescript
+import { servicenow } from 'servicenow.do'
+
+// Talk to it like a service desk
+const incident = await servicenow`email server down for networking team`
+const p1s = await servicenow`P1 incidents this week`
+const changes = await servicenow`pending changes for CAB review`
+
+// Chain like sentences
+await servicenow`P1 incidents this week`
+  .map(inc => servicenow`root cause for ${inc}`)
+
+// Incidents that resolve themselves
+await servicenow`email server down`
+  .assign('Network Operations')
+  .resolve('Restarted mail service')
+```
+
 ## The Problem
 
 ServiceNow revolutionized enterprise IT. But the model is broken:
 
-- **$100+ per user/month** - A 1,000-person company pays $1.2M+ annually
-- **6-18 month implementations** - Consultants cost more than the software
-- **Shared tenants** - Your data lives with everyone else's
-- **AI as afterthought** - "Now Assist" bolted onto 20-year-old architecture
-- **Vendor lock-in** - Leaving means losing years of configuration
+| What ServiceNow Charges | The Reality |
+|------------------------|-------------|
+| **Per User Licensing** | $100+/user/month ($1.2M+ annually for 1,000 users) |
+| **Implementation** | 6-18 months, consultants cost more than software |
+| **Shared Tenants** | Your data lives with everyone else's |
+| **AI Integration** | "Now Assist" bolted onto 20-year-old architecture |
+| **Vendor Lock-in** | Leaving means losing years of configuration |
 
-Meanwhile, AI agents are the new workforce. They need to file incidents, resolve tickets, run change management. ServiceNow wasn't built for them.
+### The Now Tax
+
+Since going public:
+
+- Aggressive upselling to higher tiers
+- Complexity drives consultant dependency
+- Slow innovation on core platform
+- AI features require premium licenses
+- Data trapped in proprietary formats
+
+IT departments are hostage to a workflow company that sees ITSM as a subscription vehicle.
+
+### The AI Gap
+
+AI agents are the new workforce. They need to file incidents, resolve tickets, run change management. ServiceNow wasn't built for them.
 
 ## The Solution
 
 **servicenow.do** reimagines ITSM for the AI era:
 
-- **One-click deploy** - Your own instance, not a shared tenant
-- **Edge-native** - Runs on Cloudflare's global network, not legacy data centers
-- **AI-native** - AI agents can file incidents, resolve tickets, manage changes
-- **Open source** - MIT licensed, no vendor lock-in
-- **Table API compatible** - `/api/now/table/*` works exactly the same
+```
+ServiceNow                         servicenow.do
+-----------------------------------------------------------------
+$100+/user/month                   Deploy for free
+6-18 month implementation          Deploy in minutes
+Shared tenant                      Your own instance
+AI as afterthought                 AI-native design
+Oracle/Azure data centers          Your Cloudflare account
+$$$ consultants                    Code it yourself
+Vendor lock-in                     Open source, MIT licensed
+```
 
 ## One-Click Deploy
 
@@ -35,8 +85,6 @@ npx create-dotdo servicenow
 ```
 
 That's it. Your own ServiceNow instance running on Cloudflare's edge.
-
-Or deploy to your workers.do workspace:
 
 ```typescript
 import { ServiceNow } from 'servicenow.do'
@@ -51,133 +99,104 @@ export default ServiceNow({
 
 ### Incident Management
 
-Full incident lifecycle - create, assign, escalate, resolve, close.
-
 ```typescript
-// Create an incident
-const incident = await snow.incidents.create({
-  short_description: 'Email server down',
-  urgency: 1,
-  impact: 1,
-  category: 'Network',
-})
+// Just say it
+const incident = await servicenow`email server down for networking team`
 
-// Assign to a group
-await incident.assign({ group: 'Network Operations' })
+// Full lifecycle in natural language
+await servicenow`email server down`
+  .assign('Network Operations')
+  .escalate('P1')
+  .resolve('Restarted mail service')
 
-// Resolve
-await incident.resolve({
-  close_notes: 'Restarted mail service',
-  close_code: 'Solved (Permanently)',
-})
+// Query incidents naturally
+await servicenow`open incidents for networking team`
+await servicenow`P1 incidents this week`
+await servicenow`incidents affecting prod-web-01`
+
+// Batch operations read like commands
+await servicenow`reassign all John Smith incidents to Jane Doe`
+await servicenow`close resolved incidents older than 30 days`
 ```
 
 ### Problem Management
 
-Root cause analysis and permanent fixes.
-
 ```typescript
-// Create problem from related incidents
-const problem = await snow.problems.create({
-  short_description: 'Recurring mail server crashes',
-  related_incidents: [inc001, inc002, inc003],
-})
+// Create problems from patterns
+await servicenow`problem from recurring mail server crashes`
 
-// Document root cause
-await problem.rootCause({
-  cause: 'Memory leak in mail daemon',
-  workaround: 'Scheduled restart every 24h',
-})
+// Root cause analysis
+await servicenow`root cause for PRB0001234`
+  .document('Memory leak in mail daemon')
+  .workaround('Scheduled restart every 24h')
+  .fix('Upgrade to v2.1.0')
 
-// Implement permanent fix
-await problem.implement({
-  change: change001,
-  resolution: 'Upgraded mail server to v2.1.0',
-})
+// Find problems naturally
+await servicenow`problems without root cause`
+await servicenow`problems linked to prod-db-01`
 ```
 
 ### Change Management
 
-Standard, normal, and emergency changes with approval workflows.
-
 ```typescript
-// Create a change request
-const change = await snow.changes.create({
-  type: 'normal',
-  short_description: 'Upgrade production database',
-  risk: 'moderate',
-  impact_analysis: 'Brief downtime during maintenance window',
-})
+// Request changes naturally
+const change = await servicenow`change to upgrade production database`
+  .risk('moderate')
+  .window('Sunday 2am-6am')
 
-// Submit for approval
-await change.submit()
+// Approval workflow in plain English
+await servicenow`submit CHG0001234 for CAB approval`
+await servicenow`approve CHG0001234`
+await servicenow`implement CHG0001234`
 
-// Approve (via workflow or AI agent)
-await change.approve({ approver: 'CAB' })
-
-// Implement
-await change.implement()
+// Query changes naturally
+await servicenow`pending changes for CAB review`
+await servicenow`emergency changes this month`
+await servicenow`failed changes in Q4`
 ```
 
 ### Service Catalog
 
-Self-service requests for users and AI agents.
-
 ```typescript
-// Define a catalog item
-const laptopRequest = await snow.catalog.create({
-  name: 'Request New Laptop',
-  category: 'Hardware',
-  workflow: 'hardware-fulfillment',
-  variables: [
-    { name: 'laptop_type', type: 'choice', choices: ['MacBook Pro', 'ThinkPad'] },
-    { name: 'accessories', type: 'multiselect', choices: ['Monitor', 'Keyboard', 'Mouse'] },
-  ],
-})
+// Request things naturally
+await servicenow`request MacBook Pro with monitor and keyboard`
+await servicenow`request access to production database`
+await servicenow`request new hire onboarding for Jane Doe`
 
-// Submit a request
-await snow.requests.create({
-  catalog_item: laptopRequest.sys_id,
-  variables: {
-    laptop_type: 'MacBook Pro',
-    accessories: ['Monitor', 'Keyboard'],
-  },
-})
+// Check request status
+await servicenow`my pending requests`
+await servicenow`hardware requests awaiting approval`
 ```
 
 ### Knowledge Base
 
-Searchable documentation for humans and AI.
-
 ```typescript
-// Create an article
-await snow.knowledge.create({
-  title: 'How to reset your password',
-  category: 'Self-Service',
-  content: '...',
-  keywords: ['password', 'reset', 'login'],
-})
+// Search knowledge naturally
+await servicenow`how to reset VPN password`
+await servicenow`email troubleshooting steps`
 
-// Search (used by AI agents to resolve tickets)
-const articles = await snow.knowledge.search('email not working')
+// Create articles naturally
+await servicenow`article: how to connect to VPN from home`
+  .category('Self-Service')
+  .keywords('vpn', 'remote', 'work from home')
+
+// AI uses knowledge to resolve tickets
+await servicenow`unresolved incidents`
+  .map(inc => servicenow`knowledge article for ${inc}`)
+  .map(article => inc.suggest(article))
 ```
 
 ### CMDB
 
-Configuration management database for your entire infrastructure.
-
 ```typescript
-// Register a CI
-await snow.cmdb.create({
-  sys_class_name: 'cmdb_ci_server',
-  name: 'prod-web-01',
-  ip_address: '10.0.1.100',
-  environment: 'production',
-  owner: 'platform-team',
-})
+// Register assets naturally
+await servicenow`server prod-web-01 at 10.0.1.100 in production`
+await servicenow`database prod-db-01 depends on prod-storage-01`
 
-// Query relationships
-const dependencies = await snow.cmdb.relationships('prod-web-01')
+// Query the CMDB naturally
+await servicenow`what depends on prod-web-01`
+await servicenow`production servers in Austin data center`
+await servicenow`assets owned by platform team`
 ```
 
 ## Table API Compatible
@@ -201,63 +220,66 @@ curl -X PATCH https://your-instance.servicenow.do/api/now/table/incident/INC0001
 
 All `/api/now/table/*` endpoints are supported. GlideRecord queries work. Scripted REST APIs work. Your existing integrations just work.
 
-## AI-Native
+## AI-Native ITSM
 
-AI agents are first-class citizens in servicenow.do:
-
-### AI Files Tickets
+### Incidents That Triage Themselves
 
 ```typescript
-import { quinn } from 'agents.do'
+// AI determines urgency and impact automatically
+await servicenow`checkout broken, users see 500 error, started 10 min ago`
+// -> P1 incident, assigned to Critical Response Team, notifications sent
 
-// QA agent found a bug
-quinn`
-  The checkout flow is broken in production.
-  Users see a 500 error when clicking "Place Order".
-  Affects all users. Started 10 minutes ago.
-`
-// Quinn automatically files an incident with correct urgency/impact
+// Or be explicit
+await servicenow`email slow for marketing team`
+  .priority('P3')
+  .assign('Email Team')
 ```
 
-### AI Resolves Tickets
+### Root Cause in One Line
 
 ```typescript
-import { ralph } from 'agents.do'
+// AI analyzes patterns and suggests root cause
+await servicenow`P1 incidents this week`
+  .map(inc => servicenow`root cause for ${inc}`)
+  .map(rca => servicenow`problem from ${rca}`)
 
-// Developer agent resolves incidents
-ralph`
-  INC0012345 is caused by a database connection pool exhaustion.
-  Deployed fix in PR #789. Connection limit increased from 50 to 200.
-  Monitoring shows errors have stopped.
-`
-// Ralph updates the incident, links the change, and resolves
+// Or just ask
+await servicenow`why did prod-db-01 fail yesterday`
 ```
 
-### AI Runs Changes
+### Change Impact Analysis
 
 ```typescript
-import { tom } from 'agents.do'
+// AI evaluates change risk automatically
+await servicenow`change to upgrade production database`
+// -> Analyzes CMDB, identifies dependencies, suggests maintenance window
 
-// Tech lead manages change approval
-tom`
-  Review CHG0001234 for the database upgrade.
-  Verify the rollback plan is complete.
-  Approve if risk assessment is acceptable.
-`
-// Tom reviews the change, verifies docs, and approves via CAB workflow
+// Review pending changes
+await servicenow`pending changes`
+  .map(chg => servicenow`impact analysis for ${chg}`)
 ```
 
-### AI Searches Knowledge
+### Knowledge That Learns
 
 ```typescript
-import { priya } from 'agents.do'
+// AI creates articles from resolved incidents
+await servicenow`resolved incidents this month`
+  .map(inc => servicenow`knowledge article from ${inc}`)
 
-// Product agent answers questions
-priya`
-  A customer is asking about our SLA for P1 incidents.
-  Check the knowledge base and respond with our policy.
-`
-// Priya searches KB, finds the article, and responds accurately
+// Articles improve resolution times
+await servicenow`new incidents`
+  .map(inc => servicenow`suggest resolution for ${inc}`)
+```
+
+### SLA Management
+
+```typescript
+// Monitor SLAs naturally
+await servicenow`incidents breaching SLA`
+await servicenow`P1 incidents close to breach`
+
+// AI escalates automatically
+// -> Notifications sent before breach, not after
 ```
 
 ## Architecture
@@ -291,62 +313,54 @@ servicenow.do is built on Cloudflare's edge infrastructure:
 
 ### Dynamic Table Engine
 
-ServiceNow's power is its table-driven architecture. servicenow.do implements this as a dynamic schema engine:
+ServiceNow's power is its table-driven architecture. servicenow.do implements this naturally:
 
 ```typescript
-// Tables are defined at runtime
-await snow.tables.create({
-  name: 'u_custom_asset',
-  extends: 'cmdb_ci',
-  columns: [
-    { name: 'u_asset_tag', type: 'string', maxLength: 40 },
-    { name: 'u_purchase_date', type: 'date' },
-    { name: 'u_cost', type: 'currency' },
-  ],
-})
+// Create tables with natural language
+await servicenow`table custom_asset extending cmdb_ci with asset_tag, purchase_date, cost`
 
-// Queries work immediately
-const assets = await snow.table('u_custom_asset')
-  .where('u_cost', '>', 10000)
-  .orderBy('u_purchase_date', 'desc')
-  .limit(100)
+// Or be explicit about types
+await servicenow`table custom_asset`
+  .extends('cmdb_ci')
+  .field('asset_tag', 'string')
+  .field('purchase_date', 'date')
+  .field('cost', 'currency')
+
+// Query naturally
+await servicenow`custom assets over $10,000 by purchase date`
+await servicenow`custom assets purchased this year`
 ```
 
 ### Business Rules Engine
 
-React to data changes with server-side logic:
+React to data changes with natural language:
 
 ```typescript
-// Business rule: auto-assign P1 incidents
-await snow.rules.create({
-  table: 'incident',
-  when: 'before',
-  operation: 'insert',
-  condition: 'priority == 1',
-  script: async (current) => {
-    current.assignment_group = 'Critical Response Team'
-    current.notify = 'manager'
-  },
-})
+// Auto-assign P1 incidents
+await servicenow`when P1 incident created assign to Critical Response Team and notify manager`
+
+// Auto-escalate breaching SLAs
+await servicenow`when incident SLA at 80% escalate to supervisor`
+
+// Close stale incidents
+await servicenow`when resolved incident untouched for 7 days close automatically`
 ```
 
 ### Workflow Engine
 
-Visual workflows for approvals, tasks, and automation:
+Define workflows naturally:
 
 ```typescript
 // Change approval workflow
-await snow.workflows.create({
-  name: 'Normal Change Approval',
-  table: 'change_request',
-  stages: [
-    { name: 'Submit', action: 'validate_fields' },
-    { name: 'Review', action: 'assign_reviewer' },
-    { name: 'CAB Approval', action: 'cab_vote', quorum: 3 },
-    { name: 'Implementation', action: 'schedule_window' },
-    { name: 'Post-Implementation', action: 'verify_success' },
-  ],
-})
+await servicenow`workflow: normal change approval`
+  .step('submit and validate')
+  .step('assign reviewer')
+  .step('CAB approval with 3 votes')
+  .step('schedule implementation window')
+  .step('verify success')
+
+// Or describe it
+await servicenow`create workflow for normal changes requiring CAB approval`
 ```
 
 ### Durable Object per Instance
@@ -362,32 +376,98 @@ Each servicenow.do deployment is a single Durable Object:
 
 | Feature | ServiceNow | servicenow.do |
 |---------|------------|---------------|
-| Pricing | $100+/user/month | Free (open source) |
-| Deployment | 6-18 months | 1 click |
-| Architecture | Shared tenant | Your own instance |
-| AI Integration | Bolted on | Native |
-| Table API | Proprietary | Compatible |
-| Data Location | Their data centers | Your choice (edge) |
-| Customization | $$$$ consultants | Code it yourself |
-| Lock-in | Years of migration | MIT licensed |
+| **Pricing** | $100+/user/month | Free (open source) |
+| **Deployment** | 6-18 months | Deploy in minutes |
+| **Architecture** | Shared tenant | Your own instance |
+| **AI** | Bolted on (Now Assist) | AI-first design |
+| **Table API** | Proprietary | Compatible |
+| **Data Location** | Their data centers | Your Cloudflare account |
+| **Customization** | $$$$ consultants | Code it yourself |
+| **Lock-in** | Years of migration | MIT licensed |
+
+## Use Cases
+
+### IT Operations
+
+```typescript
+// Daily standup for ops team
+await servicenow`P1 and P2 incidents from overnight`
+await servicenow`changes scheduled for today`
+await servicenow`SLAs at risk`
+
+// Incident management at scale
+await servicenow`open incidents`
+  .map(inc => servicenow`suggested resolution for ${inc}`)
+  .map((inc, suggestion) => inc.tryResolve(suggestion))
+```
+
+### Service Desk
+
+```typescript
+// First-line support
+await servicenow`new tickets for Service Desk`
+  .map(ticket => servicenow`auto-resolve if knowledge exists for ${ticket}`)
+
+// Escalation
+await servicenow`tickets open more than 4 hours`
+  .map(ticket => ticket.escalate())
+```
+
+### Change Management
+
+```typescript
+// CAB meeting prep
+await servicenow`changes pending CAB approval`
+  .map(chg => servicenow`risk assessment for ${chg}`)
+
+// Post-implementation review
+await servicenow`changes implemented this week`
+  .map(chg => servicenow`success rate for ${chg}`)
+```
+
+### Reporting
+
+```typescript
+// Executive dashboard
+await servicenow`MTTR this month vs last month`
+await servicenow`incident volume by category`
+await servicenow`SLA compliance by team`
+
+// Export for analysis
+await servicenow`export P1 incidents for 2024`
+```
 
 ## Roadmap
 
+### Core ITSM
 - [x] Incident Management
 - [x] Problem Management
 - [x] Change Management
 - [x] Service Catalog
 - [x] Knowledge Base
 - [x] CMDB
+
+### Platform
 - [x] Table API compatibility
 - [x] Business Rules Engine
 - [x] Workflow Engine
-- [ ] Service Level Management
+- [x] SLA Management
 - [ ] Asset Management
 - [ ] Project Portfolio Management
+
+### Enterprise
 - [ ] Discovery & Service Mapping
 - [ ] Security Operations
 - [ ] HR Service Delivery
+- [ ] Customer Service Management
+
+### AI
+- [x] Natural language queries
+- [x] Auto-triage incidents
+- [x] Root cause suggestions
+- [x] Knowledge article generation
+- [ ] Predictive incident prevention
+- [ ] Automated resolution
 
 ## Contributing
 
@@ -403,3 +483,16 @@ pnpm test
 ## License
 
 MIT
+
+---
+
+<p align="center">
+  <strong>The $150B tax ends here.</strong>
+  <br />
+  Edge-native. AI-first. Your instance.
+  <br /><br />
+  <a href="https://servicenow.do">Website</a> |
+  <a href="https://docs.servicenow.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/servicenow.do">GitHub</a>
+</p>

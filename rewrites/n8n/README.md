@@ -1,123 +1,243 @@
 # n8n.do
 
-n8n on Cloudflare - Workflow automation without Kubernetes.
+> Workflow Automation. Edge-Native. Natural Language. AI-First.
 
-## The Hero
+n8n self-hosted means Kubernetes clusters, Redis sessions, PostgreSQL databases, and 3am pages when things break. n8n Cloud costs $200+/month at scale. Zapier charges $600+/month for real usage. Make.com nickel-and-dimes every operation.
 
-You're a startup founder. You need n8n's power - webhooks triggering workflows, data flowing between systems, complex branching logic. But:
+**n8n.do** is workflow automation that deploys in seconds. Natural language workflows. No infrastructure. No YAML. No visual editor required.
 
-- **Self-hosted n8n** means YOUR servers, YOUR problems, YOUR 3am pages
-- **n8n Cloud** starts at $20/month, scales to $200+ as you grow
-- **Zapier** costs $600+/month for real usage
-- **Make.com** nickel-and-dimes every operation
-
-You can't afford ops. You can't afford Kubernetes. You need **workflow automation that just works**.
-
-## The Vision
+## AI-Native API
 
 ```typescript
-import { n8n } from '@dotdo/n8n'
-
-n8n`when webhook received, fetch contacts from CRM, route B2B to airtable, B2C to hubspot`
-n8n`every day at 9am, sync salesforce opportunities to slack #deals`
-n8n`on new github issue, classify with AI, assign to appropriate team`
+import { n8n } from 'n8n.do'             // Full SDK
+import { n8n } from 'n8n.do/tiny'        // Minimal client
+import { n8n } from 'n8n.do/mcp'         // MCP tools
 ```
 
-Natural language. Tagged templates. Workflows as sentences.
+Natural language for automation:
 
-No YAML. No visual editor required. No infrastructure to manage.
+```typescript
+import { n8n } from 'n8n.do'
+
+// Talk to it like you're thinking out loud
+n8n`when webhook /orders, validate stock, charge stripe, send confirmation`
+n8n`every day at 9am, sync salesforce opportunities to slack #deals`
+n8n`on new github issue, classify with AI, assign to appropriate team`
+
+// Store credentials naturally
+n8n`store slack token xoxb-xxx as "my-slack"`
+n8n`store stripe key sk_live_xxx as "production-stripe"`
+
+// Use them by name
+n8n`when webhook /notify, send slack #general message from request using my-slack`
+```
+
+## The Problem
+
+| What You Pay For | The Reality |
+|------------------|-------------|
+| **n8n Self-Hosted** | Kubernetes, Redis, PostgreSQL, YOUR ops burden |
+| **n8n Cloud** | $20/month starter, $200+ at scale |
+| **Zapier** | $600+/month for real automation needs |
+| **Make.com** | Per-operation billing adds up fast |
+| **Custom Code** | Months to build, forever to maintain |
+
+### The Infrastructure Tax
+
+Every workflow platform demands infrastructure:
+- Container orchestration (Kubernetes, Docker Compose)
+- Persistent storage (PostgreSQL, Redis)
+- Queue systems for async execution
+- Credential vaults
+- Monitoring and alerting
+
+You end up running a platform instead of building products.
+
+### The YAML/GUI Trap
+
+Visual editors are great for demos. Then reality hits:
+- Version control nightmares
+- No code review for workflow changes
+- Copy-paste across environments
+- Impossible to test properly
+- Lock-in to proprietary formats
+
+## The Solution
+
+**n8n.do** reimagines workflow automation:
+
+```
+Self-Hosted n8n                    n8n.do
+-----------------------------------------------------------------
+Kubernetes cluster                 Deploy in seconds
+PostgreSQL + Redis                 Zero infrastructure
+YAML/GUI workflows                 Natural language
+Container orchestration            Edge-native everywhere
+Your ops burden                    We handle everything
+$200+/month at scale               Pay for what you use
+```
 
 ## Promise Pipelining
 
 Chain workflows without `Promise.all`. One network round trip:
 
 ```typescript
+// ETL in three lines
 const synced = await n8n`fetch all postgres tables`
   .map(table => n8n`transform ${table} to analytics schema`)
   .map(transformed => n8n`load ${transformed} to bigquery`)
-// One network round trip!
-```
 
-ETL pipelines in three lines. The system handles parallelization, retries, and state.
+// Lead qualification pipeline
+const qualified = await n8n`fetch new signups`
+  .map(user => n8n`enrich ${user} with clearbit`)
+  .map(enriched => enriched.score > 80 ? n8n`route to sales` : n8n`add to nurture`)
 
-```typescript
-const notified = await n8n`get all overdue invoices from stripe`
+// Invoice reminder workflow
+const reminded = await n8n`get all overdue invoices from stripe`
   .map(invoice => n8n`send reminder email for ${invoice}`)
   .map(sent => n8n`log ${sent} to analytics`)
   .map(logged => n8n`update CRM for ${logged}`)
 ```
+
+The system handles parallelization, retries, and state. You write sentences.
 
 ## Agent Integration
 
 Let Ralph build your workflows:
 
 ```typescript
-import { ralph } from 'agents.do'
+import { ralph, priya } from 'agents.do'
 
-ralph`create a workflow that processes new orders`
-// Ralph analyzes your systems, generates the workflow, tests it
-
+// Natural language to running workflow
 ralph`when a github PR is merged, update linear ticket and notify slack`
-// Natural language -> running workflow
-```
 
-Or have Priya design the automation strategy:
-
-```typescript
-import { priya } from 'agents.do'
-
-priya`design automation strategy for customer onboarding`
-// Priya creates a plan, Ralph implements each workflow
+// Design then implement
+await priya`design automation strategy for customer onboarding`
   .map(workflow => ralph`implement ${workflow}`)
 ```
 
-## When You Need Control
+## One-Click Deploy
 
-For complex logic, use the structured API:
+```bash
+npx create-dotdo n8n
+```
+
+Workflow automation. Running on your Cloudflare account. Zero infrastructure.
 
 ```typescript
-import { N8n } from '@dotdo/n8n'
+import { N8n } from 'n8n.do'
 
-const n8n = new N8n({ id: 'my-workflows' })
+export default N8n({
+  name: 'my-workflows',
+  domain: 'workflows.mycompany.com',
+})
+```
 
-export const syncContacts = n8n.createWorkflow(
-  { id: 'sync-contacts', trigger: { type: 'webhook' } },
-  async ({ trigger, nodes }) => {
-    // HTTP request to fetch contacts
-    const contacts = await nodes.httpRequest({
-      url: 'https://api.crm.com/contacts',
-      method: 'GET',
-      headers: { Authorization: `Bearer ${trigger.data.apiKey}` }
-    })
+## Features
 
-    // Transform data with code node
-    const transformed = await nodes.code({
-      language: 'javascript',
-      code: `
-        return items.map(contact => ({
-          email: contact.email,
-          name: contact.firstName + ' ' + contact.lastName,
-          company: contact.company?.name
-        }))
-      `,
-      items: contacts
-    })
+### Triggers
 
-    // Conditional branching
-    const [hasCompany, noCompany] = await nodes.if({
-      condition: '{{ $json.company !== undefined }}',
-      items: transformed
-    })
+```typescript
+// Webhook triggers
+n8n`when webhook /orders is called, process the order`
+n8n`when webhook /contact-form, validate email, add to mailchimp`
 
-    // Parallel processing
-    await Promise.all([
-      nodes.airtable.create({ base: 'contacts', table: 'B2B', records: hasCompany }),
-      nodes.airtable.create({ base: 'contacts', table: 'B2C', records: noCompany })
-    ])
+// Scheduled triggers
+n8n`every day at 9am, generate daily report`
+n8n`every monday at 8am, send weekly summary to slack`
+n8n`every 5 minutes, check for new leads`
 
-    return { synced: transformed.length }
-  }
-)
+// Event triggers
+n8n`on stripe payment_succeeded, update customer status`
+n8n`on github push to main, deploy to production`
+n8n`on new zendesk ticket, classify with AI, route appropriately`
+```
+
+### Data Sync
+
+```typescript
+// One-line ETL
+n8n`sync shopify orders to google sheets hourly`
+n8n`sync hubspot contacts to airtable daily`
+n8n`sync stripe invoices to quickbooks on payment`
+
+// With transformation
+await n8n`fetch postgres customers`
+  .map(customer => n8n`transform ${customer} to analytics schema`)
+  .map(record => n8n`insert ${record} into bigquery`)
+```
+
+### Conditional Routing
+
+```typescript
+// If-else as natural language
+n8n`on new lead, if company size > 100 route to enterprise, else route to SMB`
+n8n`when email received, if urgent flag to slack, else add to queue`
+
+// Scoring and routing
+await n8n`fetch new signups`
+  .map(user => n8n`score ${user} for sales qualification`)
+  .map(scored => scored.score > 80
+    ? n8n`route ${scored} to sales team`
+    : n8n`add ${scored} to nurture campaign`)
+```
+
+### Notifications
+
+```typescript
+// Multi-channel notifications
+await n8n`get all users affected by outage`
+  .map(user => [
+    n8n`send email to ${user}`,
+    n8n`send sms to ${user}`,
+    n8n`update status page for ${user}`
+  ])
+
+// Conditional notifications
+n8n`on order shipped, email customer with tracking link`
+n8n`on payment failed, notify billing team in slack`
+```
+
+### Credentials
+
+```typescript
+// Store credentials naturally
+n8n`store slack token xoxb-xxx as "my-slack"`
+n8n`store stripe key sk_live_xxx as "production-stripe"`
+n8n`store github token ghp_xxx as "my-github"`
+
+// Reference by name
+n8n`send slack #general "Deploy complete" using my-slack`
+n8n`create stripe charge $99 using production-stripe`
+
+// List and manage
+await n8n`list credentials`
+await n8n`delete credential my-old-slack`
+```
+
+### Error Handling
+
+```typescript
+// Retry built in
+n8n`when api fails, retry 3 times with exponential backoff`
+
+// Fallback workflows
+n8n`on error in order-processing, notify ops and queue for manual review`
+
+// Dead letter queues
+n8n`failed webhooks go to dead-letter for investigation`
+```
+
+### Execution History
+
+```typescript
+// Query execution history naturally
+await n8n`last 10 executions of sync-contacts`
+await n8n`failed executions this week`
+await n8n`running workflows right now`
+
+// Retry failed executions
+await n8n`retry failed execution abc123`
 ```
 
 ## Architecture
@@ -145,291 +265,84 @@ export const syncContacts = n8n.createWorkflow(
 
 **Key insight**: Durable Objects provide single-threaded, strongly consistent state. Each workflow gets its own WorkflowDO for definition storage. ExecutionDO tracks run state with step memoization. CredentialDO securely stores and retrieves encrypted credentials.
 
-## Installation
+### Storage Tiers
 
-```bash
-npm install @dotdo/n8n
-```
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Active workflows, recent executions | <10ms |
+| **Warm** | R2 + SQLite Index | Historical executions (30-90 days) | <100ms |
+| **Cold** | R2 Archive | Compliance retention (1+ years) | <1s |
 
-## Quick Start
-
-### Natural Language Workflows
-
-```typescript
-import { n8n } from '@dotdo/n8n'
-
-// Simple webhook response
-n8n`when webhook /hello is called, respond with "Hello World"`
-
-// Data sync
-n8n`every hour, sync shopify orders to google sheets`
-
-// Conditional routing
-n8n`on new zendesk ticket, if priority is high route to slack #urgent, else email support team`
-
-// AI-powered processing
-n8n`when email received, classify intent with AI, route to appropriate workflow`
-```
-
-### Trigger Types
-
-```typescript
-// Webhook trigger
-n8n`when webhook /orders is called, process the order`
-
-// Cron trigger
-n8n`every day at 9am, generate daily report`
-n8n`every monday at 8am, send weekly summary`
-
-// Event trigger
-n8n`on stripe payment_succeeded, update customer status`
-n8n`on github push to main, deploy to production`
-
-// Interval trigger
-n8n`every 5 minutes, check for new leads`
-```
-
-### Complex Pipelines
-
-```typescript
-// Multi-stage data processing
-const processed = await n8n`fetch new signups from database`
-  .map(user => n8n`enrich ${user} with clearbit data`)
-  .map(enriched => n8n`score ${enriched} for sales qualification`)
-  .map(scored => scored.score > 80
-    ? n8n`route ${scored} to sales team`
-    : n8n`add ${scored} to nurture campaign`)
-
-// Fan-out notifications
-const notified = await n8n`get all users affected by outage`
-  .map(user => [
-    n8n`send email to ${user}`,
-    n8n`send sms to ${user}`,
-    n8n`update status page for ${user}`
-  ])
-```
-
-### Node Types (Structured API)
-
-```typescript
-// HTTP Request
-const response = await nodes.httpRequest({
-  url: 'https://api.example.com/data',
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: { key: 'value' }
-})
-
-// Code Node (JavaScript)
-const result = await nodes.code({
-  language: 'javascript',
-  code: `
-    const processed = items.map(item => ({
-      ...item,
-      timestamp: new Date().toISOString()
-    }))
-    return processed
-  `,
-  items: inputData
-})
-
-// Code Node (Python)
-const pythonResult = await nodes.code({
-  language: 'python',
-  code: `
-import json
-result = [{'id': item['id'], 'processed': True} for item in items]
-return result
-  `,
-  items: inputData
-})
-
-// Conditional (If)
-const [trueBranch, falseBranch] = await nodes.if({
-  condition: '{{ $json.status === "active" }}',
-  items: data
-})
-
-// Switch (Multiple Branches)
-const branches = await nodes.switch({
-  rules: [
-    { output: 0, condition: '{{ $json.type === "email" }}' },
-    { output: 1, condition: '{{ $json.type === "sms" }}' },
-    { output: 2, condition: 'true' }  // Default
-  ],
-  items: data
-})
-```
-
-### Credentials Management
-
-```typescript
-import { N8n } from '@dotdo/n8n'
-
-const n8n = new N8n({ id: 'my-app' })
-
-// Store credentials
-await n8n.credentials.create({
-  name: 'My Slack',
-  type: 'slack',
-  data: { accessToken: 'xoxb-...' }
-})
-
-// Use in workflows
-n8n`send message to slack #general using My Slack credential`
-
-// Or in structured API
-const slackWorkflow = n8n.createWorkflow(
-  { id: 'notify-slack', trigger: { type: 'webhook' } },
-  async ({ trigger, nodes }) => {
-    await nodes.slack.message({
-      credential: 'My Slack',
-      channel: '#notifications',
-      text: trigger.data.message
-    })
-  }
-)
-```
-
-### MCP Tools Integration
-
-```typescript
-import { n8nTools, invokeTool } from '@dotdo/n8n/mcp'
-
-// List available workflow tools
-console.log(n8nTools.map(t => t.name))
-// ['workflow_create', 'workflow_execute', 'workflow_list', 'node_run', ...]
-
-// AI-native workflow execution
-const result = await invokeTool('workflow_execute', {
-  workflowId: 'sync-contacts',
-  data: { source: 'crm', destination: 'airtable' }
-})
-
-// Create workflow from natural language
-await invokeTool('workflow_create', {
-  natural: 'When a new row is added to Google Sheets, create a task in Asana'
-})
-```
-
-## Deployment
-
-### wrangler.toml
-
-```toml
-name = "n8n-workflows"
-main = "src/index.ts"
-compatibility_date = "2024-01-01"
-
-[[durable_objects.bindings]]
-name = "WORKFLOW_DO"
-class_name = "WorkflowDO"
-
-[[durable_objects.bindings]]
-name = "EXECUTION_DO"
-class_name = "ExecutionDO"
-
-[[durable_objects.bindings]]
-name = "CREDENTIAL_DO"
-class_name = "CredentialDO"
-
-[[durable_objects.migrations]]
-tag = "v1"
-new_classes = ["WorkflowDO", "ExecutionDO", "CredentialDO"]
-
-[[queues.producers]]
-queue = "workflow-execution"
-binding = "WORKFLOW_QUEUE"
-
-[[queues.consumers]]
-queue = "workflow-execution"
-
-[vars]
-ENVIRONMENT = "production"
-```
-
-### Deploy
-
-```bash
-npx wrangler deploy
-```
-
-### Serve with Hono
-
-```typescript
-import { Hono } from 'hono'
-import { serve } from '@dotdo/n8n/hono'
-
-const app = new Hono()
-
-app.all('/api/n8n/*', serve({
-  client: n8n,
-  workflows: [syncContacts, processOrder]
-}))
-
-export default app
-```
-
-## Error Handling
-
-```typescript
-// Natural language with retry
-n8n`when webhook fails, retry 3 times with exponential backoff`
-
-// Structured API
-n8n.createWorkflow(
-  {
-    id: 'error-handling',
-    trigger: { type: 'webhook' },
-    settings: {
-      retryOnFail: true,
-      maxRetries: 3,
-      waitBetweenRetries: 5000
-    }
-  },
-  async ({ trigger, nodes }) => {
-    try {
-      await nodes.httpRequest({ url: 'https://unreliable-api.com' })
-    } catch (error) {
-      await nodes.executeWorkflow({
-        workflowId: 'error-handler',
-        data: { error: error.message, workflow: 'error-handling' }
-      })
-    }
-  }
-)
-```
-
-## Execution History
-
-```typescript
-// List recent executions
-const executions = await n8n.executions.list({
-  workflowId: 'sync-contacts',
-  limit: 10,
-  status: 'success'  // success | error | running | waiting
-})
-
-// Get execution details
-const execution = await n8n.executions.get(executionId)
-console.log(execution.data)      // All node outputs
-console.log(execution.duration)
-console.log(execution.status)
-
-// Retry failed execution
-await n8n.executions.retry(executionId)
-```
-
-## Why Cloudflare?
+## vs Self-Hosted n8n
 
 | Feature | Self-Hosted n8n | n8n.do |
 |---------|-----------------|--------|
-| Infrastructure | Your servers | Zero |
-| Cold starts | Node.js startup | None (DO stays warm) |
-| Execution limits | Memory-bound | Unlimited duration |
-| Scaling | Manual worker pools | Automatic |
-| Credentials | Your encryption | Built-in vault |
-| Global latency | Single region | Edge everywhere |
+| **Infrastructure** | Kubernetes + PostgreSQL + Redis | Zero |
+| **Cold starts** | Node.js container startup | None (DO stays warm) |
+| **Execution limits** | Memory-bound | Unlimited duration |
+| **Scaling** | Manual worker pools | Automatic |
+| **Credentials** | Your encryption, your vault | Built-in, per-tenant encrypted |
+| **Global latency** | Single region | Edge everywhere |
+| **Maintenance** | Your ops burden | We handle it |
+| **Cost at scale** | $200+/month + DevOps time | Pay for what you use |
+
+## Integrations
+
+### Pre-built Connectors
+
+| Category | Integrations |
+|----------|--------------|
+| **CRM** | Salesforce, HubSpot, Pipedrive, Zoho |
+| **Productivity** | Slack, Discord, Teams, Gmail, Calendar |
+| **Data** | PostgreSQL, MySQL, MongoDB, Airtable, Google Sheets |
+| **Payments** | Stripe, PayPal, Square |
+| **Marketing** | Mailchimp, SendGrid, Intercom |
+| **Dev Tools** | GitHub, GitLab, Jira, Linear, Notion |
+| **AI** | OpenAI, Anthropic, Cohere (via llm.do) |
+
+### Custom Integrations
+
+```typescript
+// Any HTTP API works
+n8n`call api.example.com/data with auth header`
+
+// Webhook receivers
+n8n`when webhook /custom receives POST, parse body and route`
+```
+
+## MCP Tools
+
+AI agents can build and execute workflows:
+
+```typescript
+import { n8nTools } from 'n8n.do/mcp'
+
+// Available tools for AI agents
+// - workflow_create: Create new workflows from description
+// - workflow_execute: Run existing workflows
+// - workflow_list: List available workflows
+// - execution_status: Check execution status
+// - credentials_list: List available credentials
+```
+
+## Deployment Options
+
+### Cloudflare Workers (Recommended)
+
+```bash
+npx create-dotdo n8n
+npx wrangler deploy
+```
+
+### Self-Managed
+
+```bash
+# Run n8n.do on your own Cloudflare account
+git clone https://github.com/dotdo/n8n.do
+cd n8n.do
+pnpm install
+pnpm deploy
+```
 
 ## The Rewrites Ecosystem
 
@@ -445,13 +358,30 @@ n8n.do is part of the rewrites family - popular infrastructure reimplemented on 
 | [kafka.do](https://kafka.do) | Kafka | Event streaming for AI |
 | [nats.do](https://nats.do) | NATS | Messaging for AI |
 
-## Related Domains
+## Contributing
 
-- **workflows.do** - Workflow orchestration
-- **inngest.do** - Event-driven durable execution
-- **triggers.do** - Event triggers and webhooks
-- **cron.do** - Scheduled tasks
+n8n.do is open source under the MIT license.
+
+```bash
+git clone https://github.com/dotdo/n8n.do
+cd n8n.do
+pnpm install
+pnpm test
+```
 
 ## License
 
 MIT
+
+---
+
+<p align="center">
+  <strong>Workflow automation without the infrastructure.</strong>
+  <br />
+  Natural language. Edge-native. AI-first.
+  <br /><br />
+  <a href="https://n8n.do">Website</a> |
+  <a href="https://docs.n8n.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/n8n.do">GitHub</a>
+</p>

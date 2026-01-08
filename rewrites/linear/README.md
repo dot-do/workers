@@ -6,6 +6,35 @@ Linear showed the world what issue tracking could feel like - instant, keyboard-
 
 **linear.do** is Linear reimagined. The same speed and elegance. AI that triages, writes, and ships. Deploy your own. Own your engineering workflow.
 
+## AI-Native API
+
+```typescript
+import { linear } from 'linear.do'           // Full SDK
+import { linear } from 'linear.do/tiny'      // Minimal client
+import { linear } from 'linear.do/graphql'   // GraphQL-only operations
+```
+
+Natural language for engineering workflows:
+
+```typescript
+import { linear } from 'linear.do'
+
+// Talk to it like a colleague
+const blocked = await linear`what's blocking the release?`
+const myWork = await linear`what should I work on today?`
+const atRisk = await linear`issues at risk of missing deadline`
+
+// Chain like sentences
+await linear`bugs reported this week`
+  .map(bug => linear`triage ${bug}`)
+
+// Issues that manage themselves
+await linear`create issue "Add dark mode" in Frontend team`
+  .estimate()         // AI estimates points
+  .assign()           // AI suggests assignee
+  .schedule()         // adds to current cycle
+```
+
 ## The Problem
 
 Linear's pricing is simpler than Jira, but still adds up:
@@ -53,36 +82,28 @@ Your own Linear. Running on Cloudflare. Faster than ever.
 npx dotdo add linear
 ```
 
-## The workers.do Way
+## Promise Pipelining
 
-You're building a product. Your team needs issue tracking that doesn't suck. Linear is beautiful and fast, but it's still $17k/year with no self-hosting option. Your engineering workflow lives on someone else's servers. There's a better way.
-
-**Natural language. Tagged templates. AI agents that work.**
+Chain work without `Promise.all`:
 
 ```typescript
 import { linear } from 'linear.do'
-import { priya, ralph, quinn } from 'agents.do'
+import { priya, ralph, mark } from 'agents.do'
 
-// Talk to your issue tracker like a human
-const blocked = await linear`what's blocking the release?`
-const myWork = await linear`what should I work on today?`
-const velocity = await linear`how did we do last cycle?`
-```
-
-**Promise pipelining - chain work without Promise.all:**
-
-```typescript
 // Release pipeline
-const shipped = await linear`find completed issues in ${cycle}`
+await linear`completed issues this cycle`
   .map(issue => mark`write release notes for ${issue}`)
   .map(notes => priya`review ${notes}`)
-  .map(notes => linear`publish ${notes}`)
 
 // Triage pipeline
-const triaged = await linear`get triage inbox`
+await linear`triage inbox`
   .map(issue => priya`analyze and prioritize ${issue}`)
   .map(issue => ralph`estimate ${issue}`)
-  .map(issue => linear`route ${issue} to project`)
+  .map(issue => linear`route ${issue} to appropriate project`)
+
+// Review pipeline
+await linear`issues ready for review`
+  .map(issue => [priya, ralph].map(r => r`review ${issue}`))
 ```
 
 One network round trip. Record-replay pipelining. Workers working for you.
@@ -94,41 +115,27 @@ One network round trip. Record-replay pipelining. Workers working for you.
 The core of everything:
 
 ```typescript
-import { Issue, Project, Cycle } from 'linear.do'
+import { linear } from 'linear.do'
 
-const issue = await Issue.create({
-  title: 'Implement WebSocket connection pooling',
-  description: `
-    ## Problem
-    Current implementation creates new connection per request.
+// Create issues naturally
+await linear`create issue "Implement WebSocket connection pooling" for backend`
+await linear`add to q1-performance cycle 42 priority high`
+await linear`assign to alice estimate 5 points`
 
-    ## Solution
-    Implement connection pooling with configurable limits.
-
-    ## Acceptance Criteria
-    - [ ] Pool maintains up to 100 connections
-    - [ ] Automatic reconnection on failure
-    - [ ] Metrics exposed for monitoring
-  `,
-  team: 'backend',
-  priority: 'High',
-  labels: ['performance', 'infrastructure'],
-  project: 'q1-performance',
-  cycle: 'cycle-42',
-  estimate: 5,
-  assignee: '@alice',
-})
+// Or all at once, like you'd say it
+await linear`
+  create issue "Implement WebSocket connection pooling" in backend:
+  - priority high
+  - labels: performance, infrastructure
+  - project q1-performance
+  - cycle 42
+  - estimate 5 points
+  - assign to alice
+`
 
 // Sub-issues
-await issue.createSubIssue({
-  title: 'Design connection pool architecture',
-  estimate: 2,
-})
-
-await issue.createSubIssue({
-  title: 'Implement pool manager',
-  estimate: 3,
-})
+await linear`add subtask "Design connection pool architecture" estimate 2`
+await linear`add subtask "Implement pool manager" estimate 3`
 ```
 
 ### The Speed
@@ -136,24 +143,17 @@ await issue.createSubIssue({
 Linear's signature instant feel, even faster on the edge:
 
 ```typescript
-// Optimistic updates - UI updates before server confirms
-await issue.update({ status: 'In Progress' })
-// UI already updated, server catches up
+// Move issues naturally
+await linear`move BACK-101 to in progress`
+await linear`start working on BACK-101`       // same thing
+await linear`mark BACK-101 done`
 
-// Keyboard-first
-// ⌘K - Command menu
-// C - Create issue
-// X - Close issue
-// A - Assign
-// P - Set priority
-// L - Add label
-// G then I - Go to inbox
-// G then M - Go to my issues
+// Batch updates read like commands
+await linear`close all completed issues in cycle 42`
+await linear`assign my inbox to me`
+await linear`move blocked issues to next cycle`
 
-// Real-time sync across all clients
-issue.subscribe((change) => {
-  // Instant updates, no polling
-})
+// Real-time sync - all clients update instantly
 ```
 
 ### Workflows
@@ -161,27 +161,15 @@ issue.subscribe((change) => {
 Customizable issue states:
 
 ```typescript
-import { Workflow } from 'linear.do'
+// Query workflow states
+await linear`workflow states for backend team`
+await linear`issues in review`
+await linear`what's in progress?`
 
-const engineeringWorkflow = Workflow.create({
-  name: 'Engineering',
-  states: [
-    // Backlog
-    { name: 'Backlog', type: 'backlog', color: '#bbb' },
-    { name: 'Todo', type: 'unstarted', color: '#e2e2e2' },
-
-    // Started
-    { name: 'In Progress', type: 'started', color: '#f2c94c' },
-    { name: 'In Review', type: 'started', color: '#bb87fc' },
-
-    // Completed
-    { name: 'Done', type: 'completed', color: '#5e6ad2' },
-
-    // Cancelled
-    { name: 'Canceled', type: 'canceled', color: '#95a2b3' },
-    { name: 'Duplicate', type: 'canceled', color: '#95a2b3' },
-  ],
-})
+// Move through workflows naturally
+await linear`move BACK-101 to review`
+await linear`BACK-101 needs review`           // same thing
+await linear`mark BACK-101 as duplicate of BACK-50`
 ```
 
 ### Cycles (Sprints)
@@ -189,29 +177,19 @@ const engineeringWorkflow = Workflow.create({
 Time-boxed iterations:
 
 ```typescript
-import { Cycle } from 'linear.do'
+// Create cycles naturally
+await linear`create cycle 42 for backend starting Monday`
+await linear`new sprint "Connection Pooling" Jan 13-24`
 
-const cycle = await Cycle.create({
-  team: 'backend',
-  number: 42,
-  startsAt: '2025-01-13',
-  endsAt: '2025-01-24',
-  name: 'Connection Pooling Sprint',
-})
+// Add issues like you'd say it
+await linear`add BACK-101 BACK-102 BACK-103 to cycle 42`
+await linear`move my issues to current cycle`
+await linear`schedule high priority bugs for this sprint`
 
-// Auto-schedule issues into cycles
-await cycle.addIssues(['BACK-101', 'BACK-102', 'BACK-103'])
-
-// Cycle metrics
-const metrics = await cycle.getMetrics()
-// {
-//   totalScope: 34,
-//   completed: 21,
-//   added: 5,
-//   removed: 2,
-//   scopeCreep: 0.15,
-//   burndownData: [...]
-// }
+// Check progress
+await linear`how's cycle 42 going?`
+await linear`burndown for current cycle`
+await linear`scope creep this sprint`
 ```
 
 ### Projects
@@ -219,24 +197,23 @@ const metrics = await cycle.getMetrics()
 Group issues into larger initiatives:
 
 ```typescript
-import { Project, Milestone } from 'linear.do'
+// Create projects naturally
+await linear`create project "Q1 Performance" for backend led by alice`
+await linear`project goal: improve p99 latency by 50%`
+await linear`project runs Jan through March`
 
-const project = await Project.create({
-  name: 'Q1 Performance',
-  description: 'Improve p99 latency by 50%',
-  team: 'backend',
-  lead: '@alice',
-  startDate: '2025-01-01',
-  targetDate: '2025-03-31',
-  milestones: [
-    Milestone.create({ name: 'Baseline metrics', date: '2025-01-15' }),
-    Milestone.create({ name: 'Connection pooling', date: '2025-02-01' }),
-    Milestone.create({ name: 'Caching layer', date: '2025-02-15' }),
-    Milestone.create({ name: 'Target achieved', date: '2025-03-15' }),
-  ],
-})
+// Add milestones like a checklist
+await linear`
+  milestones for Q1 Performance:
+  - Baseline metrics by Jan 15
+  - Connection pooling by Feb 1
+  - Caching layer by Feb 15
+  - Target achieved by Mar 15
+`
 
-// Project progress auto-calculated from issues
+// Check progress
+await linear`how's Q1 Performance doing?`
+await linear`at risk projects this quarter`
 ```
 
 ### Roadmaps
@@ -244,18 +221,14 @@ const project = await Project.create({
 Visualize the big picture:
 
 ```typescript
-import { Roadmap } from 'linear.do'
+// Query roadmaps naturally
+await linear`engineering roadmap 2025`
+await linear`what's planned for Q2?`
+await linear`projects by team this year`
 
-const roadmap = await Roadmap.create({
-  name: 'Engineering 2025',
-  projects: ['q1-performance', 'q2-scaling', 'mobile-app', 'api-v2'],
-  view: 'timeline',  // or 'table', 'board'
-  groupBy: 'team',
-  dateRange: {
-    start: '2025-01-01',
-    end: '2025-12-31',
-  },
-})
+// Create and update
+await linear`create roadmap "Engineering 2025" with Q1 Performance, Q2 Scaling, Mobile App, API v2`
+await linear`add Mobile App to Q3 roadmap`
 ```
 
 ### Triage
@@ -263,25 +236,19 @@ const roadmap = await Roadmap.create({
 Handle incoming issues efficiently:
 
 ```typescript
-import { Triage } from 'linear.do'
+// Check triage queue
+await linear`triage inbox for backend`
+await linear`untriaged issues this week`
+await linear`issues needing attention`
 
-// Triage inbox for team
-const inbox = await Triage.getInbox('backend')
-// Returns issues without: project, cycle, or estimate
+// Triage naturally
+await linear`triage BACK-150 to Q1 Performance current cycle high priority 3 points`
+await linear`snooze BACK-151 until next week`
+await linear`close BACK-152 wont fix - out of scope`
 
-// Quick triage actions
-await inbox[0].triage({
-  project: 'q1-performance',
-  cycle: 'current',
-  priority: 'High',
-  estimate: 3,
-})
-
-// Or snooze
-await inbox[1].snooze('next-week')
-
-// Or decline
-await inbox[2].decline('Won\'t fix - out of scope')
+// Bulk triage with AI assist
+await linear`triage inbox`
+  .map(issue => linear`auto-triage ${issue}`)
 ```
 
 ### Views
@@ -289,29 +256,18 @@ await inbox[2].decline('Won\'t fix - out of scope')
 Custom filtered views:
 
 ```typescript
-import { View } from 'linear.do'
+// Query views naturally
+await linear`my work`
+await linear`my issues not done grouped by project`
+await linear`blocked issues in progress or review`
 
-const myWork = View.create({
-  name: 'My Work',
-  filter: {
-    assignee: { eq: 'me' },
-    status: { notIn: ['Done', 'Canceled'] },
-  },
-  sort: [
-    { field: 'priority', direction: 'desc' },
-    { field: 'updatedAt', direction: 'desc' },
-  ],
-  groupBy: 'project',
-})
+// Save views for reuse
+await linear`save view "My Work": my issues not done sorted by priority`
+await linear`save view "Blockers": issues labeled blocked in progress`
 
-const blockers = View.create({
-  name: 'Blockers',
-  filter: {
-    labels: { contains: 'blocked' },
-    status: { in: ['In Progress', 'In Review'] },
-  },
-  sort: [{ field: 'priority', direction: 'desc' }],
-})
+// Use saved views
+await linear`show my work`
+await linear`blockers this sprint`
 ```
 
 ## AI-Native Issue Tracking
@@ -323,19 +279,15 @@ AI isn't a feature. It's how modern issue tracking works.
 AI handles the triage queue:
 
 ```typescript
-import { ai } from 'linear.do'
+// Enable AI triage naturally
+await linear`enable AI triage for backend team`
+await linear`auto-label auto-assign auto-estimate new issues`
 
-// Enable AI triage for team
-await Team.enableAITriage('backend', {
-  autoLabel: true,      // AI suggests labels
-  autoPriority: true,   // AI suggests priority
-  autoAssign: true,     // AI suggests assignee
-  autoEstimate: true,   // AI estimates points
-  autoProject: true,    // AI suggests project
-  duplicateDetection: true,
-})
+// AI triage in action
+await linear`triage inbox`
+  .map(issue => linear`analyze and triage ${issue}`)
 
-// When issue comes in, AI does:
+// When issue comes in, AI:
 // 1. Analyzes title and description
 // 2. Searches for duplicates
 // 3. Suggests labels from content
@@ -353,43 +305,17 @@ AI helps write better issues:
 
 ```typescript
 // Draft issue from quick thought
-const issue = await ai.draftIssue(`
-  login page is slow for some users
-`)
+await linear`draft issue: login page is slow for some users`
 
-// AI creates:
-{
-  title: 'Slow login page performance for subset of users',
-  description: `
-## Problem
-Some users are experiencing slow load times on the login page.
+// AI creates full issue with:
+// - Clear title
+// - Problem statement
+// - Investigation checklist
+// - Potential causes
+// - Suggested labels, priority
 
-## Investigation Needed
-- [ ] Identify which users are affected
-- [ ] Check for geographic patterns
-- [ ] Review login page performance metrics
-- [ ] Check third-party auth provider latency
-
-## Potential Causes
-- CDN cache misses
-- OAuth provider latency
-- Database query performance
-- Asset loading
-
-## Metrics to Track
-- Login page load time (p50, p95, p99)
-- OAuth callback duration
-- Time to interactive
-  `,
-  suggestedLabels: ['performance', 'investigation', 'login'],
-  suggestedPriority: 'Medium',
-}
-
-// From bug report
-const bugIssue = await ai.draftIssue({
-  type: 'bug',
-  input: 'users seeing 500 error when uploading files larger than 10mb',
-})
+// Bug reports expand automatically
+await linear`bug: users seeing 500 error uploading files over 10mb`
 
 // AI adds:
 // - Steps to reproduce
@@ -404,19 +330,17 @@ AI understands your codebase:
 
 ```typescript
 // AI analyzes related code when creating issues
-const issue = await Issue.create({
-  title: 'Add rate limiting to upload endpoint',
-  aiContext: {
-    codebase: true,  // AI reads relevant code
-    history: true,   // AI checks similar past issues
-  },
-})
+await linear`create issue "Add rate limiting to upload endpoint" with code context`
 
 // AI automatically adds:
 // - Links to relevant files
 // - Notes about existing patterns
 // - Suggested implementation approach
 // - Potential impact areas
+
+// Ask about code impact
+await linear`what would changing the auth middleware affect?`
+await linear`issues related to upload endpoint`
 ```
 
 ### AI Estimation
@@ -424,27 +348,20 @@ const issue = await Issue.create({
 AI estimates story points:
 
 ```typescript
-const estimate = await ai.estimate(issue, {
-  factors: {
-    codebase: true,    // Analyze code complexity
-    history: true,     // Compare to past issues
-    team: 'backend',   // Team velocity context
-  },
-})
+// Estimate issues naturally
+await linear`estimate BACK-100`
+await linear`how long would this take?`
 
-// Returns:
-{
-  estimate: 5,
-  confidence: 0.84,
-  reasoning: 'Similar to BACK-234 (5 points, 4 days). Requires changes in 3 files. No external dependencies.',
-  comparables: [
-    { id: 'BACK-234', points: 5, duration: '4 days', similarity: 0.89 },
-    { id: 'BACK-198', points: 3, duration: '2 days', similarity: 0.72 },
-  ],
-  risks: [
-    'Touches auth middleware - needs careful testing',
-  ],
-}
+// AI returns:
+// - Estimate: 5 points
+// - Confidence: 84%
+// - Reasoning: Similar to BACK-234 (5 points, 4 days)
+// - Risks: Touches auth middleware - needs careful testing
+
+// Bulk estimation
+await linear`estimate all unestimated issues in triage`
+await linear`untriaged issues`
+  .map(issue => linear`estimate ${issue}`)
 ```
 
 ### AI Cycle Planning
@@ -452,36 +369,19 @@ const estimate = await ai.estimate(issue, {
 AI helps plan sprints:
 
 ```typescript
-const plan = await ai.planCycle({
-  team: 'backend',
-  capacity: 40,  // Story points
-  constraints: {
-    mustInclude: ['BACK-100'],  // Critical issues
-    priorities: ['security', 'performance'],
-  },
-})
+// Plan cycles naturally
+await linear`plan next cycle for backend with 40 points capacity`
+await linear`plan sprint including BACK-100 prioritizing security and performance`
 
-// Returns:
-{
-  suggestedIssues: [
-    { id: 'BACK-100', points: 8, reason: 'Critical - requested' },
-    { id: 'BACK-105', points: 5, reason: 'Security priority' },
-    { id: 'BACK-108', points: 5, reason: 'Unblocks BACK-105' },
-    { id: 'BACK-112', points: 8, reason: 'Performance priority' },
-    { id: 'BACK-115', points: 5, reason: 'Quick win, low risk' },
-    { id: 'BACK-120', points: 8, reason: 'Performance priority' },
-  ],
-  totalPoints: 39,
-  bufferRemaining: 1,
-  risks: [
-    'BACK-108 has external dependency on API provider',
-    'BACK-112 needs design review before start',
-  ],
-  recommendations: [
-    'Start BACK-108 early due to external dependency',
-    'Schedule BACK-112 design review in first 2 days',
-  ],
-}
+// AI suggests:
+// - Issues to include with reasoning
+// - Total points (39/40)
+// - Risks and dependencies
+// - Recommendations for sequencing
+
+// Accept or adjust
+await linear`accept cycle plan`
+await linear`remove BACK-120 from plan, add BACK-125 instead`
 ```
 
 ### AI Release Notes
@@ -489,31 +389,20 @@ const plan = await ai.planCycle({
 AI writes release notes from completed issues:
 
 ```typescript
-const releaseNotes = await ai.generateReleaseNotes({
-  cycle: 'cycle-42',
-  format: 'changelog',  // or 'blog', 'email', 'slack'
-})
+// Generate release notes naturally
+await linear`release notes for cycle 42`
+await linear`changelog for this sprint`
+await linear`write release announcement for v2.5`
 
-// Returns:
-`
-## v2.5.0 (2025-01-24)
+// Different formats
+await linear`release notes for cycle 42 as blog post`
+await linear`release notes for cycle 42 for slack`
 
-### New Features
-- **Connection pooling for WebSocket** - Improved performance for high-traffic connections. Connections are now pooled and reused, reducing p99 latency by 40%.
-- **Rate limiting for uploads** - Added configurable rate limits to prevent abuse.
-
-### Bug Fixes
-- Fixed file upload failures for files larger than 10MB
-- Resolved memory leak in long-running connections
-
-### Performance
-- Database query optimization for user lookups (2x faster)
-- Reduced cold start time by 30%
-
-### Internal
-- Upgraded to TypeScript 5.4
-- Added comprehensive connection pooling tests
-`
+// AI generates from completed issues:
+// - New features with impact
+// - Bug fixes
+// - Performance improvements
+// - Breaking changes
 ```
 
 ### Natural Language Queries
@@ -521,10 +410,13 @@ const releaseNotes = await ai.generateReleaseNotes({
 Query issues conversationally:
 
 ```typescript
-const blocked = await ai.query`what's blocking the release?`
-const myWork = await ai.query`what should I work on today?`
-const velocity = await ai.query`how did we do last cycle compared to average?`
-const risk = await ai.query`which issues are at risk of missing the deadline?`
+// Ask anything
+await linear`what's blocking the release?`
+await linear`what should I work on today?`
+await linear`how did we do last cycle compared to average?`
+await linear`which issues are at risk of missing the deadline?`
+await linear`who's overloaded this sprint?`
+await linear`show me bugs reported this week`
 ```
 
 ## GitHub Integration
@@ -532,57 +424,23 @@ const risk = await ai.query`which issues are at risk of missing the deadline?`
 Deep GitHub integration built-in:
 
 ```typescript
-import { GitHub } from 'linear.do/integrations'
+// Connect naturally
+await linear`connect to github company/backend`
+await linear`sync github issues labeled linear-sync to Q1 Performance`
 
-// Link issues to PRs
-// PRs auto-link when branch includes issue ID (e.g., back-101-connection-pool)
+// Auto-transitions (enabled by default)
+// - PR opened -> issue moves to In Review
+// - PR merged -> issue moves to Done
+// - Branch with issue ID auto-links
 
-// Auto-transitions
-await GitHub.configure({
-  onPROpened: Issue.moveTo('In Review'),
-  onPRMerged: Issue.moveTo('Done'),
-  onPRClosed: Issue.moveTo('In Progress'),
-})
-
-// Sync GitHub issues
-await GitHub.sync({
-  repo: 'company/backend',
-  labels: ['linear-sync'],
-  targetProject: 'q1-performance',
-})
+// Query GitHub context
+await linear`PRs linked to BACK-101`
+await linear`issues waiting on code review`
 ```
 
-## API & Integrations
+## API Compatibility
 
-Full API compatibility:
-
-```typescript
-// GraphQL API (like Linear)
-POST /graphql
-
-query {
-  issues(filter: { team: { key: { eq: "BACK" } } }) {
-    nodes {
-      id
-      title
-      state { name }
-      assignee { name }
-    }
-  }
-}
-
-mutation {
-  issueCreate(input: {
-    teamId: "..."
-    title: "New issue"
-    description: "..."
-  }) {
-    issue { id identifier }
-  }
-}
-```
-
-Existing Linear SDK works:
+Full Linear API compatibility - existing SDKs just work:
 
 ```typescript
 import { LinearClient } from '@linear/sdk'
@@ -592,10 +450,13 @@ const client = new LinearClient({
   apiUrl: 'https://your-org.linear.do/graphql',  // Just change URL
 })
 
+// Existing code works unchanged
 const issues = await client.issues({
   filter: { team: { key: { eq: 'BACK' } } },
 })
 ```
+
+GraphQL API at `/graphql`. Same schema. Same queries. Same mutations.
 
 ## Keyboard-First Design
 

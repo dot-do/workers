@@ -1,704 +1,483 @@
 # hubspot.do
 
-> You're a startup founder. You need CRM and marketing automation. HubSpot wants $3,600/month. Your runway is shrinking. Your competitors are closing deals while you're negotiating enterprise contracts.
+> CRM and Marketing Automation. Edge-Native. AI-First. Open by Default.
 
-> Your own HubSpot. One click. AI-native. Open source.
+HubSpot charges $3,600/month for enterprise CRM. Your runway is shrinking. Your competitors are closing deals while you're negotiating contracts.
 
-[![npm version](https://img.shields.io/npm/v/hubspot.do.svg)](https://www.npmjs.com/package/hubspot.do)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+**hubspot.do** is the open-source alternative. Deploys in minutes. AI that writes emails, not just sends them. Your data, your infrastructure.
 
----
-
-## The workers.do Way
-
-Talk to your CRM like a colleague:
+## AI-Native API
 
 ```typescript
-import { hubspot, sally, mark, priya } from 'workers.do'
-
-// Natural language queries
-const leads = await hubspot`find leads from ${campaign}`
-const engaged = await hubspot`show contacts who opened last email`
-const pipeline = await hubspot`deals closing this month over $25k`
-
-// AI agents work your CRM
-await sally`qualify inbound leads from today`
-await mark`create nurture sequence for ${segment}`
+import { hubspot } from 'hubspot.do'           // Full SDK
+import { hubspot } from 'hubspot.do/tiny'      // Minimal client
+import { hubspot } from 'hubspot.do/marketing' // Marketing-only operations
 ```
+
+Natural language for sales and marketing:
+
+```typescript
+import { hubspot } from 'hubspot.do'
+
+// Talk to it like a colleague
+const warm = await hubspot`leads from Google Ads campaign`
+const engaged = await hubspot`contacts who opened email but didn't click`
+const pipeline = await hubspot`deals closing this quarter over $50k`
+
+// Chain like sentences
+await hubspot`leads from webinar`
+  .map(l => hubspot`send personalized follow-up to ${l}`)
+
+// Marketing that writes itself
+await hubspot`create nurture sequence for trial users`
+  .draft()          // AI writes the emails
+  .review()         // you approve
+  .schedule()       // sends automatically
+```
+
+## The Problem
+
+HubSpot dominates SMB marketing automation:
+
+| What HubSpot Charges | The Reality |
+|---------------------|-------------|
+| **Starter** | $20/mo (1,000 contacts, basic features) |
+| **Professional** | $800/mo (automation, sequences) |
+| **Enterprise** | $3,600/mo (advanced features) |
+| **Additional Contacts** | $45/mo per 1,000 contacts |
+| **Per-Seat Pricing** | Sales/Service hubs charge per user |
+
+### The SaaS Tax
+
+You are paying for:
+
+- **Their infrastructure** - Data centers you don't control
+- **Their margins** - 80%+ gross margins extracted from your business
+- **Their roadmap** - Features built for enterprise, not startups
+- **Their lock-in** - Customer data held hostage
+
+### The AI Gap
+
+HubSpot was built for humans clicking through web interfaces. Their "AI" features:
+- Write subject lines (you still write the email)
+- Suggest next actions (you still do them)
+- Score leads (with rules you configure)
+
+Real AI writes the entire email. Real AI qualifies leads by reading conversations. Real AI closes care gaps without human intervention.
+
+## The Solution
+
+**hubspot.do** reimagines CRM for startups and AI:
+
+```
+HubSpot                           hubspot.do
+-----------------------------------------------------------------
+$3,600/month enterprise           Deploy in minutes
+$45/1,000 contacts               ~$5/month for 10,000 contacts
+AI writes subject lines           AI writes entire campaigns
+Per-seat licensing                Usage-based pricing
+Data in their cloud               Your Cloudflare account
+Months to implement               One command deploy
+Vendor lock-in                    Open source, MIT licensed
+```
+
+## One-Click Deploy
+
+```bash
+npx create-dotdo hubspot
+```
+
+A complete CRM. Running on infrastructure you control. AI-native from day one.
+
+```typescript
+import { HubSpot } from 'hubspot.do'
+
+export default HubSpot({
+  name: 'my-startup',
+  domain: 'crm.my-startup.com',
+})
+```
+
+**Note:** This is production CRM software. See compliance section below.
+
+## Features
+
+### Contacts
+
+```typescript
+// Find anyone
+const alice = await hubspot`Alice Chen at Acme`
+const enterprise = await hubspot`contacts at companies over 500 employees`
+const active = await hubspot`contacts who engaged this week`
+
+// AI infers what you need
+await hubspot`Alice Chen`                    // returns contact
+await hubspot`emails to Alice Chen`          // returns email history
+await hubspot`Alice Chen activity`           // returns full timeline
+```
+
+### Deals
+
+```typescript
+// Pipeline is one line
+const closing = await hubspot`deals closing this month`
+const large = await hubspot`enterprise deals over $100k`
+const stalled = await hubspot`deals stuck in negotiation over 30 days`
+
+// Move deals naturally
+await hubspot`move Acme deal to proposal`
+await hubspot`close won Acme deal $75k`
+```
+
+### Companies
+
+```typescript
+// Company intelligence
+const target = await hubspot`companies in healthcare over 1000 employees`
+const engaged = await hubspot`companies with multiple contacts engaged`
+
+// Enrich automatically
+await hubspot`enrich Acme Corp`
+  .firmographics()    // company data
+  .technographics()   // tech stack
+  .intent()           // buying signals
+```
+
+### Marketing Automation
+
+```typescript
+// Campaigns that write themselves
+await hubspot`create welcome sequence for new signups`
+  .draft()           // AI writes emails
+  .review()          // you approve
+  .activate()        // starts sending
+
+// Segmentation is natural
+await hubspot`contacts who downloaded whitepaper but not pricing`
+  .map(c => hubspot`send pricing follow-up to ${c}`)
+
+// A/B test without configuration
+await hubspot`test subject lines for product launch email`
+```
+
+### Email Campaigns
+
+```typescript
+// Send naturally
+await hubspot`send product update to all customers`
+await hubspot`email Alice about her expiring trial`
+
+// AI writes, you approve
+await hubspot`draft re-engagement email for churned users`
+  .review()     // see what AI wrote
+  .approve()    // send it
+```
+
+### Lists and Segments
+
+```typescript
+// Segmentation as sentences
+const vips = await hubspot`customers spending over $10k annually`
+const atrisk = await hubspot`customers with declining engagement`
+const upsell = await hubspot`customers using feature X but not Y`
+
+// Smart lists update automatically
+await hubspot`create list: enterprise leads from LinkedIn`
+```
+
+### Lead Scoring
+
+```typescript
+// AI scores based on behavior, not rules
+const hot = await hubspot`leads most likely to buy this week`
+const mql = await hubspot`marketing qualified leads`
+
+// Custom scoring models
+await hubspot`score leads based on pricing page visits and email opens`
+```
+
+### Workflows
+
+```typescript
+// Create workflows by describing them
+await hubspot`when lead visits pricing, notify sales and send case study`
+
+// Complex sequences are still one line
+await hubspot`nurture webinar attendees for 30 days then hand to sales`
+```
+
+### Meetings
+
+```typescript
+// Scheduling without friction
+await hubspot`find time for Alice Chen and our sales team`
+await hubspot`book demo with Acme Corp next week`
+
+// Round-robin just works
+await hubspot`assign inbound demos to sales team round robin`
+```
+
+### Tickets and Support
+
+```typescript
+// Support is natural language
+await hubspot`open tickets from enterprise customers`
+await hubspot`tickets waiting on us over 24 hours`
+
+// AI handles routine responses
+await hubspot`new ticket from Alice about billing`
+  .draft()          // AI writes response
+  .review()         // you check
+  .send()           // resolved
+```
+
+### Analytics
+
+```typescript
+// Ask questions, get answers
+await hubspot`campaign performance this quarter`
+await hubspot`which emails have best open rates`
+await hubspot`attribution for closed deals`
+
+// Forecasting is a question
+await hubspot`revenue forecast for Q2`
+await hubspot`pipeline coverage for annual target`
+```
+
+## AI-Native CRM
 
 ### Promise Pipelining
 
 Chain operations without waiting. One network round trip:
 
 ```typescript
-// Find leads, send outreach, schedule follow-ups - all pipelined
-const nurtured = await hubspot`find warm leads from webinar`
-  .map(lead => sally`send personalized outreach to ${lead}`)
-  .map(outreach => mark`schedule follow-up content for ${outreach}`)
+// Find leads, qualify, outreach - all pipelined
+await hubspot`leads from product hunt launch`
+  .map(l => hubspot`enrich ${l}`)
+  .map(l => hubspot`score ${l}`)
+  .map(l => hubspot`send welcome sequence to ${l}`)
 
 // Marketing to sales handoff
-const mqls = await hubspot`find marketing qualified leads`
-  .map(lead => [priya, sally].map(r => r`review ${lead} for sales readiness`))
-  .map(qualified => sally`create deal for ${qualified}`)
+await hubspot`marketing qualified leads this week`
+  .map(l => hubspot`assign ${l} to sales rep`)
+  .map(l => hubspot`create task: follow up with ${l}`)
+
+// Multi-reviewer approval
+await hubspot`deals over $100k needing approval`
+  .map(d => [sales, finance].map(r => r`review ${d}`))
+  .map(d => hubspot`move ${d} to contract`)
 ```
 
----
-
-## The Problem
-
-HubSpot is a $30 billion company. They charge $800 to $3,600 per month for enterprise features. You are paying for:
-
-- **Their data centers** - You foot the bill for infrastructure you do not control
-- **Their margins** - 80%+ gross margins extracted from your business
-- **Their roadmap** - Features built for their largest customers, not you
-- **Their lock-in** - Your customer data held hostage in their walled garden
-
-And here is the worst part: **you are a tenant in someone else's system**. Your CRM data, your customer relationships, your sales pipeline - all living on servers you will never own, governed by terms you did not write, priced at whatever they decide next quarter.
-
-This was the only option in 2006 when HubSpot launched. It is not the only option anymore.
-
----
-
-## The Solution
-
-**hubspot.do** is a complete HubSpot alternative that you own.
-
-```bash
-npx create-dotdo hubspot
-```
-
-One command. Your own instance. Running on Cloudflare's global edge network. Pennies per month instead of hundreds or thousands of dollars.
+### AI Agents Work Your CRM
 
 ```typescript
-import { HubSpot } from 'hubspot.do'
+import { hubspot, sally, mark, priya } from 'workers.do'
 
-const crm = new HubSpot(env.HUBSPOT)
+// Sally handles sales
+await sally`qualify inbound leads from today`
+await sally`follow up with stalled deals`
 
-// Full CRM capabilities
-await crm.contacts.create({
-  email: 'alice@startup.com',
-  firstName: 'Alice',
-  lastName: 'Chen',
-  company: 'Acme Corp'
-})
+// Mark handles marketing
+await mark`draft newsletter for this week`
+await mark`create case study for Acme win`
 
-// Pipeline management
-await crm.deals.create({
-  name: 'Enterprise Contract',
-  amount: 50000,
-  stage: 'qualification',
-  contact: 'alice@startup.com'
-})
-
-// Marketing automation
-await crm.workflows.trigger('welcome-sequence', {
-  contact: 'alice@startup.com'
-})
-```
-
-Not a "HubSpot alternative." Not a "lightweight CRM." This is **your own HubSpot** - the complete platform, reimagined for the AI era, running entirely under your control.
-
----
-
-## Why This Matters
-
-### For Startup Founders
-
-You are burning $10,000 to $40,000 per year on CRM software before you have product-market fit. That is runway. That is hiring budget. That is your survival.
-
-With hubspot.do:
-- **Deploy in 60 seconds** - No sales calls, no procurement, no enterprise contracts
-- **Pay for usage** - Pennies per thousand operations, not per seat
-- **Own your data** - Export everything, migrate anywhere, no lock-in
-- **Scale infinitely** - From zero to millions of contacts without upgrades
-
-### For AI-First Companies
-
-HubSpot was built for humans clicking through web interfaces. Your AI agents need something different:
-
-- **Every action is an API call** - No UI-only features, no hidden functionality
-- **MCP tools built in** - Claude, GPT, and any LLM can operate your CRM directly
-- **Real-time webhooks** - AI workflows triggered by every customer interaction
-- **Structured data** - Schema-first design, not form fields bolted onto a legacy system
-
-### For Anyone Who Values Freedom
-
-Your customer relationships are your business. They should not be trapped in a vendor's database, subject to their pricing whims, their outages, their decisions about what features you need.
-
-hubspot.do gives you **sovereignty over your sales data**.
-
----
-
-## One-Click Deploy
-
-### Cloudflare Workers
-
-```bash
-npx create-dotdo hubspot
-```
-
-This scaffolds a complete hubspot.do instance configured for your Cloudflare account.
-
-### Manual Setup
-
-```typescript
-// src/index.ts
-import { HubSpotDO, HubSpotEntrypoint } from 'hubspot.do'
-
-export { HubSpotDO }
-export default HubSpotEntrypoint
-```
-
-```jsonc
-// wrangler.jsonc
-{
-  "name": "my-hubspot",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-01-01",
-  "compatibility_flags": ["nodejs_compat"],
-  "durable_objects": {
-    "bindings": [{ "name": "HUBSPOT", "class_name": "HubSpotDO" }]
-  },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["HubSpotDO"] }]
-}
-```
-
-```bash
-npx wrangler deploy
-```
-
-Your HubSpot is now live at the edge. Globally distributed. Zero cold starts.
-
----
-
-## Features
-
-### CRM Core
-
-| Feature | Description |
-|---------|-------------|
-| **Contacts** | Full contact management with custom properties, lifecycle stages, and activity timeline |
-| **Companies** | Organization records with hierarchies, domains, and relationship mapping |
-| **Deals** | Sales pipeline with stages, amounts, close dates, and win probability |
-| **Tickets** | Support ticketing with SLAs, priorities, and agent assignment |
-| **Products** | Product catalog with SKUs, pricing, and inventory tracking |
-| **Quotes** | Quote generation with line items, discounts, and approval workflows |
-
-### Marketing Hub
-
-| Feature | Description |
-|---------|-------------|
-| **Email Campaigns** | Drag-and-drop email builder with templates and A/B testing |
-| **Forms** | Lead capture forms with conditional logic and progressive profiling |
-| **Landing Pages** | Page builder with conversion tracking and personalization |
-| **Lists** | Smart segmentation with AND/OR logic and real-time updates |
-| **Workflows** | Visual automation builder for nurture sequences and lead scoring |
-| **Analytics** | Campaign performance, attribution modeling, and ROI tracking |
-
-### Sales Hub
-
-| Feature | Description |
-|---------|-------------|
-| **Pipelines** | Multiple pipelines with customizable stages and probability |
-| **Tasks** | Task queues with due dates, reminders, and sequences |
-| **Meetings** | Calendar integration with booking links and round-robin |
-| **Sequences** | Multi-step outreach automation with personalization |
-| **Documents** | Document tracking with view notifications and analytics |
-| **Forecasting** | Revenue forecasting with weighted pipeline and trends |
-
-### Service Hub
-
-| Feature | Description |
-|---------|-------------|
-| **Tickets** | Multi-channel ticket creation with routing and escalation |
-| **Knowledge Base** | Self-service articles with search and feedback |
-| **Customer Portal** | Branded portal for ticket submission and tracking |
-| **Feedback Surveys** | NPS, CSAT, and CES surveys with automation triggers |
-| **SLA Management** | Response and resolution time tracking with alerts |
-
-### Integrations
-
-| Feature | Description |
-|---------|-------------|
-| **Email Sync** | Two-way sync with Gmail, Outlook, and IMAP providers |
-| **Calendar Sync** | Google Calendar and Microsoft 365 integration |
-| **Calling** | VoIP integration with call logging and recording |
-| **Slack** | Real-time notifications and deal room collaboration |
-| **Zapier/n8n** | Webhook triggers for 5000+ app integrations |
-
----
-
-## AI-Native
-
-hubspot.do is built from the ground up for AI agents. Not retrofitted. Not an afterthought.
-
-### MCP Tools
-
-Every CRM operation is available as an MCP tool:
-
-```typescript
-import { hubspotTools, invokeTool } from 'hubspot.do/mcp'
-
-// List available tools
-console.log(hubspotTools.map(t => t.name))
-// ['contacts_create', 'contacts_search', 'deals_create', 'deals_update',
-//  'workflows_trigger', 'lists_add', 'emails_send', 'meetings_book', ...]
-
-// AI agents can invoke directly
-await invokeTool('contacts_create', {
-  email: 'lead@prospect.com',
-  firstName: 'New',
-  lastName: 'Lead',
-  source: 'ai-outreach'
-})
-```
-
-### Natural Language Queries
-
-```typescript
-import { HubSpot } from 'hubspot.do'
-
-const crm = new HubSpot(env.HUBSPOT)
-
-// Natural language search
-const results = await crm.search({
-  natural: 'find all enterprise deals closing this quarter over $50k'
-})
-
-// AI-powered lead scoring
-const score = await crm.contacts.score({
-  contact: 'alice@startup.com',
-  model: 'engagement-propensity'
-})
-```
-
-### agents.do Integration
-
-hubspot.do is a core service of the [workers.do](https://workers.do) platform:
-
-```typescript
-import { sally, mark } from 'agents.do'
-import { HubSpot } from 'hubspot.do'
-
-// Sally handles sales outreach
-const leads = await sally`find warm leads from yesterday's webinar`
-for (const lead of leads) {
-  await sally`send personalized follow-up to ${lead}`
-}
-
-// Mark writes marketing content
-const campaign = await mark`create email sequence for product launch`
-await crm.workflows.deploy(campaign)
+// Priya handles product feedback
+await priya`analyze support tickets for feature requests`
 
 // They work together
-await sally.watch(crm.deals, { stage: 'closed-won' }, async (deal) => {
-  await mark`write case study about ${deal.company}`
-})
+await hubspot`closed won deals this month`
+  .map(d => mark`write case study for ${d}`)
+  .map(d => sally`ask ${d.contact} for referral`)
 ```
 
-### Webhook Everything
-
-Every CRM event triggers webhooks your AI agents can consume:
+### Real-Time Events
 
 ```typescript
-import { HubSpot } from 'hubspot.do'
+// AI reacts to every CRM event
+await hubspot`when contact created`
+  .map(c => hubspot`enrich and score ${c}`)
+  .map(c => hubspot`route ${c} to right rep`)
 
-const crm = new HubSpot(env.HUBSPOT)
+await hubspot`when deal reaches negotiation`
+  .map(d => hubspot`notify manager about ${d}`)
+  .map(d => hubspot`prepare contract for ${d}`)
 
-// React to any CRM event
-crm.on('contact.created', async (contact) => {
-  await enrichContact(contact)
-  await scoreContact(contact)
-  await routeToRep(contact)
-})
-
-crm.on('deal.stage_changed', async (deal, prev, next) => {
-  if (next === 'negotiation') {
-    await notifyManager(deal)
-    await prepareContract(deal)
-  }
-})
-
-crm.on('ticket.created', async (ticket) => {
-  const response = await aiGenerateResponse(ticket)
-  await ticket.reply(response)
-})
+await hubspot`when ticket created`
+  .map(t => hubspot`draft response for ${t}`)
+  .review()
+  .send()
 ```
-
----
 
 ## API Compatible
 
-hubspot.do implements the HubSpot API specification. Your existing integrations work unchanged.
-
-### Drop-In Replacement
+hubspot.do implements the HubSpot API specification. Existing integrations work unchanged.
 
 ```typescript
-// Before: HubSpot Cloud
-import Hubspot from '@hubspot/api-client'
-const client = new Hubspot.Client({ accessToken: process.env.HUBSPOT_TOKEN })
-
-// After: hubspot.do (same code, just change the base URL)
+// Change one line - everything else works
 import Hubspot from '@hubspot/api-client'
 const client = new Hubspot.Client({
-  accessToken: process.env.HUBSPOT_TOKEN,
-  basePath: 'https://your-instance.hubspot.do'
-})
-
-// Everything works the same
-const contact = await client.crm.contacts.basicApi.create({
-  properties: { email: 'new@contact.com', firstname: 'New' }
+  basePath: 'https://your-instance.hubspot.do'  // just change this
 })
 ```
 
-### Supported API Endpoints
-
-| API | Compatibility |
-|-----|---------------|
-| **CRM Objects** | Full - contacts, companies, deals, tickets, products, quotes |
-| **CRM Associations** | Full - all standard and custom association types |
-| **CRM Properties** | Full - property groups, definitions, and validation |
-| **CRM Pipelines** | Full - stages, probability, and automation |
-| **CRM Search** | Full - filter groups, sorting, and pagination |
-| **Marketing Emails** | Full - templates, campaigns, and analytics |
-| **Forms** | Full - submissions, progressive profiling |
-| **Workflows** | Full - actions, branches, and enrollment |
-| **Files** | Full - upload, folders, and CDN delivery |
-| **Webhooks** | Full - subscriptions and event delivery |
-
-### Migration Path
+### Migration
 
 ```bash
-# Export from HubSpot Cloud
-npx hubspot.do migrate export --source=hubspot-cloud
-
-# Import to your instance
-npx hubspot.do migrate import --target=https://your-instance.hubspot.do
+# Export from HubSpot Cloud, import to your instance
+npx hubspot.do migrate --from=hubspot-cloud --to=https://your-instance.hubspot.do
 ```
 
-Full data migration including contacts, companies, deals, activities, and custom properties.
-
----
+Full data migration: contacts, companies, deals, activities, custom properties.
 
 ## Architecture
 
-```
-+------------------------------------------------------------------+
-|                        Your Application                           |
-+------------------+-------------------+----------------------------+
-|   HubSpot SDK    |   REST API        |   MCP Tools               |
-|   (Compatible)   |   (HTTP/RPC)      |   (AI Agents)             |
-+------------------+---------+---------+----------------------------+
-                             |
-+----------------------------v---------------------------------+
-|                       hubspot.do Worker                       |
-+--------------------------------------------------------------+
-|                                                              |
-|  +----------+  +------------+  +-----------+  +-----------+  |
-|  |   CRM    |  |  Marketing |  |   Sales   |  |  Service  |  |
-|  +----------+  +------------+  +-----------+  +-----------+  |
-|  | Contacts |  | Emails     |  | Pipelines |  | Tickets   |  |
-|  | Companies|  | Forms      |  | Tasks     |  | KB        |  |
-|  | Deals    |  | Workflows  |  | Meetings  |  | Feedback  |  |
-|  | Tickets  |  | Analytics  |  | Sequences |  | SLAs      |  |
-|  +----------+  +------------+  +-----------+  +-----------+  |
-|                                                              |
-+--------------------------------------------------------------+
-|             Durable Object (HubSpotDO)                       |
-+------------------------+-------------------------------------+
-|       SQLite           |              R2                      |
-|   (Hot Data Layer)     |    (Files, Attachments, Assets)     |
-+------------------------+-------------------------------------+
-```
+### Durable Object per Workspace
 
-### Why Durable Objects?
-
-1. **Single-threaded consistency** - No race conditions on contact updates
-2. **SQLite built-in** - Real relational database, not key-value hacks
-3. **Automatic scaling** - Millions of CRM instances, zero configuration
-4. **Global distribution** - Data lives at the edge, near your users
-5. **Zero cold starts** - Always warm, always fast
-6. **R2 integration** - Unlimited storage for files and attachments
+```
+HubSpotDO (config, users, pipelines)
+  |
+  +-- ContactsDO (demographics, activities)
+  |     |-- SQLite: Contact records
+  |     +-- R2: Email attachments
+  |
+  +-- DealsDO (pipeline, amounts, stages)
+  |     |-- SQLite: Deal data
+  |     +-- R2: Contracts, proposals
+  |
+  +-- MarketingDO (campaigns, workflows)
+  |     |-- SQLite: Email tracking
+  |     +-- R2: Templates, assets
+  |
+  +-- ServiceDO (tickets, knowledge base)
+        |-- SQLite: Ticket data
+        +-- R2: Attachments
+```
 
 ### Storage Tiers
 
-| Tier | Storage | Use Case |
-|------|---------|----------|
-| **Hot** | SQLite | Active contacts, recent deals, live workflows |
-| **Warm** | R2 | Historical activities, email content, attachments |
-| **Cold** | R2 Archive | Compliance archives, audit trails |
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Active contacts, recent deals | <10ms |
+| **Warm** | R2 + Index | Historical activities (90+ days) | <100ms |
+| **Cold** | R2 Archive | Compliance, audit trails | <1s |
+
+## vs HubSpot
+
+| Feature | HubSpot | hubspot.do |
+|---------|---------|-----------|
+| **Implementation** | Sales calls, procurement | Deploy in minutes |
+| **Monthly Cost** | $800-3,600/mo | ~$5/mo |
+| **AI** | Subject line suggestions | AI writes entire campaigns |
+| **Data Location** | HubSpot's cloud | Your Cloudflare account |
+| **Customization** | Limited to their UI | Code anything |
+| **Lock-in** | Years of migration | MIT licensed |
+| **API** | Rate limited | Unlimited |
+
+## Use Cases
+
+### Startup CRM
 
 ```typescript
-import { TieredHubSpot } from 'hubspot.do/storage'
-
-const crm = new TieredHubSpot({
-  hot: env.HUBSPOT,
-  warm: env.R2_BUCKET,
-  cold: env.ARCHIVE,
-  thresholds: {
-    hotMaxContacts: 1_000_000,
-    activityRetentionDays: 90,
-  }
-})
-```
-
----
-
-## Getting Started
-
-### Installation
-
-```bash
-npm install hubspot.do
-```
-
-### Basic Usage
-
-```typescript
-import { HubSpot } from 'hubspot.do'
-
-const crm = new HubSpot(env.HUBSPOT)
-
-// Create a contact
-const contact = await crm.contacts.create({
-  email: 'alice@example.com',
-  firstName: 'Alice',
-  lastName: 'Smith',
-  company: 'Acme Corp',
-  phone: '+1-555-0123',
-  lifecycleStage: 'lead'
-})
-
-// Search contacts
-const results = await crm.contacts.search({
-  filters: [
-    { property: 'lifecycleStage', operator: 'eq', value: 'lead' },
-    { property: 'createdate', operator: 'gte', value: lastWeek }
-  ],
-  sorts: [{ property: 'createdate', direction: 'desc' }],
-  limit: 50
-})
-
-// Create a deal
-const deal = await crm.deals.create({
-  name: 'Enterprise License',
-  amount: 25000,
-  stage: 'qualification',
-  closeDate: nextMonth,
-  associatedContacts: [contact.id]
-})
-
-// Update deal stage
-await crm.deals.update(deal.id, {
-  stage: 'proposal',
-  amount: 30000
-})
-
-// Trigger a workflow
-await crm.workflows.enroll('new-lead-nurture', contact.id)
-```
-
-### Real-Time Updates
-
-```typescript
-import { HubSpot } from 'hubspot.do'
-
-const crm = new HubSpot(env.HUBSPOT)
-
-// Subscribe to contact changes
-const unsubscribe = crm.contacts.watch({
-  filters: [{ property: 'lifecycleStage', operator: 'eq', value: 'customer' }]
-}, (event) => {
-  console.log(`New customer: ${event.contact.email}`)
-  sendWelcomePackage(event.contact)
-})
-
-// Subscribe to deal movements
-crm.deals.watch({
-  filters: [{ property: 'stage', operator: 'eq', value: 'closed-won' }]
-}, async (event) => {
-  await celebrateWin(event.deal)
-  await provisionAccount(event.deal)
-})
+// Your entire sales process
+await hubspot`new lead Alice Chen from Product Hunt`
+await hubspot`qualify Alice based on company size and role`
+await hubspot`send personalized demo request to Alice`
+await hubspot`schedule demo for Alice next Tuesday`
+await hubspot`create deal Acme Corp $25k`
 ```
 
 ### Marketing Automation
 
 ```typescript
-import { HubSpot } from 'hubspot.do'
-
-const crm = new HubSpot(env.HUBSPOT)
-
-// Create an email template
-const template = await crm.emails.createTemplate({
-  name: 'Welcome Email',
-  subject: 'Welcome to {{company.name}}!',
-  body: `
-    Hi {{contact.firstName}},
-
-    Thanks for signing up! Here's what to do next...
-
-    Best,
-    The Team
-  `
-})
-
-// Create a workflow
-const workflow = await crm.workflows.create({
-  name: 'New Signup Nurture',
-  trigger: {
-    type: 'form_submission',
-    formId: 'signup-form'
-  },
-  actions: [
-    { type: 'send_email', templateId: template.id, delay: 0 },
-    { type: 'wait', duration: '3d' },
-    { type: 'send_email', templateId: 'follow-up-1', delay: 0 },
-    { type: 'branch', condition: 'has_opened_email', yes: 'qualify', no: 'wait' },
-    { type: 'update_property', property: 'lifecycleStage', value: 'mql', id: 'qualify' }
-  ]
-})
-
-// Activate the workflow
-await crm.workflows.activate(workflow.id)
+// Launch campaign in one conversation
+await hubspot`create campaign for product launch`
+  .audience(`customers who used feature X`)
+  .sequence(`announce, demo invite, case study, pricing`)
+  .draft()
+  .review()
+  .schedule(`next Monday`)
 ```
 
----
+### Sales Pipeline
 
-## The Rewrites Ecosystem
+```typescript
+// Pipeline management as conversation
+await hubspot`deals stuck in proposal over 2 weeks`
+  .map(d => hubspot`send nudge to ${d.contact}`)
 
-hubspot.do is part of the rewrites family - reimplementations of legacy SaaS platforms on Cloudflare Durable Objects:
+await hubspot`deals closing this month`
+  .map(d => hubspot`forecast probability for ${d}`)
+```
 
-| Rewrite | Original | Monthly Cost Savings |
-|---------|----------|---------------------|
-| **hubspot.do** | HubSpot ($800-3600/mo) | 95-99% |
-| [salesforce.do](https://salesforce.do) | Salesforce ($75-300/user/mo) | 95-99% |
-| [zendesk.do](https://zendesk.do) | Zendesk ($55-115/agent/mo) | 90-95% |
-| [intercom.do](https://intercom.do) | Intercom ($74-139/seat/mo) | 90-95% |
-| [mailchimp.do](https://mailchimp.do) | Mailchimp ($13-350/mo) | 80-95% |
-| [stripe.do](https://stripe.do) | Stripe Atlas ($500 + 2.9%) | 50-70% |
+### Customer Success
 
-Each rewrite follows the same pattern:
-- **Your own instance** - Not multi-tenant, not shared, yours
-- **Durable Object per workspace** - Isolated, consistent, scalable
-- **SQLite for hot data** - Real database, real queries
-- **R2 for files** - Unlimited storage, global CDN
-- **MCP tools** - AI-native from day one
-- **API compatible** - Existing integrations work
+```typescript
+// Retention workflows
+await hubspot`customers with declining engagement`
+  .map(c => hubspot`schedule check-in with ${c}`)
 
----
+await hubspot`customers approaching renewal`
+  .map(c => hubspot`send renewal reminder to ${c}`)
+```
 
-## Pricing Comparison
+## Roadmap
 
-### HubSpot Cloud Pricing (2025)
+### CRM Core
+- [x] Contacts with custom properties
+- [x] Companies with hierarchies
+- [x] Deals with pipelines
+- [x] Tickets with SLAs
+- [x] Products and quotes
+- [ ] Custom objects
 
-| Plan | Monthly Cost | What You Get |
-|------|--------------|--------------|
-| **Starter** | $20/mo | 1,000 contacts, basic features |
-| **Professional** | $800/mo | 2,000 contacts, automation |
-| **Enterprise** | $3,600/mo | 10,000 contacts, advanced features |
+### Marketing
+- [x] Email campaigns
+- [x] Smart lists
+- [x] Workflows
+- [x] Forms
+- [x] Landing pages
+- [ ] Social media integration
 
-Plus: $45/mo per additional 1,000 contacts. Per-seat pricing for Sales and Service Hubs.
+### Sales
+- [x] Pipelines
+- [x] Tasks and sequences
+- [x] Meetings
+- [x] Documents
+- [x] Forecasting
+- [ ] Call recording
 
-### hubspot.do Pricing
-
-| Resource | Cost | Notes |
-|----------|------|-------|
-| **Durable Object** | $0.15/million requests | Your CRM instance |
-| **SQLite Storage** | $0.20/GB/month | Contact and deal data |
-| **R2 Storage** | $0.015/GB/month | Files and attachments |
-| **Workers** | Free tier: 100k/day | API and webhook handling |
-
-**Example: 10,000 contacts, 50,000 monthly operations**
-
-- HubSpot Enterprise: **$3,600/month**
-- hubspot.do: **~$5/month**
-
-That is a **99.86% cost reduction**.
-
----
-
-## Frequently Asked Questions
-
-### Is this really a complete HubSpot replacement?
-
-hubspot.do implements the core CRM, Marketing, Sales, and Service Hub functionality that 90% of HubSpot users actually use. Enterprise features like predictive lead scoring and custom behavioral events are on the roadmap.
-
-### What about HubSpot's ecosystem of integrations?
-
-hubspot.do is API-compatible with HubSpot. Most integrations that work with HubSpot's API will work with hubspot.do by changing the base URL. We also provide native webhooks and MCP tools for AI-first integrations.
-
-### Can I migrate from HubSpot Cloud?
-
-Yes. We provide migration tools that export your contacts, companies, deals, activities, and custom properties from HubSpot Cloud and import them into your hubspot.do instance.
-
-### What about support?
-
-hubspot.do is open source (MIT license). Community support is available via GitHub Issues. Enterprise support contracts are available for organizations that need SLAs.
-
-### Is my data secure?
-
-Your data runs on Cloudflare's infrastructure with enterprise-grade security. You control the encryption keys. You control access. Your data never leaves infrastructure you control.
-
-### What if Cloudflare goes down?
-
-Cloudflare has a 99.99% uptime SLA. Your Durable Object data is automatically replicated across multiple regions. For additional resilience, enable continuous backup to your own R2 bucket or external storage.
-
----
+### AI
+- [x] Natural language queries
+- [x] Email drafting
+- [x] Lead scoring
+- [x] Campaign generation
+- [ ] Predictive analytics
+- [ ] Conversation intelligence
 
 ## Contributing
 
-hubspot.do is open source and welcomes contributions.
+hubspot.do is open source under the MIT license.
 
 ```bash
-# Clone the repository
-git clone https://github.com/drivly/hubspot.do.git
+git clone https://github.com/dotdo/hubspot.do
 cd hubspot.do
-
-# Install dependencies
-npm install
-
-# Run tests
-npm test
-
-# Start local development
-npm run dev
+pnpm install
+pnpm test
 ```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
----
 
 ## License
 
-MIT - see [LICENSE](LICENSE)
-
----
-
-## The Manifesto
-
-We are in the early days of a fundamental shift.
-
-For two decades, SaaS vendors built empires by hosting software you could have run yourself. They charged rent on your data. They dictated your upgrade path. They held your customer relationships hostage.
-
-The cloud was supposed to democratize computing. Instead, it created new landlords.
-
-**That era is ending.**
-
-Edge computing, Durable Objects, and AI agents are collapsing the complexity that justified SaaS premiums. The same CRM that costs $3,600/month can now run on infrastructure that costs $5/month. The same features that required a 500-person engineering team can be replicated by AI-assisted development in weeks.
-
-hubspot.do is not just a cheaper HubSpot. It is a statement:
-
-**Your customer data belongs to you.**
-
-**Your sales pipeline belongs to you.**
-
-**Your business relationships belong to you.**
-
-One click. Your own HubSpot. Forever.
+MIT License - Your customers, your data, your CRM.
 
 ---
 
 <p align="center">
-  <strong>Take back control.</strong>
+  <strong>The $3,600/month ends here.</strong>
+  <br />
+  AI-native. Edge-first. Customer-owned.
+  <br /><br />
+  <a href="https://hubspot.do">Website</a> |
+  <a href="https://docs.hubspot.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/hubspot.do">GitHub</a>
 </p>

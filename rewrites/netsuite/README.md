@@ -11,35 +11,39 @@ Oracle NetSuite dominates mid-market ERP with $2.3B+ in annual revenue. They cha
 
 **netsuite.do** is the open-source alternative. Deploy your own ERP in one click. AI does your journal entries. SuiteTalk API compatible - your existing integrations just work.
 
-## The workers.do Way
+## AI-Native API
 
-You're building a real business. You need ERP. NetSuite wants $500k/year plus consultants. SAP wants $10M plus a 3-year implementation. You just want to invoice customers and pay vendors.
+```typescript
+import { netsuite } from 'netsuite.do'           // Full SDK
+import { netsuite } from 'netsuite.do/tiny'      // Minimal client
+import { netsuite } from 'netsuite.do/gl'        // GL-only operations
+```
 
-**workers.do** gives you an AI finance team that speaks plain English:
+Natural language for financial workflows:
 
 ```typescript
 import { netsuite } from 'netsuite.do'
-import { cfo, controller } from 'agents.do'
 
-// Natural language ERP operations
-const invoice = await netsuite`create invoice for ${customer} with items ${lineItems}`
-const forecast = await netsuite`show cash flow forecast for ${quarter}`
-const reconciled = await netsuite`reconcile bank statement for ${account}`
-```
+// Talk to it like you'd talk to your controller
+const invoice = await netsuite`invoice ACME for 100 widgets @ $49.99, Net 30`
+const aging = await netsuite`AR aging over 60 days`
+const forecast = await netsuite`cash flow forecast Q1`
 
-### Promise Pipelining
+// Chain like sentences
+await netsuite`overdue invoices over $10k`
+  .notify(`Payment reminder: your invoice is past due`)
 
-Chain complex financial workflows with a single network round trip:
-
-```typescript
-const closed = await netsuite`close ${period} books`
+// Close books as natural flow
+await netsuite`close January 2025 books`
   .map(period => netsuite`generate financials for ${period}`)
-  .map(statements => [cfo, controller].map(r => r`approve ${statements}`))
+  .map(statements => netsuite`post to investor portal ${statements}`)
 ```
 
 ### AI Agents for Finance
 
 ```typescript
+import { cfo, controller, ar } from 'agents.do'
+
 // CFO agent handles strategic questions
 await cfo`Why did gross margin drop 3% this quarter?`
 
@@ -47,7 +51,7 @@ await cfo`Why did gross margin drop 3% this quarter?`
 await controller`Close January 2025 books`
 
 // AR agent handles collections
-await ar`Which customers are past due? Draft collection emails.`
+await ar`past due customers over $5k? Draft collection emails.`
 ```
 
 One import. Natural language. Your AI finance department.
@@ -102,30 +106,14 @@ That's it. Your own NetSuite running on Cloudflare's edge.
 The heart of any ERP. Double-entry accounting with real-time subsidiary consolidation.
 
 ```typescript
-import { netsuite } from 'netsuite.do'
+// Just say it
+await netsuite`record $5000 rent expense to account 6100, approved by controller`
 
-// Post a journal entry
-await netsuite.gl.journalEntry({
-  date: '2025-01-15',
-  memo: 'Monthly rent expense',
-  lines: [
-    { account: '6100', debit: 5000, department: 'Engineering' },
-    { account: '2000', credit: 5000 }
-  ],
-  approvedBy: 'controller'
-})
+// Trial balance like you'd ask your accountant
+const trialBalance = await netsuite`trial balance for US Operations as of January 31`
 
-// Real-time trial balance
-const trialBalance = await netsuite.gl.trialBalance({
-  asOf: '2025-01-31',
-  subsidiary: 'US Operations'
-})
-
-// Consolidated financials across entities
-const consolidated = await netsuite.gl.consolidate({
-  period: '2025-01',
-  eliminateIntercompany: true
-})
+// Consolidation in plain English
+const consolidated = await netsuite`consolidate January 2025 with intercompany eliminations`
 ```
 
 ### Accounts Receivable
@@ -133,28 +121,19 @@ const consolidated = await netsuite.gl.consolidate({
 Customer invoicing, payments, and collections.
 
 ```typescript
-// Create an invoice
-const invoice = await netsuite.ar.invoice({
-  customer: 'ACME-001',
-  items: [
-    { item: 'WIDGET-A', quantity: 100, rate: 49.99 },
-    { item: 'SERVICE-SETUP', quantity: 1, rate: 500 }
-  ],
-  terms: 'Net 30',
-  dueDate: '2025-02-15'
-})
+// Invoice like you'd tell your bookkeeper
+const invoice = await netsuite`invoice ACME-001 for 100 WIDGET-A @ $49.99 plus setup fee $500, Net 30`
 
-// Record payment
-await netsuite.ar.payment({
-  invoice: invoice.id,
-  amount: 5499,
-  method: 'ACH',
-  reference: 'PMT-2025-001'
-})
+// Record payment naturally
+await netsuite`received $5499 ACH payment for invoice ${invoice.id}`
 
-// Aging report
-const aging = await netsuite.ar.aging({ asOf: '2025-01-31' })
+// Ask for aging like you'd ask your controller
+const aging = await netsuite`AR aging report`
 // { current: 45000, days30: 12000, days60: 3000, days90: 500 }
+
+// Collections in one line
+await netsuite`overdue invoices over $10k`
+  .map(invoice => netsuite`send collection notice for ${invoice}`)
 ```
 
 ### Accounts Payable
@@ -162,30 +141,18 @@ const aging = await netsuite.ar.aging({ asOf: '2025-01-31' })
 Vendor bills, payments, and cash management.
 
 ```typescript
-// Enter a vendor bill
-const bill = await netsuite.ap.bill({
-  vendor: 'SUPPLIER-001',
-  invoiceNumber: 'INV-12345',
-  date: '2025-01-10',
-  dueDate: '2025-02-10',
-  lines: [
-    { account: '5000', amount: 10000, memo: 'Raw materials' },
-    { account: '6200', amount: 500, memo: 'Freight' }
-  ]
-})
+// Enter a bill like you'd hand it to AP
+const bill = await netsuite`bill from SUPPLIER-001 invoice INV-12345: $10k raw materials, $500 freight, due Feb 10`
 
-// Schedule payment
-await netsuite.ap.schedulePayment({
-  bills: [bill.id],
-  payDate: '2025-02-08',
-  method: 'ACH'
-})
+// Schedule payment naturally
+await netsuite`pay ${bill.id} via ACH on Feb 8`
 
-// Cash flow forecast
-const cashFlow = await netsuite.ap.cashForecast({
-  from: '2025-01-01',
-  to: '2025-03-31'
-})
+// Cash flow like you'd ask the CFO
+const cashFlow = await netsuite`cash flow forecast Q1 2025`
+
+// Pay all due bills in one sweep
+await netsuite`bills due this week`
+  .map(bill => netsuite`schedule payment for ${bill}`)
 ```
 
 ### Inventory Management
@@ -193,38 +160,22 @@ const cashFlow = await netsuite.ap.cashForecast({
 Multi-location inventory with lot tracking, serial numbers, and bin management.
 
 ```typescript
-// Create an item
-await netsuite.inventory.createItem({
-  type: 'inventory',
-  name: 'WIDGET-A',
-  description: 'Industrial Widget, Type A',
-  costing: 'average',
-  accounts: {
-    asset: '1300',
-    cogs: '5000',
-    income: '4000'
-  }
-})
+// Create items naturally
+await netsuite`create inventory item WIDGET-A, average cost, asset 1300 cogs 5000 income 4000`
 
-// Receive inventory
-await netsuite.inventory.receive({
-  location: 'WAREHOUSE-01',
-  items: [
-    { item: 'WIDGET-A', quantity: 500, cost: 25.00, lot: 'LOT-2025-001' }
-  ],
-  purchaseOrder: 'PO-2025-001'
-})
+// Receive inventory like you'd tell the warehouse
+await netsuite`receive 500 WIDGET-A @ $25 lot LOT-2025-001 at WAREHOUSE-01 for PO-2025-001`
 
-// Transfer between locations
-await netsuite.inventory.transfer({
-  from: 'WAREHOUSE-01',
-  to: 'WAREHOUSE-02',
-  items: [{ item: 'WIDGET-A', quantity: 100 }]
-})
+// Transfer like a warehouse manager
+await netsuite`transfer 100 WIDGET-A from WAREHOUSE-01 to WAREHOUSE-02`
 
-// Real-time availability
-const availability = await netsuite.inventory.availability('WIDGET-A')
+// Check availability naturally
+const availability = await netsuite`WIDGET-A availability`
 // { onHand: 500, available: 450, committed: 50, onOrder: 200 }
+
+// Reorder alerts in plain English
+await netsuite`items below reorder point`
+  .map(item => netsuite`create PO for ${item} to replenish`)
 ```
 
 ### Order Management
@@ -232,34 +183,20 @@ const availability = await netsuite.inventory.availability('WIDGET-A')
 Sales orders, fulfillment, and revenue recognition.
 
 ```typescript
-// Create sales order
-const order = await netsuite.orders.create({
-  customer: 'ACME-001',
-  items: [
-    { item: 'WIDGET-A', quantity: 50, rate: 49.99 },
-    { item: 'WIDGET-B', quantity: 25, rate: 79.99 }
-  ],
-  shippingMethod: 'FedEx Ground',
-  terms: 'Net 30'
-})
+// Create orders like you'd tell sales ops
+const order = await netsuite`sales order ACME-001: 50 WIDGET-A @ $49.99, 25 WIDGET-B @ $79.99, ship FedEx Ground, Net 30`
 
-// Fulfill from inventory
-await netsuite.orders.fulfill({
-  order: order.id,
-  location: 'WAREHOUSE-01',
-  shipDate: '2025-01-16',
-  tracking: '1234567890'
-})
+// Fulfill with a sentence
+await netsuite`fulfill ${order.id} from WAREHOUSE-01 tracking 1234567890`
 
-// Generate invoice
-await netsuite.orders.invoice(order.id)
+// Invoice and recognize revenue
+await netsuite`invoice ${order.id}`
+await netsuite`recognize revenue for ${order.id} straight-line over 12 months`
 
-// Revenue recognition schedule
-await netsuite.revenue.schedule({
-  order: order.id,
-  method: 'straight-line',
-  periods: 12
-})
+// End-to-end order flow
+await netsuite`orders ready to ship`
+  .map(order => netsuite`fulfill ${order}`)
+  .map(fulfilled => netsuite`invoice ${fulfilled}`)
 ```
 
 ### Procurement
@@ -267,31 +204,19 @@ await netsuite.revenue.schedule({
 Purchase orders, vendor management, and receiving.
 
 ```typescript
-// Create purchase order
-const po = await netsuite.procurement.purchaseOrder({
-  vendor: 'SUPPLIER-001',
-  items: [
-    { item: 'RAW-MATERIAL-A', quantity: 1000, rate: 10.00 },
-    { item: 'RAW-MATERIAL-B', quantity: 500, rate: 15.00 }
-  ],
-  shipTo: 'WAREHOUSE-01',
-  expectedDate: '2025-01-25'
-})
+// Create PO like you'd dictate it
+const po = await netsuite`PO to SUPPLIER-001: 1000 RAW-MATERIAL-A @ $10, 500 RAW-MATERIAL-B @ $15, ship to WAREHOUSE-01 by Jan 25`
 
-// Receive against PO
-await netsuite.procurement.receive({
-  purchaseOrder: po.id,
-  items: [
-    { item: 'RAW-MATERIAL-A', quantity: 1000, lot: 'LOT-001' }
-  ]
-})
+// Receive like you'd tell receiving
+await netsuite`receive 1000 RAW-MATERIAL-A lot LOT-001 against ${po.id}`
 
-// Three-way match
-const match = await netsuite.procurement.match({
-  purchaseOrder: po.id,
-  receipt: 'RCV-001',
-  vendorBill: 'BILL-001'
-})
+// Three-way match in plain English
+await netsuite`match PO ${po.id} with receipt RCV-001 and bill BILL-001`
+
+// Procure-to-pay pipeline
+await netsuite`approved requisitions this week`
+  .map(req => netsuite`create PO for ${req}`)
+  .map(po => netsuite`send to vendor ${po}`)
 ```
 
 ### Multi-Subsidiary
@@ -299,29 +224,19 @@ const match = await netsuite.procurement.match({
 Enterprise-grade multi-entity accounting with intercompany transactions.
 
 ```typescript
-// Define subsidiary structure
-await netsuite.subsidiaries.create({
-  name: 'ACME UK Ltd',
-  parent: 'ACME Corp',
-  currency: 'GBP',
-  fiscalCalendar: 'UK-FISCAL',
-  chartOfAccounts: 'inherit'  // or 'custom'
-})
+// Define subsidiary naturally
+await netsuite`create subsidiary ACME UK Ltd under ACME Corp, GBP, UK fiscal calendar`
 
-// Intercompany transaction
-await netsuite.intercompany.sale({
-  from: 'ACME Corp',
-  to: 'ACME UK Ltd',
-  items: [{ item: 'WIDGET-A', quantity: 100, transferPrice: 30.00 }],
-  eliminateOnConsolidation: true
-})
+// Intercompany transactions in plain English
+await netsuite`intercompany sale: ACME Corp sells 100 WIDGET-A @ $30 to ACME UK Ltd`
 
-// Consolidated P&L
-const pnl = await netsuite.reports.incomeStatement({
-  period: '2025-01',
-  consolidated: true,
-  eliminateIntercompany: true
-})
+// Consolidated financials like you'd ask the CFO
+const pnl = await netsuite`consolidated P&L for January 2025 with intercompany eliminations`
+
+// Global close in one pipeline
+await netsuite`subsidiaries`
+  .map(sub => netsuite`close January for ${sub}`)
+  .map(closed => netsuite`consolidate ${closed}`)
 ```
 
 ---
@@ -335,20 +250,12 @@ This is what makes netsuite.do fundamentally different. AI isn't bolted on - it'
 Upload an invoice, get journal entries. No data entry.
 
 ```typescript
-import { ada } from 'netsuite.do/agents'
-
-// Email an invoice to your ERP
-await ada`
-  Process this invoice from AWS:
-  - Vendor: Amazon Web Services
-  - Amount: $12,847.32
-  - Service: Cloud computing January 2025
-  - Invoice #: INV-2025-001-AWS
-`
-// Ada:
+// Just forward the invoice
+await netsuite`process AWS invoice INV-2025-001-AWS for $12,847.32 cloud computing January`
+// AI:
 // - Creates vendor bill: $12,847.32
 // - Posts to: 6300 (Cloud Services Expense)
-// - Assigns to: Engineering department (from historical patterns)
+// - Assigns to: Engineering (from historical patterns)
 // - Schedules payment based on terms
 ```
 
@@ -357,21 +264,17 @@ await ada`
 Connect your bank, wake up to reconciled accounts.
 
 ```typescript
-// AI reconciles overnight
-const reconciliation = await netsuite.banking.reconcile({
-  account: '1000',  // Operating account
-  statement: await fetchBankStatement()
-})
-
-// Results next morning:
+// One line reconciliation
+const reconciliation = await netsuite`reconcile operating account with today's bank statement`
 // {
 //   matched: 247,
 //   created: 12,      // New transactions AI identified and categorized
 //   flagged: 3,       // Needs human review
-//   suggestions: [
-//     { transaction: 'DEP-2025-001', match: 'INV-2024-892', confidence: 0.94 }
-//   ]
 // }
+
+// Handle exceptions naturally
+await netsuite`unmatched bank transactions`
+  .map(txn => netsuite`categorize ${txn}`)
 ```
 
 ### AI Inventory Forecasting
@@ -379,15 +282,8 @@ const reconciliation = await netsuite.banking.reconcile({
 Predict what you'll need before you need it.
 
 ```typescript
-import { forecast } from 'netsuite.do/ai'
-
-// AI analyzes historical patterns
-const prediction = await forecast.inventory({
-  item: 'WIDGET-A',
-  horizon: '90 days',
-  factors: ['seasonality', 'growth', 'events']
-})
-
+// Ask like you'd ask your supply chain manager
+const prediction = await netsuite`forecast WIDGET-A demand for next 90 days`
 // {
 //   currentStock: 450,
 //   predictedDemand: [
@@ -395,10 +291,13 @@ const prediction = await forecast.inventory({
 //     { period: 'Mar 2025', quantity: 220, confidence: 0.87 },
 //     { period: 'Apr 2025', quantity: 195, confidence: 0.81 }
 //   ],
-//   reorderPoint: 150,
-//   reorderQuantity: 400,
 //   suggestion: 'Order 400 units by Feb 15 to maintain service levels'
 // }
+
+// Auto-replenish pipeline
+await netsuite`items needing reorder`
+  .map(item => netsuite`optimal reorder for ${item}`)
+  .map(order => netsuite`create PO ${order}`)
 ```
 
 ### AI Financial Analysis
@@ -406,7 +305,7 @@ const prediction = await forecast.inventory({
 Ask questions, get answers with supporting data.
 
 ```typescript
-import { cfo } from 'netsuite.do/agents'
+import { cfo } from 'agents.do'
 
 await cfo`Why did gross margin drop 3% this quarter?`
 // "Gross margin declined from 42% to 39% primarily due to:
@@ -417,13 +316,8 @@ await cfo`Why did gross margin drop 3% this quarter?`
 //
 // 2. **Product mix shift** (-$22,000 impact)
 //    - WIDGET-B sales up 40% (lower margin product)
-//    - WIDGET-A sales down 15% (higher margin product)
 //
-// 3. **Fulfillment costs** (+$8,000)
-//    - Expedited shipping for late orders
-//
-// Recommendation: Renegotiate METAL-CO contract or source alternative.
-// Run scenario analysis? [Yes/No]"
+// Recommendation: Renegotiate METAL-CO contract or source alternative."
 ```
 
 ### AI Closes the Books
@@ -431,94 +325,59 @@ await cfo`Why did gross margin drop 3% this quarter?`
 Month-end close that takes hours, not weeks.
 
 ```typescript
-import { controller } from 'netsuite.do/agents'
+import { controller } from 'agents.do'
 
-await controller`Close January 2025 books`
+// Close books with promise pipelining
+await netsuite`close January 2025 books`
+  .map(period => netsuite`generate financials for ${period}`)
+  .map(statements => [cfo, controller].map(r => r`approve ${statements}`))
 
-// Controller agent:
-// 1. Runs all recurring journal entries
+// Controller agent handles everything:
+// 1. Runs recurring journal entries
 // 2. Posts depreciation schedules
 // 3. Accrues unbilled revenue
-// 4. Reconciles all balance sheet accounts
+// 4. Reconciles balance sheet accounts
 // 5. Runs intercompany eliminations
-// 6. Generates variance analysis vs budget
-// 7. Prepares close checklist with exceptions
-// 8. Notifies CFO when ready for review
+// 6. Prepares close checklist with exceptions
 ```
 
 ---
 
 ## SuiteTalk API Compatible
 
-Existing NetSuite integrations work without changes.
+Existing NetSuite integrations work without changes. REST APIs, SuiteQL, RESTlets, Saved Searches - all supported.
+
+```typescript
+// SuiteQL for power users who want SQL
+const topCustomers = await netsuite`
+  SELECT customer.companyname, SUM(transaction.amount) as total
+  FROM transaction
+  JOIN customer ON transaction.entity = customer.id
+  WHERE transaction.type = 'SalesOrd'
+  GROUP BY customer.companyname
+  ORDER BY total DESC
+`
+
+// Or just ask naturally
+const same = await netsuite`top customers by sales this year`
+```
 
 ### REST Web Services
 
 ```bash
-# Query customers
+# Existing integrations just work
 curl -X GET 'https://your-instance.netsuite.do/services/rest/record/v1/customer' \
   -H 'Authorization: Bearer $TOKEN'
-
-# Create sales order
-curl -X POST 'https://your-instance.netsuite.do/services/rest/record/v1/salesOrder' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "entity": {"id": "123"},
-    "item": {"items": [{"item": {"id": "456"}, "quantity": 10}]}
-  }'
-```
-
-### SuiteQL
-
-```typescript
-// SuiteQL queries work exactly the same
-const query = await netsuite.query(`
-  SELECT
-    customer.companyname,
-    SUM(transaction.amount) as total_sales
-  FROM transaction
-  INNER JOIN customer ON transaction.entity = customer.id
-  WHERE transaction.type = 'SalesOrd'
-    AND transaction.trandate >= TO_DATE('2025-01-01', 'YYYY-MM-DD')
-  GROUP BY customer.companyname
-  ORDER BY total_sales DESC
-`)
-```
-
-### RESTlets
-
-```typescript
-// Define custom endpoints
-export const MyRESTlet = netsuite.restlet({
-  get: async (context) => {
-    const customerId = context.parameters.customerId
-    return await netsuite.record.load('customer', customerId)
-  },
-  post: async (context) => {
-    const data = context.request.body
-    return await netsuite.record.create('salesorder', data)
-  }
-})
 ```
 
 ### Saved Searches
 
 ```typescript
-// Saved searches work
-const results = await netsuite.search.load('customsearch_top_customers')
+// Run saved searches naturally
+const results = await netsuite`run saved search top_customers`
 
-// Or create dynamically
-const search = await netsuite.search.create({
-  type: 'transaction',
-  filters: [
-    ['type', 'anyof', 'SalesOrd'],
-    'AND',
-    ['mainline', 'is', 'T'],
-    'AND',
-    ['trandate', 'within', 'thismonth']
-  ],
-  columns: ['tranid', 'entity', 'amount']
-})
+// Or create on the fly
+await netsuite`sales orders this month over $10k`
 ```
 
 ---
@@ -614,12 +473,8 @@ Each accounting domain runs in its own Durable Object:
 Unlike traditional ERPs that batch consolidation overnight:
 
 ```typescript
-// Consolidation runs in real-time
-const statement = await netsuite.gl.incomeStatement({
-  period: '2025-01',
-  subsidiary: 'all',
-  consolidated: true
-})
+// Real-time consolidated financials
+const statement = await netsuite`income statement January all subsidiaries consolidated`
 
 // Behind the scenes:
 // 1. Each subsidiary DO has its own trial balance
@@ -692,30 +547,23 @@ npm run deploy
 ### First Steps
 
 ```typescript
-import { NetSuiteClient } from 'netsuite.do'
-
-const ns = new NetSuiteClient({
-  url: 'https://your-company.netsuite.do',
-  token: process.env.NETSUITE_TOKEN
-})
+import { netsuite } from 'netsuite.do'
 
 // 1. Set up chart of accounts
-await ns.setup.chartOfAccounts('standard-us')
+await netsuite`setup standard US chart of accounts`
 
 // 2. Create a customer
-const customer = await ns.customers.create({
-  companyName: 'Acme Corporation',
-  email: 'ap@acme.com',
-  terms: 'Net 30'
-})
+const customer = await netsuite`create customer Acme Corporation ap@acme.com Net 30`
 
 // 3. Create first invoice
-const invoice = await ns.ar.invoice({
-  customer: customer.id,
-  items: [{ description: 'Consulting Services', amount: 5000 }]
-})
+const invoice = await netsuite`invoice ${customer.id} for $5000 Consulting Services`
 
 // You're live!
+
+// Start managing cash
+await netsuite`cash position today`
+await netsuite`bills due this week`
+await netsuite`overdue receivables`
 ```
 
 ---
@@ -755,15 +603,15 @@ npx netsuite.do migrate \
 Run both systems in parallel during transition:
 
 ```typescript
-// Dual-write adapter
-const adapter = netsuite.migration.dualWrite({
-  source: netsuiteProduction,
-  target: netsuiteDoInstance,
-  sync: 'real-time'
-})
+// Enable dual-write mode
+await netsuite`enable parallel run with production NetSuite`
 
 // All writes go to both systems
 // Compare results, validate, then cut over
+
+await netsuite`compare January transactions with Oracle NetSuite`
+await netsuite`show discrepancies`
+await netsuite`cut over to netsuite.do`
 ```
 
 ---
@@ -816,15 +664,19 @@ const adapter = netsuite.migration.dualWrite({
 
 netsuite.do is open source under the MIT license.
 
+We especially welcome contributions from:
+- Controllers and CFOs
+- ERP implementation consultants
+- Accountants and bookkeepers
+- NetSuite developers escaping SuiteScript
+- TypeScript enthusiasts
+
 ```bash
 git clone https://github.com/dotdo/netsuite.do
 cd netsuite.do
-npm install
-npm test
-npm run dev
+pnpm install
+pnpm test
 ```
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 ---
 
@@ -835,6 +687,12 @@ MIT
 ---
 
 <p align="center">
-  <strong>Enterprise ERP, democratized.</strong><br/>
-  Built on Cloudflare Workers. Designed for AI. Owned by you.
+  <strong>The $2.3B ERP monopoly ends here.</strong>
+  <br />
+  AI-native. SuiteTalk-compatible. Owned by you.
+  <br /><br />
+  <a href="https://netsuite.do">Website</a> |
+  <a href="https://docs.netsuite.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/netsuite.do">GitHub</a>
 </p>

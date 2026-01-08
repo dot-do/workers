@@ -1,170 +1,230 @@
 # composio.do
 
-**Hands for AI Agents** - 150+ tool integrations with managed auth on Cloudflare.
+> Hands for AI Agents. 150+ Tools. Zero Auth Headaches.
 
-## The Hero
+Your agent can think. It can reason. It can plan. But it needs **hands** to act.
 
-You're building AI agents. They can think, reason, plan. But they need **hands** to act.
+"Fix the bug and open a PR" means 5 APIs: GitHub branches, commits, PRs, Slack webhooks, Linear tickets. 40+ hours of OAuth nightmares. 3am token refresh bugs. Rate limit hell.
 
-Your agent wants to "fix the bug and open a PR" - but that means:
-- Create a branch on GitHub
-- Write the code changes
-- Commit with the right message
-- Open a PR with context
-- Notify the team on Slack
+**composio.do** gives your agents hands. 150+ tools. One line per action.
 
-**40+ hours** per integration. OAuth nightmares. 3am token refresh bugs. Rate limit hell.
-
-**composio.do** gives your agents hands. 150+ tools. Zero auth headaches.
+## AI-Native API
 
 ```typescript
-import { composio } from '@dotdo/composio'
-
-composio`connect user-123 to GitHub`
-composio`create issue: Login bug on mobile in acme/webapp`
-composio.github`open PR for feature branch`
-composio.slack`notify #engineering about deployment`
+import { composio } from 'composio.do'           // Full SDK
+import { composio } from 'composio.do/tiny'      // Minimal client
+import { composio } from 'composio.do/mcp'       // MCP tools only
 ```
 
-Natural language. Tagged templates. Your agent just talks.
+Natural language for tool integrations:
 
-## The Real Power: Agent Integration
+```typescript
+import { composio } from 'composio.do'
 
-The real magic is when agents get tools automatically:
+// Talk to it like a colleague
+await composio`connect GitHub for user-123`
+await composio`available actions for Slack`
+await composio`execute send-message on Slack #general "Hello team"`
+
+// Chain like sentences
+await composio`create GitHub issue ${bug}`
+  .then(issue => composio`notify Slack #bugs about ${issue}`)
+
+// Agents get tools automatically
+await ralph.with(composio)`fix the login bug and open a PR`
+```
+
+## The Problem
+
+Composio (the original) charges for every action:
+
+| What They Charge | The Reality |
+|------------------|-------------|
+| **Per-Action Pricing** | $0.001-0.01 per tool call adds up fast |
+| **Vendor Lock-in** | Your agent's hands belong to them |
+| **Latency** | Round trip to their servers per action |
+| **Tool Limits** | Quota overages kill your agent mid-task |
+| **No Self-Hosting** | Your credentials, their servers |
+
+### The Real Cost
+
+At scale, tool calls explode:
+- Simple bug fix: 10-20 tool calls
+- Feature implementation: 50-100 tool calls
+- Daily agent operations: 1,000+ tool calls
+
+**$100-1,000/month** just for your agent to have hands.
+
+## The Solution
+
+**composio.do** is the open-source alternative:
+
+```
+Composio (Original)                 composio.do
+-----------------------------------------------------------------
+Per-action pricing                  $0 - run your own
+Their servers                       Your Cloudflare account
+Latency per action                  Edge-native, global
+Quota limits                        Unlimited
+Vendor lock-in                      Open source, MIT licensed
+```
+
+## One-Click Deploy
+
+```bash
+npx create-dotdo composio
+```
+
+150+ tool integrations. Running on infrastructure you control. Zero per-action costs.
+
+```typescript
+import { Composio } from 'composio.do'
+
+export default Composio({
+  name: 'my-agent-tools',
+  domain: 'tools.myagent.ai',
+  apps: ['github', 'slack', 'notion', 'linear'],
+})
+```
+
+## Features
+
+### Connections
+
+```typescript
+// Connect anyone to anything
+await composio`connect GitHub for user-123`
+await composio`connect Slack for team-acme`
+await composio`connect Salesforce for org-enterprise`
+
+// AI infers what you need
+await composio`user-123 connections`        // returns all connections
+await composio`GitHub status for user-123`  // returns connection health
+await composio`refresh tokens for user-123` // refreshes expired tokens
+```
+
+### Tool Discovery
+
+```typescript
+// Find tools naturally
+await composio`what can I do with GitHub?`
+await composio`Slack actions for messaging`
+await composio`search tools for file management`
+
+// Get tool schemas
+await composio`schema for github_create_issue`
+await composio`required params for slack_send_message`
+```
+
+### Tool Execution
+
+```typescript
+// Just say it
+await composio`create GitHub issue: Login bug on mobile in acme/webapp`
+await composio`send Slack message to #engineering: Deployment complete`
+await composio`create Notion page: Sprint 23 Retro in Engineering space`
+
+// AI parses intent, executes the right action
+await composio`add label "urgent" to issue #42 on acme/webapp`
+await composio`assign @tom to PR #123`
+await composio`close Linear ticket ENG-456 as done`
+```
+
+### Agent Integration
 
 ```typescript
 import { ralph } from 'agents.do'
 
-// Ralph gets 150+ composio tools automatically
-ralph.with(composio)`fix the login bug and open a PR`
-// Uses github_create_branch, github_commit, github_create_pr, slack_send_message
+// Ralph gets 150+ tools automatically
+await ralph.with(composio)`fix the login bug and open a PR`
+// Uses: github_create_branch, github_commit, github_create_pr, slack_send_message
+
+// Ralph doesn't know about OAuth, tokens, or API schemas
+// He just acts
 ```
 
-Ralph doesn't need to know about OAuth, tokens, or API schemas. He just acts.
+### Promise Pipelining
 
 ```typescript
 import { priya, ralph, tom, quinn } from 'agents.do'
 
-// Plan to deploy
+// Plan to deploy - one network round trip
 const deployment = await priya`plan deployment for v2.0`
   .map(plan => ralph.with(composio)`implement ${plan}`)
-  .map(code => tom.with(composio.github)`review and approve ${code}`)
-  .map(approved => composio.slack`notify #releases: ${approved}`)
-// One network round trip!
-```
+  .map(code => tom.with(composio)`review and approve ${code}`)
+  .map(approved => composio`notify Slack #releases: ${approved}`)
 
-## Promise Pipelining
-
-Chain actions without `Promise.all`. CapnWeb pipelining:
-
-```typescript
-const logged = await composio.github`create issue ${bug}`
-  .map(issue => composio.slack`notify #bugs: ${issue}`)
-  .map(notification => composio.notion`log ${notification}`)
-// One network round trip!
-```
-
-Cross-platform workflows:
-
-```typescript
-const deployed = await composio.github`merge PR #${prNumber}`
-  .map(merge => composio.vercel`deploy production`)
-  .map(deploy => composio.datadog`create deployment marker`)
-  .map(marker => composio.slack`announce deployment in #releases`)
-```
-
-## When You Need Control
-
-For structured access, the API is still there:
-
-```typescript
-import { Composio } from '@dotdo/composio'
-
-const composio = new Composio({ apiKey: env.COMPOSIO_API_KEY })
-
-// Connect a user to GitHub via OAuth
-const connection = await composio.connect({
-  userId: 'user-123',
-  app: 'github',
-  redirectUrl: 'https://myapp.com/callback'
-})
-
-// Get tools for an agent framework
-const githubTools = await composio.getTools({
-  apps: ['github'],
-  actions: ['create_issue', 'create_pr', 'list_repos']
-})
-
-// Execute an action directly
-const result = await composio.execute({
-  action: 'github_create_issue',
-  params: {
-    repo: 'my-org/my-repo',
-    title: 'Bug: Login fails on mobile',
-    body: 'Steps to reproduce...'
-  },
-  entityId: 'user-123'
-})
+// Cross-platform workflows
+await composio`merge GitHub PR #${prNumber}`
+  .map(merge => composio`deploy Vercel production`)
+  .map(deploy => composio`create Datadog deployment marker`)
+  .map(marker => composio`announce in Slack #releases: ${marker}`)
 ```
 
 ## 150+ Tools, Zero Config
 
-| Category | Apps | What Your Agent Can Do |
-|----------|------|------------------------|
-| **Developer** | GitHub, GitLab, Linear, Jira | Create issues, branches, PRs, manage repos |
-| **Communication** | Slack, Discord, Teams, Email | Send messages, manage channels, notify teams |
-| **Productivity** | Notion, Asana, Monday, Trello | Create tasks, update pages, manage boards |
-| **CRM** | Salesforce, HubSpot, Pipedrive | Manage contacts, deals, log activities |
-| **Storage** | Google Drive, Dropbox, Box | Upload, download, share files |
-| **Analytics** | Datadog, Mixpanel, Amplitude | Track events, create dashboards |
-| **AI/ML** | OpenAI, Anthropic, Cohere | Generate text, embeddings, analysis |
+| Category | Apps | Example Commands |
+|----------|------|------------------|
+| **Developer** | GitHub, GitLab, Linear, Jira | `create issue`, `open PR`, `merge branch` |
+| **Communication** | Slack, Discord, Teams, Email | `send message`, `create channel`, `notify team` |
+| **Productivity** | Notion, Asana, Monday, Trello | `create task`, `update page`, `move card` |
+| **CRM** | Salesforce, HubSpot, Pipedrive | `create contact`, `log activity`, `update deal` |
+| **Storage** | Google Drive, Dropbox, Box | `upload file`, `share folder`, `create doc` |
+| **Analytics** | Datadog, Mixpanel, Amplitude | `track event`, `create dashboard`, `query metric` |
+| **AI/ML** | OpenAI, Anthropic, Cohere | `generate text`, `create embedding`, `analyze` |
 
-Your agent gets all of these. Just `.with(composio)`.
+```typescript
+// All tools, one interface
+await composio`create GitHub issue: ${bug}`
+await composio`send Slack message: ${notification}`
+await composio`create Notion page: ${doc}`
+await composio`log Salesforce activity: ${call}`
+await composio`upload to Drive: ${file}`
+await composio`track Mixpanel event: ${action}`
+```
 
 ## MCP Native
 
-Every tool is an MCP tool. Claude can use them directly:
+Every tool is an MCP tool. Claude uses them directly:
 
 ```typescript
-import { createMCPServer } from '@dotdo/composio/mcp'
+// Expose tools to Claude
+await composio`serve MCP for user-123 with github slack notion`
 
-const mcpServer = createMCPServer({
-  apps: ['github', 'slack', 'notion'],
-  entityId: 'user-123'
-})
-
-// Tools are automatically exposed
-// github_create_issue, slack_send_message, notion_create_page...
+// Claude sees:
+// - github_create_issue
+// - github_create_pr
+// - slack_send_message
+// - notion_create_page
+// ... 150+ tools
 ```
 
 ## Framework Adapters
 
-Works with every agent framework:
-
 ```typescript
-// LangChain
-import { composioTools } from '@dotdo/composio/langchain'
-const tools = await composioTools.getTools({ apps: ['github'], entityId: 'user-123' })
-
-// CrewAI
-import { composioTools } from '@dotdo/composio/crewai'
-const tools = await composioTools.getTools({ apps: ['notion'], entityId: 'user-123' })
-
+// Works with every framework
 // But really, just use agents.do
+
 import { ralph } from 'agents.do'
-ralph.with(composio)`do the thing`  // This is the way
+await ralph.with(composio)`do the thing`  // This is the way
 ```
 
 ## Auth Made Invisible
 
-The hardest part of integrations is auth. Composio handles it all:
+The hardest part of integrations is auth. Just say it:
 
 ```typescript
-// OAuth - handled
-composio`connect user-123 to Salesforce`
+// OAuth - one line
+await composio`connect Salesforce for user-123`
 
 // API Keys - stored securely
-composio`connect user-123 to OpenAI with ${apiKey}`
+await composio`connect OpenAI for user-123 with ${apiKey}`
+
+// Check connection status
+await composio`status for user-123 connections`
+
+// Disconnect
+await composio`disconnect GitHub for user-123`
 
 // Token refresh - automatic
 // Rate limits - managed
@@ -175,73 +235,130 @@ Each user gets isolated credentials. Per-entity Durable Objects. No cross-contam
 
 ## Architecture
 
+### Durable Object per Entity
+
 ```
-                    +----------------------+
-                    |    composio.do       |
-                    |  (Cloudflare Worker) |
-                    +----------------------+
-                              |
-              +---------------+---------------+
-              |               |               |
-    +------------------+ +------------------+ +------------------+
-    |    ToolsDO       | |   ConnectionDO   | |   ExecutionDO    |
-    | (tool registry)  | | (OAuth/API keys) | | (action sandbox) |
-    +------------------+ +------------------+ +------------------+
+ComposioDO (config, apps, schemas)
+  |
+  +-- ConnectionDO (per user - OAuth tokens, API keys)
+  |     |-- SQLite: Credentials (encrypted)
+  |     +-- R2: Connection metadata
+  |
+  +-- ExecutionDO (sandboxed tool execution)
+  |     |-- Rate limiting per entity
+  |     +-- Audit logging
+  |
+  +-- WebhookDO (inbound events from apps)
+        |-- GitHub webhooks
+        +-- Slack events
 ```
 
 **Key insight**: Each user entity gets its own ConnectionDO for credential isolation. Tool execution happens in sandboxed ExecutionDO instances with rate limiting per entity.
 
-## Installation
+### Storage Tiers
 
-```bash
-npm install @dotdo/composio
-```
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Active connections, recent executions | <10ms |
+| **Warm** | R2 + Index | Historical logs, audit trails | <100ms |
+| **Cold** | R2 Archive | Compliance retention | <1s |
 
-## Quick Start
+### Encryption
+
+Per-entity encryption for credentials. AES-256-GCM. Automatic key rotation. Immutable audit logs.
+
+## vs Composio (Original)
+
+| Feature | Composio (Original) | composio.do |
+|---------|---------------------|-------------|
+| **Pricing** | Per-action fees | $0 - run your own |
+| **Data Location** | Their servers | Your Cloudflare account |
+| **Latency** | Centralized | Edge-native, global |
+| **Quotas** | Monthly limits | Unlimited |
+| **Customization** | Limited | Full source access |
+| **Lock-in** | Vendor dependency | MIT licensed |
+| **MCP** | Partial support | Native |
+
+## Use Cases
+
+### AI Coding Agents
 
 ```typescript
-import { composio } from '@dotdo/composio'
-
-// Connect (one-time OAuth)
-composio`connect user-123 to GitHub`
-
-// Act
-composio.github`create issue: Fix login bug in acme/webapp`
-composio.slack`message #dev: Issue created`
-
-// Or let an agent do it all
-import { ralph } from 'agents.do'
-ralph.with(composio)`fix the login bug, create a PR, notify the team`
+// Agent that ships code
+await ralph.with(composio)`
+  fix the login bug in auth.ts,
+  create a branch,
+  commit the fix,
+  open a PR,
+  notify #engineering on Slack
+`
 ```
 
-## The Rewrites Ecosystem
+### Workflow Automation
 
-composio.do is part of the rewrites family - reimplementations of popular infrastructure on Cloudflare:
+```typescript
+// When issue created, assign and notify
+await composio`watch GitHub issues on acme/webapp`
+  .on('created', issue => composio`
+    assign @tom to ${issue},
+    add label "triage",
+    notify #support: New issue ${issue.title}
+  `)
+```
 
-| Rewrite | Original | Purpose |
-|---------|----------|---------|
-| [fsx.do](https://fsx.do) | fs (Node.js) | Filesystem for AI |
-| [gitx.do](https://gitx.do) | git | Version control for AI |
-| [inngest.do](https://inngest.do) | Inngest | Workflows/Jobs for AI |
-| **composio.do** | Composio | Tool integrations for AI |
-| kafka.do | Kafka | Event streaming for AI |
-| nats.do | NATS | Messaging for AI |
+### Multi-App Orchestration
 
-## Why Cloudflare?
+```typescript
+// Sales flow across apps
+await composio`new contact ${lead} in HubSpot`
+  .map(contact => composio`create task in Asana: Follow up with ${contact}`)
+  .map(task => composio`schedule calendar meeting for ${task.due}`)
+  .map(meeting => composio`send Slack reminder: ${meeting}`)
+```
 
-1. **Global Edge** - Tool execution close to your agents
-2. **Durable Objects** - Per-entity credential isolation
-3. **Workers KV** - Fast tool schema caching
-4. **Queues** - Reliable webhook delivery
-5. **Zero Cold Starts** - Your agent never waits
+## Deployment Options
 
-## Related Domains
+### Cloudflare Workers
 
-- **agents.do** - AI agents that use these tools
-- **tools.do** - Generic tool registry
-- **auth.do** - Authentication platform
-- **workflows.do** - Workflow orchestration
+```bash
+npx create-dotdo composio
+# Your account, your data
+```
+
+### Private Cloud
+
+```bash
+# Docker deployment
+docker run -p 8787:8787 dotdo/composio
+
+# Kubernetes
+kubectl apply -f composio-do.yaml
+```
+
+## Contributing
+
+composio.do is open source under the MIT license.
+
+```bash
+git clone https://github.com/dotdo/composio.do
+cd composio.do
+pnpm install
+pnpm test
+```
 
 ## License
 
-MIT
+MIT License - Give your agents hands.
+
+---
+
+<p align="center">
+  <strong>Per-action pricing ends here.</strong>
+  <br />
+  150+ tools. Zero cost. Your infrastructure.
+  <br /><br />
+  <a href="https://composio.do">Website</a> |
+  <a href="https://docs.composio.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/composio.do">GitHub</a>
+</p>

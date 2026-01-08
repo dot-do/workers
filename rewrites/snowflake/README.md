@@ -35,6 +35,30 @@ Iceberg = enterprise only       Iceberg-native from day one
 Managed service only            Self-host or managed
 ```
 
+## AI-Native API
+
+```typescript
+import { snowflake } from 'snowflake.do'           // Full SDK
+import { snowflake } from 'snowflake.do/tiny'      // Minimal client
+import { snowflake } from 'snowflake.do/iceberg'   // Iceberg-only operations
+```
+
+Natural language for data warehousing:
+
+```typescript
+import { snowflake } from 'snowflake.do'
+
+// Talk to it like a data analyst
+const revenue = await snowflake`total revenue last quarter`
+const trends = await snowflake`customer churn by cohort`
+const anomaly = await snowflake`why did costs spike Tuesday?`
+
+// Chain like sentences
+await snowflake`create warehouse ANALYTICS medium auto-suspend 60s`
+await snowflake`clone database PRODUCTION to DEV_TESTING`
+await snowflake`stream order changes from ORDERS, merge to summary every 5 minutes`
+```
+
 ## One-Click Deploy
 
 ```bash
@@ -42,24 +66,6 @@ npx create-dotdo snowflake
 ```
 
 Your own data warehouse. Running on Cloudflare. Predictable costs.
-
-## Natural Language to SQL
-
-Skip the SQL. Just ask:
-
-```typescript
-import { snowflake } from 'snowflake.do'
-
-// Natural language queries
-const revenue = await snowflake`what was our total revenue last quarter?`
-const trends = await snowflake`show me customer churn trends by cohort`
-const anomaly = await snowflake`why did costs spike on Tuesday?`
-
-// Returns data, SQL, and narrative
-console.log(revenue.data)       // Query results
-console.log(revenue.sql)        // Generated SQL
-console.log(revenue.insight)    // AI-generated explanation
-```
 
 ## Promise Pipelining: Data Pipelines in One Round Trip
 
@@ -110,413 +116,195 @@ const analysis = await snowflake`query customer_360 for enterprise accounts`
 
 ### Virtual Warehouses
 
-Create isolated compute clusters that scale independently:
-
 ```typescript
-import { Warehouse } from 'snowflake.do'
+// Just say it
+const analytics = await snowflake`create warehouse ANALYTICS medium auto-suspend 60s`
+const etl = await snowflake`create warehouse ETL xlarge with 1000 credit limit`
 
-// Create warehouses for different workloads
-const analytics = Warehouse.create({
-  name: 'ANALYTICS_WH',
-  size: 'medium',
-  autoSuspend: 60,        // Suspend after 60s idle
-  autoResume: true,
-  minCluster: 1,
-  maxCluster: 4,          // Auto-scale to 4 clusters
-  scalingPolicy: 'economy',
-})
-
-const etl = Warehouse.create({
-  name: 'ETL_WH',
-  size: 'xlarge',
-  autoSuspend: 120,
-  resourceMonitor: 'ETL_BUDGET',
-  maxCredits: 1000,
-})
+// Scale like talking to an ops engineer
+await snowflake`scale ANALYTICS to 4 clusters`
+await snowflake`suspend ETL warehouse`
+await snowflake`resume ANALYTICS when queries waiting`
 
 // Run queries on specific warehouses
-await snowflake.use(analytics)`select * from sales`
-await snowflake.use(etl)`copy into events from @stage`
+await snowflake`on ANALYTICS: top customers by revenue last quarter`
+await snowflake`on ETL: copy events from @stage`
 ```
 
 ### Zero-Copy Cloning
 
-Clone databases, schemas, or tables instantly without copying data:
-
 ```typescript
-import { Database, Schema, Table } from 'snowflake.do'
-
-// Clone entire database for testing
-const prodClone = await Database.clone({
-  source: 'PRODUCTION',
-  target: 'DEV_TESTING',
-  // Zero storage cost - shares underlying data
-})
-
-// Clone schema for experimentation
-const schemaClone = await Schema.clone({
-  source: 'PRODUCTION.ANALYTICS',
-  target: 'PRODUCTION.ANALYTICS_EXPERIMENT',
-})
-
-// Clone table at a point in time
-const tableClone = await Table.clone({
-  source: 'ORDERS',
-  target: 'ORDERS_BACKUP',
-  at: { timestamp: '2024-01-15 10:30:00' },
-})
+// Clone like you'd ask a DBA
+await snowflake`clone database PRODUCTION to DEV_TESTING`
+await snowflake`clone schema PRODUCTION.ANALYTICS for experimentation`
+await snowflake`clone ORDERS table from yesterday at 10:30am`
 
 // Test against production data safely
-await snowflake.use(prodClone)`
-  -- Safe to run destructive queries
-  delete from customers where status = 'test'
-`
+await snowflake`on DEV_TESTING: delete test customers`
+// Zero storage cost - shares underlying data
 ```
 
 ### Time Travel
 
-Query data as it existed at any point in the past:
-
 ```typescript
-import { TimeTravel } from 'snowflake.do'
+// Query the past naturally
+const yesterday = await snowflake`orders from yesterday`
+const lastWeek = await snowflake`customer count as of last Monday`
+const preIncident = await snowflake`inventory before the bad update`
 
-// Query historical data
-const yesterday = await snowflake`
-  select * from orders
-  at (timestamp => '2024-01-14 00:00:00'::timestamp)
-`
+// Recover and restore
+await snowflake`restore PRODUCTS table to yesterday 11:59pm`
+await snowflake`undo that delete on customers`
 
-// Recover deleted data
-const deleted = await snowflake`
-  select * from customers
-  before (statement => '${deleteStatementId}')
-`
-
-// Undo a bad update
-await TimeTravel.restore({
-  table: 'PRODUCTS',
-  to: { timestamp: '2024-01-14 23:59:59' },
-})
-
-// Compare data across time
-const diff = await TimeTravel.diff({
-  table: 'INVENTORY',
-  from: { offset: '-24 hours' },
-  to: { timestamp: 'current' },
-})
+// Compare across time
+const diff = await snowflake`diff INVENTORY last 24 hours`
+await snowflake`what changed in orders since Tuesday?`
 ```
 
 ### Semi-Structured Data (JSON/Avro/Parquet)
 
-Query JSON, Avro, and Parquet natively:
-
 ```typescript
-import { Variant } from 'snowflake.do'
+// Load any format - AI infers the schema
+await snowflake`load events from @json_stage`
+await snowflake`load logs from s3://bucket/parquet/`
+await snowflake`ingest avro files from @kafka_stage`
 
-// Load JSON directly
-await snowflake`
-  copy into events
-  from @json_stage
-  file_format = (type = JSON)
-`
+// Query nested data naturally
+const events = await snowflake`user events last 24 hours with properties.amount > 100`
+const items = await snowflake`flatten order line items with product and quantity`
 
-// Query nested JSON with dot notation
-const events = await snowflake`
-  select
-    raw:user.id::string as user_id,
-    raw:event.type::string as event_type,
-    raw:properties.amount::number as amount,
-    raw:metadata.tags[0]::string as first_tag
-  from events
-  where raw:event.timestamp::timestamp > dateadd(hour, -24, current_timestamp())
-`
-
-// Flatten arrays
-const items = await snowflake`
-  select
-    order_id,
-    f.value:product_id::string as product_id,
-    f.value:quantity::number as quantity,
-    f.value:price::number as price
-  from orders,
-  lateral flatten(input => order_data:items) f
-`
-
-// Load Parquet with schema inference
-await snowflake`
-  create table logs using template (
-    select array_agg(object_construct(*))
-    from table(infer_schema(
-      location => '@parquet_stage',
-      file_format => 'parquet_format'
-    ))
-  )
-`
+// Just ask for what you need
+await snowflake`event types by user from the nested JSON`
+await snowflake`extract all tags from metadata arrays`
 ```
 
 ### Data Sharing & Marketplace
 
-Share data securely without copying:
-
 ```typescript
-import { Share, DataExchange } from 'snowflake.do'
+// Share data like sending a file
+await snowflake`share CUSTOMER_METRICS and PRODUCT_USAGE with partner ABC`
+await snowflake`share analytics schema with our reseller network`
 
-// Create a share
-const share = await Share.create({
-  name: 'CUSTOMER_INSIGHTS',
-  database: 'ANALYTICS',
-  schemas: ['PUBLIC'],
-  tables: ['CUSTOMER_METRICS', 'PRODUCT_USAGE'],
-})
+// Publish to marketplace
+await snowflake`list "Real-Time Customer Analytics" for free in marketplace`
+await snowflake`list weather data at $0.01 per query`
 
-// Add consumers
-await share.addAccount('PARTNER_ACCOUNT_123')
-await share.addAccount('PARTNER_ACCOUNT_456')
-
-// Create a listing for the marketplace
-const listing = await DataExchange.createListing({
-  share: 'CUSTOMER_INSIGHTS',
-  title: 'Real-Time Customer Analytics',
-  description: 'Live customer metrics updated hourly',
-  pricing: { type: 'free' },  // or { type: 'paid', perQuery: 0.01 }
-  categories: ['Analytics', 'Marketing'],
-})
-
-// Consume shared data (as a consumer)
-const sharedDb = await DataExchange.mount({
-  listing: 'provider.CUSTOMER_INSIGHTS',
-  database: 'PARTNER_DATA',
-})
-
-await snowflake`select * from PARTNER_DATA.PUBLIC.CUSTOMER_METRICS`
+// Consume shared data
+await snowflake`mount partner.CUSTOMER_INSIGHTS as PARTNER_DATA`
+const metrics = await snowflake`customer metrics from PARTNER_DATA`
 ```
 
 ### Snowpipe: Continuous Data Ingestion
 
-Stream data in real-time:
-
 ```typescript
-import { Snowpipe, Stage } from 'snowflake.do'
+// Set up streaming ingestion naturally
+await snowflake`stage s3://my-bucket/events/ as EVENTS_STAGE`
+await snowflake`pipe events from EVENTS_STAGE into RAW_EVENTS automatically`
 
-// Create a stage pointing to S3
-const stage = await Stage.create({
-  name: 'EVENTS_STAGE',
-  url: 's3://my-bucket/events/',
-  credentials: {
-    awsKeyId: env.AWS_KEY_ID,
-    awsSecretKey: env.AWS_SECRET_KEY,
-  },
-  fileFormat: { type: 'JSON' },
-})
+// Monitor like asking a colleague
+const status = await snowflake`how many files pending in EVENTS_PIPE?`
+await snowflake`when did EVENTS_PIPE last run?`
 
-// Create a Snowpipe for automatic ingestion
-const pipe = await Snowpipe.create({
-  name: 'EVENTS_PIPE',
-  stage: 'EVENTS_STAGE',
-  table: 'RAW_EVENTS',
-  autoIngest: true,
-  // Files loaded within seconds of arrival
-})
-
-// Monitor pipe status
-const status = await pipe.status()
-console.log(status.pendingFileCount)
-console.log(status.lastIngestTimestamp)
-
-// Manual refresh if needed
-await pipe.refresh({ prefix: 'events/2024/01/' })
+// Manual operations when needed
+await snowflake`refresh EVENTS_PIPE for January 2024 files`
+await snowflake`pause the events pipe`
+await snowflake`resume all pipes`
 ```
 
 ### Streams & Tasks: Change Data Capture
 
-Track changes and automate processing:
-
 ```typescript
-import { Stream, Task } from 'snowflake.do'
+// Track changes naturally
+await snowflake`stream order changes from ORDERS`
+const newOrders = await snowflake`new inserts from ORDERS_CHANGES`
+const allChanges = await snowflake`what changed in ORDERS since last check?`
 
-// Create a stream to capture changes
-const stream = await Stream.create({
-  name: 'ORDERS_CHANGES',
-  table: 'ORDERS',
-  appendOnly: false,  // Capture inserts, updates, and deletes
-})
+// Automate processing like scheduling a meeting
+await snowflake`every 5 minutes: merge order changes into ORDER_SUMMARY`
+await snowflake`when orders change: update the daily totals`
 
-// Query the stream for changes
-const changes = await snowflake`
-  select
-    METADATA$ACTION as action,
-    METADATA$ISUPDATE as is_update,
-    *
-  from ORDERS_CHANGES
-  where METADATA$ACTION = 'INSERT'
-`
+// Build task DAGs naturally
+await snowflake`after order processing: refresh dashboards`
+await snowflake`chain: ingest -> transform -> aggregate -> publish`
 
-// Create a task to process changes automatically
-const task = await Task.create({
-  name: 'PROCESS_ORDER_CHANGES',
-  warehouse: 'ANALYTICS_WH',
-  schedule: 'USING CRON 0/5 * * * * UTC',  // Every 5 minutes
-  statement: `
-    merge into ORDER_SUMMARY s
-    using (select * from ORDERS_CHANGES) c
-    on s.order_date = c.order_date
-    when matched then update set total = s.total + c.amount
-    when not matched then insert (order_date, total) values (c.order_date, c.amount)
-  `,
-  when: 'SYSTEM$STREAM_HAS_DATA(\'ORDERS_CHANGES\')',
-})
-
-// Task dependencies (DAG)
-await Task.create({
-  name: 'DOWNSTREAM_ANALYTICS',
-  after: ['PROCESS_ORDER_CHANGES'],  // Runs after parent completes
-  statement: `call refresh_dashboards()`,
-})
+// Monitor tasks
+await snowflake`show me failed tasks today`
+await snowflake`why did ORDER_SUMMARY task fail?`
 ```
 
 ### Iceberg Tables
 
-Native Apache Iceberg support for open table formats:
-
 ```typescript
-import { IcebergTable, ExternalVolume } from 'snowflake.do'
+// Create Iceberg tables naturally
+await snowflake`store CUSTOMER_EVENTS as iceberg in s3://my-iceberg-bucket/`
+await snowflake`create iceberg table EVENTS with event_id, customer_id, timestamp`
 
-// Create external volume pointing to your object storage
-const volume = await ExternalVolume.create({
-  name: 'ICEBERG_STORAGE',
-  storageLocations: [{
-    name: 's3_location',
-    storageBaseUrl: 's3://my-iceberg-bucket/',
-    storageProvider: 'S3',
-    storageAwsRoleArn: env.AWS_ROLE_ARN,
-  }],
-})
+// Query like any table
+await snowflake`today's events into CUSTOMER_EVENTS`
+await snowflake`customers by event count from CUSTOMER_EVENTS`
 
-// Create Iceberg table (Snowflake-managed)
-const table = await IcebergTable.create({
-  name: 'CUSTOMER_EVENTS',
-  externalVolume: 'ICEBERG_STORAGE',
-  catalog: 'SNOWFLAKE',  // Snowflake manages the catalog
-  baseLocation: 'customer_events/',
-  columns: [
-    { name: 'event_id', type: 'STRING' },
-    { name: 'customer_id', type: 'STRING' },
-    { name: 'event_type', type: 'STRING' },
-    { name: 'timestamp', type: 'TIMESTAMP' },
-    { name: 'properties', type: 'OBJECT' },
-  ],
-})
+// Open format = use anywhere
+const metadata = await snowflake`iceberg metadata for CUSTOMER_EVENTS`
+// Access from Spark, Trino, Presto - it's just Iceberg
 
-// Query Iceberg table like any other table
-await snowflake`
-  insert into CUSTOMER_EVENTS
-  select * from RAW_EVENTS
-  where event_date = current_date()
-`
-
-// Access from external engines (Spark, Trino, etc.)
-const metadata = await table.getIcebergMetadata()
-console.log(metadata.metadataLocation)  // s3://my-iceberg-bucket/customer_events/metadata/...
-
-// Read existing Iceberg tables from external catalogs
-const externalTable = await IcebergTable.mount({
-  name: 'EXTERNAL_EVENTS',
-  externalVolume: 'ICEBERG_STORAGE',
-  catalogIntegration: 'GLUE_CATALOG',
-  catalogTableName: 'analytics.events',
-})
+// Mount external Iceberg tables
+await snowflake`mount iceberg table analytics.events from Glue catalog`
+await snowflake`query the Databricks events table`
 ```
 
 ## AI-Native Features
 
 ### Natural Language Queries
 
-Ask questions in plain English:
-
 ```typescript
-import { askSnowflake } from 'snowflake.do'
+// Just ask - it's all the same syntax
+const orders = await snowflake`how many orders last month?`
+const churn = await snowflake`what's driving customer churn by channel?`
+const forecast = await snowflake`predict Q2 revenue from historical trends`
 
-// Simple queries
-const answer = await askSnowflake('How many orders did we have last month?')
-// Returns: { value: 15234, sql: "SELECT COUNT(*) FROM orders WHERE...", chart: <viz> }
+// Returns data, SQL, and narrative
+console.log(orders.data)       // Query results
+console.log(orders.sql)        // Generated SQL
+console.log(orders.insight)    // AI-generated explanation
 
-// Complex analytics
-const analysis = await askSnowflake(`
-  What's driving the increase in customer churn?
-  Break it down by acquisition channel and product line.
-`)
-
-// Predictive
-const forecast = await askSnowflake(`
-  Predict our revenue for next quarter based on historical trends
-  and seasonality patterns.
-`)
+// Complex analytics in plain English
+await snowflake`
+  why did west coast revenue drop?
+  compare to last quarter by product line
+`
 ```
 
 ### AI Agents as Data Engineers
 
-Let AI agents manage your data warehouse:
-
 ```typescript
 import { priya, tom, ralph, quinn } from 'agents.do'
-import { snowflake } from 'snowflake.do'
 
-// Product manager explores data for roadmap
-const insights = await priya`
-  analyze our user engagement data and identify
-  the top 3 features driving retention
-`
+// Agents talk to the warehouse like teammates
+const insights = await priya`what features drive retention from user engagement data?`
+const review = await tom`review our warehouse schema for the growing query load`
+const pipeline = await ralph`build ETL from Kafka through transform to snowflake`
+const quality = await quinn`test customer_360 for nulls, dupes, and broken refs`
 
-// Tech lead reviews data architecture
-const review = await tom`
-  review our data warehouse schema and suggest
-  optimizations for our growing query load
-`
-
-// Developer builds data pipeline
-const pipeline = await ralph`
-  build an ETL pipeline that ingests events from Kafka,
-  transforms them for analytics, and loads into snowflake
-`
-
-// QA validates data quality
-const quality = await quinn`
-  create data quality tests for the customer_360 table
-  checking for nulls, duplicates, and referential integrity
-`
-
-// Chain it all together
-const dataProduct = await priya`define requirements for customer analytics`
+// Chain agents and data operations together
+const dataProduct = await priya`define customer analytics requirements`
   .map(spec => tom`design the data model for ${spec}`)
-  .map(model => ralph`implement ${model} in snowflake.do`)
-  .map(impl => quinn`validate data quality of ${impl}`)
+  .map(model => ralph`implement ${model} in snowflake`)
+  .map(impl => quinn`validate ${impl}`)
   .map(validated => priya`create dashboard from ${validated}`)
 ```
 
 ### Automated Optimization
 
-AI-powered query and cost optimization:
-
 ```typescript
-import { optimize } from 'snowflake.do'
+// Ask for optimization advice naturally
+await snowflake`why are my queries slow this week?`
+await snowflake`which warehouses should I consolidate?`
+await snowflake`how should I cluster the EVENTS table?`
 
-// Analyze and optimize slow queries
-const recommendations = await optimize.queries({
-  timeRange: 'last_7_days',
-  minExecutionTime: '30s',
-})
-
-// Get warehouse sizing recommendations
-const warehouseAdvice = await optimize.warehouses({
-  analyzeUsage: true,
-  suggestConsolidation: true,
-})
-
-// Automatic clustering recommendations
-const clusteringAdvice = await optimize.clustering({
-  table: 'EVENTS',
-  sampleQueries: true,
-})
+// Or just let it optimize
+await snowflake`optimize slow queries from last 7 days`
+await snowflake`right-size all warehouses`
+await snowflake`auto-cluster EVENTS based on query patterns`
 ```
 
 ## Architecture
@@ -597,32 +385,16 @@ Every capability exposed as AI tools:
 ```typescript
 import { snowflakeTools } from 'snowflake.do/mcp'
 
-// Available tools
-snowflakeTools.map(t => t.name)
-// [
-//   'query',
-//   'create_table',
-//   'create_warehouse',
-//   'clone_database',
-//   'time_travel_query',
-//   'create_stream',
-//   'create_task',
-//   'create_pipe',
-//   'create_share',
-//   'load_data',
-//   'optimize_query',
-//   'explain_plan',
-// ]
+// AI agents can manage the entire warehouse through natural language
+// The MCP server translates to appropriate operations
 
-// AI can manage the entire warehouse
-await invokeTool('create_table', {
-  name: 'EVENTS',
-  columns: [
-    { name: 'event_id', type: 'VARCHAR' },
-    { name: 'payload', type: 'VARIANT' },
-  ],
-  clusterBy: ['event_date'],
-})
+// Tools available:
+// - query, create_table, create_warehouse, clone_database
+// - time_travel, stream, task, pipe, share, load_data
+// - optimize, explain, monitor
+
+// AI just talks naturally - tools are invoked automatically
+await snowflake`create EVENTS table with event_id and payload, cluster by date`
 ```
 
 ## Deployment Options

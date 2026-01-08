@@ -2,14 +2,37 @@
 
 > The $62B Data Lakehouse. Now open source. AI-native. Zero complexity.
 
-[![npm version](https://img.shields.io/npm/v/databricks.do.svg)](https://www.npmjs.com/package/databricks.do)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-
----
-
 Databricks built a $62B empire on Apache Spark. Unity Catalog costs $6/DBU. Serverless SQL warehouses start at $0.22/DBU. MLflow "Enterprise" requires premium tiers. A 50-person data team easily spends $500K-$1M/year.
 
 **databricks.do** is the open-source alternative. Lakehouse architecture on Cloudflare. Delta tables backed by R2. SQL warehouses at the edge. ML pipelines without the bill.
+
+## AI-Native API
+
+```typescript
+import { databricks } from 'databricks.do'           // Full SDK
+import { databricks } from 'databricks.do/tiny'      // Minimal client
+import { databricks } from 'databricks.do/sql'       // SQL-only operations
+```
+
+Natural language for data workflows:
+
+```typescript
+import { databricks } from 'databricks.do'
+
+// Talk to it like a colleague
+const revenue = await databricks`sales by region last quarter`
+const top = await databricks`top 10 customers by revenue`
+const trend = await databricks`monthly revenue trend this year`
+
+// Chain like sentences
+await databricks`customers who churned last month`
+  .map(c => databricks`analyze churn reasons for ${c}`)
+
+// Pipelines that build themselves
+await databricks`run sales ETL daily at 6am`
+  .monitor()           // AI watches for anomalies
+  .alert()             // notify on failures
+```
 
 ## The Problem
 
@@ -17,1068 +40,327 @@ Databricks has become synonymous with "enterprise data platform":
 
 | The Databricks Tax | Reality |
 |--------------------|---------|
-| Unity Catalog | $6/DBU premium + compute costs |
-| Serverless SQL | $0.22-$0.70/DBU depending on tier |
-| MLflow "Enterprise" | Requires premium workspace |
-| Jobs compute | $0.15-$0.40/DBU depending on tier |
-| Real-time inference | Model serving at $0.07/1000 requests |
-| Total platform | $500K-$1M+/year for serious data teams |
+| **Unity Catalog** | $6/DBU premium + compute costs |
+| **Serverless SQL** | $0.22-$0.70/DBU depending on tier |
+| **MLflow "Enterprise"** | Requires premium workspace |
+| **Jobs compute** | $0.15-$0.40/DBU depending on tier |
+| **Model serving** | $0.07/1000 requests |
+| **Total platform** | $500K-$1M+/year for serious data teams |
 
-**The dirty secret**: Most Databricks implementations:
-- Explode costs when workloads scale
-- Lock you into proprietary Unity Catalog
-- Require Databricks-specific skills (not transferable)
-- Make data sharing across clouds expensive
-- Hide simple SQL behind Spark complexity
+### The DBU Tax
 
-Meanwhile, Databricks' core value proposition - **unified analytics on a lakehouse** - is fundamentally a storage and compute coordination problem. Edge compute with columnar storage solves this better.
+The real cost of Databricks:
+
+- Costs explode when workloads scale
+- Proprietary Unity Catalog lock-in
+- Databricks-specific skills (not transferable)
+- Cross-cloud data sharing is expensive
+- Simple SQL hidden behind Spark complexity
+
+Meanwhile, Databricks' core value - **unified analytics on a lakehouse** - is a storage and compute coordination problem. Edge compute with columnar storage solves this better.
 
 ## The Solution
 
-**databricks.do** brings the lakehouse to the edge:
+**databricks.do** reimagines the lakehouse for data engineers:
+
+```
+Databricks                          databricks.do
+-----------------------------------------------------------------
+$500K-$1M+/year                     Deploy in minutes
+$6/DBU Unity Catalog                $0 - open source
+Spark required                      SQL-first
+Cloud-specific                      Edge-native
+AI as premium feature               AI at the core
+DBU-based billing                   Pay for actual compute
+```
+
+## One-Click Deploy
 
 ```bash
 npx create-dotdo databricks
 ```
 
-Your own Databricks alternative. Running on Cloudflare. AI-native from day one.
+Your own Lakehouse. Running on infrastructure you control. AI-native from day one.
 
-| Databricks | databricks.do |
-|------------|---------------|
-| $500K-$1M+/year | **Free** (open source) |
-| Unity Catalog lock-in | **Open Delta Lake** |
-| Spark required | **SQL-first** |
-| DBU-based billing | **Pay for actual compute** |
-| Cloud-specific | **Edge-native** |
-| AI as premium feature | **AI at the core** |
+```typescript
+import { Databricks } from 'databricks.do'
 
----
+export default Databricks({
+  name: 'company-lakehouse',
+  domain: 'data.company.com',
+  storage: 'r2',
+})
+```
 
 ## Features
 
-### Unity Catalog
-
-Data governance without the premium tier. Discover, manage, and secure all your data assets.
+### Data Catalog
 
 ```typescript
-import { databricks } from 'databricks.do'
+// Just say what you need
+await databricks`create production catalog`
+await databricks`create sales schema in production`
+await databricks`give analysts read access to sales`
 
-// Create a catalog
-await databricks.catalog.create({
-  name: 'production',
-  comment: 'Production data assets',
-  owner: 'data-platform-team',
-})
-
-// Create a schema
-await databricks.schema.create({
-  catalog: 'production',
-  name: 'sales',
-  comment: 'Sales domain data',
-  properties: {
-    domain: 'sales',
-    team: 'revenue-analytics',
-  },
-})
-
-// Grant permissions
-await databricks.grants.update({
-  securable_type: 'SCHEMA',
-  full_name: 'production.sales',
-  changes: [
-    {
-      principal: 'data-analysts',
-      add: ['SELECT', 'READ_VOLUME'],
-    },
-    {
-      principal: 'data-engineers',
-      add: ['SELECT', 'MODIFY', 'CREATE_TABLE'],
-    },
-  ],
-})
-
-// Data lineage tracking
-const lineage = await databricks.lineage.get({
-  table: 'production.sales.orders',
-  direction: 'both', // upstream and downstream
-})
+// AI infers what you need
+await databricks`production.sales`         // returns schema info
+await databricks`lineage for orders`       // returns data lineage
+await databricks`who can access sales?`    // returns permissions
 ```
 
-### Delta Lake Tables
-
-ACID transactions on cloud object storage. Time travel built-in.
+### Delta Tables
 
 ```typescript
-// Create a Delta table
-await databricks.tables.create({
-  catalog: 'production',
-  schema: 'sales',
-  name: 'orders',
-  columns: [
-    { name: 'order_id', type: 'BIGINT', nullable: false },
-    { name: 'customer_id', type: 'BIGINT', nullable: false },
-    { name: 'order_date', type: 'DATE', nullable: false },
-    { name: 'amount', type: 'DECIMAL(18,2)', nullable: false },
-    { name: 'status', type: 'STRING', nullable: false },
-  ],
-  partitionedBy: ['order_date'],
-  clusteringBy: ['customer_id'],
-  properties: {
-    'delta.autoOptimize.optimizeWrite': 'true',
-    'delta.autoOptimize.autoCompact': 'true',
-  },
-})
+// Create tables naturally
+await databricks`create orders table with order_id customer_id amount status`
+await databricks`partition orders by date`
+await databricks`add order_id 1 customer 100 amount 99.99 to orders`
 
-// Insert data with ACID guarantees
-await databricks.tables.insert({
-  table: 'production.sales.orders',
-  data: [
-    { order_id: 1, customer_id: 100, order_date: '2025-01-15', amount: 99.99, status: 'completed' },
-    { order_id: 2, customer_id: 101, order_date: '2025-01-15', amount: 249.99, status: 'pending' },
-  ],
-})
+// Time travel is one word
+await databricks`orders as of yesterday`
+await databricks`orders version 42`
+await databricks`orders changes since last week`
 
-// Time travel - query historical versions
-const yesterdayData = await databricks.sql`
-  SELECT * FROM production.sales.orders
-  VERSION AS OF 42
-`
-
-// Or by timestamp
-const historicalData = await databricks.sql`
-  SELECT * FROM production.sales.orders
-  TIMESTAMP AS OF '2025-01-14 00:00:00'
-`
-
-// MERGE (upsert) operations
-await databricks.tables.merge({
-  target: 'production.sales.orders',
-  source: stagingOrders,
-  on: 'target.order_id = source.order_id',
-  whenMatched: {
-    update: { status: 'source.status', amount: 'source.amount' },
-  },
-  whenNotMatched: {
-    insert: '*',
-  },
-})
+// Merges read like English
+await databricks`upsert staging_orders into orders on order_id`
 ```
 
-### Spark SQL
-
-Full SQL analytics without the Spark cluster overhead.
+### SQL Analytics
 
 ```typescript
-// SQL queries execute at the edge
-const revenue = await databricks.sql`
-  SELECT
-    DATE_TRUNC('month', order_date) AS month,
-    SUM(amount) AS revenue,
-    COUNT(DISTINCT customer_id) AS unique_customers
-  FROM production.sales.orders
-  WHERE order_date >= '2024-01-01'
-  GROUP BY 1
-  ORDER BY 1
-`
+// Just ask questions
+await databricks`monthly revenue this year`
+await databricks`customers ranked by spend`
+await databricks`cohort analysis for Q1 signups`
 
-// Window functions
-const customerRanking = await databricks.sql`
-  SELECT
-    customer_id,
-    SUM(amount) AS total_spend,
-    RANK() OVER (ORDER BY SUM(amount) DESC) AS spend_rank,
-    PERCENT_RANK() OVER (ORDER BY SUM(amount) DESC) AS percentile
-  FROM production.sales.orders
-  GROUP BY customer_id
-`
-
-// CTEs and complex queries
-const cohortAnalysis = await databricks.sql`
-  WITH first_orders AS (
-    SELECT
-      customer_id,
-      DATE_TRUNC('month', MIN(order_date)) AS cohort_month
-    FROM production.sales.orders
-    GROUP BY customer_id
-  ),
-  monthly_activity AS (
-    SELECT
-      o.customer_id,
-      f.cohort_month,
-      DATE_TRUNC('month', o.order_date) AS activity_month,
-      SUM(o.amount) AS revenue
-    FROM production.sales.orders o
-    JOIN first_orders f ON o.customer_id = f.customer_id
-    GROUP BY 1, 2, 3
-  )
-  SELECT
-    cohort_month,
-    DATEDIFF(MONTH, cohort_month, activity_month) AS months_since_first,
-    COUNT(DISTINCT customer_id) AS active_customers,
-    SUM(revenue) AS cohort_revenue
-  FROM monthly_activity
-  GROUP BY 1, 2
-  ORDER BY 1, 2
-`
+// Complex analysis, simple words
+await databricks`customer lifetime value by acquisition channel`
+await databricks`revenue attribution by marketing touchpoint`
+await databricks`funnel conversion rates by segment`
 ```
 
-### MLflow Integration
-
-Model lifecycle management without the premium workspace.
+### MLflow
 
 ```typescript
-import { mlflow } from 'databricks.do/ml'
+// Experiments without the ceremony
+await databricks`track churn prediction experiment`
+await databricks`log accuracy 0.89 precision 0.85 recall 0.92`
+await databricks`register churn model v1`
 
-// Create an experiment
-const experiment = await mlflow.createExperiment({
-  name: 'customer-churn-prediction',
-  artifact_location: 'r2://mlflow-artifacts/churn',
-  tags: {
-    team: 'data-science',
-    project: 'retention',
-  },
-})
+// Deploy with one line
+await databricks`deploy churn model to production`
+await databricks`predict churn for customer 12345`
 
-// Log a run
-const run = await mlflow.startRun({
-  experiment_id: experiment.id,
-  run_name: 'xgboost-v1',
-})
-
-await mlflow.logParams(run.id, {
-  max_depth: 6,
-  learning_rate: 0.1,
-  n_estimators: 100,
-})
-
-await mlflow.logMetrics(run.id, {
-  accuracy: 0.89,
-  precision: 0.85,
-  recall: 0.92,
-  f1_score: 0.88,
-  auc_roc: 0.94,
-})
-
-// Log the model
-await mlflow.logModel(run.id, {
-  artifact_path: 'model',
-  flavor: 'sklearn',
-  model: trainedModel,
-  signature: {
-    inputs: [
-      { name: 'tenure', type: 'double' },
-      { name: 'monthly_charges', type: 'double' },
-      { name: 'total_charges', type: 'double' },
-    ],
-    outputs: [
-      { name: 'churn_probability', type: 'double' },
-    ],
-  },
-})
-
-await mlflow.endRun(run.id)
-
-// Register model to Model Registry
-await mlflow.registerModel({
-  name: 'customer-churn-model',
-  source: `runs:/${run.id}/model`,
-  description: 'XGBoost model for predicting customer churn',
-})
-
-// Promote to production
-await mlflow.transitionModelVersion({
-  name: 'customer-churn-model',
-  version: 1,
-  stage: 'Production',
-  archive_existing: true,
-})
-
-// Model serving (inference at the edge)
-const prediction = await mlflow.predict({
-  model: 'customer-churn-model',
-  stage: 'Production',
-  input: {
-    tenure: 24,
-    monthly_charges: 79.99,
-    total_charges: 1919.76,
-  },
-})
-// { churn_probability: 0.23 }
+// AI manages the lifecycle
+await databricks`what's the best performing churn model?`
+await databricks`compare model v1 vs v2`
 ```
 
 ### Notebooks
 
-Interactive analytics without the cluster spin-up time.
-
 ```typescript
-import { notebooks } from 'databricks.do'
+// Run analysis like you'd describe it
+await databricks`run sales analysis notebook`
+await databricks`schedule daily report at 8am Pacific`
 
-// Create a notebook
-const notebook = await notebooks.create({
-  path: '/workspace/analytics/sales-analysis',
-  language: 'SQL', // SQL, Python, Scala, R
-  content: `
--- Cell 1: Load data
-SELECT * FROM production.sales.orders LIMIT 10
-
--- Cell 2: Aggregate
-SELECT
-  status,
-  COUNT(*) as count,
-  SUM(amount) as total
-FROM production.sales.orders
-GROUP BY status
-
--- Cell 3: Visualization
-%viz bar
-SELECT
-  DATE_TRUNC('day', order_date) as date,
-  SUM(amount) as revenue
-FROM production.sales.orders
-WHERE order_date >= CURRENT_DATE - INTERVAL 30 DAYS
-GROUP BY 1
-ORDER BY 1
-  `,
-})
-
-// Run a notebook
-const result = await notebooks.run({
-  path: '/workspace/analytics/sales-analysis',
-  parameters: {
-    start_date: '2025-01-01',
-    end_date: '2025-01-31',
-  },
-})
-
-// Schedule notebook execution
-await notebooks.schedule({
-  path: '/workspace/analytics/daily-report',
-  cron: '0 8 * * *', // 8 AM daily
-  timezone: 'America/Los_Angeles',
-  alerts: {
-    on_failure: ['data-team@company.com'],
-  },
-})
+// AI writes the code
+await databricks`analyze sales trends and visualize as line chart`
+await databricks`create dashboard for executive summary`
 ```
 
 ### SQL Warehouses
 
-Serverless SQL compute that scales to zero.
-
 ```typescript
-import { warehouse } from 'databricks.do'
+// Warehouses that manage themselves
+await databricks`create analytics warehouse auto-stop 15 min`
+await databricks`scale warehouse to handle Black Friday traffic`
 
-// Create a SQL warehouse
-const wh = await warehouse.create({
-  name: 'analytics-warehouse',
-  size: 'Small', // Small, Medium, Large, X-Large
-  auto_stop_mins: 15,
-  enable_photon: true, // Vectorized query engine
-  max_num_clusters: 10,
-  spot_instance_policy: 'COST_OPTIMIZED',
-})
-
-// Execute queries against the warehouse
-const result = await warehouse.query({
-  warehouse_id: wh.id,
-  statement: `
-    SELECT
-      product_category,
-      SUM(revenue) as total_revenue,
-      AVG(margin) as avg_margin
-    FROM production.sales.product_metrics
-    GROUP BY 1
-    ORDER BY 2 DESC
-    LIMIT 10
-  `,
-  wait_timeout: '30s',
-})
-
-// Query with parameters
-const customerOrders = await warehouse.query({
-  warehouse_id: wh.id,
-  statement: `
-    SELECT * FROM production.sales.orders
-    WHERE customer_id = :customer_id
-    AND order_date >= :start_date
-  `,
-  parameters: [
-    { name: 'customer_id', value: '12345', type: 'BIGINT' },
-    { name: 'start_date', value: '2025-01-01', type: 'DATE' },
-  ],
-})
-
-// Stream results for large queries
-for await (const chunk of warehouse.streamQuery({
-  warehouse_id: wh.id,
-  statement: 'SELECT * FROM production.logs.events',
-  chunk_size: 10000,
-})) {
-  await processChunk(chunk)
-}
+// Stream large results naturally
+await databricks`stream all events from last month`
+  .each(batch => process(batch))
 ```
 
-### DLT Pipelines (Delta Live Tables)
-
-Declarative ETL with automatic dependency management.
+### ETL Pipelines
 
 ```typescript
-import { DLT } from 'databricks.do/pipelines'
+// Pipelines in plain English
+await databricks`create sales ETL bronze silver gold`
+await databricks`run sales pipeline`
+await databricks`backfill orders from January`
 
-// Define a DLT pipeline
-const pipeline = DLT.pipeline({
-  name: 'sales-etl',
-  target: 'production.sales',
-  continuous: false,
-  development: false,
-})
-
-// Bronze layer - raw ingestion
-const rawOrders = pipeline.table({
-  name: 'raw_orders',
-  comment: 'Raw orders from source systems',
-  source: () => databricks.sql`
-    SELECT * FROM cloud_files(
-      's3://raw-data/orders/',
-      'json',
-      map('cloudFiles.inferColumnTypes', 'true')
-    )
-  `,
-  expectations: {
-    'valid_order_id': 'order_id IS NOT NULL',
-    'valid_amount': 'amount > 0',
-  },
-  expectation_action: 'ALLOW', // ALLOW, DROP, FAIL
-})
-
-// Silver layer - cleaned and conformed
-const cleanedOrders = pipeline.table({
-  name: 'cleaned_orders',
-  comment: 'Cleaned and validated orders',
-  source: () => databricks.sql`
-    SELECT
-      CAST(order_id AS BIGINT) AS order_id,
-      CAST(customer_id AS BIGINT) AS customer_id,
-      TO_DATE(order_date) AS order_date,
-      CAST(amount AS DECIMAL(18,2)) AS amount,
-      UPPER(TRIM(status)) AS status,
-      CURRENT_TIMESTAMP() AS processed_at
-    FROM LIVE.raw_orders
-    WHERE order_id IS NOT NULL
-  `,
-  expectations: {
-    'unique_orders': 'COUNT(*) = COUNT(DISTINCT order_id)',
-  },
-})
-
-// Gold layer - business aggregates
-const dailySales = pipeline.table({
-  name: 'daily_sales',
-  comment: 'Daily sales aggregations',
-  source: () => databricks.sql`
-    SELECT
-      order_date,
-      COUNT(*) AS order_count,
-      COUNT(DISTINCT customer_id) AS unique_customers,
-      SUM(amount) AS total_revenue,
-      AVG(amount) AS avg_order_value
-    FROM LIVE.cleaned_orders
-    WHERE status = 'COMPLETED'
-    GROUP BY order_date
-  `,
-})
-
-// Deploy the pipeline
-await pipeline.deploy()
-
-// Run the pipeline
-const update = await pipeline.start()
-console.log(update.state) // STARTING -> RUNNING -> COMPLETED
+// Quality expectations built-in
+await databricks`fail if order_id is null`
+await databricks`drop rows where amount <= 0`
 ```
 
-### Lakehouse Architecture
+## Promise Pipelining
 
-Unified platform for all your data workloads.
-
-```typescript
-import { lakehouse } from 'databricks.do'
-
-// Configure the lakehouse
-const config = await lakehouse.configure({
-  // Storage layer
-  storage: {
-    type: 'r2', // R2, S3, GCS, ADLS
-    bucket: 'company-lakehouse',
-    region: 'auto',
-  },
-
-  // Compute layer
-  compute: {
-    default_warehouse: 'analytics-warehouse',
-    spark_config: {
-      'spark.sql.adaptive.enabled': 'true',
-      'spark.sql.adaptive.coalescePartitions.enabled': 'true',
-    },
-  },
-
-  // Governance layer
-  governance: {
-    default_catalog: 'production',
-    audit_logging: true,
-    data_lineage: true,
-    column_level_security: true,
-  },
-
-  // AI layer
-  ai: {
-    vector_search_enabled: true,
-    feature_store_enabled: true,
-    model_serving_enabled: true,
-  },
-})
-
-// Lakehouse medallion architecture
-const architecture = await lakehouse.createMedallion({
-  bronze: {
-    catalog: 'raw',
-    retention_days: 90,
-    format: 'delta',
-  },
-  silver: {
-    catalog: 'curated',
-    retention_days: 365,
-    format: 'delta',
-    z_ordering: true,
-  },
-  gold: {
-    catalog: 'production',
-    retention_days: null, // Forever
-    format: 'delta',
-    materialized_views: true,
-  },
-})
-```
-
----
-
-## AI-Native Analytics
-
-This is the revolution. Data engineering and analytics are fundamentally AI problems.
-
-### Natural Language to SQL
-
-Skip the SQL syntax. Just ask:
+Chain operations without callback hell:
 
 ```typescript
-import { databricks } from 'databricks.do'
-
-// Natural language queries
-const result = await databricks`what were our top 10 customers by revenue last quarter?`
-// Generates and executes:
-// SELECT customer_id, SUM(amount) as revenue
-// FROM production.sales.orders
-// WHERE order_date >= DATE_TRUNC('quarter', CURRENT_DATE - INTERVAL 3 MONTHS)
-// GROUP BY customer_id
-// ORDER BY revenue DESC
-// LIMIT 10
-
-const analysis = await databricks`analyze the trend in order volume over the past year`
-// Returns data + visualization + narrative
-
-const pipeline = await databricks`create an ETL pipeline to load customer data from S3`
-// Generates DLT pipeline definition
-```
-
-### Promise Pipelining for ML Workflows
-
-Chain ML operations without callback hell:
-
-```typescript
-import { priya, ralph, tom } from 'agents.do'
-import { databricks, mlflow } from 'databricks.do'
-
-// Build an ML pipeline with promise pipelining
-const deployed = await databricks`load customer transaction data`
-  .map(data => databricks`clean and validate the data`)
-  .map(cleaned => databricks`engineer features for churn prediction`)
-  .map(features => mlflow`train an XGBoost model`)
-  .map(model => mlflow`evaluate model performance`)
-  .map(evaluated => mlflow`register model if metrics pass thresholds`)
-  .map(registered => mlflow`deploy to production endpoint`)
+// Build an ML pipeline with one chain
+const deployed = await databricks`load customer transactions`
+  .map(data => databricks`clean and validate ${data}`)
+  .map(clean => databricks`engineer churn features from ${clean}`)
+  .map(features => databricks`train XGBoost on ${features}`)
+  .map(model => databricks`evaluate ${model}`)
+  .map(evaluated => databricks`deploy if metrics pass`)
 
 // One network round trip. Record-replay pipelining.
-
-// AI agents orchestrate the workflow
-const mlPipeline = await priya`design a customer segmentation model`
-  .map(spec => ralph`implement the feature engineering`)
-  .map(features => ralph`train the clustering model`)
-  .map(model => [priya, tom].map(r => r`review the model performance`))
-  .map(reviewed => ralph`deploy to production`)
-```
-
-### AI-Powered Data Quality
-
-Automatic anomaly detection and data quality monitoring:
-
-```typescript
-import { dataQuality } from 'databricks.do/ai'
-
-// Monitor data quality with AI
-const monitor = await dataQuality.createMonitor({
-  table: 'production.sales.orders',
-  baseline_window: '30 days',
-  metrics: [
-    'row_count',
-    'null_rate',
-    'distinct_count',
-    'statistical_distribution',
-  ],
-  alert_on: {
-    row_count_change: 0.2, // 20% change
-    null_rate_increase: 0.05, // 5% increase
-    statistical_drift: 0.1, // Distribution shift
-  },
-})
-
-// AI explains anomalies
-const anomaly = await dataQuality.explain({
-  table: 'production.sales.orders',
-  metric: 'row_count',
-  timestamp: '2025-01-15',
-})
-// "Row count dropped 35% on 2025-01-15 compared to the 30-day average.
-//  Root cause analysis:
-//  - Source system API returned errors from 2-4 AM UTC
-//  - 12,453 orders failed to ingest
-//  - Recommendation: Re-run ingestion for affected time window"
 ```
 
 ### AI Agents as Data Engineers
 
-AI agents can build and maintain your data platform:
-
 ```typescript
 import { priya, ralph, tom, quinn } from 'agents.do'
-import { databricks } from 'databricks.do'
 
-// Product manager defines requirements
-const spec = await priya`
-  we need a customer 360 view that combines:
-  - transaction history
-  - support tickets
-  - product usage
-  - marketing engagement
-  create a data model spec
-`
+// The whole team, naturally
+const spec = await priya`design customer 360 data model`
+const pipeline = await ralph`implement ${spec} with DLT`
+const review = await tom`review ${pipeline} architecture`
+const tests = await quinn`create quality tests for ${pipeline}`
 
-// Developer implements the data pipeline
-const pipeline = await ralph`
-  implement the customer 360 data model from ${spec}
-  use DLT for incremental processing
-  ensure GDPR compliance with column masking
-`
-
-// Tech lead reviews the architecture
-const review = await tom`
-  review the customer 360 pipeline architecture:
-  - data modeling best practices
-  - performance optimization
-  - cost efficiency
-  ${pipeline}
-`
-
-// QA validates data quality
-const validation = await quinn`
-  create data quality tests for customer 360:
-  - referential integrity
-  - business rule validation
-  - freshness SLAs
-`
+// Chain the team
+await priya`plan Q1 data roadmap`
+  .map(plan => ralph`implement ${plan}`)
+  .map(code => [priya, tom, quinn].map(r => r`review ${code}`))
 ```
 
----
+### AI-Powered Data Quality
+
+```typescript
+// Monitor automatically
+await databricks`monitor orders for anomalies`
+await databricks`alert if row count drops 20%`
+await databricks`explain why orders dropped yesterday`
+// "Row count dropped 35% - source API returned errors from 2-4 AM UTC.
+//  12,453 orders failed to ingest. Re-run ingestion for affected window."
+```
 
 ## Architecture
 
-databricks.do mirrors Databricks' architecture with Durable Objects:
+### Durable Object per Workspace
 
 ```
-                     Cloudflare Edge
-                           |
-           +---------------+---------------+
-           |               |               |
-     +-----------+   +-----------+   +-----------+
-     | Auth      |   | SQL       |   | MCP       |
-     | Gateway   |   | Gateway   |   | Server    |
-     +-----------+   +-----------+   +-----------+
-           |               |               |
-           +-------+-------+-------+-------+
-                   |               |
-            +------------+  +------------+
-            | Workspace  |  | Workspace  |
-            | DO         |  | DO         |
-            +------------+  +------------+
-                   |
-    +--------------+--------------+
-    |              |              |
-+--------+  +-----------+  +---------+
-| Catalog|  | Warehouse |  | MLflow  |
-| DO     |  | DO        |  | DO      |
-+--------+  +-----------+  +---------+
-    |              |              |
-+---+---+   +------+------+  +----+----+
-|       |   |      |      |  |    |    |
-Delta  Unity Query Vector Model Exp
-Tables Catalog Engine Search Registry
+LakehouseDO (config, users, catalogs)
+  |
+  +-- CatalogDO (schemas, tables, permissions)
+  |     |-- SQLite: Metadata (encrypted)
+  |     +-- R2: Delta tables (Parquet)
+  |
+  +-- WarehouseDO (queries, cache)
+  |     |-- SQLite: Query state
+  |     +-- Query engine
+  |
+  +-- MLflowDO (experiments, models)
+  |     |-- SQLite: Tracking data
+  |     +-- R2: Artifacts
+  |
+  +-- PipelineDO (ETL, schedules)
+        |-- SQLite: Pipeline state
 ```
-
-### Durable Object Structure
-
-| Durable Object | Databricks Equivalent | Purpose |
-|----------------|----------------------|---------|
-| `WorkspaceDO` | Workspace | Multi-tenant isolation |
-| `CatalogDO` | Unity Catalog | Data governance |
-| `SchemaDO` | Schema | Namespace management |
-| `TableDO` | Delta Table | ACID table operations |
-| `WarehouseDO` | SQL Warehouse | Query execution |
-| `PipelineDO` | DLT Pipeline | ETL orchestration |
-| `NotebookDO` | Notebook | Interactive analytics |
-| `MLflowDO` | MLflow | Model lifecycle |
-| `ExperimentDO` | Experiment | ML tracking |
-| `ModelDO` | Model Registry | Model versioning |
 
 ### Storage Tiers
 
-```
-Hot (SQLite in DO)     Warm (R2 Parquet)     Cold (R2 Archive)
------------------      -----------------      -----------------
-Catalog metadata       Delta table data       Historical versions
-Recent query cache     ML artifacts           Audit logs
-Notebook state         Feature store          Compliance archive
-MLflow tracking        Large datasets         Long-term retention
-```
-
-### Query Execution
-
-```typescript
-// Query flow
-SQL Query
-    |
-    v
-Query Parser (Validate syntax)
-    |
-    v
-Catalog Resolver (Resolve table references)
-    |
-    v
-Access Control (Check permissions)
-    |
-    v
-Query Optimizer (Generate execution plan)
-    |
-    v
-Storage Layer (Fetch from R2/cache)
-    |
-    v
-Execution Engine (Process at edge)
-    |
-    v
-Results (Stream back to client)
-```
-
----
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Metadata, recent queries | <10ms |
+| **Warm** | R2 Parquet | Delta tables, features | <100ms |
+| **Cold** | R2 Archive | Historical versions, audit | <1s |
 
 ## vs Databricks
 
 | Feature | Databricks | databricks.do |
 |---------|------------|---------------|
-| Pricing | $500K-$1M+/year | **Free** |
-| Unity Catalog | $6/DBU premium | **Included** |
-| SQL Warehouse | $0.22-$0.70/DBU | **Edge compute** |
-| MLflow | Premium tier | **Included** |
-| Infrastructure | Databricks managed | **Your Cloudflare** |
-| Lock-in | Proprietary | **Open source** |
-| Spark required | Yes | **SQL-first** |
-| AI features | Premium add-ons | **Native** |
+| **Implementation** | DBU billing complexity | Deploy in minutes |
+| **Annual Cost** | $500K-$1M+ | ~$50/month |
+| **Architecture** | Spark clusters | Edge-native, global |
+| **Data Catalog** | $6/DBU premium | Included |
+| **AI** | Premium add-ons | AI-first design |
+| **Data Location** | Databricks managed | Your Cloudflare account |
+| **Lock-in** | Proprietary | MIT licensed |
 
-### Cost Comparison
-
-**50-person data team with moderate workloads:**
-
-| | Databricks | databricks.do |
-|-|------------|---------------|
-| SQL Warehouse compute | $180,000/year | $0 |
-| Unity Catalog | $36,000/year | $0 |
-| Jobs compute | $120,000/year | $0 |
-| MLflow/Model Serving | $48,000/year | $0 |
-| Databricks Premium | $96,000/year | $0 |
-| **Annual Total** | **$480,000** | **$50** (Workers) |
-| **3-Year TCO** | **$1,440,000+** | **$150** |
-
----
-
-## Quick Start
-
-### One-Click Deploy
-
-```bash
-npx create-dotdo databricks
-
-# Follow prompts:
-# - Workspace name
-# - Storage configuration (R2 bucket)
-# - Default catalog name
-# - Authentication method
-```
-
-### Manual Setup
-
-```bash
-git clone https://github.com/dotdo/databricks.do
-cd databricks.do
-npm install
-npm run deploy
-```
-
-### First Query
-
-```typescript
-import { DatabricksClient } from 'databricks.do'
-
-const databricks = new DatabricksClient({
-  url: 'https://your-workspace.databricks.do',
-  token: process.env.DATABRICKS_TOKEN,
-})
-
-// 1. Create a catalog
-await databricks.catalog.create({ name: 'demo' })
-
-// 2. Create a schema
-await databricks.schema.create({
-  catalog: 'demo',
-  name: 'sales',
-})
-
-// 3. Create a table
-await databricks.tables.create({
-  catalog: 'demo',
-  schema: 'sales',
-  name: 'orders',
-  columns: [
-    { name: 'id', type: 'BIGINT' },
-    { name: 'customer', type: 'STRING' },
-    { name: 'amount', type: 'DECIMAL(10,2)' },
-  ],
-})
-
-// 4. Insert data
-await databricks.tables.insert({
-  table: 'demo.sales.orders',
-  data: [
-    { id: 1, customer: 'Acme Corp', amount: 999.99 },
-    { id: 2, customer: 'Globex Inc', amount: 1499.99 },
-  ],
-})
-
-// 5. Query with SQL
-const result = await databricks.sql`
-  SELECT customer, SUM(amount) as total
-  FROM demo.sales.orders
-  GROUP BY customer
-`
-
-// 6. Or use natural language
-const analysis = await databricks`what's our total revenue?`
-// "Total revenue is $2,499.98 from 2 orders."
-```
-
----
-
-## Migration from Databricks
-
-### Export from Databricks
-
-```bash
-# Export Unity Catalog metadata
-databricks unity-catalog export --catalog production --output ./export
-
-# Export notebooks
-databricks workspace export_dir /workspace ./notebooks --format DBC
-
-# Export MLflow experiments
-databricks experiments export --experiment-id 123 --output ./mlflow
-
-# Or use our migration tool
-npx databricks.do migrate export \
-  --workspace https://your-workspace.cloud.databricks.com \
-  --token $DATABRICKS_TOKEN
-```
-
-### Import to databricks.do
-
-```bash
-npx databricks.do migrate import \
-  --source ./export \
-  --url https://your-workspace.databricks.do
-
-# Migrates:
-# - Unity Catalog (catalogs, schemas, tables)
-# - Table data (Delta format preserved)
-# - Access controls and grants
-# - MLflow experiments and models
-# - Notebooks and dashboards
-# - SQL queries and alerts
-```
-
-### Parallel Run
-
-```typescript
-// Run both systems during transition
-const bridge = databricks.migration.createBridge({
-  source: {
-    type: 'databricks-cloud',
-    workspace: 'https://...',
-    token: process.env.DATABRICKS_TOKEN,
-  },
-  target: {
-    type: 'databricks.do',
-    url: 'https://...',
-  },
-  mode: 'dual-read', // Read from both, compare results
-})
-
-// Validation queries run against both
-// Reconciliation reports generated automatically
-// Cut over when confident
-```
-
----
-
-## Industry Use Cases
+## Use Cases
 
 ### Data Engineering
 
 ```typescript
-// Real-time data pipeline
-const pipeline = DLT.pipeline({
-  name: 'streaming-events',
-  continuous: true,
-})
+// Streaming pipelines in plain English
+await databricks`stream events from Kafka to bronze`
+await databricks`clean bronze events to silver`
+await databricks`aggregate silver to gold metrics`
 
-pipeline.table({
-  name: 'events_bronze',
-  source: () => databricks.sql`
-    SELECT * FROM cloud_files(
-      'r2://events/',
-      'json',
-      map('cloudFiles.format', 'json')
-    )
-  `,
-})
-
-pipeline.table({
-  name: 'events_silver',
-  source: () => databricks.sql`
-    SELECT
-      event_id,
-      user_id,
-      event_type,
-      TO_TIMESTAMP(event_time) as event_timestamp,
-      properties
-    FROM LIVE.events_bronze
-  `,
-})
+// Backfills are one line
+await databricks`backfill orders from last month`
 ```
 
 ### Data Science
 
 ```typescript
-// Feature engineering + model training
-const features = await databricks.sql`
-  SELECT
-    customer_id,
-    COUNT(*) as order_count,
-    SUM(amount) as total_spend,
-    AVG(amount) as avg_order_value,
-    MAX(order_date) as last_order,
-    DATEDIFF(CURRENT_DATE, MAX(order_date)) as days_since_last_order
-  FROM production.sales.orders
-  GROUP BY customer_id
-`
+// ML without the ceremony
+await databricks`train churn model on customer features`
+await databricks`tune hyperparameters for best accuracy`
+await databricks`deploy if accuracy > 0.9`
 
-const model = await mlflow.autoML({
-  task: 'classification',
-  target: 'churned',
-  features: features,
-  time_budget_minutes: 60,
-})
+// Feature engineering
+await databricks`create customer lifetime value features`
+await databricks`store features in feature store`
 ```
 
 ### Business Intelligence
 
 ```typescript
-// Self-service analytics
-const dashboard = await databricks.dashboard.create({
-  name: 'Executive Summary',
-  queries: [
-    {
-      name: 'Revenue Trend',
-      sql: `SELECT DATE_TRUNC('month', order_date) as month, SUM(amount) as revenue FROM production.sales.orders GROUP BY 1`,
-      visualization: 'line',
-    },
-    {
-      name: 'Top Customers',
-      sql: `SELECT customer_id, SUM(amount) as spend FROM production.sales.orders GROUP BY 1 ORDER BY 2 DESC LIMIT 10`,
-      visualization: 'bar',
-    },
-  ],
-  refresh_schedule: '0 8 * * *',
-})
+// Dashboards from questions
+await databricks`create executive dashboard with revenue and customers`
+await databricks`add filter for date range and region`
+await databricks`schedule refresh daily at 6am`
 ```
 
----
+### Migration from Databricks
+
+```typescript
+// One-liner migration
+await databricks`import from cloud.databricks.com`
+
+// Or step by step
+await databricks`import catalog production from databricks`
+await databricks`import notebooks from /workspace`
+await databricks`import mlflow experiments`
+```
+
+## Deployment Options
+
+### Cloudflare Workers
+
+```bash
+npx create-dotdo databricks
+# Deploys to your Cloudflare account
+```
+
+### Private Cloud
+
+```bash
+docker run -p 8787:8787 dotdo/databricks
+```
 
 ## Roadmap
 
-### Now
+### Core Lakehouse
 - [x] Unity Catalog (catalogs, schemas, tables)
 - [x] Delta Lake tables with ACID
 - [x] SQL Warehouse queries
 - [x] MLflow tracking and registry
-- [x] Notebooks (SQL)
 - [x] Natural language queries
-
-### Next
-- [ ] DLT Pipelines (full implementation)
-- [ ] Python notebooks
-- [ ] Real-time streaming tables
+- [ ] DLT Pipelines (full)
+- [ ] Real-time streaming
 - [ ] Vector search
+
+### AI
+- [x] Natural language to SQL
+- [x] AI data quality monitoring
+- [ ] AutoML integration
 - [ ] Feature store
-- [ ] Model serving endpoints
-
-### Later
-- [ ] Spark compatibility layer
-- [ ] DBT integration
-- [ ] Airflow integration
-- [ ] Unity Catalog federation
-- [ ] Cross-cloud Delta Sharing
-- [ ] Photon-compatible query engine
-
----
-
-## Documentation
-
-| Guide | Description |
-|-------|-------------|
-| [Quick Start](./docs/quickstart.mdx) | Deploy in 5 minutes |
-| [Unity Catalog](./docs/unity-catalog.mdx) | Data governance |
-| [Delta Lake](./docs/delta-lake.mdx) | ACID tables |
-| [SQL Warehouse](./docs/sql-warehouse.mdx) | Query execution |
-| [MLflow](./docs/mlflow.mdx) | ML lifecycle |
-| [DLT Pipelines](./docs/dlt.mdx) | ETL orchestration |
-| [Migration](./docs/migration.mdx) | Moving from Databricks |
-
----
+- [ ] Model serving
 
 ## Contributing
 
@@ -1087,29 +369,23 @@ databricks.do is open source under the MIT license.
 ```bash
 git clone https://github.com/dotdo/databricks.do
 cd databricks.do
-npm install
-npm test
-npm run dev
+pnpm install
+pnpm test
 ```
-
-Key areas for contribution:
-- Query engine optimization
-- Delta Lake protocol compliance
-- MLflow API compatibility
-- Notebook execution runtime
-- DLT pipeline orchestration
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
-
----
 
 ## License
 
-MIT
+MIT License - For the data democratizers.
 
 ---
 
 <p align="center">
-  <strong>The Lakehouse, simplified.</strong><br/>
-  Built on Cloudflare Workers. Powered by AI. No DBU pricing.
+  <strong>The $62B lakehouse ends here.</strong>
+  <br />
+  SQL-first. AI-native. No DBU pricing.
+  <br /><br />
+  <a href="https://databricks.do">Website</a> |
+  <a href="https://docs.databricks.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/databricks.do">GitHub</a>
 </p>

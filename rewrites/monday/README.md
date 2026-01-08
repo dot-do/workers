@@ -1,10 +1,38 @@
 # monday.do
 
-> Work OS. Open source. AI-orchestrated.
+> Work OS. Open source. AI-orchestrated. Natural language.
 
 Monday.com built a $10B+ company on colorful boards and "work operating system" marketing. At $12-24/user/month, with core features locked behind higher tiers and AI as yet another add-on, it's a lot of money for project visualization.
 
 **monday.do** is the Work OS reimagined. Visual project management with AI that actually manages work. Automations that write themselves. Cross-team visibility without cross-team pricing.
+
+## AI-Native API
+
+```typescript
+import { monday } from 'monday.do'           // Full SDK
+import { monday } from 'monday.do/tiny'      // Minimal client
+import { monday } from 'monday.do/boards'    // Boards-only operations
+```
+
+Natural language for work management:
+
+```typescript
+import { monday } from 'monday.do'
+
+// Talk to it like a project manager
+const stuck = await monday`what items are stuck and why?`
+const overdue = await monday`overdue tasks for marketing team`
+const capacity = await monday`who has bandwidth for more work?`
+
+// Chain like sentences
+await monday`all items due this week`
+  .notify(`Reminder: due this week`)
+
+// Boards that build themselves
+await monday`board for Product Development with Status, Owner, Priority columns`
+  .addGroup(`Q1 Features`)
+  .addItem(`Authentication Revamp`)
+```
 
 ## The Problem
 
@@ -64,7 +92,7 @@ You're building a product. Your team needs work management. Monday.com wants $29
 
 ```typescript
 import { monday } from 'monday.do'
-import { priya, ralph, quinn } from 'agents.do'
+import { priya, ralph, quinn, mark } from 'agents.do'
 
 // Talk to your work OS like a human
 const stuck = await monday`what items are stuck and why?`
@@ -76,15 +104,20 @@ const forecast = await monday`will we hit the Q1 deadline?`
 
 ```typescript
 // Sprint planning pipeline
-const planned = await monday`get backlog items`
+const sprint = await monday`current sprint`
+const planned = await monday`backlog items ready for sprint`
   .map(item => priya`prioritize ${item} for sprint`)
   .map(item => ralph`estimate ${item}`)
   .map(item => monday`add ${item} to ${sprint}`)
 
 // Status update pipeline
-const updated = await monday`get items completed this week`
+const updated = await monday`items completed this week`
   .map(item => mark`write status update for ${item}`)
   .map(update => monday`post ${update} to board`)
+
+// Review pipeline
+const reviewed = await monday`items ready for review`
+  .map(item => [priya, quinn].map(r => r`review ${item}`))
 ```
 
 One network round trip. Record-replay pipelining. Workers working for you.
@@ -96,134 +129,74 @@ One network round trip. Record-replay pipelining. Workers working for you.
 The foundation of work management:
 
 ```typescript
-import { Board, Item, Group } from 'monday.do'
+// Create boards naturally
+const board = await monday`board for Product Development with Status, Owner, Priority columns`
+const hiring = await monday`hiring pipeline board with stages: Phone Screen, Technical, Team, Offer`
+const bugs = await monday`bug tracking board with Severity, Reporter, Assignee`
 
-// Create a board
-const projectBoard = Board.create({
-  name: 'Product Development',
-  type: 'items',  // or 'projects', 'docs'
-  columns: {
-    Status: Column.status({
-      labels: ['Not Started', 'Working on it', 'Stuck', 'Done'],
-      colors: ['gray', 'blue', 'red', 'green'],
-    }),
-    Owner: Column.person(),
-    Priority: Column.status({
-      labels: ['Low', 'Medium', 'High', 'Critical'],
-      colors: ['gray', 'yellow', 'orange', 'red'],
-    }),
-    Timeline: Column.timeline(),
-    Budget: Column.numbers({ unit: '$' }),
-    Progress: Column.progress(),
-    Tags: Column.tags(),
-    Dependency: Column.dependency(),
-    LastUpdated: Column.lastUpdated(),
-  },
-})
+// AI infers what you need
+await monday`Product Development board`         // returns existing board
+await monday`create Sprint 23 board`            // creates new board
+await monday`duplicate Q4 board as Q1`          // duplicates with updates
 
-// Add groups and items
-const q1Features = Group.create(projectBoard, {
-  title: 'Q1 Features',
-  color: '#0086c0',
-})
+// Add groups and items naturally
+await monday`add Q1 Features group to Product Development`
+await monday`add Authentication Revamp to Q1 Features, high priority, assign to Alice`
 
-await Item.create(projectBoard, {
-  group: q1Features,
-  name: 'Authentication Revamp',
-  Status: 'Working on it',
-  Owner: ['@alice'],
-  Priority: 'High',
-  Timeline: { start: '2025-01-15', end: '2025-02-15' },
-  Budget: 50000,
-})
+// Bulk operations read like instructions
+await monday`
+  Product Development board:
+  - Q1 Features group:
+    - Authentication Revamp, high priority, Alice
+    - Payment Integration, critical priority, Bob
+    - Dashboard Redesign, medium priority, Carol
+`
 ```
 
 ### Column Types
 
 All the column types you need:
 
-| Type | Description |
-|------|-------------|
-| **Status** | Customizable status labels with colors |
-| **Person** | Assign team members |
-| **Timeline** | Date ranges with Gantt visualization |
-| **Date** | Single date picker |
-| **Numbers** | Numeric values with units |
-| **Text** | Free-form text |
-| **Long Text** | Rich text editor |
-| **Tags** | Multi-select tags |
-| **Dropdown** | Single select dropdown |
-| **Files** | File attachments |
-| **Link** | URLs with preview |
-| **Checkbox** | Boolean checkbox |
-| **Progress** | Progress tracking (0-100%) |
-| **Rating** | Star ratings |
-| **Vote** | Voting mechanism |
-| **World Clock** | Timezone display |
-| **Location** | Geographic locations |
-| **Dependency** | Item dependencies |
-| **Mirror** | Mirror data from connected boards |
-| **Formula** | Calculated columns |
-| **Auto Number** | Auto-incrementing IDs |
-| **Creation Log** | Who created when |
-| **Last Updated** | Last modification time |
+| Type | Description | Natural Language |
+|------|-------------|------------------|
+| **Status** | Customizable status labels with colors | `with Status column` |
+| **Person** | Assign team members | `with Owner column` |
+| **Timeline** | Date ranges with Gantt visualization | `with Timeline column` |
+| **Date** | Single date picker | `with Due Date column` |
+| **Numbers** | Numeric values with units | `with Budget column in dollars` |
+| **Text** | Free-form text | `with Notes column` |
+| **Long Text** | Rich text editor | `with Description column` |
+| **Tags** | Multi-select tags | `with Tags column` |
+| **Dropdown** | Single select dropdown | `with Category dropdown` |
+| **Files** | File attachments | `with Attachments column` |
+| **Link** | URLs with preview | `with Link column` |
+| **Checkbox** | Boolean checkbox | `with Completed checkbox` |
+| **Progress** | Progress tracking (0-100%) | `with Progress column` |
+| **Rating** | Star ratings | `with Rating column` |
+| **Dependency** | Item dependencies | `with Dependencies column` |
+| **Formula** | Calculated columns | `with Total formula` |
 
 ### Views
 
 Same data, different perspectives:
 
 ```typescript
-// Main Table View (default)
-const tableView = View.table({
-  columns: ['Name', 'Status', 'Owner', 'Priority', 'Timeline'],
-  sort: [{ column: 'Priority', order: 'desc' }],
-  filter: { Status: { not: 'Done' } },
-})
+// Switch views naturally
+await monday`show Product Development as kanban`
+await monday`show Q1 roadmap as timeline`
+await monday`show team workload for January`
+await monday`show sprint burndown chart`
 
-// Timeline View (Gantt)
-const timelineView = View.timeline({
-  dateColumn: 'Timeline',
-  groupBy: 'Owner',
-  color: 'Priority',
-})
+// Create views with natural descriptions
+await monday`create view: active items sorted by priority`
+await monday`create kanban view grouped by Status`
+await monday`create timeline view colored by Priority`
+await monday`create calendar view for due dates`
 
-// Kanban View
-const kanbanView = View.kanban({
-  groupBy: 'Status',
-  subItems: true,
-})
-
-// Calendar View
-const calendarView = View.calendar({
-  dateColumn: 'Timeline',
-  color: 'Priority',
-})
-
-// Chart View
-const chartView = View.chart({
-  type: 'bar',
-  xAxis: 'Status',
-  yAxis: { type: 'count' },
-  groupBy: 'Priority',
-})
-
-// Workload View
-const workloadView = View.workload({
-  personColumn: 'Owner',
-  effortColumn: 'Effort',
-  dateColumn: 'Timeline',
-  capacity: 40,  // hours per week
-})
-
-// Dashboard View
-const dashboardView = View.dashboard({
-  widgets: [
-    Widget.numbers({ column: 'Budget', aggregate: 'sum' }),
-    Widget.chart({ column: 'Status', type: 'pie' }),
-    Widget.battery({ column: 'Progress' }),
-    Widget.timeline({ column: 'Timeline' }),
-  ],
-})
+// Filter naturally
+await monday`show items not done, sorted by priority descending`
+await monday`show Alice's items due this week`
+await monday`show stuck items with high priority`
 ```
 
 ### Dashboards
@@ -231,40 +204,25 @@ const dashboardView = View.dashboard({
 Aggregate data across boards:
 
 ```typescript
-import { Dashboard, Widget } from 'monday.do'
+// Create dashboards naturally
+await monday`executive dashboard showing all projects`
+await monday`team dashboard for Engineering with velocity and burndown`
+await monday`Q1 goals dashboard with progress bars`
 
-const executiveDashboard = Dashboard.create({
-  name: 'Executive Overview',
-  widgets: [
-    Widget.numbers({
-      title: 'Total Projects',
-      boards: ['product-dev', 'engineering', 'marketing'],
-      value: 'count',
-    }),
-    Widget.chart({
-      title: 'Status Breakdown',
-      boards: ['product-dev', 'engineering'],
-      type: 'pie',
-      groupBy: 'Status',
-    }),
-    Widget.timeline({
-      title: 'All Projects Timeline',
-      boards: ['product-dev'],
-      dateColumn: 'Timeline',
-    }),
-    Widget.battery({
-      title: 'Overall Progress',
-      boards: ['q1-goals'],
-      column: 'Progress',
-    }),
-    Widget.table({
-      title: 'At Risk Items',
-      boards: ['product-dev', 'engineering'],
-      filter: { Status: 'Stuck' },
-      columns: ['Name', 'Owner', 'Status', 'Timeline'],
-    }),
-  ],
-})
+// Query dashboards
+await monday`how are we tracking on Q1 goals?`
+await monday`show project status across all teams`
+await monday`what's the total budget across all projects?`
+
+// Dashboard widgets from descriptions
+await monday`
+  Executive Overview dashboard:
+  - total project count across all boards
+  - status breakdown pie chart
+  - all projects timeline
+  - Q1 goals progress
+  - at-risk items table
+`
 ```
 
 ### Subitems
@@ -272,29 +230,19 @@ const executiveDashboard = Dashboard.create({
 Break work into smaller pieces:
 
 ```typescript
-const feature = await Item.create(board, {
-  name: 'User Dashboard',
-  Status: 'Working on it',
-})
+// Add subitems naturally
+await monday`break down User Dashboard into subitems`
+await monday`add subitem Design Mockups to User Dashboard, assign to designer`
+await monday`add subitem Backend API to User Dashboard, in progress`
+await monday`add subitem Frontend to User Dashboard, not started`
 
-// Add subitems
-await feature.addSubitem({
-  name: 'Design mockups',
-  Status: 'Done',
-  Owner: ['@designer'],
-})
+// Or let AI break it down
+await monday`decompose Authentication Revamp into implementation tasks`
+  // AI creates: Database schema, API endpoints, UI components, Tests
 
-await feature.addSubitem({
-  name: 'Backend API',
-  Status: 'Working on it',
-  Owner: ['@backend'],
-})
-
-await feature.addSubitem({
-  name: 'Frontend implementation',
-  Status: 'Not Started',
-  Owner: ['@frontend'],
-})
+// Query subitems
+await monday`subitems for User Dashboard`
+await monday`incomplete subitems for Q1 Features`
 
 // Parent progress auto-calculates from subitems
 ```
@@ -305,34 +253,26 @@ AI doesn't just assist - it orchestrates.
 
 ### AI Automations
 
-Automations that write themselves:
+Automations as natural language:
 
 ```typescript
-import { ai, Automation } from 'monday.do'
+// Describe automations the way you'd tell a colleague
+await monday`automate: when Status = Done, notify Owner on Slack`
+await monday`automate: when all subitems done, move parent to Completed`
+await monday`automate: when item stuck for 3 days, escalate to manager`
+await monday`automate: when due date passes, mark as overdue and notify`
 
-// Describe what you want in natural language
-const automation = await ai.createAutomation(`
-  When an item's status changes to "Done",
-  notify the item owner on Slack,
-  and if all subitems are also done,
-  move the parent item to the "Completed" group.
-`)
+// Complex automations read like rules
+await monday`
+  automate:
+  - when Priority = Critical and Status = Stuck, notify #leadership on Slack
+  - when all dependencies done, set Status = Ready
+  - every Monday at 9am, send weekly digest to team
+`
 
-// AI generates:
-Automation.create({
-  trigger: Trigger.columnChange('Status', 'Done'),
-  actions: [
-    Action.notify({
-      channel: 'slack',
-      to: '{Owner}',
-      message: '{Item Name} has been completed!',
-    }),
-    Action.conditional({
-      if: 'all subitems.Status = Done',
-      then: Action.moveToGroup('Completed'),
-    }),
-  ],
-})
+// Query automations
+await monday`what automations are on Product Development board?`
+await monday`disable the overdue notification automation`
 ```
 
 ### AI Work Assignment
@@ -340,25 +280,18 @@ Automation.create({
 Let AI assign work intelligently:
 
 ```typescript
-const assignment = await ai.assignWork({
-  item: newFeature,
-  considerations: {
-    expertise: true,      // Match skills to task
-    workload: true,       // Consider current load
-    availability: true,   // Check calendar/PTO
-    history: true,        // Past performance on similar tasks
-  },
-})
+// Just ask who should do it
+const who = await monday`who should work on Payment Integration?`
+// AI considers: expertise, workload, availability, history
 
-// Returns:
-{
-  recommendation: '@alice',
-  confidence: 0.89,
-  reasoning: 'Alice has completed 12 similar frontend tasks with average 2-day lead time. Current workload is 65% capacity. Available all week.',
-  alternatives: [
-    { person: '@bob', score: 0.72, note: 'Good fit but at 85% capacity' },
-  ],
-}
+// Auto-assign with reasoning
+await monday`assign Payment Integration to best available person`
+  // Returns: Assigned to Alice - 12 similar tasks completed, 65% capacity, available all week
+
+// Balance workload across team
+await monday`balance Q1 Features across engineering team`
+await monday`who has capacity for more work?`
+await monday`redistribute stuck items from Bob who's overloaded`
 ```
 
 ### AI Status Updates
@@ -366,35 +299,19 @@ const assignment = await ai.assignWork({
 AI writes status updates from activity:
 
 ```typescript
-// Generate weekly status update from board activity
-const statusUpdate = await ai.generateStatusUpdate({
-  board: 'product-dev',
-  period: 'last 7 days',
-  format: 'executive',  // or 'detailed', 'bullet-points'
-})
+// Generate updates naturally
+const update = await monday`write weekly status update for Product Development`
+const standup = await monday`what did engineering complete yesterday?`
+const exec = await monday`executive summary of Q1 progress`
 
-// Returns:
-`
-## Product Development - Week of Jan 13
+// Scheduled updates
+await monday`automate: every Friday at 4pm, send weekly status to team@company.com`
+await monday`automate: every morning, post standup summary to #engineering`
 
-### Completed (5 items)
-- Authentication revamp shipped to production
-- Payment integration testing complete
-- 3 bug fixes deployed
-
-### In Progress (8 items)
-- User dashboard at 60% (on track for Jan 24)
-- API rate limiting implementation started
-
-### At Risk (2 items)
-- Mobile app redesign blocked on design approval
-- Third-party integration waiting on vendor response
-
-### Key Metrics
-- Velocity: 34 story points (up 15% from last week)
-- Cycle time: 3.2 days average
-- Items blocked: 2 (down from 5)
-`
+// Query for reporting
+await monday`what shipped this week?`
+await monday`what's at risk for Q1 deadline?`
+await monday`velocity trend for last 4 sprints`
 ```
 
 ### AI Project Planning
@@ -402,22 +319,18 @@ const statusUpdate = await ai.generateStatusUpdate({
 Let AI break down projects:
 
 ```typescript
-const projectPlan = await ai.planProject({
-  description: 'Build a customer feedback system',
-  constraints: {
-    deadline: '2025-03-01',
-    team: ['@alice', '@bob', '@carol'],
-    budget: 75000,
-  },
-  style: 'agile',  // or 'waterfall', 'kanban'
-})
+// Plan projects from descriptions
+await monday`plan customer feedback system, deadline March 1, team: Alice Bob Carol`
+  // AI creates: Phases, tasks, estimates, dependencies, resource allocation
 
-// Returns structured plan with:
-// - Phases and milestones
-// - Tasks with estimates
-// - Dependencies mapped
-// - Resource allocation
-// - Risk identification
+// Let AI manage sprints
+await monday`plan next sprint from backlog`
+await monday`what can we realistically deliver by March 1?`
+await monday`create release plan for v2.0`
+
+// Risk identification
+await monday`what are the risks for Q1 delivery?`
+await monday`which items are blocking the most work?`
 ```
 
 ### AI Board Creation
@@ -425,18 +338,15 @@ const projectPlan = await ai.planProject({
 Create boards from descriptions:
 
 ```typescript
-const board = await ai.createBoard(`
-  I need to track our hiring pipeline.
-  We interview candidates, they go through phone screen,
-  technical interview, team interview, offer stage.
-  Need to track recruiter, hiring manager, salary expectations.
-`)
+// Just describe what you need
+const board = await monday`
+  hiring pipeline board:
+  - stages: Phone Screen, Technical, Team Interview, Offer
+  - track: Recruiter, Hiring Manager, Salary Expectations, Start Date
+  - automate: notify hiring manager when candidate advances
+`
 
-// AI creates board with appropriate:
-// - Column types
-// - Status labels
-// - Groups
-// - Automations
+// AI creates board with appropriate column types, status labels, groups, and automations
 ```
 
 ### Natural Language Queries
@@ -444,12 +354,12 @@ const board = await ai.createBoard(`
 Query your boards conversationally:
 
 ```typescript
-import { ai } from 'monday.do'
-
-const stuck = await ai.query`what items are stuck and why?`
-const capacity = await ai.query`who has bandwidth to take on more work?`
-const forecast = await ai.query`will we hit the Q1 deadline?`
-const blockers = await ai.query`what's blocking the mobile app project?`
+// Just ask
+const stuck = await monday`what items are stuck and why?`
+const capacity = await monday`who has bandwidth for more work?`
+const forecast = await monday`will we hit the Q1 deadline?`
+const blockers = await monday`what's blocking the mobile app project?`
+const trends = await monday`how has velocity changed over the last month?`
 ```
 
 ## Automations
@@ -457,92 +367,42 @@ const blockers = await ai.query`what's blocking the mobile app project?`
 Powerful automation engine without limits:
 
 ```typescript
-import { Automation, Trigger, Action, Condition } from 'monday.do'
+// Simple automations
+await monday`automate: when Status = Done, notify Owner`
+await monday`automate: when Priority = Critical, add to Critical Items board`
+await monday`automate: when assigned, send welcome email to Owner`
 
-// Simple automation
-const notifyOnDone = Automation.create({
-  name: 'Notify on completion',
-  trigger: Trigger.columnChange('Status', 'Done'),
-  actions: [
-    Action.notify({ to: '{Owner}', message: 'Item completed!' }),
-  ],
-})
+// Complex automations with conditions
+await monday`automate: when Status = Stuck and Priority = Critical, escalate to manager and notify #leadership`
 
-// Complex automation with conditions
-const escalateStuck = Automation.create({
-  name: 'Escalate stuck items',
-  trigger: Trigger.columnChange('Status', 'Stuck'),
-  conditions: [
-    Condition.column('Priority', 'is', 'Critical'),
-  ],
-  actions: [
-    Action.assignPerson('{Manager}'),
-    Action.notify({ to: '#leadership', channel: 'slack' }),
-    Action.createItem({
-      board: 'escalations',
-      name: 'Escalation: {Item Name}',
-      link: '{Item Link}',
-    }),
-  ],
-})
+// Time-based automations
+await monday`automate: every Monday at 9am, send weekly digest to team@company.com`
+await monday`automate: every day at 5pm, remind owners of items due tomorrow`
 
-// Time-based automation
-const weeklyDigest = Automation.create({
-  name: 'Weekly digest',
-  trigger: Trigger.recurring({ day: 'Monday', time: '09:00' }),
-  actions: [
-    Action.sendEmail({
-      to: 'team@company.com',
-      template: 'weekly-digest',
-      data: {
-        completed: '{{ items where Status = Done and updated_at > 7 days ago }}',
-        inProgress: '{{ items where Status = Working on it }}',
-        upcoming: '{{ items where Status = Not Started and Timeline starts within 7 days }}',
-      },
-    }),
-  ],
-})
-
-// Dependency automation
-const startWhenReady = Automation.create({
-  name: 'Start when dependencies done',
-  trigger: Trigger.allDependenciesDone(),
-  actions: [
-    Action.setColumn('Status', 'Working on it'),
-    Action.notify({ to: '{Owner}', message: 'Dependencies complete - ready to start!' }),
-  ],
-})
+// Dependency automations
+await monday`automate: when all dependencies done, set Status = Ready and notify Owner`
+await monday`automate: when blocked, find and notify blocking item owners`
 ```
 
 ### Integration Recipes
 
-Pre-built integrations:
+Pre-built integrations as natural language:
 
 ```typescript
 // Slack integration
-Automation.recipe('slack-notify', {
-  trigger: Trigger.columnChange('Status'),
-  action: Action.slackMessage({
-    channel: '#project-updates',
-    message: '{Person} updated {Item Name} to {Status}',
-  }),
-})
+await monday`automate: when Status changes, post to #project-updates`
+await monday`automate: when item stuck for 2 days, alert #engineering`
 
 // GitHub integration
-Automation.recipe('github-sync', {
-  trigger: Trigger.githubPR({ action: 'merged' }),
-  action: Action.setColumn('Status', 'Done'),
-})
+await monday`automate: when PR merged, set Status = Done`
+await monday`automate: when commit mentions item, add link to item`
 
 // Calendar integration
-Automation.recipe('calendar-sync', {
-  trigger: Trigger.columnChange('Timeline'),
-  action: Action.createCalendarEvent({
-    calendar: '{Owner}',
-    title: '{Item Name}',
-    dates: '{Timeline}',
-  }),
-})
+await monday`automate: when Timeline set, create calendar event for Owner`
+await monday`automate: when due date approaching, send calendar reminder`
+
+// Email integration
+await monday`automate: when Status = Done, email stakeholders`
 ```
 
 ## API Compatible
@@ -621,21 +481,13 @@ WorkspaceDO (users, permissions, global config)
 Every change syncs instantly:
 
 ```typescript
-// Subscribe to board changes
-board.subscribe((event) => {
-  switch (event.type) {
-    case 'item.created':
-    case 'item.updated':
-    case 'column_value.changed':
-    case 'item.moved':
-      // Update UI instantly
-  }
-})
+// Subscribe to changes naturally
+await monday`watch Product Development board`
+  .on('item.created', item => console.log(`New: ${item.name}`))
+  .on('status.changed', item => console.log(`${item.name} is now ${item.status}`))
 
 // Presence awareness
-board.onPresence((users) => {
-  // Show who's viewing the board
-})
+await monday`who's viewing Product Development?`
 ```
 
 ### Storage Architecture
@@ -700,14 +552,20 @@ monday.com showed the world what visual work management could be. **monday.do** 
 
 ## Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+monday.do is open source under the MIT license.
 
-Key areas:
-- Column types and views
-- Automation engine
-- AI capabilities
-- API compatibility
-- Integrations
+We especially welcome contributions from:
+- Project managers and team leads
+- Productivity tool enthusiasts
+- Automation engineers
+- UI/UX designers
+
+```bash
+git clone https://github.com/dotdo/monday.do
+cd monday.do
+pnpm install
+pnpm test
+```
 
 ## License
 
@@ -716,7 +574,12 @@ MIT License - Use it however you want. Build your business on it. Fork it. Make 
 ---
 
 <p align="center">
-  <strong>monday.do</strong> is part of the <a href="https://dotdo.dev">dotdo</a> platform.
+  <strong>The $10B valuation ends here.</strong>
   <br />
-  <a href="https://monday.do">Website</a> | <a href="https://docs.monday.do">Docs</a> | <a href="https://discord.gg/dotdo">Discord</a>
+  Natural language. AI-first. Unlimited automations.
+  <br /><br />
+  <a href="https://monday.do">Website</a> |
+  <a href="https://docs.monday.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/monday.do">GitHub</a>
 </p>

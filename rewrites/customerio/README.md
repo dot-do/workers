@@ -1,95 +1,66 @@
 # customerio.do
 
-Customer.io on Cloudflare Durable Objects - Marketing automation for every AI agent.
+> Marketing Automation. Edge-Native. Natural Language. AI-First.
+
+Customer.io charges $150/month for 12,000 profiles. Their API requires configuration objects, event schemas, and workflow builders. Every integration is a developer task.
+
+**customerio.do** is the open-source alternative. Natural language. Deploy in seconds. Talk to it like a marketer.
+
+## AI-Native API
+
+```typescript
+import { customerio } from 'customerio.do'           // Full SDK
+import { customerio } from 'customerio.do/tiny'      // Minimal client
+import { customerio } from 'customerio.do/segments'  // Segments-only
+```
+
+Natural language for marketing automation:
+
+```typescript
+import { customerio } from 'customerio.do'
+
+// Talk to it like a colleague
+await customerio`user-123 signed up from Google Ads`
+await customerio`alice@example.com upgraded to Pro`
+await customerio`send welcome sequence to users signed up today`
+
+// Chain like sentences
+await customerio`users who abandoned cart`
+  .notify('Complete your purchase - 10% off!')
+
+// Campaigns that write themselves
+await customerio`users inactive for 30 days`
+  .map(user => customerio`win back ${user}`)
+```
 
 ## The Problem
 
-AI agents need marketing automation. Millions of them. Running in parallel. Each with their own customer relationships.
+Customer.io dominates marketing automation alongside Braze and Iterable:
 
-Traditional marketing platforms were built for humans:
-- One shared platform for many marketers
-- Centralized campaign management
-- Manual audience building
-- Expensive per-send pricing
+| What Customer.io Charges | The Reality |
+|--------------------------|-------------|
+| **Essentials** | $100/month for 5,000 profiles |
+| **Premium** | $1,000+/month |
+| **Per-Message** | Overage charges on email/SMS |
+| **Enterprise** | Custom pricing (read: expensive) |
+| **Integration** | Developers write event tracking |
+| **Vendor Lock-in** | Data trapped in their platform |
 
-AI agents need the opposite:
-- One automation engine per agent
-- Distributed by default
-- Dynamic audiences computed in real-time
-- Free at the instance level, pay for delivery
+### The Integration Tax
 
-## The Vision
+Every marketing tool requires:
 
-Every AI agent gets their own Customer.io.
+- Schema definitions for events
+- Code changes for tracking
+- Developer time for campaigns
+- Platform-specific syntax
 
-```typescript
-import { tom, ralph, priya } from 'agents.do'
-import { CustomerIO } from 'customerio.do'
+Marketers can't move without engineering help.
 
-// Each agent has their own isolated marketing platform
-const tomCRM = CustomerIO.for(tom)
-const ralphCRM = CustomerIO.for(ralph)
-const priyaCRM = CustomerIO.for(priya)
-
-// Full Customer.io API
-await tomCRM.identify('user_123', { email: 'alice@example.com', plan: 'pro' })
-await ralphCRM.track('user_123', 'feature_used', { feature: 'export' })
-await priyaCRM.workflows.trigger('onboarding', { recipients: ['user_123'] })
-```
-
-Not a shared marketing platform. Not a multi-tenant nightmare. Each agent has their own complete Customer.io instance.
-
-## Features
-
-- **Track API** - identify() and track() for user behavior
-- **Campaigns/Journeys** - Visual workflow builder with CF Workflows
-- **Dynamic Segments** - Real-time audience computation
-- **Multi-Channel** - Email, push, SMS, in-app, webhooks
-- **Liquid Templates** - Personalized content rendering
-- **Preference Management** - User opt-in/opt-out handling
-- **MCP Tools** - Model Context Protocol for AI-native marketing
-
-## Architecture
-
-```
-                    +-----------------------+
-                    |    customerio.do      |
-                    |   (Cloudflare Worker) |
-                    +-----------------------+
-                              |
-              +---------------+---------------+
-              |               |               |
-    +------------------+ +------------------+ +------------------+
-    | CustomerDO (Tom) | | CustomerDO (Rae) | | CustomerDO (...) |
-    |   SQLite + R2    | |   SQLite + R2    | |   SQLite + R2    |
-    +------------------+ +------------------+ +------------------+
-              |               |               |
-              +---------------+---------------+
-                              |
-                    +-------------------+
-                    |   CF Workflows    |
-                    | (Journey Engine)  |
-                    +-------------------+
-```
-
-**Key insight**: Durable Objects provide single-threaded, strongly consistent state. Each agent's customer data is a Durable Object. SQLite handles queries. Cloudflare Workflows handle multi-step journeys.
-
-## Installation
-
-```bash
-npm install @dotdo/customerio
-```
-
-## Quick Start
-
-### Event Tracking
+### The Configuration Hell
 
 ```typescript
-import { CustomerIO } from 'customerio.do'
-
-const cio = new CustomerIO(env.CUSTOMERIO)
-
-// Identify user with attributes
+// OLD: Customer.io SDK (verbose, developer-only)
 await cio.identify('user_123', {
   email: 'alice@example.com',
   name: 'Alice',
@@ -97,173 +68,299 @@ await cio.identify('user_123', {
   created_at: Date.now()
 })
 
-// Track events
 await cio.track('user_123', 'order_placed', {
   order_id: 'order_456',
   amount: 99.99,
   items: [{ sku: 'widget-1', qty: 2 }]
 })
-
-// Anonymous tracking with later resolution
-await cio.track(null, 'page_viewed', { url: '/pricing' }, {
-  anonymousId: 'anon_789'
-})
-
-// Later, resolve anonymous to user
-await cio.identify('user_123', {}, {
-  anonymousId: 'anon_789'  // Merges anonymous history
-})
 ```
 
-### Workflow Triggers
+Nobody talks like that. A marketer would say: "Alice placed a $100 order."
+
+## The Solution
+
+**customerio.do** reimagines marketing automation:
+
+```
+Customer.io                         customerio.do
+-----------------------------------------------------------------
+$100-1000+/month                    $0 - run your own
+Configuration objects               Natural language
+Developer-required                  Marketer-friendly
+Proprietary workflows               Cloudflare Workflows
+Data trapped                        Your Cloudflare account
+Weeks to integrate                  Deploy in seconds
+```
+
+## One-Click Deploy
+
+```bash
+npx create-dotdo customerio
+```
+
+A complete marketing automation platform. Running on infrastructure you control.
 
 ```typescript
 import { CustomerIO } from 'customerio.do'
 
-const cio = new CustomerIO(env.CUSTOMERIO)
-
-// Trigger a journey
-const { runId } = await cio.workflows.trigger('onboarding', {
-  recipients: ['user_123'],
-  data: {
-    trial_days: 14,
-    features: ['export', 'api']
-  }
+export default CustomerIO({
+  name: 'my-startup',
+  domain: 'marketing.my-startup.com',
 })
-
-// Check run status
-const status = await cio.workflows.getStatus(runId)
-console.log(status)
-// { status: 'running', currentStep: 'welcome_email', progress: 2/5 }
 ```
 
-### Dynamic Segments
+## Features
+
+### User Tracking
 
 ```typescript
-import { CustomerIO } from 'customerio.do'
+// Just describe what happened
+await customerio`user-123 signed up from Google Ads`
+await customerio`alice@example.com is on the Pro plan`
+await customerio`bob viewed pricing page 3 times today`
 
-const cio = new CustomerIO(env.CUSTOMERIO)
+// AI infers what you need
+await customerio`user-123`               // returns user profile
+await customerio`user-123 activity`      // returns event history
+await customerio`users from Twitter`     // returns segment
+```
 
-// Create a segment
-await cio.segments.create({
-  name: 'Active Pro Users',
-  rules: {
-    and: [
-      { attribute: 'plan', operator: 'eq', value: 'pro' },
-      { event: 'login', operator: 'did', timeframe: '7d' }
-    ]
-  }
-})
+### Events
 
-// Query segment membership
-const members = await cio.segments.members('active-pro-users')
-console.log(`${members.count} users in segment`)
+```typescript
+// Natural event tracking
+await customerio`alice placed a $99 order`
+await customerio`bob abandoned cart with 3 items`
+await customerio`user-123 used the export feature`
+
+// Batch events read like a log
+await customerio`
+  alice upgraded to Pro
+  bob canceled subscription
+  charlie started trial
+`
+```
+
+### Segments
+
+```typescript
+// Query your audience like a database
+await customerio`users who signed up this week`
+await customerio`Pro users who haven't logged in for 30 days`
+await customerio`users from Google Ads with no purchase`
+
+// Segments that update themselves
+await customerio`active Pro users`
+  .count()  // real-time membership
+
+await customerio`cart abandoners from yesterday`
+  .each(user => customerio`remind ${user} about cart`)
+```
+
+### Campaigns
+
+```typescript
+// Trigger campaigns naturally
+await customerio`send welcome email to alice@example.com`
+await customerio`start onboarding sequence for new signups`
+await customerio`notify Pro users about the new feature`
+
+// Multi-step journeys
+await customerio`users who signed up today`
+  .notify('Welcome! Here is how to get started...')
+  .wait('3 days')
+  .notify('Have you tried our export feature?')
+  .wait('7 days')
+  .notify('Ready to upgrade to Pro?')
 ```
 
 ### Multi-Channel Delivery
 
 ```typescript
-import { CustomerIO } from 'customerio.do'
+// Just say what you want
+await customerio`email alice about the sale`
+await customerio`push notification to mobile users`
+await customerio`SMS bob about order shipped`
 
-const cio = new CustomerIO(env.CUSTOMERIO)
-
-// Send directly to a channel
-await cio.send('user_123', {
-  channel: 'email',
-  template: 'welcome',
-  data: { name: 'Alice' }
-})
-
-// Send with fallback
-await cio.send('user_123', {
-  channel: 'push',
-  fallback: 'email',  // If push fails or user opted out
-  template: 'notification',
-  data: { message: 'New feature available!' }
-})
+// Automatic fallback
+await customerio`notify alice about new feature`
+  // Tries push, falls back to email, then SMS
 ```
 
-### Liquid Templates
+### Templates
 
 ```typescript
-import { CustomerIO } from 'customerio.do'
+// AI writes personalized content
+await customerio`welcome email for Pro users`
+  // Generates context-aware template
 
-const cio = new CustomerIO(env.CUSTOMERIO)
-
-// Create a template
-await cio.templates.create({
-  id: 'welcome',
-  channel: 'email',
-  subject: 'Welcome, {{ user.name }}!',
-  body: `
-    <h1>Welcome to {{ company.name }}</h1>
-
-    {% if user.plan == 'pro' %}
-      <p>Thank you for choosing Pro!</p>
-    {% else %}
-      <p>Upgrade to Pro for more features.</p>
-    {% endif %}
-
-    <ul>
-    {% for feature in user.features %}
-      <li>{{ feature | capitalize }}</li>
-    {% endfor %}
-    </ul>
-  `
-})
-
-// Preview a template
-const preview = await cio.templates.preview('welcome', {
-  user: { name: 'Alice', plan: 'pro', features: ['export', 'api'] },
-  company: { name: 'Acme Inc' }
-})
+// Or preview with data
+await customerio`preview welcome email for alice`
 ```
 
-## API Overview
+## Promise Pipelining
 
-### Track API (`customerio.do`)
+Chain operations without waiting:
 
-- `identify(userId, traits, options)` - Create/update user profile
-- `track(userId, event, properties, options)` - Record event
-- `batch(events)` - Bulk event ingestion
+```typescript
+// One network round trip
+const campaigns = await customerio`users from Google Ads this week`
+  .map(user => customerio`send welcome sequence to ${user}`)
+  .map(result => customerio`track ${result} delivery status`)
 
-### Workflows (`customerio.do/workflows`)
+// Parallel outreach
+await customerio`inactive Pro users`
+  .map(user => [
+    customerio`email ${user} win-back offer`,
+    customerio`push ${user} reminder`,
+  ])
+```
 
-- `trigger(workflowId, options)` - Start a journey
-- `getStatus(runId)` - Check run status
-- `cancel(runId)` - Cancel in-progress run
+## Architecture
 
-### Segments (`customerio.do/segments`)
+```
+Internet --> Cloudflare Worker --> Durable Object --> SQLite
+                  |                     |                |
+             Edge Routing          Customer Data     User Profiles
+                                   Event History     Segments
+                                   Campaign State    Preferences
+```
 
-- `create(definition)` - Define a segment
-- `update(segmentId, definition)` - Modify rules
-- `members(segmentId)` - Query membership
-- `check(segmentId, userId)` - Check single user
+### Durable Object per Workspace
 
-### Delivery (`customerio.do/delivery`)
+```
+CustomerIODO (config, channels, templates)
+  |
+  +-- UsersDO (profiles, attributes)
+  |     |-- SQLite: User records
+  |     +-- R2: Profile data
+  |
+  +-- EventsDO (tracking, history)
+  |     |-- SQLite: Event stream
+  |     +-- R2: Event archive
+  |
+  +-- SegmentsDO (audiences, rules)
+  |     |-- SQLite: Segment definitions
+  |
+  +-- CampaignsDO (journeys, workflows)
+        |-- SQLite: Campaign state
+        +-- CF Workflows: Journey engine
+```
 
-- `send(userId, options)` - Send message
-- `status(messageId)` - Delivery status
+### Storage Tiers
 
-### Templates (`customerio.do/templates`)
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Active users, recent events | <10ms |
+| **Warm** | R2 + SQLite Index | Historical events (30-90 days) | <100ms |
+| **Cold** | R2 Archive | Compliance retention (1+ years) | <1s |
 
-- `create(template)` - Create template
-- `update(templateId, template)` - Modify template
-- `preview(templateId, context)` - Render preview
+## vs Customer.io
 
-## The Rewrites Ecosystem
+| Feature | Customer.io | customerio.do |
+|---------|-------------|---------------|
+| **Pricing** | $100-1000+/month | ~$10/month |
+| **API Style** | Configuration objects | Natural language |
+| **Setup** | Developer required | Marketer-friendly |
+| **Workflows** | Proprietary builder | Cloudflare Workflows |
+| **Data Location** | Their cloud | Your Cloudflare account |
+| **Customization** | Limited | Code it yourself |
+| **Lock-in** | Data export fees | MIT licensed |
 
-customerio.do is part of the rewrites family - reimplementations of popular infrastructure on Cloudflare Durable Objects:
+## Use Cases
 
-| Rewrite | Original | Purpose |
-|---------|----------|---------|
-| [fsx.do](https://fsx.do) | fs (Node.js) | Filesystem for AI |
-| [gitx.do](https://gitx.do) | git | Version control for AI |
-| [supabase.do](https://supabase.do) | Supabase | Postgres/BaaS for AI |
-| **customerio.do** | Customer.io | Marketing automation for AI |
-| [notify.do](https://notify.do) | Novu/Knock | Notification infrastructure |
-| kafka.do | Kafka | Event streaming for AI |
-| nats.do | NATS | Messaging for AI |
+### Product-Led Growth
+
+```typescript
+// Trial conversion automation
+await customerio`users on day 7 of trial who haven't activated`
+  .notify('Need help getting started?')
+  .wait('3 days')
+  .notify('Your trial ends soon - upgrade now for 20% off')
+
+// Feature adoption
+await customerio`Pro users who never used export`
+  .notify('Did you know you can export your data?')
+```
+
+### E-Commerce
+
+```typescript
+// Cart recovery
+await customerio`cart abandoners in the last hour`
+  .wait('1 hour')
+  .notify('You left something behind!')
+  .wait('24 hours')
+  .notify('Still thinking about it? Here is 10% off')
+
+// Post-purchase
+await customerio`customers who ordered today`
+  .notify('Your order is confirmed!')
+  .wait('3 days')
+  .notify('How was your experience? Leave a review')
+```
+
+### SaaS Onboarding
+
+```typescript
+// Welcome sequence
+await customerio`new signups`
+  .notify('Welcome! Here is how to get started')
+  .wait('1 day')
+  .notify('Have you completed your first project?')
+  .wait('3 days')
+  .notify('Meet the features that power users love')
+
+// Re-engagement
+await customerio`users inactive for 30 days`
+  .notify('We miss you! Here is what is new')
+```
+
+## AI-Native Marketing
+
+### Audience Discovery
+
+```typescript
+// AI finds your best audiences
+await customerio`users most likely to convert`
+await customerio`customers at risk of churning`
+await customerio`users who would benefit from Pro`
+```
+
+### Content Generation
+
+```typescript
+// AI writes the copy
+await customerio`write win-back email for churned Pro users`
+await customerio`generate subject lines for cart abandonment`
+await customerio`personalize welcome email for alice`
+```
+
+### Campaign Optimization
+
+```typescript
+// AI optimizes timing and content
+await customerio`best time to email alice`
+await customerio`which subject line performs better for Pro users`
+await customerio`optimize cart abandonment sequence`
+```
+
+## Multi-Agent Marketing
+
+Every AI agent gets their own marketing instance:
+
+```typescript
+import { mark, sally } from 'agents.do'
+import { customerio } from 'customerio.do'
+
+// Mark handles marketing campaigns
+await mark`announce the new feature to Pro users`
+  // Uses customerio under the hood
+
+// Sally handles sales outreach
+await sally`reach out to trial users about to expire`
+  // Different campaigns, same platform
+```
 
 ## The workers.do Platform
 
@@ -271,27 +368,65 @@ customerio.do is a core service of [workers.do](https://workers.do) - the platfo
 
 ```typescript
 import { priya, ralph, tom, mark } from 'agents.do'
-import { CustomerIO } from 'customerio.do'
 
-// AI agents with marketing automation
-const startup = {
-  product: priya,
-  engineering: ralph,
-  tech: tom,
-  marketing: mark,
-}
-
-// Mark runs marketing campaigns
-const markCIO = CustomerIO.for(mark)
-
-await markCIO.workflows.trigger('launch-announcement', {
-  segment: 'active-users',
-  data: { feature: 'AI Assistant', launch_date: '2024-01-15' }
-})
+// AI agents with marketing built in
+await mark`launch announcement for AI Assistant`
+await sally`follow up with leads from the webinar`
+await priya`notify beta users about the new feature`
 ```
 
 Both kinds of workers. Working for you.
 
+## Roadmap
+
+### Core Features
+- [x] User Profiles
+- [x] Event Tracking
+- [x] Dynamic Segments
+- [x] Multi-Channel Delivery
+- [x] Campaign Workflows
+- [ ] A/B Testing
+- [ ] Predictive Analytics
+
+### Channels
+- [x] Email (via Resend/Postmark)
+- [x] Push Notifications
+- [x] SMS (via Twilio)
+- [x] In-App Messages
+- [ ] WhatsApp
+- [ ] Slack
+
+### AI
+- [x] Natural Language Queries
+- [x] Content Generation
+- [ ] Send Time Optimization
+- [ ] Churn Prediction
+- [ ] Audience Discovery
+
+## Contributing
+
+customerio.do is open source under the MIT license.
+
+```bash
+git clone https://github.com/dotdo/customerio.do
+cd customerio.do
+pnpm install
+pnpm test
+```
+
 ## License
 
-MIT
+MIT License - Marketing automation for everyone.
+
+---
+
+<p align="center">
+  <strong>Talk to your marketing platform.</strong>
+  <br />
+  Natural language. Edge-native. AI-first.
+  <br /><br />
+  <a href="https://customerio.do">Website</a> |
+  <a href="https://docs.customerio.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/customerio.do">GitHub</a>
+</p>

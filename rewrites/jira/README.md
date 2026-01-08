@@ -4,7 +4,36 @@
 
 Jira became synonymous with issue tracking. It also became synonymous with slowness, complexity, and eye-watering enterprise pricing. Every developer knows the pain: waiting for pages to load, clicking through endless configuration screens, paying $8.15/user/month that somehow balloons to six figures annually.
 
-**jira.do** reimagines issue tracking for the AI era. Deploy your own Jira. JQL-compatible queries. AI that triages bugs, writes acceptance criteria, and estimates story points while you sleep.
+**jira.do** reimagines issue tracking for the AI era. Deploy your own Jira. Natural language queries. AI that triages bugs, writes acceptance criteria, and estimates story points while you sleep.
+
+## AI-Native API
+
+```typescript
+import { jira } from 'jira.do'           // Full SDK
+import { jira } from 'jira.do/tiny'      // Minimal client
+import { jira } from 'jira.do/agile'     // Scrum/Kanban operations
+```
+
+Natural language for project management:
+
+```typescript
+import { jira } from 'jira.do'
+
+// Talk to it like a colleague
+const bugs = await jira`critical bugs blocking release`
+const myWork = await jira`my issues in current sprint`
+const blocked = await jira`what's blocked and why?`
+
+// Chain like sentences
+await jira`untriaged bugs this week`
+  .map(bug => jira`triage ${bug}`)
+  .map(bug => jira`assign ${bug} to on-call`)
+
+// Ship a release with one pipeline
+await jira`completed since last release`
+  .map(issue => jira`add to release notes ${issue}`)
+  .notify(`#releases`)
+```
 
 ## The Problem
 
@@ -38,9 +67,9 @@ $8-16/user/month              $0 - run your own
 Slow page loads               Instant (edge computing)
 Complex configuration         Convention over configuration
 AI as premium add-on          AI-native from day one
-JQL queries                   JQL queries (compatible!)
+JQL queries                   Natural language
 Atlassian servers             Your Cloudflare account
-Groovy automations            TypeScript workflows
+Groovy automations            Say what you want
 Their ecosystem               Open ecosystem
 ```
 
@@ -52,205 +81,89 @@ npx create-dotdo jira
 
 That's it. Your own Jira. Running on Cloudflare. Ready for issues.
 
-Or deploy to an existing workers.do project:
-
-```bash
-npx dotdo add jira
-```
-
-## The workers.do Way
-
-You're building a product. Your team needs issue tracking. Jira wants $100k/year and your developers spend more time waiting for pages to load than writing code. There's a better way.
-
-**Natural language. Tagged templates. AI agents that work.**
-
 ```typescript
-import { jira } from 'jira.do'
-import { priya, ralph, quinn } from 'agents.do'
+import { Jira } from 'jira.do'
 
-// Talk to your issue tracker like a human
-const bugs = await jira`find critical bugs from ${sprint}`
-const blocked = await jira`which stories are blocked and why?`
-const myWork = await jira`what am I working on?`
+export default Jira({
+  name: 'my-startup',
+  domain: 'issues.my-startup.com',
+})
 ```
-
-**Promise pipelining - chain work without Promise.all:**
-
-```typescript
-// Ship a release with one pipeline
-const shipped = await jira`find completed issues in ${cycle}`
-  .map(issue => mark`write release notes for ${issue}`)
-  .map(notes => priya`review ${notes}`)
-
-// AI triage pipeline
-const triaged = await jira`show untriaged issues`
-  .map(issue => priya`analyze and prioritize ${issue}`)
-  .map(issue => ralph`estimate ${issue}`)
-  .map(issue => quinn`identify test cases for ${issue}`)
-```
-
-One network round trip. Record-replay pipelining. Workers working for you.
 
 ## Features
 
-### Issue Tracking
-
-Everything you expect from a modern issue tracker:
-
-| Feature | Description |
-|---------|-------------|
-| **Issues** | Bugs, stories, tasks, epics, subtasks |
-| **Projects** | Organize work by team or product |
-| **Boards** | Kanban and Scrum boards |
-| **Backlogs** | Prioritized work queues |
-| **Sprints** | Time-boxed iterations |
-| **Roadmaps** | Visual timeline planning |
-| **Components** | Categorize by system area |
-| **Versions** | Track releases |
-| **Labels** | Flexible tagging |
-| **Custom Fields** | Your data, your schema |
-
-### JQL Compatible
-
-Write JQL exactly like Jira:
-
-```sql
-project = BACKEND AND status = "In Progress" AND assignee = currentUser()
-ORDER BY priority DESC, created ASC
-```
-
-Advanced queries work too:
-
-```sql
-project in (FRONTEND, BACKEND, MOBILE)
-  AND resolution = Unresolved
-  AND priority in (Critical, High)
-  AND created >= -30d
-  AND labels in (security, performance)
-ORDER BY updated DESC
-```
-
-The JQL parser compiles to SQLite - your queries run locally, instantly.
-
-### Agile Boards
-
-#### Scrum Board
+### Issues
 
 ```typescript
-import { Board, Sprint } from 'jira.do'
+// Create issues naturally
+await jira`create bug "Login broken on Safari" priority high`
+await jira`new story "User can export dashboard as PDF"`
+await jira`add task "Update dependencies" to current sprint`
 
-export const backendBoard = Board({
-  name: 'Backend Scrum',
-  type: 'scrum',
-  project: 'BACKEND',
-  columns: ['To Do', 'In Progress', 'Code Review', 'Testing', 'Done'],
-  swimlanes: 'assignee',
-  quickFilters: [
-    { name: 'Only My Issues', jql: 'assignee = currentUser()' },
-    { name: 'Critical', jql: 'priority = Critical' },
-  ],
-})
+// Find issues by talking
+await jira`my open bugs`
+await jira`unassigned stories in backend`
+await jira`blockers for release 2.0`
+await jira`what did I close this week?`
 
-// Sprint management
-const currentSprint = await Sprint.active('BACKEND')
-await Sprint.create({
-  name: 'Sprint 42',
-  startDate: '2025-01-13',
-  endDate: '2025-01-24',
-  goal: 'Complete authentication refactor',
-})
+// AI infers what you need
+await jira`BACKEND-123`                    // returns the issue
+await jira`comments on BACKEND-123`        // returns comments
+await jira`history of BACKEND-123`         // returns changelog
 ```
 
-#### Kanban Board
+### Sprints
 
 ```typescript
-export const supportBoard = Board({
-  name: 'Support Kanban',
-  type: 'kanban',
-  project: 'SUPPORT',
-  columns: [
-    { name: 'Inbox', limit: null },
-    { name: 'Triage', limit: 5 },
-    { name: 'Working', limit: 3 },
-    { name: 'Review', limit: 2 },
-    { name: 'Done', limit: null },
-  ],
-})
+// Sprint management as conversation
+await jira`start sprint "Auth Refactor" two weeks`
+await jira`current sprint progress`
+await jira`what's left in this sprint?`
+await jira`close sprint and move incomplete to backlog`
+
+// Sprint planning with AI
+await jira`plan next sprint 40 points`     // AI picks from backlog
+await jira`can we fit BACKEND-456 in this sprint?`
+```
+
+### Boards
+
+```typescript
+// Scrum or Kanban, just ask
+await jira`show backend board`
+await jira`what's in code review?`
+await jira`move BACKEND-123 to testing`
+
+// Board health
+await jira`blocked items on frontend board`
+await jira`what's been in progress too long?`
 ```
 
 ### Workflows
 
-Define issue workflows in TypeScript:
-
 ```typescript
-import { Workflow, Transition } from 'jira.do'
+// Transition issues naturally
+await jira`start work on BACKEND-123`
+await jira`BACKEND-123 ready for review`
+await jira`close BACKEND-123 as fixed`
 
-export const bugWorkflow = Workflow({
-  name: 'Bug Workflow',
-  statuses: ['Open', 'In Progress', 'In Review', 'Testing', 'Done'],
-  transitions: [
-    Transition('Open', 'In Progress', {
-      validators: [{ field: 'assignee', isNotEmpty: true }],
-    }),
-    Transition('In Progress', 'In Review', {
-      postFunctions: [
-        { action: 'addLabel', value: 'needs-review' },
-        { action: 'notify', recipients: ['lead'] },
-      ],
-    }),
-    Transition('In Review', 'Testing', {
-      conditions: [{ field: 'reviewer', approved: true }],
-    }),
-    Transition('Testing', 'Done', {
-      conditions: [{ field: 'qa', approved: true }],
-      postFunctions: [
-        { action: 'setField', field: 'resolution', value: 'Fixed' },
-      ],
-    }),
-  ],
-})
+// Bulk transitions
+await jira`close all done issues in sprint`
+await jira`reopen BACKEND-100 through BACKEND-110`
 ```
 
 ### Automations
 
-Automate repetitive tasks with TypeScript:
-
 ```typescript
-import { Automation } from 'jira.do'
+// Describe what you want, AI makes it happen
+await jira`when bugs are created, assign to on-call`
+await jira`notify #frontend when frontend issues are critical`
+await jira`escalate if critical bugs sit untouched for 4 hours`
 
-// Auto-assign based on component
-export const componentAssignment = Automation({
-  name: 'Component Auto-Assignment',
-  trigger: { event: 'issue.created' },
-  conditions: [
-    { field: 'assignee', isEmpty: true },
-    { field: 'components', isNotEmpty: true },
-  ],
-  actions: async (issue) => {
-    const component = issue.components[0]
-    const lead = await component.getLead()
-    await issue.update({ assignee: lead })
-  },
-})
-
-// SLA breach warning
-export const slaWarning = Automation({
-  name: 'SLA Breach Warning',
-  trigger: { event: 'schedule', cron: '*/15 * * * *' },
-  actions: async () => {
-    const issues = await Issue.query(`
-      priority = Critical
-      AND status != Done
-      AND created <= -4h
-      AND labels not in (sla-warned)
-    `)
-    for (const issue of issues) {
-      await issue.addLabel('sla-warned')
-      await issue.comment('SLA breach imminent. Escalating.')
-      await Slack.notify('#escalations', `Critical issue ${issue.key} approaching SLA breach`)
-    }
-  },
-})
+// Or chain it yourself
+await jira`new critical bugs`
+  .each(bug => jira`assign ${bug} to on-call`)
+  .notify(`#escalations`)
 ```
 
 ## AI-Native Issue Tracking
@@ -259,219 +172,102 @@ Here's where jira.do gets interesting. AI isn't an add-on. It's how modern issue
 
 ### AI Triage
 
-When issues come in, AI handles the grunt work:
-
 ```typescript
-import { ai } from 'jira.do'
+// New issues triage themselves
+await jira`triage new bugs`
+  .map(bug => jira`estimate ${bug}`)
+  .map(bug => jira`assign ${bug} by expertise`)
 
-// AI analyzes every new issue
-export const aiTriage = Automation({
-  name: 'AI Triage',
-  trigger: { event: 'issue.created' },
-  actions: async (issue) => {
-    const analysis = await ai.triage(issue, {
-      estimatePoints: true,
-      suggestPriority: true,
-      suggestComponents: true,
-      suggestAssignee: true,
-      detectDuplicates: true,
-      writeAcceptanceCriteria: issue.type === 'Story',
-    })
+// Or ask for analysis
+await jira`analyze BACKEND-456`
+// AI returns: priority suggestion, estimate, likely assignee, potential duplicates
 
-    // Apply AI suggestions
-    await issue.update({
-      storyPoints: analysis.estimatedPoints,
-      priority: analysis.suggestedPriority,
-      components: analysis.suggestedComponents,
-      labels: analysis.suggestedLabels,
-    })
-
-    // Add AI-generated acceptance criteria
-    if (analysis.acceptanceCriteria) {
-      await issue.update({
-        description: issue.description + '\n\n## Acceptance Criteria\n' + analysis.acceptanceCriteria
-      })
-    }
-
-    // Flag potential duplicates
-    if (analysis.duplicates.length > 0) {
-      await issue.addComment(`Potential duplicates: ${analysis.duplicates.map(d => d.key).join(', ')}`)
-      await issue.addLabel('possible-duplicate')
-    }
-
-    // Auto-assign based on expertise
-    if (analysis.suggestedAssignee) {
-      await issue.update({ assignee: analysis.suggestedAssignee })
-    }
-  },
-})
+// Find duplicates before they multiply
+await jira`is BACKEND-789 a duplicate?`
+await jira`similar issues to "login timeout on mobile"`
 ```
 
-### AI Story Point Estimation
-
-Never play planning poker again:
+### AI Estimation
 
 ```typescript
-const estimate = await ai.estimatePoints(issue, {
-  historical: true,      // Learn from past issues
-  codebase: true,        // Analyze relevant code
-  teamVelocity: true,    // Factor in team capacity
-})
+// Never play planning poker again
+await jira`estimate BACKEND-456`
+// AI compares to similar historical issues, analyzes code complexity
 
-// Returns:
-{
-  points: 5,
-  confidence: 0.82,
-  reasoning: "Similar to BACKEND-234 which took 4 days. Code changes in auth module are well-isolated. Team velocity suggests 5 points is achievable in one sprint.",
-  comparables: ['BACKEND-234', 'BACKEND-198', 'BACKEND-312']
-}
+// Bulk estimation
+await jira`estimate unpointed stories in backlog`
+
+// Sprint capacity planning
+await jira`can backend team fit 45 points next sprint?`
+await jira`what's realistic for next sprint?`
 ```
 
 ### AI Acceptance Criteria
 
-Product managers rejoice:
-
 ```typescript
-const story = Issue.create({
-  type: 'Story',
-  summary: 'User can reset password via email',
-  description: 'Users need to reset their password when they forget it.',
-})
+// AI writes acceptance criteria from story descriptions
+await jira`write acceptance criteria for BACKEND-456`
 
-// AI generates acceptance criteria
-const ac = await ai.acceptanceCriteria(story)
+// Or generate from scratch
+await jira`create story "password reset via email" with AC`
+// AI generates full acceptance criteria, edge cases, security notes
 
-// Returns:
-`
-## Acceptance Criteria
-
-- [ ] User can click "Forgot Password" from login page
-- [ ] User enters email address
-- [ ] System validates email exists in database
-- [ ] System sends password reset email within 30 seconds
-- [ ] Email contains secure, time-limited reset link (expires in 1 hour)
-- [ ] User can set new password meeting security requirements
-- [ ] User receives confirmation email after password change
-- [ ] User can log in with new password
-
-## Technical Notes
-- Reset tokens should use cryptographically secure random generation
-- Rate limit reset requests to prevent abuse (max 5 per hour per email)
-- Log all password reset attempts for security audit
-`
+// Batch it
+await jira`stories missing acceptance criteria`
+  .map(story => jira`write acceptance criteria for ${story}`)
 ```
 
 ### AI Bug Analysis
 
-AI reads stack traces so you don't have to:
-
 ```typescript
-const bugAnalysis = await ai.analyzeBug(issue, {
-  stackTrace: issue.description,
-  codebase: true,
-  recentCommits: true,
-})
+// AI reads stack traces so you don't have to
+await jira`analyze bug BACKEND-789`
+// Returns: root cause, likely file, suggested fix, who to assign
 
-// Returns:
-{
-  rootCause: "Null pointer exception in UserService.getProfile() when user.email is null",
-  likelyFile: "src/services/user-service.ts:142",
-  suggestedFix: "Add null check before accessing user.email property",
-  recentCommit: {
-    sha: "abc123",
-    message: "Refactor user profile loading",
-    author: "alice@company.com",
-    relevance: 0.91
-  },
-  assigneeSuggestion: "alice@company.com"  // Author of related commit
-}
-```
+// Find the culprit
+await jira`who should fix BACKEND-789?`
+// AI checks recent commits, code ownership, current workload
 
-### Natural Language Queries
-
-Skip JQL entirely:
-
-```typescript
-import { jira } from 'jira.do'
-
-// Natural language to JQL
-const bugs = await jira`show me all critical bugs from this week`
-const myWork = await jira`what am I working on?`
-const blocked = await jira`which stories are blocked and why?`
-const velocity = await jira`how many points did the backend team complete last sprint?`
+// Connect the dots
+await jira`what commit caused BACKEND-789?`
+await jira`related issues to BACKEND-789`
 ```
 
 ### AI Sprint Planning
 
-Let AI help plan sprints:
-
 ```typescript
-const sprintPlan = await ai.planSprint({
-  team: 'backend',
-  capacity: 45,  // story points
-  priorities: ['security', 'performance'],
-  mustInclude: ['BACKEND-500', 'BACKEND-501'],  // Critical issues
-})
+// Let AI plan your sprint
+await jira`plan next sprint for backend team`
+await jira`plan sprint prioritizing security issues`
 
-// Returns:
-{
-  suggestedIssues: ['BACKEND-500', 'BACKEND-501', 'BACKEND-456', 'BACKEND-478'],
-  totalPoints: 43,
-  reasoning: "Prioritized security issues as requested. Included BACKEND-478 as it unblocks BACKEND-500. Left 2 points buffer for unexpected work.",
-  risks: [
-    "BACKEND-456 has no acceptance criteria - recommend writing before sprint start",
-    "BACKEND-478 depends on external API that has been flaky"
-  ]
-}
+// What-if scenarios
+await jira`what if we add BACKEND-456 to current sprint?`
+await jira`sprint risks for current sprint`
+
+// Retrospective insights
+await jira`why did last sprint slip?`
+await jira`what patterns in our blocked issues?`
 ```
 
 ## Real-Time Collaboration
 
-Built on Durable Objects for true real-time:
-
 ```typescript
-// Subscribe to issue changes
-const subscription = issue.subscribe((change) => {
-  console.log(`${change.field} changed from ${change.oldValue} to ${change.newValue} by ${change.user}`)
-})
+// Watch issues live
+await jira`watch BACKEND-123`
+  .on('change', delta => console.log(`${delta.field} changed`))
 
-// Subscribe to board changes
-const boardSub = board.subscribe((event) => {
-  if (event.type === 'issue.moved') {
-    console.log(`${event.issue.key} moved to ${event.column}`)
-  }
-})
+// Board presence
+await jira`show backend board`
+  .on('move', issue => console.log(`${issue.key} moved`))
+  .on('presence', users => console.log(`${users.length} viewing`))
 
-// Presence awareness
-board.onPresence((users) => {
-  console.log(`${users.length} people viewing this board`)
-})
+// Team activity stream
+await jira`backend team activity today`
 ```
 
 ## API Compatible
 
-Drop-in compatibility with Jira's REST API:
-
-```typescript
-// Standard Jira REST API endpoints
-GET    /rest/api/3/issue/{issueKey}
-POST   /rest/api/3/issue
-PUT    /rest/api/3/issue/{issueKey}
-DELETE /rest/api/3/issue/{issueKey}
-
-GET    /rest/api/3/project
-GET    /rest/api/3/project/{projectKey}
-
-POST   /rest/api/3/search  // JQL search
-GET    /rest/agile/1.0/board/{boardId}/sprint
-POST   /rest/agile/1.0/sprint
-
-GET    /rest/api/3/user
-GET    /rest/api/3/field
-GET    /rest/api/3/workflow
-```
-
-Your existing Jira integrations work with minimal changes:
+Drop-in compatibility with Jira's REST API. Your existing integrations work:
 
 ```typescript
 // Existing jira-client code
@@ -484,6 +280,8 @@ const jira = new JiraClient({
 
 const issue = await jira.findIssue('PROJ-123')
 ```
+
+Standard REST endpoints supported: issues, projects, boards, sprints, search, users, fields, workflows.
 
 ## Architecture
 
@@ -514,16 +312,11 @@ OrganizationDO (users, permissions, global config)
 
 ### Storage Tiers
 
-```typescript
-// Hot: SQLite in Durable Object
-// Active issues, recent activity, current sprints
-
-// Warm: R2 object storage
-// Closed issues from past 12 months, attachments
-
-// Cold: R2 archive
-// Historical data, compliance retention
-```
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Active issues, current sprints | <10ms |
+| **Warm** | R2 + SQLite Index | Closed issues (past 12 months) | <100ms |
+| **Cold** | R2 Archive | Historical data, compliance | <1s |
 
 ### Multi-Tenancy
 
@@ -536,6 +329,19 @@ opensource.jira.do       <- Open source project
 ```
 
 Each org has isolated data, users, and configuration.
+
+## vs Jira Cloud
+
+| Feature | Jira Cloud | jira.do |
+|---------|-----------|---------|
+| **Cost** | $8-16/user/month | ~$5/month total |
+| **Page Load** | 3-5 seconds | <100ms |
+| **Architecture** | Atlassian Cloud | Edge-native, global |
+| **Queries** | JQL only | Natural language |
+| **AI** | Enterprise add-on | Built-in from day one |
+| **Data Location** | Atlassian data centers | Your Cloudflare account |
+| **Customization** | Marketplace apps | Code it yourself |
+| **Lock-in** | Years of migration | MIT licensed |
 
 ## Migration from Jira
 
@@ -585,20 +391,29 @@ npm run deploy  # Production deployment
 
 ## Roadmap
 
+### Core
 - [x] Issues, projects, components, versions
-- [x] JQL parser and query engine
+- [x] Natural language queries
 - [x] Scrum and Kanban boards
 - [x] Sprints and backlogs
 - [x] Workflows and transitions
 - [x] Custom fields
 - [x] REST API compatibility
+
+### AI
 - [x] AI triage and estimation
+- [x] Acceptance criteria generation
+- [x] Bug analysis and assignment
+- [x] Sprint planning assistance
+- [ ] Predictive velocity
+- [ ] Burndown forecasting
+
+### Integrations
 - [ ] Advanced roadmaps
 - [ ] Confluence integration (confluence.do)
 - [ ] Tempo/time tracking
-- [ ] Structure (hierarchies beyond epics)
-- [ ] ScriptRunner compatibility
-- [ ] Jira Service Management mode
+- [ ] GitHub/GitLab sync
+- [ ] Slack/Teams notifications
 
 ## Why Open Source?
 
@@ -616,7 +431,7 @@ Jira showed the world what issue tracking could be. **jira.do** makes it fast, i
 We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 Key areas:
-- JQL parser extensions
+- Natural language query extensions
 - Board and workflow features
 - API compatibility
 - AI/MCP integrations
@@ -629,7 +444,12 @@ MIT License - Use it however you want. Build your business on it. Fork it. Make 
 ---
 
 <p align="center">
-  <strong>jira.do</strong> is part of the <a href="https://dotdo.dev">dotdo</a> platform.
+  <strong>The $96k/year issue tracker ends here.</strong>
   <br />
-  <a href="https://jira.do">Website</a> | <a href="https://docs.jira.do">Docs</a> | <a href="https://discord.gg/dotdo">Discord</a>
+  Natural language. AI-native. Your infrastructure.
+  <br /><br />
+  <a href="https://jira.do">Website</a> |
+  <a href="https://docs.jira.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/jira.do">GitHub</a>
 </p>

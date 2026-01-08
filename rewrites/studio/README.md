@@ -1,88 +1,206 @@
 # studio.do
 
-Database Studio on Cloudflare Durable Objects - A database management UI for every AI agent.
+> Database Studio. Edge-Native. AI-First. Every Agent Gets Their Own.
 
-## The workers.do Way
+Drizzle Studio is a centralized dashboard. TablePlus is a desktop app. pgAdmin is from the 2000s. They're all built for humans clicking through GUIs. But when Tom needs to understand why queries are slow, or Ralph needs to implement a migration, they shouldn't navigate interfaces designed for human fingers.
 
-Your AI agents need to see the data. Existing tools are built for humans at dashboards. But when Tom needs to understand why queries are slow, or Ralph needs to implement a migration, they shouldn't have to navigate a GUI designed for human fingers.
+**studio.do** gives every AI agent their own Database Studio. Persistent state. Query history. Schema introspection. All through natural language.
 
-**Natural Language First**
+## AI-Native API
 
 ```typescript
-import { tom, ralph } from 'agents.do'
+import { studio } from 'studio.do'           // Full SDK
+import { studio } from 'studio.do/tiny'      // Minimal client
+import { studio } from 'studio.do/mcp'       // MCP tools only
+```
+
+Natural language for database operations:
+
+```typescript
 import { studio } from 'studio.do'
 
-// Tagged template literals - talk to your agents
-const schema = await tom`show me the database schema`
-const slow = await tom`find slow queries from today`
-const migration = await studio`generate migration for ${changes}`
-```
+// Talk to it like a colleague
+const schema = await studio`schema for users`
+const slow = await studio`slow queries from today`
+const admins = await studio`active admins created this month in users`
 
-**Promise Pipelining**
+// Chain like sentences
+await studio`tables with no indexes`
+  .map(table => studio`add index suggestions for ${table}`)
 
-Chain operations without `Promise.all`. One network round trip:
-
-```typescript
-const optimized = await studio`introspect ${database}`
-  .map(table => tom`analyze ${table} for optimization`)
-  .map(suggestion => ralph`implement ${suggestion}`)
-```
-
-**Migrations and Schema Management**
-
-```typescript
-// Migrations
-await studio.migrate.generate()    // Generate from schema diff
-await studio.migrate.push()        // Apply pending migrations
-await studio.migrate.status()      // Check migration state
-
-// Schema management
-await studio.schema.diff(a, b)     // Compare schemas
-await studio.schema.snapshot()     // Save current state
+// Connections are one line
+await studio`connect to Turso at libsql://my-db.turso.io`
+await studio`connect to D1 database MAIN_DB`
+await studio`connect to Supabase project xyz`
 ```
 
 ## The Problem
 
-AI agents need to inspect and manage databases. But existing tools like Drizzle Studio are:
-- Centralized (not edge-native)
-- Proprietary (not open source)
-- Config-driven (require `drizzle.config.ts`)
-- Human-focused (no MCP/AI integration)
+Drizzle Studio dominates database tooling:
 
-## The Vision
+| What Drizzle Studio Requires | The Reality |
+|------------------------------|-------------|
+| **Config Files** | `drizzle.config.ts` required |
+| **Centralized** | Single server, not edge-native |
+| **Proprietary** | Free tier, paid cloud |
+| **Human-Only** | No MCP/AI integration |
+| **Shared State** | Everyone sees the same thing |
 
-Every AI agent gets their own Database Studio instance.
+### The Database Tax
 
-```typescript
-import { tom, ralph } from 'agents.do'
-import { Turso } from 'turso.do'
-import { Studio } from 'studio.do'
+Every database interaction requires:
+- Opening a GUI application
+- Navigating menus and buttons
+- Writing SQL in text boxes
+- Copy-pasting results
 
-// Each agent has their own database
-const tomDb = Turso.for(tom)
-const ralphDb = Turso.for(ralph)
+AI agents can't do any of this. They need programmatic access.
 
-// And their own Studio to manage it
-const tomStudio = Studio.for(tom)
-await tomStudio.connect(tomDb)
+### The Isolation Problem
 
-// AI can now introspect and modify data structures
-await tom`check my database schema and suggest optimizations`
-// Uses MCP tools: studio_introspect, studio_query
+When Tom analyzes slow queries, he shouldn't see Ralph's query history. When Ralph runs migrations, he shouldn't affect Tom's connections. Shared dashboards break isolation.
+
+## The Solution
+
+**studio.do** reimagines database tooling for AI:
+
+```
+Drizzle Studio                  studio.do
+-----------------------------------------------------------------
+Config files required           Runtime introspection
+Centralized server              Durable Object per agent
+Proprietary cloud               Open source (MIT)
+Human GUI                       Natural language API
+Shared dashboard                Isolated per agent
+No MCP                          MCP tools native
 ```
 
-Not a shared admin panel. Each agent has isolated, persistent Studio state.
+## One-Click Deploy
+
+```bash
+npx create-dotdo studio
+```
+
+A Database Studio for every AI agent. Running on infrastructure you control.
+
+```typescript
+import { Studio } from 'studio.do'
+
+export default Studio({
+  name: 'my-studio',
+  domain: 'db.my-app.com',
+})
+```
 
 ## Features
 
-- **Runtime Introspection** - No config files needed, introspects live databases
-- **Multi-Database Support** - Turso, Supabase.do, Cloudflare D1, any libSQL
-- **MCP Tools** - AI-native database operations via Model Context Protocol
-- **Per-Agent Isolation** - Each agent/tenant gets their own Studio instance
-- **Query History** - Stored in DO SQLite, persists across sessions
-- **Schema Visualization** - ER diagrams via Mermaid
+### Schema Introspection
+
+```typescript
+// Natural as asking a colleague
+await studio`schema`                        // all tables
+await studio`schema for users`              // single table
+await studio`columns in orders`             // column definitions
+await studio`indexes on products`           // index definitions
+await studio`foreign keys for invoices`     // relationships
+
+// AI infers what you need
+await studio`users`                         // returns schema
+await studio`users data`                    // returns rows
+await studio`users structure`               // returns columns
+```
+
+### Browsing Data
+
+```typescript
+// Just describe what you want
+await studio`active admins in users`
+await studio`orders from last week`
+await studio`products under $50`
+
+// Sorting and limiting read naturally
+await studio`top 10 customers by revenue`
+await studio`oldest users created before 2020`
+await studio`recent errors limit 100`
+```
+
+### Executing Queries
+
+```typescript
+// Raw SQL when you need it
+await studio`run SELECT * FROM users WHERE id = 123`
+await studio`execute DROP TABLE temp_data`
+
+// Query history
+await studio`my recent queries`
+await studio`slow queries from today`
+await studio`failed queries this week`
+```
+
+### Connections
+
+```typescript
+// Connect with one line
+await studio`connect to Turso at libsql://my-db.turso.io`
+await studio`connect to D1 database MAIN_DB`
+await studio`connect to Supabase project xyz`
+await studio`connect to Postgres at postgres://localhost/mydb`
+
+// Manage connections
+await studio`list connections`
+await studio`disconnect from Turso`
+await studio`switch to production`
+```
+
+### Migrations
+
+```typescript
+// Schema changes are sentences
+await studio`add email column to users`
+await studio`create index on orders.customer_id`
+await studio`rename column username to name in users`
+
+// Migration management
+await studio`pending migrations`
+await studio`apply migrations`
+await studio`rollback last migration`
+
+// Generate from diff
+await studio`generate migration from schema changes`
+```
+
+### Schema Visualization
+
+```typescript
+// ER diagrams on demand
+await studio`diagram for orders`
+await studio`visualize relationships`
+await studio`entity diagram for billing tables`
+```
+
+### Promise Pipelining
+
+Chain operations without `Promise.all`. One network round trip:
+
+```typescript
+// Analyze and optimize
+await studio`tables with no indexes`
+  .map(table => studio`suggest indexes for ${table}`)
+  .map(suggestion => studio`apply ${suggestion}`)
+
+// Bulk introspection
+await studio`all tables`
+  .map(table => studio`analyze ${table} for optimization`)
+
+// Migration pipeline
+await studio`schema diff from last week`
+  .map(change => studio`generate migration for ${change}`)
+  .map(migration => studio`review ${migration}`)
+```
 
 ## Architecture
+
+### Durable Object per Agent
 
 ```
                     +-----------------------+
@@ -106,175 +224,119 @@ Not a shared admin panel. Each agent has isolated, persistent Studio state.
 
 **Key insight**: Durable Objects provide per-agent state. Each Studio instance stores its own connection info, query history, and preferences in DO SQLite.
 
-## Installation
+### Multi-Database Support
 
-```bash
-npm install studio.do
-```
-
-## Quick Start
-
-### Connect to a Database
-
-```typescript
-import { Studio } from 'studio.do'
-
-const studio = new Studio(env.STUDIO)
-
-// Connect to Turso
-await studio.connect('turso', {
-  url: 'libsql://my-db-org.turso.io',
-  authToken: env.TURSO_TOKEN
-})
-
-// Or connect to D1
-await studio.connect('d1', {
-  binding: env.D1_DATABASE
-})
-
-// Or connect to Supabase.do
-await studio.connect('supabase', {
-  binding: env.SUPABASE_DO
-})
-```
-
-### Introspect Schema
-
-```typescript
-// Get full schema
-const schema = await studio.introspect()
-console.log(schema.tables)
-// [{ name: 'users', columns: [...], indexes: [...], foreignKeys: [...] }, ...]
-
-// Get single table
-const usersTable = await studio.introspect('users')
-```
-
-### Browse Data
-
-```typescript
-// Simple browse
-const users = await studio.browse('users', { limit: 50 })
-
-// With filters
-const activeUsers = await studio.browse('users', {
-  filter: { status: 'active', role: 'admin' },
-  sort: { created_at: 'desc' },
-  limit: 20,
-  offset: 0
-})
-```
-
-### Execute Queries
-
-```typescript
-// Run SQL
-const result = await studio.query('SELECT * FROM users WHERE id = ?', [123])
-
-// Get query history
-const history = await studio.getQueryHistory({ limit: 10 })
-```
+| Database | Connection |
+|----------|------------|
+| **Turso** | `connect to Turso at libsql://...` |
+| **D1** | `connect to D1 database BINDING` |
+| **Supabase** | `connect to Supabase project ID` |
+| **Postgres** | `connect to Postgres at postgres://...` |
+| **SQLite** | `connect to SQLite at /path/to/db` |
 
 ### MCP Tools
 
-```typescript
-import { studioTools, invokeTool } from 'studio.do/mcp'
+AI agents interact via Model Context Protocol:
 
-// List available tools
-console.log(studioTools.map(t => t.name))
-// ['studio_connect', 'studio_introspect', 'studio_browse', 'studio_query', ...]
+| Tool | Natural Language Equivalent |
+|------|----------------------------|
+| `studio_connect` | `connect to Turso at...` |
+| `studio_introspect` | `schema for users` |
+| `studio_browse` | `active admins in users` |
+| `studio_query` | `run SELECT * FROM...` |
+| `studio_alter` | `add email column to users` |
+| `studio_visualize` | `diagram for orders` |
 
-// Invoke a tool
-const schema = await invokeTool('studio_introspect', {
-  database: 'main',
-  tables: ['users', 'posts']
-})
-
-// Browse with natural language (AI feature)
-const result = await invokeTool('studio_browse', {
-  table: 'users',
-  natural: 'active admins created this month'
-})
-```
-
-### Durable Object
+## Agent Integration
 
 ```typescript
-import { StudioDO } from 'studio.do/do'
+import { tom, ralph } from 'agents.do'
+import { studio } from 'studio.do'
 
-// In your worker
-export { StudioDO }
+// Each agent has their own Studio
+await tom`connect to production database`
+await ralph`connect to staging database`
 
-export default {
-  async fetch(request, env) {
-    // Each agent gets their own Studio instance
-    const id = env.STUDIO.idFromName('agent-tom')
-    const stub = env.STUDIO.get(id)
-    return stub.fetch(request)
-  }
-}
+// They don't see each other's connections
+await tom`my connections`     // [production]
+await ralph`my connections`   // [staging]
+
+// Agents can analyze and implement
+await tom`find slow queries`
+  .map(query => tom`analyze ${query}`)
+  .map(issue => ralph`optimize ${issue}`)
 ```
 
-## API Overview
-
-### Core (`studio.do`)
-
-**Connection Management**
-- `connect(type, config)` - Connect to a database
-- `disconnect(name?)` - Disconnect from database(s)
-- `listConnections()` - List active connections
-
-**Schema Introspection**
-- `introspect(table?)` - Get schema for all tables or specific table
-- `getTables()` - List table names
-- `getColumns(table)` - Get column definitions
-- `getIndexes(table)` - Get index definitions
-- `getForeignKeys(table)` - Get foreign key relationships
-
-**Data Operations**
-- `browse(table, options?)` - Browse table data with filtering/pagination
-- `query(sql, params?)` - Execute arbitrary SQL
-- `insert(table, data)` - Insert row(s)
-- `update(table, data, where)` - Update row(s)
-- `delete(table, where)` - Delete row(s)
-
-**Query Management**
-- `getQueryHistory(options?)` - Get past queries
-- `saveQuery(name, sql)` - Save a named query
-- `getSavedQueries()` - List saved queries
-
-### MCP Tools (`studio.do/mcp`)
-
-| Tool | Description |
-|------|-------------|
-| `studio_connect` | Connect to a database |
-| `studio_introspect` | Get database schema |
-| `studio_browse` | Browse table data with filters |
-| `studio_query` | Execute SQL query |
-| `studio_alter` | Modify schema (DDL) |
-| `studio_visualize` | Generate ER diagram |
-
-### Durable Object (`studio.do/do`)
-
-- `StudioDO` - Main Durable Object class
-- Handles all operations via fetch API
-- Stores preferences and history in DO SQLite
-
-## Comparison with Drizzle Studio
+## vs Drizzle Studio
 
 | Feature | Drizzle Studio | studio.do |
-|---------|---------------|-----------|
-| **Architecture** | Centralized server | Durable Object per user |
+|---------|----------------|-----------|
+| **Architecture** | Centralized server | Durable Object per agent |
 | **Open Source** | No | Yes (MIT) |
-| **Schema Source** | Config file | Runtime introspection |
+| **Schema Source** | Config file (`drizzle.config.ts`) | Runtime introspection |
 | **AI Integration** | None | MCP tools native |
 | **Multi-tenancy** | Shared instance | Isolated per agent |
 | **Offline** | No | Yes (DO state persists) |
+| **Natural Language** | No | Yes |
 | **ER Diagrams** | No | Yes (Mermaid) |
+
+## Use Cases
+
+### Database Exploration
+
+```typescript
+// Discover schema
+await studio`all tables`
+await studio`relationships between tables`
+await studio`tables with most rows`
+
+// Profile data
+await studio`column statistics for users`
+await studio`null values in orders`
+await studio`duplicate emails in customers`
+```
+
+### Performance Analysis
+
+```typescript
+// Find problems
+await studio`slow queries from last hour`
+await studio`missing indexes`
+await studio`table scan queries`
+
+// Fix them
+await studio`suggest indexes for orders`
+  .map(suggestion => studio`create ${suggestion}`)
+```
+
+### Data Migration
+
+```typescript
+// Export data
+await studio`export users to CSV`
+await studio`backup orders table`
+
+// Import data
+await studio`import customers from CSV`
+await studio`restore orders from backup`
+```
+
+### Schema Evolution
+
+```typescript
+// Make changes
+await studio`add phone column to customers`
+await studio`drop legacy_id from orders`
+await studio`rename email to email_address in users`
+
+// Track changes
+await studio`migration history`
+await studio`schema changes this month`
+```
 
 ## The Rewrites Ecosystem
 
-studio.do completes the AI infrastructure stack:
+studio.do completes the AI database infrastructure:
 
 | Package | Purpose |
 |---------|---------|
@@ -286,3 +348,16 @@ studio.do completes the AI infrastructure stack:
 ## License
 
 MIT
+
+---
+
+<p align="center">
+  <strong>Drizzle Studio is for humans. studio.do is for AI.</strong>
+  <br />
+  Natural language. Per-agent isolation. Edge-native.
+  <br /><br />
+  <a href="https://studio.do">Website</a> |
+  <a href="https://docs.studio.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/studio.do">GitHub</a>
+</p>

@@ -55,36 +55,49 @@ Your own Asana. Running on Cloudflare. AI that actually coordinates work.
 npx dotdo add asana
 ```
 
-## The workers.do Way
+## AI-Native API
 
-You're building a product. Your team needs work coordination. Asana wants $60k/year with goals and portfolios locked behind premium tiers. AI is an afterthought. There's a better way.
+```typescript
+import { asana } from 'asana.do'           // Full SDK
+import { asana } from 'asana.do/tiny'      // Minimal client
+import { asana } from 'asana.do/goals'     // Goals-focused operations
+```
 
-**Natural language. Tagged templates. AI agents that work.**
+Natural language for work management:
 
 ```typescript
 import { asana } from 'asana.do'
-import { priya, ralph, quinn } from 'agents.do'
 
-// Talk to your work manager like a human
+// Talk to it like a colleague
 const blocked = await asana`what's blocking the mobile app?`
-const capacity = await asana`does the team have bandwidth?`
+const capacity = await asana`does engineering have bandwidth?`
 const priorities = await asana`what should I focus on today?`
+
+// Chain like sentences
+await asana`overdue tasks in Q1 Launch`
+  .map(task => asana`notify assignee of ${task}`)
+
+// Tasks that delegate themselves
+await asana`new feature requests this week`
+  .analyze()         // AI categorizes and estimates
+  .assign()          // best-fit team members
+  .schedule()        // realistic timelines
 ```
 
 **Promise pipelining - chain work without Promise.all:**
 
 ```typescript
 // Goal tracking pipeline
-const tracked = await asana`get Q1 goals`
-  .map(goal => priya`analyze progress on ${goal}`)
+await asana`Q1 goals`
+  .map(goal => asana`analyze progress on ${goal}`)
   .map(goal => asana`update status for ${goal}`)
-  .map(status => mark`write executive summary for ${status}`)
+  .notify(`Q1 goal status updated`)
 
 // Task delegation pipeline
-const delegated = await asana`get new tasks`
-  .map(task => priya`analyze requirements for ${task}`)
-  .map(task => ralph`estimate ${task}`)
+await asana`new tasks in backlog`
+  .map(task => asana`estimate ${task}`)
   .map(task => asana`assign ${task} to best fit`)
+  .map(task => asana`add ${task} to current sprint`)
 ```
 
 One network round trip. Record-replay pipelining. Workers working for you.
@@ -96,39 +109,17 @@ One network round trip. Record-replay pipelining. Workers working for you.
 The atomic unit of work:
 
 ```typescript
-import { Task, Project, Section } from 'asana.do'
+// Create tasks naturally
+await asana`create "Implement user authentication" for Alice due Jan 20`
+await asana`add OAuth2 flow task - Google SSO, GitHub SSO, email fallback`
 
-// Create a task
-const task = await Task.create({
-  name: 'Implement user authentication',
-  assignee: '@alice',
-  dueDate: '2025-01-20',
-  priority: 'high',
-  description: `
-    Implement OAuth2 authentication flow:
-    - Google SSO
-    - GitHub SSO
-    - Email/password fallback
-  `,
-  projects: ['backend-q1'],
-  tags: ['security', 'authentication'],
-})
+// Subtasks just work
+await asana`add subtask "Set up OAuth providers" due Jan 15 to auth task`
+await asana`add subtask "Implement session management" due Jan 18 to auth task`
 
-// Add subtasks
-await task.addSubtask({
-  name: 'Set up OAuth providers',
-  assignee: '@alice',
-  dueDate: '2025-01-15',
-})
-
-await task.addSubtask({
-  name: 'Implement session management',
-  assignee: '@alice',
-  dueDate: '2025-01-18',
-})
-
-// Add dependencies
-await task.addDependency(otherTask)
+// Dependencies read like speech
+await asana`session management depends on OAuth setup`
+await asana`payment integration blocked by legal review`
 ```
 
 ### Projects
@@ -136,26 +127,14 @@ await task.addDependency(otherTask)
 Organize tasks into projects:
 
 ```typescript
-const project = await Project.create({
-  name: 'Backend Q1 2025',
-  team: 'engineering',
-  owner: '@alice',
-  dueDate: '2025-03-31',
-  template: 'software-development',
-  defaultView: 'board',
-  sections: [
-    Section.create({ name: 'Backlog' }),
-    Section.create({ name: 'Ready' }),
-    Section.create({ name: 'In Progress' }),
-    Section.create({ name: 'In Review' }),
-    Section.create({ name: 'Done' }),
-  ],
-  customFields: {
-    Priority: Field.dropdown(['Low', 'Medium', 'High', 'Critical']),
-    Points: Field.number(),
-    Sprint: Field.dropdown(['Sprint 1', 'Sprint 2', 'Sprint 3']),
-  },
-})
+// Create projects naturally
+await asana`create project "Backend Q1 2025" for engineering owned by Alice`
+await asana`add sections Backlog, Ready, In Progress, In Review, Done to Backend Q1`
+
+// Set up custom fields
+await asana`add priority field to Backend Q1 with Low, Medium, High, Critical`
+await asana`add points field to Backend Q1`
+await asana`add sprint field to Backend Q1 with Sprint 1, Sprint 2, Sprint 3`
 ```
 
 ### Views
@@ -163,39 +142,12 @@ const project = await Project.create({
 Multiple ways to see your work:
 
 ```typescript
-// List View (default)
-const listView = View.list({
-  groupBy: 'section',
-  sort: [{ field: 'dueDate', direction: 'asc' }],
-  filter: { assignee: '@me', completed: false },
-})
-
-// Board View (Kanban)
-const boardView = View.board({
-  columns: 'section',
-  cardFields: ['assignee', 'dueDate', 'priority'],
-  swimlanes: 'assignee',
-})
-
-// Timeline View (Gantt)
-const timelineView = View.timeline({
-  dateField: 'dueDate',
-  color: 'priority',
-  showDependencies: true,
-})
-
-// Calendar View
-const calendarView = View.calendar({
-  dateField: 'dueDate',
-  color: 'project',
-})
-
-// Workload View
-const workloadView = View.workload({
-  team: 'engineering',
-  capacity: { type: 'points', perWeek: 40 },
-  dateRange: { start: 'now', end: '+4 weeks' },
-})
+// Query views naturally
+await asana`my incomplete tasks sorted by due date`
+await asana`Backend Q1 board view`
+await asana`Backend Q1 timeline with dependencies`
+await asana`my calendar for this month`
+await asana`engineering workload next 4 weeks`
 ```
 
 ### Portfolios
@@ -203,32 +155,14 @@ const workloadView = View.workload({
 See across all projects:
 
 ```typescript
-import { Portfolio } from 'asana.do'
+// Create portfolios naturally
+await asana`create portfolio "Q1 2025 Initiatives" for CTO`
+await asana`add Backend Q1, Frontend Q1, Mobile Q1, Infrastructure Q1 to Q1 portfolio`
 
-const q1Portfolio = await Portfolio.create({
-  name: 'Q1 2025 Initiatives',
-  owner: '@cto',
-  projects: ['backend-q1', 'frontend-q1', 'mobile-q1', 'infrastructure-q1'],
-  fields: [
-    Field.status(),      // Project health
-    Field.progress(),    // Completion percentage
-    Field.date('dueDate'),
-    Field.person('owner'),
-    Field.custom('priority'),
-    Field.custom('budget'),
-  ],
-})
-
-// Portfolio views
-const statusView = portfolio.view('status', {
-  groupBy: 'status',
-  sort: 'dueDate',
-})
-
-const timelineView = portfolio.view('timeline', {
-  showMilestones: true,
-  color: 'status',
-})
+// Query portfolio views
+await asana`Q1 portfolio by status`
+await asana`Q1 portfolio timeline with milestones`
+await asana`projects at risk in Q1 portfolio`
 ```
 
 ### Goals
@@ -236,41 +170,18 @@ const timelineView = portfolio.view('timeline', {
 Align work to outcomes:
 
 ```typescript
-import { Goal } from 'asana.do'
+// Create goals naturally
+await asana`create goal "Reach $10M ARR" for 2025 owned by CEO`
+await asana`current ARR is $5.2M target is $10M`
 
-// Company goal
-const companyGoal = await Goal.create({
-  name: 'Reach $10M ARR by end of 2025',
-  owner: '@ceo',
-  timeframe: '2025',
-  metric: {
-    type: 'currency',
-    current: 5200000,
-    target: 10000000,
-  },
-})
+// Team goals cascade automatically
+await asana`create goal "Launch enterprise features" for Q1 supporting $10M ARR`
+await asana`link Backend Q1 to enterprise features goal`
 
-// Team goal supporting company goal
-const teamGoal = await Goal.create({
-  name: 'Launch enterprise features',
-  owner: '@pm',
-  timeframe: 'Q1 2025',
-  parent: companyGoal,
-  supportingWork: [
-    { type: 'project', id: 'enterprise-features' },
-    { type: 'portfolio', id: 'q1-initiatives' },
-  ],
-  metric: {
-    type: 'percentage',
-    current: 0,
-    target: 100,
-    autoCalculate: 'from-projects',  // Progress from linked projects
-  },
-})
-
-// Goals cascade automatically
-// When projects complete, goal progress updates
-// When goals update, parent goals recalculate
+// Check goal progress
+await asana`Q1 goals progress`
+await asana`goals at risk`
+await asana`how are we tracking to $10M ARR?`
 ```
 
 ## AI-Native Work Management
@@ -282,22 +193,16 @@ AI doesn't just help - it coordinates.
 Describe work naturally:
 
 ```typescript
-import { ai } from 'asana.do'
-
-// Create tasks from natural language
-const tasks = await ai.createTasks(`
+// Just describe the work - AI creates the tasks
+await asana`
   We need to launch the new pricing page.
   Alice should design the page by Friday.
   Bob needs to implement it, depends on design.
   Carol will write the copy, can start now.
   Dave does QA before launch.
-`)
+`
 
-// AI creates structured tasks with:
-// - Assignees extracted
-// - Dependencies mapped
-// - Due dates inferred
-// - Subtasks where appropriate
+// AI extracts assignees, maps dependencies, infers due dates
 ```
 
 ### AI Project Planning
@@ -305,40 +210,11 @@ const tasks = await ai.createTasks(`
 Let AI structure your project:
 
 ```typescript
-const projectPlan = await ai.planProject({
-  description: 'Build a customer feedback portal',
-  team: ['@alice', '@bob', '@carol'],
-  deadline: '2025-03-01',
-  style: 'agile',
-})
-
-// Returns:
-{
-  phases: [
-    {
-      name: 'Discovery',
-      duration: '1 week',
-      tasks: [
-        { name: 'User interviews', assignee: '@carol', points: 3 },
-        { name: 'Competitive analysis', assignee: '@alice', points: 2 },
-      ],
-    },
-    {
-      name: 'Design',
-      duration: '2 weeks',
-      tasks: [/* ... */],
-    },
-    // ...
-  ],
-  milestones: [
-    { name: 'Design Review', date: '2025-01-24' },
-    { name: 'Beta Launch', date: '2025-02-14' },
-    { name: 'Production Launch', date: '2025-03-01' },
-  ],
-  risks: [
-    { risk: 'Third-party API integration', mitigation: 'Start early, have fallback' },
-  ],
-}
+// Describe what you need - get a full plan
+await asana`plan customer feedback portal for Alice Bob Carol by March 1`
+  .breakdown()   // phases, milestones, dependencies
+  .assign()      // best-fit team members
+  .schedule()    // realistic timelines
 ```
 
 ### AI Task Assignment
@@ -346,31 +222,14 @@ const projectPlan = await ai.planProject({
 Smart work distribution:
 
 ```typescript
-// When new task comes in
-const assignment = await ai.assignTask(task, {
-  team: 'engineering',
-  factors: {
-    expertise: true,     // Match skills to task
-    workload: true,      // Current capacity
-    availability: true,  // Calendar, PTO
-    preference: true,    // Historical preferences
-    development: true,   // Growth opportunities
-  },
-})
+// AI assigns based on expertise, workload, availability
+await asana`assign new auth task to best fit on engineering`
 
-// Returns:
-{
-  recommended: '@alice',
-  confidence: 0.91,
-  reasoning: 'Best expertise match for auth work. Current load at 70%. No conflicts in timeline.',
-  alternatives: [
-    { person: '@bob', score: 0.78, note: 'Good skills, but already on 2 auth tasks' },
-  ],
-  considerations: [
-    'Alice completed 8 similar tasks with 95% on-time rate',
-    'Task aligns with her Q1 growth goal: security expertise',
-  ],
-}
+// Or let AI rebalance the team
+await asana`rebalance engineering workload`
+
+// Check capacity before assigning
+await asana`who can take the payment integration?`
 ```
 
 ### AI Goal Tracking
@@ -378,33 +237,13 @@ const assignment = await ai.assignTask(task, {
 AI monitors and reports on goals:
 
 ```typescript
-// AI analyzes goal progress
-const goalAnalysis = await ai.analyzeGoal(revenueGoal, {
-  depth: 'full',
-  forecast: true,
-  recommendations: true,
-})
+// Check goal health
+await asana`how is $10M ARR goal tracking?`
+await asana`goals at risk this quarter`
+await asana`what's impacting enterprise features goal?`
 
-// Returns:
-{
-  status: 'at_risk',
-  progress: 0.52,  // 52% to target
-  timeElapsed: 0.75,  // 75% through timeframe
-  forecast: {
-    predicted: 8500000,  // Predicted end value
-    probability: 0.65,   // 65% chance of hitting target
-    trend: 'slowing',
-  },
-  contributing: [
-    { project: 'enterprise-sales', impact: 'high', status: 'on_track' },
-    { project: 'pricing-update', impact: 'medium', status: 'delayed' },
-  ],
-  recommendations: [
-    'Pricing update is 2 weeks behind - consider adding resources',
-    'Enterprise sales pipeline strong - accelerate onboarding',
-  ],
-  narrative: 'Revenue goal is at risk. While enterprise sales are performing well, the pricing page delay impacts our ability to capture mid-market customers. Recommend prioritizing pricing page launch.',
-}
+// Get recommendations
+await asana`recommendations for Q1 goals`
 ```
 
 ### AI Status Updates
@@ -412,42 +251,12 @@ const goalAnalysis = await ai.analyzeGoal(revenueGoal, {
 Never write another status update:
 
 ```typescript
-// Generate status update from work activity
-const update = await ai.generateUpdate({
-  scope: 'project',  // or 'portfolio', 'goal', 'team'
-  project: 'backend-q1',
-  period: 'this week',
-  audience: 'stakeholders',
-})
+// Generate updates from work activity
+await asana`Backend Q1 status update for stakeholders`
+await asana`weekly summary for engineering`
+await asana`Q1 portfolio executive summary`
 
-// Returns:
-`
-## Backend Q1 - Weekly Update (Jan 13-17)
-
-### Summary
-Strong progress this week with 12 tasks completed. Authentication module shipped to staging.
-
-### Completed
-- User authentication flow (shipped to staging)
-- Database migration scripts
-- API rate limiting implementation
-
-### In Progress
-- Payment integration (60% complete, on track)
-- Admin dashboard backend
-
-### Blockers
-- Waiting on legal review for payment terms
-
-### Next Week
-- Complete payment integration
-- Start caching layer implementation
-
-### Metrics
-- 12 tasks completed (up from 8 last week)
-- 3 days average cycle time
-- On track for Q1 deadline
-`
+// AI writes the narrative from actual work data
 ```
 
 ### Natural Language Queries
@@ -455,10 +264,10 @@ Strong progress this week with 12 tasks completed. Authentication module shipped
 Query your work naturally:
 
 ```typescript
-const blocked = await ai.query`what's blocking the mobile app?`
-const capacity = await ai.query`does the engineering team have bandwidth?`
-const deadline = await ai.query`will we hit the Q1 launch date?`
-const priorities = await ai.query`what should I focus on today?`
+await asana`what's blocking the mobile app?`
+await asana`does engineering have bandwidth?`
+await asana`will we hit the Q1 launch date?`
+await asana`what should I focus on today?`
 ```
 
 ## Inbox & My Tasks
@@ -466,25 +275,16 @@ const priorities = await ai.query`what should I focus on today?`
 Personal work management:
 
 ```typescript
-import { Inbox, MyTasks } from 'asana.do'
+// Your inbox
+await asana`my unread notifications`
+await asana`tasks assigned to me this week`
+await asana`mentions and comments`
 
-// Inbox - all notifications
-const inbox = await Inbox.get({
-  unread: true,
-  types: ['assigned', 'mentioned', 'commented', 'liked'],
-})
-
-// My Tasks - personal organization
-const myTasks = await MyTasks.get({
-  sections: ['Recently Assigned', 'Today', 'Upcoming', 'Later'],
-  sort: 'dueDate',
-})
-
-// Move between sections
-await task.moveToSection('Today')
-
-// Set personal due date (different from task due date)
-await task.setMyDueDate('2025-01-15')
+// My Tasks sections
+await asana`my tasks for today`
+await asana`upcoming tasks`
+await asana`move auth task to Today`
+await asana`snooze payment task until Monday`
 ```
 
 ## Rules (Automations)
@@ -492,43 +292,15 @@ await task.setMyDueDate('2025-01-15')
 Automate repetitive work:
 
 ```typescript
-import { Rule, Trigger, Action } from 'asana.do'
+// Set up rules naturally
+await asana`when task completed move to Done section`
+await asana`when due date is tomorrow notify assignee`
+await asana`when task added to Urgent set priority Critical and notify #support-urgent`
 
-// Move to section based on status
-const moveWhenDone = Rule.create({
-  name: 'Move completed tasks',
-  project: 'backend-q1',
-  trigger: Trigger.fieldChange('completed', true),
-  actions: [
-    Action.moveToSection('Done'),
-    Action.addComment('Moved to Done'),
-  ],
-})
-
-// Notify on due date approaching
-const dueDateReminder = Rule.create({
-  name: 'Due date reminder',
-  project: 'backend-q1',
-  trigger: Trigger.dueDateApproaching({ days: 1 }),
-  conditions: [
-    Condition.field('completed', false),
-  ],
-  actions: [
-    Action.notifyAssignee('Task due tomorrow: {task_name}'),
-  ],
-})
-
-// Auto-assign based on section
-const autoAssign = Rule.create({
-  name: 'Auto-assign by section',
-  project: 'support-queue',
-  trigger: Trigger.taskAddedToSection('Urgent'),
-  actions: [
-    Action.setField('priority', 'Critical'),
-    Action.addFollower('@oncall'),
-    Action.notify({ channel: 'slack', to: '#support-urgent' }),
-  ],
-})
+// Chain automations with pipelining
+await asana`overdue tasks in support-queue`
+  .map(task => asana`escalate ${task} to manager`)
+  .map(task => asana`notify customer about ${task}`)
 ```
 
 ## API Compatible
@@ -591,15 +363,9 @@ All changes sync instantly:
 
 ```typescript
 // Subscribe to project changes
-project.subscribe((event) => {
-  switch (event.type) {
-    case 'task:created':
-    case 'task:updated':
-    case 'task:moved':
-    case 'task:completed':
-      // Update UI
-  }
-})
+await asana`watch Backend Q1 for changes`
+  .on('task:created', task => console.log('New task:', task))
+  .on('task:completed', task => console.log('Done:', task))
 ```
 
 ### Storage

@@ -4,6 +4,37 @@
 
 You're a startup founder. You just hired employee #25. You need to create their email, add them to Slack, provision GitHub, ship a laptop, set up payroll, enroll benefits... Two systems. Duplicate data. Manual processes. And both want $35/employee/month. Your growth shouldn't come with a per-seat tax.
 
+## AI-Native API
+
+```typescript
+import { rippling } from 'rippling.do'           // Full SDK
+import { rippling } from 'rippling.do/tiny'      // Minimal client
+import { rippling } from 'rippling.do/hr'        // HR-only operations
+```
+
+Natural language for people operations:
+
+```typescript
+import { rippling, rio } from 'rippling.do'
+
+// Talk to it like a colleague
+const sarah = await rippling`Sarah Chen`
+const engineers = await rippling`engineers in Austin`
+const onboarding = await rippling`new hires this month`
+
+// Chain like sentences
+await rippling`hire Sarah Chen as Engineer`
+  .provision(['github', 'linear', 'aws'])
+  .shipLaptop()
+  .scheduleOnboarding()
+
+// Offboarding that handles itself
+await rippling`Sarah's last day is Friday`
+  .revokeAccess()
+  .recoverDevices()
+  .transferFiles()
+```
+
 ## The workers.do Way
 
 ```typescript
@@ -71,18 +102,10 @@ npx create-dotdo rippling
 Your unified people + IT platform is live.
 
 ```typescript
-import { rippling } from 'rippling.do'
+import { rippling, rio } from 'rippling.do'
 
-// Add an employee - everything else happens automatically
-await rippling.employees.hire({
-  name: 'Sarah Chen',
-  email: 'sarah@startup.com',
-  role: 'Software Engineer',
-  department: 'Engineering',
-  startDate: '2025-01-15',
-  manager: 'alex-kim',
-  location: 'San Francisco'
-})
+// Hire in natural language
+await rippling`hire Sarah Chen as Software Engineer in Engineering`
 
 // This triggers:
 // - Email account creation (Google Workspace)
@@ -99,42 +122,22 @@ await rippling.employees.hire({
 The magic is the **employee record as the source of truth**.
 
 ```typescript
-// The employee record
-const sarah = {
-  id: 'sarah-chen',
-  name: 'Sarah Chen',
-  email: 'sarah@startup.com',
-  department: 'Engineering',
-  role: 'Software Engineer',
-  manager: 'alex-kim',
-  startDate: '2025-01-15',
-  status: 'active'
-}
+// Query anyone naturally
+const sarah = await rippling`Sarah Chen`
+const engineers = await rippling`engineers in San Francisco`
+const onPTO = await rippling`employees on PTO this week`
 
-// This drives EVERYTHING:
-
-// Apps (what SaaS they can access)
-sarah.apps = ['slack', 'github', 'notion', 'figma', 'linear']
-
-// Devices (what hardware they have)
-sarah.devices = ['macbook-pro-m3-sarah']
-
-// Access (what permissions they have)
-sarah.access = {
-  github: { teams: ['engineering'], role: 'member' },
-  slack: { channels: ['#engineering', '#all-hands'] },
-  aws: { role: 'developer', accounts: ['staging'] }
-}
+// AI infers what you need
+await rippling`Sarah Chen`              // returns employee
+await rippling`Sarah's devices`         // returns device list
+await rippling`Sarah's app access`      // returns provisioned apps
 ```
 
 When Sarah's record changes, everything updates:
 
 ```typescript
-// Sarah gets promoted to Tech Lead
-await rippling.employees.update('sarah-chen', {
-  role: 'Tech Lead',
-  level: 'L5'
-})
+// Promote in natural language
+await rippling`promote Sarah Chen to Tech Lead`
 
 // Automatically:
 // - GitHub: Added to 'tech-leads' team
@@ -147,11 +150,8 @@ await rippling.employees.update('sarah-chen', {
 When Sarah leaves:
 
 ```typescript
-// Sarah leaves the company
-await rippling.employees.terminate('sarah-chen', {
-  lastDay: '2025-06-30',
-  reason: 'resignation'
-})
+// Offboard naturally
+await rippling`Sarah's last day is June 30`
 
 // Automatically:
 // - All app access revoked within minutes
@@ -170,25 +170,26 @@ await rippling.employees.terminate('sarah-chen', {
 Everything about a person in one place.
 
 ```typescript
-const employee = await rippling.employees.get('sarah-chen')
+// Get employee with natural language
+const sarah = await rippling`Sarah Chen`
 
 // HR data
-employee.name               // Sarah Chen
-employee.department         // Engineering
-employee.manager            // Alex Kim
-employee.salary             // $150,000
-employee.startDate          // 2025-01-15
+sarah.name               // Sarah Chen
+sarah.department         // Engineering
+sarah.manager            // Alex Kim
+sarah.salary             // $150,000
+sarah.startDate          // 2025-01-15
 
 // IT data
-employee.email              // sarah@startup.com
-employee.apps               // ['slack', 'github', 'notion', ...]
-employee.devices            // ['macbook-pro-m3-sarah']
-employee.accessLevel        // L3 (department-specific access)
+sarah.email              // sarah@startup.com
+sarah.apps               // ['slack', 'github', 'notion', ...]
+sarah.devices            // ['macbook-pro-m3-sarah']
+sarah.accessLevel        // L3 (department-specific access)
 
 // Computed
-employee.tenure             // 2 months
-employee.isFullyProvisioned // true
-employee.complianceStatus   // 'green'
+sarah.tenure             // 2 months
+sarah.isFullyProvisioned // true
+sarah.complianceStatus   // 'green'
 ```
 
 ### App Provisioning
@@ -196,45 +197,19 @@ employee.complianceStatus   // 'green'
 Connect your SaaS apps. Provisioning becomes automatic.
 
 ```typescript
-// Connect apps
-await rippling.apps.connect('google-workspace', {
-  serviceAccount: process.env.GOOGLE_SERVICE_ACCOUNT,
-  domain: 'startup.com'
-})
+// Connect apps in natural language
+await rippling`connect Google Workspace for startup.com`
+await rippling`connect Slack`
+await rippling`connect GitHub`
 
-await rippling.apps.connect('slack', {
-  token: process.env.SLACK_ADMIN_TOKEN
-})
+// Define provisioning rules naturally
+await rippling`when engineers join`.provision(['github', 'linear', 'slack', 'notion', 'aws'])
+await rippling`when tech leads join`.provision(['pagerduty', 'aws production'])
+await rippling`when managers join`.provision(['lattice', 'expensify'])
 
-await rippling.apps.connect('github', {
-  appId: process.env.GITHUB_APP_ID,
-  installationId: process.env.GITHUB_INSTALLATION_ID,
-  privateKey: process.env.GITHUB_PRIVATE_KEY
-})
-
-// Define provisioning rules
-await rippling.provisioning.rule({
-  name: 'Engineering apps',
-  when: { department: 'Engineering' },
-  provision: [
-    { app: 'github', team: 'engineering', role: 'member' },
-    { app: 'linear', team: 'engineering' },
-    { app: 'slack', channels: ['#engineering', '#dev'] },
-    { app: 'notion', workspace: 'engineering' },
-    { app: 'aws', role: 'developer', accounts: ['staging'] }
-  ]
-})
-
-await rippling.provisioning.rule({
-  name: 'Tech Lead apps',
-  when: { role: 'Tech Lead' },
-  provision: [
-    { app: 'github', team: 'tech-leads', role: 'maintainer' },
-    { app: 'slack', channels: ['#tech-leads', '#architecture'] },
-    { app: 'aws', role: 'tech-lead', accounts: ['staging', 'production'] },
-    { app: 'pagerduty', role: 'responder' }
-  ]
-})
+// Or just describe what you want
+await rippling`engineers get GitHub, Linear, Slack #engineering, and AWS staging`
+await rippling`tech leads also get production AWS and PagerDuty`
 ```
 
 ### Device Management
@@ -242,42 +217,22 @@ await rippling.provisioning.rule({
 Laptops, phones, monitors - tracked and managed.
 
 ```typescript
-// Inventory management
-await rippling.devices.add({
-  type: 'laptop',
-  model: 'MacBook Pro 14" M3',
-  serialNumber: 'C02XX1234567',
-  purchaseDate: '2025-01-01',
-  cost: 2499,
-  status: 'in-stock'
-})
+// Add devices naturally
+await rippling`add MacBook Pro M3 serial C02XX1234567`
+await rippling`add 27" LG monitor to inventory`
 
-// Assign to employee
-await rippling.devices.assign('macbook-C02XX1234567', {
-  employee: 'sarah-chen',
-  assignedDate: '2025-01-15'
-})
+// Assign to employees
+await rippling`give Sarah the new MacBook`
+await rippling`ship laptop to Jamie in Austin`
 
-// MDM integration
-await rippling.devices.enroll('macbook-C02XX1234567', {
-  mdm: 'jamf',
-  profile: 'engineering-standard'
-})
-
-// Track all devices
-const devices = await rippling.devices.list()
-// [
-//   { serial: 'C02XX1234567', type: 'laptop', assignee: 'sarah-chen', status: 'active' },
-//   { serial: 'C02YY7654321', type: 'laptop', assignee: null, status: 'in-stock' },
-//   { serial: 'MON123456', type: 'monitor', assignee: 'alex-kim', status: 'active' }
-// ]
+// Track devices
+await rippling`Sarah's devices`
+await rippling`all laptops in stock`
+await rippling`devices needing refresh`
 
 // Off-boarding device recovery
-await rippling.devices.recover('macbook-C02XX1234567', {
-  action: 'return',
-  returnAddress: 'Office HQ',
-  wipeAfterReturn: true
-})
+await rippling`recover Sarah's laptop`.returnTo('Office HQ').wipeOnReturn()
+await rippling`wipe Jamie's MacBook remotely`
 ```
 
 ### Access Control
@@ -285,41 +240,19 @@ await rippling.devices.recover('macbook-C02XX1234567', {
 Manage who can access what.
 
 ```typescript
-// Define access levels
-await rippling.access.defineLevel('L1', {
-  name: 'Basic Access',
-  description: 'New employees, contractors',
-  apps: {
-    slack: { channels: ['#all-hands'] },
-    notion: { pages: ['public-wiki'] },
-    google: { drive: 'view-only' }
-  }
-})
+// Define access levels naturally
+await rippling`new employees get Slack #all-hands, Notion public wiki, view-only Drive`
+await rippling`full-time employees also get team channels and team drive`
+await rippling`after 6 months with manager approval, employees get AWS staging and private repos`
 
-await rippling.access.defineLevel('L2', {
-  name: 'Team Access',
-  inherits: 'L1',
-  description: 'Full-time employees',
-  apps: {
-    slack: { channels: ['#team-${department}'] },
-    notion: { pages: ['${department}-workspace'] },
-    google: { drive: 'team-drive' }
-  }
-})
+// Grant access on demand
+await rippling`Sarah needs Datadog access`.approvedUntil('90 days')
+await rippling`give Jamie production AWS access`
+await rippling`add the interns to #summer-2025`
 
-await rippling.access.defineLevel('L3', {
-  name: 'Sensitive Access',
-  inherits: 'L2',
-  description: 'Senior employees',
-  requires: { tenure: '6 months', review: 'manager' },
-  apps: {
-    aws: { accounts: ['staging'] },
-    github: { repos: ['private-*'] }
-  }
-})
-
-// Employees automatically get access based on role + tenure
-// No manual provisioning needed
+// Revoke just as easily
+await rippling`remove Jamie's production access`
+await rippling`revoke all access for terminated employees`
 ```
 
 ### IT Service Desk
@@ -327,31 +260,18 @@ await rippling.access.defineLevel('L3', {
 Employees request, IT approves, system provisions.
 
 ```typescript
-// Employee requests software
-await rippling.requests.create({
-  employee: 'sarah-chen',
-  type: 'app-access',
-  app: 'datadog',
-  reason: 'Need to debug production issues',
-  urgency: 'medium'
-})
+// Employees request naturally
+await rippling`Sarah requests Datadog for debugging production`
+await rippling`Jamie needs a new monitor for home office`
 
-// IT approves
-await rippling.requests.approve('request-123', {
-  approver: 'it-admin',
-  notes: 'Approved for 90 days'
-})
+// IT approves with one line
+await rippling`approve Sarah's Datadog request for 90 days`
+await rippling`approve Jamie's monitor, ship to home address`
 
-// System automatically provisions
-// - Datadog account created
-// - SSO configured
-// - Employee notified
-// - Access logged
-
-// Track all requests
-const requests = await rippling.requests.list({
-  status: 'pending'
-})
+// Track requests
+await rippling`pending IT requests`
+await rippling`requests this week`
+await rippling`Jamie's open requests`
 ```
 
 ### Compliance
@@ -359,33 +279,20 @@ const requests = await rippling.requests.list({
 Track software licenses, access reviews, security.
 
 ```typescript
-// Software license tracking
-const licenses = await rippling.compliance.licenses()
-// {
-//   slack: { type: 'per-seat', count: 45, used: 42, cost: '$12/seat/mo' },
-//   figma: { type: 'per-seat', count: 20, used: 18, cost: '$15/seat/mo' },
-//   github: { type: 'per-seat', count: 50, used: 35, cost: '$4/seat/mo' }
-// }
+// License tracking
+await rippling`how many Slack seats are we using?`
+await rippling`unused Figma licenses`
+await rippling`software spend this quarter`
 
 // Access reviews
-await rippling.compliance.accessReview({
-  scope: 'all-employees',
-  apps: ['aws', 'github', 'notion'],
-  reviewers: ['department-managers'],
-  due: '2025-03-01'
-})
+await rippling`run AWS access review by March 1`
+await rippling`who has production access?`
+await rippling`access not reviewed in 90 days`
 
 // Security posture
-const security = await rippling.compliance.security()
-// {
-//   mfaEnrollment: '98%',
-//   ssoAdoption: '100%',
-//   deviceCompliance: '95%',
-//   issues: [
-//     { type: 'mfa-disabled', employees: ['jamie-wong'], risk: 'medium' },
-//     { type: 'device-outdated', devices: ['macbook-C02ZZ123'], risk: 'low' }
-//   ]
-// }
+await rippling`security issues`
+await rippling`employees without MFA`
+await rippling`devices with outdated OS`
 ```
 
 ## AI Assistant
@@ -606,25 +513,14 @@ export const MyAppConnector = Connector({
   name: 'my-app',
   auth: 'oauth2',
 
-  provision: async (employee, config) => {
-    // Create account in my-app
-    await myAppApi.createUser({
-      email: employee.email,
-      name: employee.name,
-      role: config.role
-    })
-  },
+  // What happens when someone joins
+  provision: (employee) => myAppApi.createUser(employee),
 
-  deprovision: async (employee) => {
-    // Remove account
-    await myAppApi.deleteUser(employee.email)
-  },
+  // What happens when someone leaves
+  deprovision: (employee) => myAppApi.deleteUser(employee.email),
 
-  sync: async () => {
-    // Reconcile state
-    const users = await myAppApi.listUsers()
-    return users
-  }
+  // Keep state in sync
+  sync: () => myAppApi.listUsers()
 })
 ```
 
@@ -633,60 +529,20 @@ export const MyAppConnector = Connector({
 The rules engine that makes it all work.
 
 ```typescript
-// Rules are evaluated in order
-// First match wins (unless 'additive: true')
+// Rules read like sentences
+await rippling`everyone gets Google Workspace, Slack, and 1Password`
+await rippling`engineers also get GitHub, Linear, and AWS staging`
+await rippling`managers also get Slack #managers, Lattice, and Expensify`
 
-await rippling.provisioning.rules([
-  // Everyone gets these
-  {
-    name: 'All employees',
-    when: { status: 'active' },
-    provision: [
-      { app: 'google-workspace' },
-      { app: 'slack', channels: ['#all-hands', '#random'] },
-      { app: '1password', vault: 'company' }
-    ]
-  },
+// Conditional access reads naturally
+await rippling`senior engineers with 6+ months get production AWS and PagerDuty`
+await rippling`after SOC 2 training, employees can access customer data`
 
-  // Department-specific
-  {
-    name: 'Engineering',
-    when: { department: 'Engineering' },
-    additive: true,
-    provision: [
-      { app: 'github', org: 'startup', team: 'engineering' },
-      { app: 'linear', team: 'engineering' },
-      { app: 'aws', role: 'developer', accounts: ['staging'] }
-    ]
-  },
-
-  // Role-specific
-  {
-    name: 'Managers',
-    when: { hasDirectReports: true },
-    additive: true,
-    provision: [
-      { app: 'slack', channels: ['#managers'] },
-      { app: 'lattice', role: 'manager' },
-      { app: 'expensify', role: 'approver' }
-    ]
-  },
-
-  // Special access
-  {
-    name: 'Production access',
-    when: {
-      department: 'Engineering',
-      level: { gte: 'L4' },
-      tenure: { gte: '6 months' }
-    },
-    additive: true,
-    provision: [
-      { app: 'aws', accounts: ['production'], role: 'senior-developer' },
-      { app: 'pagerduty', role: 'responder' }
-    ]
-  }
-])
+// Chain provisioning with promise pipelining
+await rippling`new engineers this quarter`
+  .map(emp => rippling`provision ${emp} with standard engineering stack`)
+  .map(emp => rippling`ship laptop to ${emp}`)
+  .map(emp => rippling`schedule onboarding call for ${emp}`)
 ```
 
 ## Self-Service IT
@@ -694,23 +550,14 @@ await rippling.provisioning.rules([
 Employees handle common IT tasks themselves.
 
 ```typescript
-// Employee self-service portal
-await rippling.self.requestApp('sarah-chen', 'datadog', {
-  reason: 'Debugging production issues'
-})
+// Employees request what they need naturally
+await rippling`I need Datadog for debugging production`
+await rippling`my laptop battery is draining fast`
+await rippling`I need a monitor for my home office`
 
-await rippling.self.reportIssue('sarah-chen', {
-  type: 'device',
-  device: 'macbook-C02XX1234567',
-  issue: 'Battery draining quickly',
-  priority: 'low'
-})
-
-await rippling.self.requestDevice('sarah-chen', {
-  type: 'monitor',
-  model: 'LG 27" 4K',
-  reason: 'Remote work setup'
-})
+// Managers can act on behalf of reports
+await rippling`Sarah needs Figma for the new project`
+await rippling`order a standing desk for Jamie`
 ```
 
 ## Pricing
@@ -731,11 +578,10 @@ await rippling.self.requestDevice('sarah-chen', {
 Import from Rippling:
 
 ```typescript
-import { migrate } from 'rippling.do/migrate'
+import { rippling } from 'rippling.do'
 
-await migrate.fromRippling({
-  apiKey: process.env.RIPPLING_API_KEY
-})
+// One line migration
+await rippling`import everything from Rippling`
 
 // Imports:
 // - All employee records

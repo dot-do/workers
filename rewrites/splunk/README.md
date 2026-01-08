@@ -6,6 +6,35 @@ Splunk dominates enterprise log analytics and SIEM. But at $150/GB/day for cloud
 
 **splunk.do** reimagines log analytics for the AI era. Full SPL compatibility. Unlimited data. Zero per-GB pricing.
 
+## AI-Native API
+
+```typescript
+import { splunk } from 'splunk.do'           // Full SDK
+import { splunk } from 'splunk.do/tiny'      // Minimal client
+import { splunk } from 'splunk.do/spl'       // SPL-only operations
+```
+
+Natural language for log analytics:
+
+```typescript
+import { splunk } from 'splunk.do'
+
+// Talk to it like a colleague
+const errors = await splunk`errors in checkout last hour`
+const attacks = await splunk`brute force attempts today`
+const anomalies = await splunk`what's unusual in network traffic?`
+
+// Chain like sentences
+await splunk`failed logins followed by success`
+  .map(events => splunk`correlate with data exfiltration`)
+  .alert(`Potential account compromise detected`)
+
+// Ingestion that documents itself
+await splunk`ingest nginx access_combined into main`
+await splunk`stream kafka logs from events topic`
+await splunk`tail /var/log/*.log as syslog`
+```
+
 ## The Problem
 
 Cisco acquired Splunk for $28B and built a data empire on:
@@ -18,30 +47,6 @@ Cisco acquired Splunk for $28B and built a data empire on:
 - **Retention costs** - Long-term data storage is expensive
 
 100 GB/day? **$15,000/day**. That's **$5.5 million/year**. Just for logs.
-
-## The workers.do Way
-
-Your security team is drowning. Logs are pouring in from everywhere. Every query in SPL requires a specialist. Every GB stored is another $150. And when a breach happens, you need answers in minutes, not hours of query tuning.
-
-What if log analysis was a conversation?
-
-```typescript
-import { splunk, tom } from 'workers.do'
-
-// Natural language log analytics
-const errors = await splunk`search errors from ${service} last hour`
-const attack = await splunk`find brute force attempts against ${system}`
-const anomaly = await splunk`what's unusual in network traffic today?`
-
-// Chain security investigation into response
-const incident = await splunk`show failed logins followed by successful access`
-  .map(events => splunk`correlate with data exfiltration patterns`)
-  .map(findings => tom`assess severity and recommend response for ${findings}`)
-```
-
-One import. Natural language. AI-powered security operations.
-
-That's log analytics that works for you.
 
 ## The Solution
 
@@ -66,47 +71,84 @@ npx create-dotdo splunk
 
 Your own Splunk instance. Running on Cloudflare. Zero per-GB fees.
 
-## Log Analytics Without Limits
-
-Ingest, search, and analyze unlimited log data:
-
 ```typescript
-import { splunk } from 'splunk.do'
+import { Splunk } from 'splunk.do'
 
-// Ingest logs
-await splunk.ingest({
-  source: 'nginx',
-  sourcetype: 'access_combined',
-  index: 'main',
-  events: [
-    { _raw: '10.0.0.1 - - [01/Jan/2024:00:00:00 +0000] "GET /api/users HTTP/1.1" 200 1234' },
-  ],
+export default Splunk({
+  name: 'acme-soc',
+  domain: 'logs.acme.com',
+  retention: {
+    hot: '7d',
+    warm: '30d',
+    cold: '365d',
+  },
 })
-
-// Search with SPL
-const results = await splunk.search({
-  query: 'index=main sourcetype=access_combined status>=500 | stats count by status',
-  earliest: '-24h',
-  latest: 'now',
-})
-
-// Natural language search
-const insights = await splunk`show me all errors in the last hour with their root causes`
 ```
 
 ## Features
 
-### SPL (Search Processing Language)
+### Log Ingestion
 
-Full SPL compatibility:
+```typescript
+// Ingest in plain English
+await splunk`ingest nginx access_combined into main`
+await splunk`stream cloudflare logs into web`
+await splunk`tail /var/log/auth.log as linux:auth`
+
+// AI infers what you need
+await splunk`ingest these events`          // auto-detects format
+await splunk`ingest from S3 bucket logs/`  // configures input
+await splunk`ingest kafka events topic`    // sets up consumer
+```
+
+### Search
+
+```typescript
+// Just ask
+await splunk`errors in checkout last hour`
+await splunk`500 errors by endpoint today`
+await splunk`slow queries over 500ms`
+
+// AI generates SPL underneath
+await splunk`errors in checkout` // -> index=main level=error source=checkout earliest=-1h
+await splunk`top error sources`  // -> index=main level=error | stats count by source | sort -count
+```
+
+### Alerting
+
+```typescript
+// Natural as talking to a SOC analyst
+await splunk`alert me when errors spike in production`
+await splunk`page on-call if auth failures exceed 100/min`
+await splunk`slack #security on brute force detection`
+
+// Chain alerts into investigation
+await splunk`failed logins > 10 per IP`
+  .alert(`Brute force detected`)
+  .block()   // auto-block the IP
+```
+
+### SPL Compatibility
+
+Full SPL underneath - natural language generates it:
+
+```typescript
+// Your query
+await splunk`errors in checkout last hour`
+
+// Generated SPL
+// index=main level=error source=checkout earliest=-1h
+
+// Your query
+await splunk`top 10 slowest endpoints today`
+
+// Generated SPL
+// index=main | stats avg(response_time) as avg_time by endpoint | sort -avg_time | head 10
+```
+
+All SPL commands work:
 
 ```spl
-// Basic search
-index=main sourcetype=access_combined status>=400
-
-// Field extraction
-index=main | rex field=_raw "user=(?<username>\w+)"
-
 // Statistics
 index=main | stats count, avg(response_time) by endpoint
 
@@ -116,666 +158,455 @@ index=main | timechart span=1h count by status
 // Transactions
 index=main | transaction session_id maxspan=30m
 
-// Lookups
-index=main | lookup users.csv user_id OUTPUT user_name, department
-
-// Subsearches
-index=main [search index=alerts level=critical | fields src_ip]
-
-// Eval expressions
-index=main | eval response_category=case(
-    status<300, "success",
-    status<400, "redirect",
-    status<500, "client_error",
-    true(), "server_error"
-)
-
-// Join
-index=main | join user_id [search index=users | fields user_id, email]
-
-// Machine learning (MLTK equivalent)
+// Machine learning
 index=main | fit DensityFunction response_time by endpoint
 ```
 
 ### Indexing
 
-High-performance log indexing:
-
 ```typescript
-import { Index } from 'splunk.do/indexing'
-
-// Create index with configuration
-const mainIndex = Index({
-  name: 'main',
-  maxDataSize: 'auto',
-  frozenTimePeriod: '365d',
-  homePath: 'r2://indexes/main/hot',
-  coldPath: 'r2://indexes/main/cold',
-  frozenPath: 'r2://indexes/main/frozen',
-})
+// Create indexes naturally
+await splunk`create index main frozen in 365d`
+await splunk`create index security retention 90d`
+await splunk`create index metrics with rollups hourly daily`
 
 // Configure field extractions
-mainIndex.props({
-  TRANSFORMS: [
-    { regex: /user_id=(\w+)/, field: 'user_id' },
-    { regex: /duration=(\d+)ms/, field: 'duration_ms', type: 'number' },
-  ],
-  TIME_FORMAT: '%Y-%m-%dT%H:%M:%S.%f%z',
-  TZ: 'UTC',
-})
+await splunk`extract user_id from pattern user=(\w+)`
+await splunk`extract duration_ms as number from duration=(\d+)ms`
 
-// Source types
-const nginxSourcetype = Sourcetype({
-  name: 'nginx:access',
-  EXTRACT: [
-    { regex: /"(?<method>\w+)\s+(?<uri>[^\s]+)\s+(?<protocol>[^"]+)"/, format: 'fields' },
-    { regex: /(?<status>\d{3})/, format: 'number' },
-  ],
-  TIME_PREFIX: '\\[',
-  TIME_FORMAT: '%d/%b/%Y:%H:%M:%S %z',
-})
+// Source types are inferred
+await splunk`ingest nginx`  // knows nginx format
+await splunk`ingest json`   // knows JSON format
+await splunk`ingest syslog` // knows syslog format
 ```
 
 ### Data Inputs
 
-Multiple ingestion methods:
-
 ```typescript
-import { Inputs } from 'splunk.do/inputs'
+// Just say where logs come from
+await splunk`collect from HEC token abc123`
+await splunk`collect from syslog port 514`
+await splunk`collect from kafka brokers kafka:9092 topic logs`
+await splunk`collect from S3 bucket my-logs prefix logs/`
+await splunk`collect from cloudwatch log-group /aws/lambda/my-function`
 
-// HTTP Event Collector (HEC)
-const hec = Inputs.hec({
-  token: 'your-token',
-  ssl: true,
-  acknowledgement: true,
-})
-
-// Send events via HEC
-await hec.send({
-  event: { message: 'User logged in', user: 'alice' },
-  sourcetype: 'app:auth',
-  index: 'main',
-})
-
-// Syslog
-const syslog = Inputs.syslog({
-  port: 514,
-  protocol: 'tcp',
-  sourcetype: 'syslog',
-})
-
-// File monitoring (via forwarder)
-const files = Inputs.monitor({
-  path: '/var/log/*.log',
-  sourcetype: 'linux:syslog',
-  recursive: true,
-})
-
-// Kafka integration
-const kafka = Inputs.kafka({
-  brokers: ['kafka:9092'],
-  topics: ['logs', 'events'],
-  consumerGroup: 'splunk-consumer',
-})
-
-// AWS (S3, CloudWatch, etc.)
-const s3 = Inputs.s3({
-  bucket: 'my-logs-bucket',
-  region: 'us-east-1',
-  prefix: 'logs/',
-  sourcetype: 'aws:s3:accesslogs',
-})
+// Forwarders
+await splunk`forward /var/log/*.log to main`
+await splunk`forward docker containers to containers index`
 ```
 
 ### Dashboards
 
-Build operational dashboards:
-
 ```typescript
-import { Dashboard, Panel } from 'splunk.do/dashboard'
+// Describe what you want to see
+await splunk`dashboard security ops`
+  .add(`critical alerts count`)
+  .add(`security events over time`)
+  .add(`attack sources on map`)
+  .add(`recent alerts table`)
+  .refresh(`5m`)
 
-const securityDashboard = Dashboard({
-  title: 'Security Operations Center',
-  refresh: '5m',
-  panels: [
-    Panel.singleValue({
-      title: 'Critical Alerts',
-      search: 'index=alerts level=critical | stats count',
-      colorBy: 'value',
-      thresholds: { warn: 10, critical: 50 },
-    }),
-    Panel.timechart({
-      title: 'Security Events Over Time',
-      search: 'index=security | timechart span=1h count by event_type',
-      stackMode: 'stacked',
-    }),
-    Panel.map({
-      title: 'Attack Sources',
-      search: 'index=security event_type=attack | iplocation src_ip | geostats count by Country',
-    }),
-    Panel.table({
-      title: 'Recent Alerts',
-      search: 'index=alerts | head 100 | table _time, level, message, src_ip',
-      drilldown: {
-        search: 'index=alerts src_ip=$row.src_ip$',
-      },
-    }),
-    Panel.choropleth({
-      title: 'Events by Country',
-      search: 'index=security | iplocation src_ip | stats count by Country',
-    }),
-  ],
-  inputs: [
-    { type: 'time', token: 'time', default: '-24h' },
-    { type: 'dropdown', token: 'severity', options: ['critical', 'high', 'medium', 'low'] },
-  ],
-})
+// Or one-liners
+await splunk`dashboard api health: errors, latency p99, throughput`
+await splunk`dashboard user activity: logins by hour, active users, failed attempts`
 ```
 
 ### Alerts
 
-Proactive monitoring:
-
 ```typescript
-import { Alert } from 'splunk.do/alerts'
+// Natural alerting
+await splunk`alert errors > 100 in 5 minutes email ops@company.com`
+await splunk`alert brute force detected slack #security`
+await splunk`alert payment failures page on-call`
 
-// Scheduled alert
-const errorSpike = Alert({
-  name: 'Error Rate Spike',
-  search: 'index=main level=error | stats count | where count > 100',
-  schedule: '*/5 * * * *',
-  trigger: {
-    condition: 'number of results > 0',
-    throttle: '10m',
-  },
-  actions: [
-    { type: 'email', to: 'ops@company.com' },
-    { type: 'slack', channel: '#alerts' },
-    { type: 'webhook', url: 'https://api.pagerduty.com/events' },
-  ],
-})
+// Chain detection into response
+await splunk`failed logins > 10 from same IP`
+  .alert(`Brute force detected`)
+  .block()   // auto-block at firewall
+  .notify()  // tell security team
 
-// Real-time alert
-const securityAlert = Alert({
-  name: 'Brute Force Detection',
-  search: 'index=auth event_type=login_failed | stats count by src_ip | where count > 10',
-  type: 'realtime',
-  window: '5m',
-  trigger: {
-    condition: 'number of results > 0',
-  },
-  actions: [
-    { type: 'notable', severity: 'high' },
-    { type: 'risk', score: 50, object: 'src_ip' },
-  ],
-})
-
-// Correlation search
-const correlationAlert = Alert({
-  name: 'Multi-Stage Attack',
-  search: `
-    | from datamodel:Network_Traffic
-    | tstats count from datamodel:Authentication where Authentication.action=failure
-    | join src_ip [| from datamodel:Malware]
-  `,
-  trigger: {
-    condition: 'number of results > 0',
-  },
-})
+// Correlation as a sentence
+await splunk`alert failed login then successful from different IP`
+  .severity(`high`)
+  .investigate()  // open incident automatically
 ```
 
 ### Reports
 
-Scheduled reports and exports:
-
 ```typescript
-import { Report } from 'splunk.do/reports'
+// Scheduled reports in plain English
+await splunk`weekly security summary email security-team@company.com`
+await splunk`daily error report to #engineering at 9am`
+await splunk`monthly compliance export to S3 bucket reports/`
 
-const weeklyReport = Report({
-  name: 'Weekly Security Summary',
-  search: `
-    index=security earliest=-7d
-    | stats count by event_type, severity
-    | sort -count
-  `,
-  schedule: '0 9 * * MON',
-  export: {
-    format: 'pdf',
-    recipients: ['security-team@company.com'],
-    subject: 'Weekly Security Report - ${now}',
-  },
-})
-
-// Pivot reports
-const pivotReport = Report({
-  name: 'Traffic Analysis',
-  datamodel: 'Network_Traffic',
-  pivot: {
-    rows: ['src_ip', 'dest_port'],
-    columns: ['action'],
-    values: [{ field: 'bytes', aggregation: 'sum' }],
-  },
-})
+// Ad-hoc exports
+await splunk`export last week errors as csv`
+await splunk`export incidents since January as pdf`
 ```
 
 ## SIEM & Security
 
 ### Enterprise Security
 
-Full SIEM capabilities:
-
 ```typescript
-import { ES } from 'splunk.do/security'
+// Notable events - just describe the threat
+await splunk`detect malware communication as critical`
+await splunk`detect lateral movement as high severity`
+await splunk`detect data exfiltration pattern`
 
-// Notable events
-const notable = ES.notable({
-  search: 'index=proxy dest_category=malware',
-  severity: 'critical',
-  rule_name: 'Malware Communication Detected',
-  drilldown: 'index=proxy src_ip=$src_ip$ earliest=-24h',
-})
-
-// Risk scoring
-const riskRule = ES.risk({
-  search: 'index=auth event_type=login_failed | stats count by user | where count > 5',
-  risk_object_field: 'user',
-  risk_object_type: 'user',
-  risk_score: 20,
-  risk_message: 'Multiple failed logins for user $user$',
-})
+// Risk scoring in plain English
+await splunk`add risk 20 to users with 5+ failed logins`
+await splunk`add risk 50 to IPs hitting honeypots`
+await splunk`add risk 100 to known bad actors`
 
 // Threat intelligence
-const threatIntel = ES.threatIntel({
-  search: 'index=firewall | lookup threat_intel.csv dest_ip OUTPUT threat_type, confidence',
-  feed: 'custom_threat_feed',
-})
+await splunk`enrich firewall logs with threat intel`
+await splunk`match traffic against IOC feeds`
+await splunk`flag connections to known C2 servers`
 
-// Investigation workbench
-const investigation = await ES.investigate({
-  startingPoint: { type: 'ip', value: '10.0.0.1' },
-  timeRange: '-7d',
-  expand: ['dns', 'auth', 'proxy', 'firewall'],
-})
+// Investigation
+await splunk`investigate IP 10.0.0.1 last 7 days`
+  .expand(`dns, auth, proxy, firewall`)
+  .timeline()
+  .graph()
 ```
 
-### User Behavior Analytics (UBA)
-
-Detect anomalous behavior:
+### User Behavior Analytics
 
 ```typescript
-import { UBA } from 'splunk.do/uba'
+// Baseline in one line
+await splunk`baseline user behavior over 30 days`
 
-// Baseline user behavior
-await UBA.baseline({
-  entity: 'user',
-  activities: ['login', 'file_access', 'email_send', 'web_browse'],
-  timeframe: '30d',
-})
+// Detect anomalies naturally
+await splunk`anomalous user activity today`
+await splunk`users behaving unusually this week`
+await splunk`alice@company.com doing anything weird?`
 
-// Detect anomalies
-const anomalies = await UBA.detect({
-  entity: 'user',
-  sensitivity: 'medium',
-  timeRange: '-24h',
-})
-
-for (const anomaly of anomalies) {
-  console.log(anomaly.entity)      // 'alice@company.com'
-  console.log(anomaly.activity)    // 'file_access'
-  console.log(anomaly.deviation)   // 3.5 standard deviations
-  console.log(anomaly.explanation) // 'Accessed 10x more files than usual'
-}
-
-// Threat models
-const insiderThreat = UBA.threatModel({
-  name: 'Data Exfiltration',
-  indicators: [
-    { activity: 'file_download', threshold: '5x baseline' },
-    { activity: 'usb_insert', weight: 2 },
-    { activity: 'after_hours_access', weight: 1.5 },
-  ],
-  threshold: 75,
-})
+// Threat models as sentences
+await splunk`detect data exfiltration: downloads 5x normal, USB usage, after hours access`
+await splunk`detect account takeover: login from new location then password change`
+await splunk`detect insider threat: bulk file access before resignation`
 ```
 
-### SOAR Integration
-
-Security orchestration and response:
+### SOAR
 
 ```typescript
-import { SOAR } from 'splunk.do/soar'
+// Playbooks as workflows
+await splunk`on phishing detected`
+  .extract(`IOCs from email`)
+  .check(`reputation via VirusTotal`)
+  .block(`sender if malicious`)
+  .notify(`SOC with ticket`)
 
-// Playbook
-const phishingPlaybook = SOAR.playbook({
-  name: 'Phishing Response',
-  trigger: {
-    type: 'notable',
-    rule: 'Phishing Email Detected',
-  },
-  steps: [
-    {
-      name: 'Extract Indicators',
-      action: 'extract_iocs',
-      input: { email: '$notable.email$' },
-    },
-    {
-      name: 'Check Reputation',
-      action: 'virustotal_lookup',
-      input: { url: '$indicators.urls$' },
-    },
-    {
-      name: 'Block Sender',
-      action: 'block_email_sender',
-      condition: '$reputation.malicious$',
-      input: { sender: '$notable.sender$' },
-    },
-    {
-      name: 'Notify SOC',
-      action: 'create_ticket',
-      input: {
-        title: 'Phishing Incident - $notable.subject$',
-        severity: '$notable.severity$',
-      },
-    },
-  ],
-})
+// Response actions in natural language
+await splunk`isolate host infected-laptop via CrowdStrike`
+await splunk`block IP 1.2.3.4 at firewall`
+await splunk`disable user alice@company.com`
+await splunk`quarantine email from attacker@evil.com`
 
-// Custom actions
-SOAR.action({
-  name: 'isolate_host',
-  parameters: ['hostname'],
-  script: async ({ hostname }) => {
-    await crowdstrike.containHost(hostname)
-    return { status: 'isolated', hostname }
-  },
-})
+// Chain detection to response
+await splunk`ransomware indicators detected`
+  .isolate()      // contain the host
+  .snapshot()     // preserve evidence
+  .escalate()     // page security team
 ```
 
 ## AI-Native Features
 
 ### Natural Language Search
 
-Skip SPL complexity:
-
 ```typescript
-import { ask } from 'splunk.do'
+// Just ask - no SPL required
+await splunk`errors in the last hour`
+await splunk`failed logins followed by success from different IP`
+await splunk`top sources of 500 errors today`
+await splunk`why is the API slow right now?`
 
-// Simple questions
-const q1 = await ask('show me all errors in the last hour')
-// Generates: index=main level=error earliest=-1h
+// AI infers the right query
+await splunk`errors in checkout`
+// -> index=main level=error source=checkout
 
-// Complex queries
-const q2 = await ask('find all failed logins followed by successful login from different IP')
-// Generates: complex transaction/correlation SPL
-
-// Analytical questions
-const q3 = await ask('what are the top sources of 500 errors today?')
-// Generates: index=main status=500 | stats count by source | sort -count | head 10
-
-// Diagnostic questions
-const q4 = await ask('why is the API slow right now?')
-// Returns: analysis with correlated logs, traces, and metrics
+await splunk`users logging in from multiple countries`
+// -> index=auth | iplocation src_ip | stats dc(Country) by user | where dc > 1
 ```
 
 ### SPL Assistant
 
-AI helps write and optimize SPL:
-
 ```typescript
-import { spl } from 'splunk.do'
+// Explain SPL in plain English
+await splunk`explain: index=main | tstats count by _time span=1h | timewrap 1d`
+
+// Optimize SPL automatically
+await splunk`optimize: index=main | search status=500 | stats count`
+// Returns: index=main status=500 | stats count
+// "Moved filter before search for 10x speedup"
 
 // Generate SPL from description
-const query = await spl.generate({
-  description: 'Find users who logged in from multiple countries in the last 24 hours',
-  index: 'auth',
-})
-// Returns: index=auth event_type=login | iplocation src_ip | stats dc(Country) as countries values(Country) by user | where countries > 1
-
-// Optimize existing SPL
-const optimized = await spl.optimize({
-  query: 'index=main | search status=500 | stats count by endpoint',
-})
-// Returns: index=main status=500 | stats count by endpoint
-// Explanation: "Moved status filter before search command for better performance"
-
-// Explain SPL
-const explanation = await spl.explain({
-  query: 'index=main | tstats count where index=main by _time span=1h | timewrap 1d',
-})
-// Returns: detailed explanation of each command
+await splunk`SPL for: users with login from new device after password reset`
 ```
 
 ### Anomaly Detection
 
-AI-powered anomaly detection:
-
 ```typescript
-import { ML } from 'splunk.do/ml'
+// Detect anomalies naturally
+await splunk`anomalies in API latency this week`
+await splunk`unusual traffic patterns today`
+await splunk`outliers in request volume by IP`
 
-// Anomaly detection
-const anomalies = await ML.detectAnomalies({
-  search: 'index=main | timechart span=1h count by endpoint',
-  sensitivity: 0.8,
-  timeRange: '-7d',
-})
+// Forecast
+await splunk`predict error rate next 24 hours`
+await splunk`forecast disk usage next week`
 
-// Forecasting
-const forecast = await ML.forecast({
-  search: 'index=main | timechart span=1h count',
-  horizon: '24h',
-  confidence: 0.95,
-})
-
-// Clustering
-const clusters = await ML.cluster({
-  search: 'index=main level=error | table message',
-  algorithm: 'kmeans',
-  k: 10,
-})
-// Groups similar error messages together
-
-// Outlier detection
-const outliers = await ML.outliers({
-  search: 'index=main | stats count by src_ip',
-  field: 'count',
-  method: 'mad', // median absolute deviation
-})
+// Cluster similar events
+await splunk`group similar error messages`
+await splunk`cluster security events by pattern`
 ```
 
 ### AI Agents for Security
-
-AI agents for SOC operations:
 
 ```typescript
 import { tom, quinn } from 'agents.do'
 import { splunk } from 'splunk.do'
 
-// Tech lead investigates incident
-const investigation = await tom`
-  investigate the security incident from alert ID 12345
-  correlate all related events and identify attack timeline
-`
+// Chain investigation with agents
+await splunk`security incident alert 12345`
+  .map(events => tom`correlate and build attack timeline`)
+  .map(timeline => tom`identify root cause and impact`)
+  .map(analysis => quinn`validate findings and check for gaps`)
 
-// QA validates detection rules
-const validation = await quinn`
-  test the brute force detection rule against last month's data
-  identify false positives and suggest tuning
-`
+// Tune detection rules
+await splunk`brute force detections last month`
+  .map(detections => quinn`identify false positives`)
+  .map(fps => tom`suggest rule improvements`)
 ```
 
 ## Architecture
 
-### Indexing Pipeline
-
-```
-Log Sources  -->  Universal Forwarder  -->  Heavy Forwarder  -->  Indexer
-                         |                        |                  |
-                    Raw Data              Parsing/Routing        Indexing
-                    Compression           Field Extraction      Storage
-```
-
 ### Durable Objects
 
 ```
-                    +------------------------+
-                    |   splunk.do Worker     |
-                    |   (API + Search Head)  |
-                    +------------------------+
-                              |
-              +---------------+---------------+
-              |               |               |
-    +------------------+ +------------------+ +------------------+
-    | IndexerDO        | | SearchHeadDO     | | ForwarderDO      |
-    | (Index + Search) | | (Distributed)    | | (Collection)     |
-    +------------------+ +------------------+ +------------------+
-              |               |               |
-              +---------------+---------------+
-                              |
-         +--------------------+--------------------+
-         |                    |                    |
-    +----------+       +-----------+        +------------+
-    |    D1    |       |     R2    |        | Analytics  |
-    | (Meta)   |       | (Buckets) |        | Engine     |
-    +----------+       +-----------+        +------------+
+ SplunkDO (config, users, roles, inputs)
+   |
+   +-- IndexerDO (hot storage, real-time search)
+   |     |-- SQLite: Hot buckets (encrypted)
+   |     +-- R2: Warm/Cold buckets (compressed)
+   |
+   +-- SearchHeadDO (distributed search, federation)
+   |     |-- SQLite: Job state, saved searches
+   |     +-- Query optimization
+   |
+   +-- ForwarderDO (collection, parsing)
+   |     |-- SQLite: Input state, checkpoints
+   |     +-- R2: Raw data staging
+   |
+   +-- AlertDO (detection, response)
+         |-- SQLite: Alert state, throttling
+         +-- Webhook integration
 ```
 
 ### Storage Tiers
 
-Splunk's bucket-based storage model:
-
-```
-Hot Buckets (SQLite)      Warm Buckets (R2)      Cold Buckets (R2 IA)
-     |                          |                       |
-Real-time search         Recent historical         Long-term archive
-High write rate          Read-optimized            Cost-optimized
-Edge locations           Regional R2               Archive R2
-```
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Real-time, last 7 days | <10ms |
+| **Warm** | R2 Standard | Historical, 30-90 days | <100ms |
+| **Cold** | R2 IA | Compliance, 1+ years | <1s |
 
 ### Distributed Search
 
+Queries automatically fan out and merge:
+
 ```typescript
-// Search head distributes to indexers
-SearchHead
-    |
-    +-- IndexerDO[0] (US-East)
-    +-- IndexerDO[1] (US-West)
-    +-- IndexerDO[2] (EU-West)
-    |
-Merge Results
-    |
-Return to Client
+// Your query
+await splunk`errors in checkout last week`
+
+// Under the hood
+// SearchHead -> IndexerDO[US-East, US-West, EU-West]
+// Parallel execution, results merge, dedupe, sort
 ```
 
 ## Data Onboarding
-
-### Universal Forwarder
 
 ```bash
 # Install forwarder
 curl -sL https://splunk.do/forwarder | bash
 
-# Configure outputs
-splunk set deploy-poll your-org.splunk.do:8089
-
-# Add inputs
-splunk add monitor /var/log/syslog -sourcetype syslog
-splunk add monitor /var/log/nginx/*.log -sourcetype nginx
+# One-line setup
+splunk forward /var/log/*.log to main at logs.acme.com
 ```
 
-### Heavy Forwarder
-
-For parsing and routing:
-
 ```typescript
-// Heavy forwarder configuration
-HeavyForwarder({
-  inputs: [
-    { type: 'tcp', port: 514, sourcetype: 'syslog' },
-    { type: 'udp', port: 514, sourcetype: 'syslog' },
-  ],
-  outputs: [
-    { server: 'indexer1.splunk.do:9997' },
-    { server: 'indexer2.splunk.do:9997' },
-  ],
-  routing: {
-    'sourcetype=syslog': 'index=syslog',
-    'sourcetype=nginx': 'index=web',
-    'default': 'index=main',
-  },
-})
+// Or configure in code
+await splunk`forward syslog port 514 to syslog index`
+await splunk`forward kafka events topic to main`
+await splunk`forward S3 bucket logs/ to archive`
 ```
 
 ## Migration from Splunk
 
-### SPL Compatibility
-
-Full SPL command support:
-
-```
-Category               Commands
------------------------------------------------------------------
-Search                 search, where, regex, rex
-Stats                  stats, eventstats, streamstats, chart, timechart
-Transforming           top, rare, contingency, cluster
-Reporting              table, fields, rename, convert
-Join                   join, append, union, multisearch
-Transaction            transaction, associate
-Machine Learning       anomalydetection, predict, fit
-```
-
-### Configuration Migration
+### One-Line Migration
 
 ```bash
-# Export Splunk configuration
-splunk export server-config --output ./config
-
-# Import to splunk.do
-npx splunk-migrate import ./config
-
-# Migrate saved searches
-npx splunk-migrate searches --source splunk.company.com
-
-# Migrate dashboards
-npx splunk-migrate dashboards --source splunk.company.com
+npx splunk-migrate from splunk.company.com
 ```
+
+Migrates:
+- Saved searches
+- Dashboards
+- Alerts
+- Inputs configuration
+- Field extractions
+
+### SPL Compatibility
+
+Full SPL command support. All existing queries work unchanged:
+
+| Category | Commands |
+|----------|----------|
+| **Search** | search, where, regex, rex |
+| **Stats** | stats, eventstats, streamstats, chart, timechart |
+| **Transform** | top, rare, contingency, cluster |
+| **Report** | table, fields, rename, convert |
+| **Join** | join, append, union, multisearch |
+| **ML** | anomalydetection, predict, fit |
 
 ### API Compatibility
 
+All Splunk REST endpoints supported:
+
 ```
-Endpoint                        Status
------------------------------------------------------------------
-POST /services/search/jobs      Supported
-GET  /services/search/jobs/{id} Supported
-POST /services/receivers/simple Supported
-POST /services/collector/event  Supported (HEC)
-GET  /services/data/indexes     Supported
+POST /services/search/jobs
+GET  /services/search/jobs/{id}
+POST /services/receivers/simple
+POST /services/collector/event  (HEC)
+GET  /services/data/indexes
+```
+
+## vs Splunk Enterprise / Splunk Cloud
+
+| Feature | Splunk | splunk.do |
+|---------|--------|-----------|
+| **Pricing** | $150/GB/day | $0 - run your own |
+| **Implementation** | Weeks to months | Deploy in minutes |
+| **Annual Cost** | $5M+ at scale | ~$100/month |
+| **Architecture** | On-prem/Cloud | Edge-native, global |
+| **Query Language** | SPL only | SPL + natural language |
+| **AI** | Splunk AI Assistant | AI-first design |
+| **SIEM** | Enterprise Security ($$$) | Included |
+| **SOAR** | Splunk SOAR ($$$) | Included |
+| **UBA** | Splunk UBA ($$$) | Included |
+| **Lock-in** | Cisco lock-in | MIT licensed |
+
+## Use Cases
+
+### Security Operations
+
+```typescript
+// SOC in a few lines
+await splunk`detect threats across all sources`
+await splunk`alert on brute force, malware, exfiltration`
+await splunk`investigate incidents automatically`
+  .correlate()
+  .timeline()
+  .respond()
+```
+
+### DevOps Observability
+
+```typescript
+// Full observability
+await splunk`errors in production with stack traces`
+await splunk`latency p99 by service`
+await splunk`deployment impact on error rate`
+```
+
+### Compliance
+
+```typescript
+// Audit and retain
+await splunk`retain security logs 7 years`
+await splunk`export SOC 2 evidence for Q4`
+await splunk`PCI audit trail for card transactions`
 ```
 
 ## Roadmap
 
+### Core Platform
 - [x] SPL search engine
-- [x] Indexing and storage
+- [x] Indexing and storage (hot/warm/cold)
 - [x] Dashboards and visualizations
-- [x] Alerting
+- [x] Alerting (scheduled + real-time)
 - [x] Natural language search
 - [x] HEC data collection
-- [ ] Enterprise Security (ES)
-- [ ] SOAR integration
-- [ ] User Behavior Analytics
-- [ ] ITSI
-- [ ] Data models
-- [ ] Pivot
+- [ ] Metrics store
+- [ ] Trace ingestion
+
+### Security
+- [x] Enterprise Security (ES)
+- [x] SOAR integration
+- [x] User Behavior Analytics
+- [ ] Threat intelligence platform
+- [ ] Automated response actions
+- [ ] Compliance reporting
+
+### AI
+- [x] Natural language queries
+- [x] Anomaly detection
+- [x] Agent integration
+- [ ] Predictive alerting
+- [ ] Automated investigation
+- [ ] Root cause analysis
 
 ## Why Open Source?
 
-Log analytics shouldn't cost $5M/year:
+### 1. Cost Liberation
 
-1. **Your logs** - Machine data is critical operational intelligence
-2. **Your searches** - SPL knowledge shouldn't be vendor-locked
-3. **Your security** - SIEM capabilities shouldn't require enterprise pricing
-4. **Your retention** - Historical data shouldn't cost per-GB forever
+$150/GB/day is a tax on observability. Open source means:
+- Zero per-GB fees
+- No capacity licensing
+- No add-on pricing
+- Run on your infrastructure
 
-Splunk showed the world what log analytics could be. **splunk.do** makes it accessible to everyone.
+### 2. No Lock-in
+
+Your logs, your SPL, your dashboards. Open source enables:
+- Export everything, anytime
+- Switch providers freely
+- Customize without consultants
+- Integrate with anything
+
+### 3. AI Enablement
+
+Closed platforms control your AI options. Open source means:
+- Integrate any LLM
+- Build custom detection
+- Train on your data
+- Natural language everything
+
+### 4. Community Innovation
+
+Security moves faster than vendor roadmaps. Open source enables:
+- Detection rules from the community
+- Shared threat intelligence
+- Faster vulnerability response
+- Collective defense
+
+## Contributing
+
+splunk.do is open source under the MIT license.
+
+We especially welcome contributions from:
+- Security engineers and SOC analysts
+- DevOps and SRE teams
+- Detection engineers
+- Data engineers
+
+```bash
+git clone https://github.com/dotdo/splunk.do
+cd splunk.do
+pnpm install
+pnpm test
+```
 
 ## License
 
@@ -784,7 +615,12 @@ MIT License - Ingest everything. Search anything. Detect all threats.
 ---
 
 <p align="center">
-  <strong>splunk.do</strong> is part of the <a href="https://dotdo.dev">dotdo</a> platform.
+  <strong>The $28B acquisition ends here.</strong>
   <br />
-  <a href="https://splunk.do">Website</a> | <a href="https://docs.splunk.do">Docs</a> | <a href="https://discord.gg/dotdo">Discord</a>
+  SPL-compatible. AI-native. Zero per-GB fees.
+  <br /><br />
+  <a href="https://splunk.do">Website</a> |
+  <a href="https://docs.splunk.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/splunk.do">GitHub</a>
 </p>

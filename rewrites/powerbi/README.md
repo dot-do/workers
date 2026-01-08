@@ -20,7 +20,13 @@ Microsoft built a BI empire on:
 
 A 500-person enterprise? **$60k+/year** for Pro. Premium capacity? **$60k+ additional**.
 
-## The workers.do Way
+## AI-Native API
+
+```typescript
+import { powerbi } from 'powerbi.do'           // Full SDK
+import { powerbi } from 'powerbi.do/tiny'      // Minimal client
+import { powerbi } from 'powerbi.do/dax'       // DAX-only operations
+```
 
 Your CFO lives in Excel. Your team needs dashboards. Microsoft wants $120k/year and a Power BI Desktop license for every analyst.
 
@@ -30,7 +36,7 @@ Your CFO lives in Excel. Your team needs dashboards. Microsoft wants $120k/year 
 import { powerbi } from 'powerbi.do'
 import { priya, mark } from 'agents.do'
 
-// Excel-native analytics
+// Talk to it like a colleague
 const report = await powerbi`analyze ${excelFile} with revenue trends`
 const dashboard = await powerbi`build KPI dashboard from ${spreadsheet}`
 const insight = await powerbi`why did margins drop in February?`
@@ -82,20 +88,12 @@ The killer feature: true Excel integration without Microsoft:
 ```typescript
 import { powerbi } from 'powerbi.do'
 
-// Connect directly to Excel files
-const report = await powerbi.fromExcel({
-  file: 'sales_data.xlsx',
-  tables: ['Sales', 'Products', 'Regions'],
-})
-
-// Or connect to Google Sheets
-const report2 = await powerbi.fromSheet({
-  spreadsheetId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms',
-  ranges: ['Sales!A1:Z1000', 'Products!A1:D100'],
-})
+// Just point at your data
+const report = await powerbi`load sales_data.xlsx with tables Sales Products Regions`
+const sheets = await powerbi`connect to Google Sheet ${spreadsheetId}`
 
 // Excel formulas work as DAX measures
-const report3 = await powerbi`
+await powerbi`
   analyze ${excelFile} with measures:
   - Total Sales = SUM(Sales[Amount])
   - YoY Growth = CALCULATE([Total Sales], SAMEPERIODLASTYEAR('Date'[Date]))
@@ -106,7 +104,16 @@ const report3 = await powerbi`
 
 ### DAX Compatible
 
-Write DAX formulas exactly like Power BI:
+Write DAX formulas exactly like Power BI - or describe them naturally:
+
+```typescript
+// Natural language generates DAX
+await powerbi`profit margin as [Profit] / [Revenue] in percent`
+await powerbi`YTD sales vs same period last year`
+await powerbi`running total of sales by date`
+```
+
+Or write DAX directly:
 
 ```dax
 // Measures
@@ -149,170 +156,114 @@ CALCULATE(
 
 ### Data Model
 
-Define relationships and hierarchies:
+Define relationships and hierarchies naturally:
 
 ```typescript
-import { DataModel, Table, Relationship } from 'powerbi.do'
+import { powerbi } from 'powerbi.do'
 
-export const SalesModel = DataModel({
-  tables: {
-    Sales: Table({
-      source: 'sales.csv',
-      columns: {
-        OrderID: { type: 'integer', key: true },
-        Date: { type: 'date' },
-        ProductID: { type: 'integer' },
-        CustomerID: { type: 'integer' },
-        Amount: { type: 'decimal' },
-        Quantity: { type: 'integer' },
-      },
-    }),
+// Load tables from files
+await powerbi`load sales.csv as Sales`
+await powerbi`load products.csv as Products`
+await powerbi`create date table 2020 to 2025`
 
-    Products: Table({
-      source: 'products.csv',
-      columns: {
-        ProductID: { type: 'integer', key: true },
-        Name: { type: 'string' },
-        Category: { type: 'string' },
-        Subcategory: { type: 'string' },
-        Price: { type: 'decimal' },
-      },
-      hierarchies: {
-        'Product Hierarchy': ['Category', 'Subcategory', 'Name'],
-      },
-    }),
+// Relationships in plain English
+await powerbi`relate Sales.ProductID to Products.ProductID`
+await powerbi`relate Sales.Date to Date.Date`
 
-    Date: Table({
-      type: 'date',
-      start: '2020-01-01',
-      end: '2025-12-31',
-      // Auto-generates Year, Quarter, Month, Week, Day columns
-    }),
-  },
+// Hierarchies
+await powerbi`Products hierarchy: Category > Subcategory > Name`
 
-  relationships: [
-    Relationship({
-      from: { table: 'Sales', column: 'ProductID' },
-      to: { table: 'Products', column: 'ProductID' },
-      type: 'many-to-one',
-    }),
-    Relationship({
-      from: { table: 'Sales', column: 'Date' },
-      to: { table: 'Date', column: 'Date' },
-      type: 'many-to-one',
-    }),
-  ],
-})
+// Or describe the whole model at once
+await powerbi`
+  model from:
+  - sales.csv as Sales
+  - products.csv as Products
+  - date table 2020 to 2025
+
+  relationships:
+  - Sales.ProductID -> Products.ProductID
+  - Sales.Date -> Date.Date
+`
 ```
 
 ### Reports
 
-Build interactive reports:
+Build interactive reports with natural language:
 
 ```typescript
-import { Report, Page, Visual } from 'powerbi.do'
+import { powerbi } from 'powerbi.do'
 
-export const SalesReport = Report({
-  name: 'Sales Analysis',
-  theme: 'corporate',
-  pages: [
-    Page({
-      name: 'Overview',
-      visuals: [
-        Visual.card({
-          title: 'Total Revenue',
-          measure: '[Total Sales]',
-          format: 'currency',
-          position: { x: 0, y: 0, width: 200, height: 100 },
-        }),
-        Visual.card({
-          title: 'YoY Growth',
-          measure: '[YoY Growth %]',
-          format: 'percent',
-          conditionalFormatting: {
-            positive: 'green',
-            negative: 'red',
-          },
-          position: { x: 220, y: 0, width: 200, height: 100 },
-        }),
-        Visual.lineChart({
-          title: 'Revenue Trend',
-          axis: 'Date[Month]',
-          values: ['[Total Sales]', '[Same Period Last Year]'],
-          position: { x: 0, y: 120, width: 600, height: 300 },
-        }),
-        Visual.barChart({
-          title: 'Sales by Category',
-          axis: 'Products[Category]',
-          values: ['[Total Sales]'],
-          sort: 'descending',
-          position: { x: 620, y: 120, width: 400, height: 300 },
-        }),
-      ],
-      slicers: [
-        { field: 'Date[Year]', type: 'dropdown' },
-        { field: 'Products[Category]', type: 'list' },
-        { field: 'Customers[Region]', type: 'tile' },
-      ],
-    }),
-    Page({
-      name: 'Product Details',
-      visuals: [
-        Visual.matrix({
-          rows: ['Products[Category]', 'Products[Subcategory]'],
-          columns: ['Date[Quarter]'],
-          values: ['[Total Sales]', '[Profit Margin]'],
-          subtotals: true,
-        }),
-      ],
-    }),
-  ],
-})
+// Create a report with one sentence
+const report = await powerbi`executive dashboard for sales data`
+
+// Or describe what you want to see
+await powerbi`
+  Sales Analysis report:
+  - card: Total Revenue as currency
+  - card: YoY Growth as percent, green if positive red if negative
+  - line chart: revenue by month vs last year
+  - bar chart: sales by category descending
+
+  slicers: Year, Category, Region
+`
+
+// Add pages naturally
+await powerbi`add Product Details page to ${report}`
+await powerbi`matrix: Category > Subcategory by Quarter showing Sales and Margin`
+
+// AI builds the layout - you refine if needed
+await powerbi`make the revenue chart bigger`
+await powerbi`move slicers to sidebar`
 ```
 
 ### Power Query (M)
 
-Transform data with Power Query:
+Transform data naturally or with M code:
 
 ```typescript
-import { PowerQuery } from 'powerbi.do'
+import { powerbi } from 'powerbi.do'
 
-const transformedSales = PowerQuery(`
+// Natural language transformations
+await powerbi`transform sales.csv: filter Amount > 0, add YearMonth column`
+await powerbi`unpivot months into Month and Value columns`
+await powerbi`split Name column by comma into First and Last`
+
+// Chain transformations
+await powerbi`load sales.csv`
+  .map(data => powerbi`filter ${data} where Amount > 0`)
+  .map(data => powerbi`add column YearMonth = Year * 100 + Month`)
+  .map(data => powerbi`remove duplicates by OrderID`)
+
+// Or use M code directly when you need precision
+await powerbi`
+  M code:
   let
     Source = Csv.Document(File.Contents("sales.csv")),
-    #"Promoted Headers" = Table.PromoteHeaders(Source),
-    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers", {
-      {"Date", type date},
-      {"Amount", type number}
-    }),
-    #"Filtered Rows" = Table.SelectRows(#"Changed Type", each [Amount] > 0),
-    #"Added YearMonth" = Table.AddColumn(#"Filtered Rows", "YearMonth",
-      each Date.Year([Date]) * 100 + Date.Month([Date])
-    )
+    Filtered = Table.SelectRows(Source, each [Amount] > 0)
   in
-    #"Added YearMonth"
-`)
+    Filtered
+`
 ```
 
 ### Quick Measures
 
-AI-generated DAX:
+Describe what you want, get DAX:
 
 ```typescript
-import { quickMeasure } from 'powerbi.do'
+import { powerbi } from 'powerbi.do'
 
-// Describe what you want, get DAX
-const measure = await quickMeasure({
-  model: SalesModel,
-  description: 'rolling 3-month average of sales',
-})
+// Just say it
+const rolling = await powerbi`measure: rolling 3-month average of sales`
 // Returns: AVERAGEX(DATESINPERIOD('Date'[Date], MAX('Date'[Date]), -3, MONTH), [Total Sales])
 
-const measure2 = await quickMeasure({
-  model: SalesModel,
-  description: 'year-to-date sales compared to same period last year',
-})
+const ytdCompare = await powerbi`measure: YTD sales vs same period last year`
 // Returns complex DAX with time intelligence
+
+// Common patterns in plain English
+await powerbi`measure: profit margin as Profit / Revenue in percent`
+await powerbi`measure: running total of sales by date`
+await powerbi`measure: percent of parent category`
+await powerbi`measure: rank products by sales descending`
 ```
 
 ## AI-Native Features
@@ -322,23 +273,19 @@ const measure2 = await quickMeasure({
 Ask questions about your data:
 
 ```typescript
-import { qna } from 'powerbi.do'
+import { powerbi } from 'powerbi.do'
 
-// Simple questions
-const answer1 = await qna('what were total sales last month?')
-// Returns: { value: 1234567, visualization: <chart> }
+// Just ask
+const answer = await powerbi`what were total sales last month?`
+const compare = await powerbi`how does Europe compare to North America?`
+const trend = await powerbi`show me the sales trend over time`
 
-// Comparative questions
-const answer2 = await qna('how does Europe compare to North America?')
-// Returns: { data: [...], visualization: <comparison chart> }
+// Drill down conversationally
+await powerbi`break that down by product category`
+await powerbi`now just show electronics`
+await powerbi`why did margins drop in Q3?`
 
-// Trend questions
-const answer3 = await qna('show me the sales trend over time')
-// Returns: { data: [...], visualization: <line chart> }
-
-// Drill-down questions
-const answer4 = await qna('break that down by product category')
-// Returns: { data: [...], visualization: <stacked chart> }
+// Answers come with visualizations automatically
 ```
 
 ### AI Insights
@@ -346,21 +293,19 @@ const answer4 = await qna('break that down by product category')
 Automatic insight discovery:
 
 ```typescript
-import { insights } from 'powerbi.do'
+import { powerbi } from 'powerbi.do'
 
-const findings = await insights({
-  model: SalesModel,
-  focus: 'Sales[Amount]',
-  timeframe: 'last quarter',
-})
+// Ask for insights
+const findings = await powerbi`insights on sales last quarter`
+const anomalies = await powerbi`what's unusual in the data?`
+const drivers = await powerbi`what's driving revenue growth?`
 
-// Returns ranked insights
-for (const finding of findings) {
-  console.log(finding.type)        // 'anomaly' | 'trend' | 'driver'
-  console.log(finding.description) // "Sales spiked 45% on March 15"
-  console.log(finding.explanation) // "Driven by Product X promotion"
-  console.log(finding.visual)      // Auto-generated visualization
-}
+// AI finds and explains patterns automatically:
+// - "Sales spiked 45% on March 15, driven by Product X promotion"
+// - "West region outperforming by 23% due to new store openings"
+// - "Customer churn increased in segment B after price change"
+
+// Each insight comes with a visualization
 ```
 
 ### Smart Narratives
@@ -368,37 +313,38 @@ for (const finding of findings) {
 Auto-generated text summaries:
 
 ```typescript
-import { smartNarrative } from 'powerbi.do'
+import { powerbi } from 'powerbi.do'
 
-const narrative = await smartNarrative({
-  visual: salesTrendChart,
-  style: 'executive-summary',
-})
+// Generate executive summaries
+const summary = await powerbi`summarize sales performance for the board`
+// "Sales increased 12% quarter-over-quarter, driven primarily by strong
+// performance in Electronics (+23%). West region led at 18%, Northeast declined 5%..."
 
-// Returns: "Sales increased 12% quarter-over-quarter, driven primarily
-// by strong performance in the Electronics category (+23%). The West
-// region led growth at 18%, while the Northeast declined 5%..."
+// Different tones for different audiences
+await powerbi`explain this chart for the CEO`
+await powerbi`technical summary of data quality issues`
+await powerbi`weekly metrics email for the sales team`
 ```
 
 ### AI Agents as Analysts
 
-AI agents can create complete reports:
+AI agents create complete reports with promise pipelining:
 
 ```typescript
-import { priya, mark } from 'agents.do'
+import { priya, mark, tom } from 'agents.do'
 import { powerbi } from 'powerbi.do'
 
-// Product manager builds analytics
-const productReport = await priya`
-  create a Power BI report analyzing our product usage data
-  include adoption metrics, engagement scores, and churn indicators
-`
+// Agents work like analysts
+const productReport = await priya`analyze our product usage data`
+  .visualize()    // auto-generates Power BI report
+  .share()        // sends to stakeholders
 
-// Marketing builds campaign report
-const campaignReport = await mark`
-  build a report showing our marketing campaign performance
-  with spend, conversions, and ROI by channel
-`
+// Chain agents for review workflows
+const report = await mark`build campaign performance report`
+  .map(draft => [priya, tom].map(r => r`review ${draft}`))
+  .map(approved => powerbi`publish ${approved} to workspace`)
+
+// One round trip - natural language throughout
 ```
 
 ## Real-Time Streaming
@@ -406,56 +352,24 @@ const campaignReport = await mark`
 No refresh limitations:
 
 ```typescript
-import { StreamingDataset } from 'powerbi.do'
+import { powerbi } from 'powerbi.do'
 
-const realtimeSales = StreamingDataset({
-  name: 'Real-time Sales',
-  columns: {
-    timestamp: { type: 'datetime' },
-    product: { type: 'string' },
-    amount: { type: 'number' },
-    region: { type: 'string' },
-  },
-})
+// Create a streaming dataset
+const stream = await powerbi`stream: Real-time Sales with timestamp product amount region`
 
-// Push data in real-time
-for await (const sale of salesStream) {
-  await realtimeSales.push({
-    timestamp: new Date(),
-    product: sale.product,
-    amount: sale.amount,
-    region: sale.region,
-  })
-}
+// Push data naturally
+await powerbi`push to Real-time Sales: ${sale}`
 
-// Report updates automatically
+// Or pipe from any source
+await powerbi`stream from ${kafkaTopic} to Real-time Sales`
+await powerbi`stream from ${webhookUrl} to Real-time Sales`
+
+// Reports update automatically - no 8/day limit
 ```
 
 ## Embedding
 
 Embed reports in your applications:
-
-### JavaScript SDK
-
-```typescript
-import { PowerBIEmbed } from 'powerbi.do/embed'
-
-const embed = new PowerBIEmbed({
-  container: document.getElementById('report'),
-  report: 'sales-analysis',
-  accessToken: await getEmbedToken(),
-  settings: {
-    filterPaneEnabled: false,
-    navContentPaneEnabled: true,
-  },
-})
-
-// Interact programmatically
-await embed.setFilters([
-  { table: 'Date', column: 'Year', values: [2024] },
-])
-const data = await embed.exportData()
-```
 
 ### React Component
 
@@ -465,10 +379,9 @@ import { PowerBIReport } from 'powerbi.do/react'
 function Dashboard() {
   return (
     <PowerBIReport
-      reportId="sales-analysis"
+      report="sales-analysis"
       filters={{ year: 2024, region: 'West' }}
       onDataSelected={(data) => console.log(data)}
-      height={600}
     />
   )
 }
@@ -477,16 +390,25 @@ function Dashboard() {
 ### Row-Level Security
 
 ```typescript
-import { createEmbedToken } from 'powerbi.do/embed'
+import { powerbi } from 'powerbi.do'
 
-const token = await createEmbedToken({
-  report: 'sales-analysis',
-  roles: ['RegionalManager'],
-  filters: {
-    'Customers[Region]': user.region,  // Row-level security
-  },
-  expiry: Date.now() + 3600000,
-})
+// Embed with security in one line
+const token = await powerbi`embed sales-analysis for ${user.email} filtered to ${user.region}`
+
+// RLS just works - users see only their data
+```
+
+### JavaScript SDK
+
+```typescript
+import { powerbi } from 'powerbi.do'
+
+// Embed and control naturally
+const embed = await powerbi`embed sales-analysis in ${container}`
+
+// Interact naturally
+await powerbi`filter ${embed} to Year 2024`
+await powerbi`export ${embed} data to Excel`
 ```
 
 ## Architecture
@@ -537,29 +459,32 @@ DAX Expression         Parse Tree           Execution Plan
 
 ### Column Store
 
-Power BI uses columnar storage for performance:
+Columnar storage for fast aggregations - automatic optimization:
 
 ```typescript
-// Data stored in column format for fast aggregations
-ColumnStore({
-  table: 'Sales',
-  columns: {
-    Date: Int32Array,      // Dates as integers
-    ProductID: Int32Array, // Dictionary encoded
-    Amount: Float64Array,  // Native numbers
-  },
-  dictionaries: {
-    ProductID: ['Widget A', 'Widget B', ...],
-  },
-  indexes: {
-    Date: BitIndex,  // Bitmap index for filtering
-  },
-})
+import { powerbi } from 'powerbi.do'
+
+// You don't configure storage - it optimizes automatically
+// Dates as integers, dictionary encoding, bitmap indexes
+// All handled by the engine
+
+// Just query naturally
+await powerbi`sum of Amount by Date for last 5 years`  // <10ms
 ```
 
 ## Data Connections
 
-Connect to any source:
+Connect to any source naturally:
+
+```typescript
+import { powerbi } from 'powerbi.do'
+
+// Just say where your data is
+await powerbi`connect to ${postgresUrl}`
+await powerbi`import from Snowflake sales_db.transactions`
+await powerbi`load data from ${restApiEndpoint}`
+await powerbi`sync with Google Sheet ${spreadsheetId}`
+```
 
 | Source | Type | Notes |
 |--------|------|-------|
@@ -577,14 +502,19 @@ Connect to any source:
 
 ## Migration from Power BI
 
-### Export Your Reports
+### Import Your Reports
 
 ```bash
-# Export PBIX file
-# (Manual export from Power BI Desktop)
-
-# Import to powerbi.do
+# One command migration
 npx powerbi-migrate import ./report.pbix
+```
+
+```typescript
+import { powerbi } from 'powerbi.do'
+
+// Or import programmatically
+await powerbi`import ${pbixFile}`
+await powerbi`migrate workspace from Power BI service`
 ```
 
 ### DAX Compatibility

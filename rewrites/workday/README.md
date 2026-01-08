@@ -1,72 +1,95 @@
 # workday.do
 
-> Enterprise HCM. AI-native. Deploy in minutes, not months.
+> Enterprise HCM. Edge-Native. Open by Default. AI-First.
+
+Workday charges enterprises millions for implementations, locks them into proprietary systems, and treats AI as an afterthought. Implementation takes 6-18 months. Licensing costs $100K+ annually. The system that manages your people requires its own team to manage.
+
+**workday.do** is the open-source alternative. Deploy in minutes, not months. AI-native from day one. Your data, your infrastructure.
+
+## AI-Native API
+
+```typescript
+import { workday } from 'workday.do'           // Full SDK
+import { workday } from 'workday.do/tiny'      // Minimal client
+import { workday } from 'workday.do/payroll'   // Payroll-only operations
+```
+
+Natural language for HR workflows:
+
+```typescript
+import { workday } from 'workday.do'
+
+// Talk to it like a colleague
+await workday`hire Alex Chen as Software Engineer in Engineering at $150k starting Jan 15`
+await workday`promote Alex to Senior Engineer at $165k effective March 1`
+await workday`Alex's vacation balance`
+
+// Chain like sentences
+await workday`engineers needing reviews`
+  .notify(`Your performance review is due`)
+
+// Requests that route themselves
+await workday`request 40 hours vacation for Alex Chen Feb 17-21`
+  .route('manager-approval')
+  .onApprove(async () => await workday`block Alex's calendar`)
+```
 
 ## The Problem
 
 Workday changed the world by moving HR to the cloud. But that was 2005.
 
-Today:
+| What Workday Charges | The Reality |
+|---------------------|-------------|
+| **Implementation** | $500K-5M+ (6-18 month projects) |
+| **Annual Licensing** | $100K-1M+ per year |
+| **Per-Employee Fees** | $50-200 per employee per month |
+| **AI Features** | Additional SKUs, integration headaches |
+| **Customization** | $300/hour consultants |
+| **Vendor Lock-in** | Decades of data trapped |
 
-- **Implementation takes 6-18 months** - Consultants, configuration, data migration
-- **Costs $100K+ annually** - Enterprise licensing, per-employee fees, support contracts
-- **AI is a bolt-on** - "Coming soon" features, additional SKUs, integration headaches
-- **Complexity as a moat** - The system that manages your people shouldn't need its own team to manage
+### The Complexity Tax
 
-The irony? Workday was founded to be simpler than PeopleSoft. Twenty years later, it *is* PeopleSoft.
+The irony? Workday was founded to be simpler than PeopleSoft. Twenty years later, it *is* PeopleSoft:
+
+- Implementation projects measured in years
+- Dedicated "Workday admins" required
+- Bolt-on AI sold separately
+- Configuration complexity as a moat
 
 ## The Solution
 
-**workday.do** is open-source Human Capital Management that runs on Cloudflare Workers.
+**workday.do** reimagines HCM for the AI era:
 
-- **Deploy in minutes** - Not months
-- **AI-native from day one** - Not a feature flag
-- **Your data, your infrastructure** - Not their cloud, their terms
-- **Enterprise capabilities** - Without enterprise complexity
-
-```bash
-npx create-dotdo workday
 ```
-
-That's it. You now have:
-
-- Employee records with effective dating
-- Organizational hierarchies
-- Compensation management
-- Time off tracking
-- Business process workflows
-- AI HR assistant
-
-All running on edge infrastructure you control.
+Workday                             workday.do
+-----------------------------------------------------------------
+$500K-5M implementation             Deploy in minutes
+$100K+/year maintenance             $0 - run your own
+18-month implementations            npm install && deploy
+Bolt-on AI features                 AI-native from day one
+Workday's cloud lock-in             Your Cloudflare account
+Consultants for everything          Code-first, instant deploy
+Per-employee licensing              Open source, MIT licensed
+```
 
 ## One-Click Deploy
 
 ```bash
-# Create your HCM instance
 npx create-dotdo workday
-
-# Or clone and customize
-git clone https://github.com/dotdo/workday.do
-cd workday.do
-npm install
-npm run deploy
 ```
 
-Your Workday alternative is live. Add your first employee:
+An enterprise HCM. Running on infrastructure you control. AI-native from day one.
 
 ```typescript
-import { hr } from 'workday.do'
+import { Workday } from 'workday.do'
 
-await hr.workers.hire({
-  name: 'Alex Chen',
-  position: 'Software Engineer',
-  organization: 'Engineering',
-  startDate: '2025-01-15',
-  compensation: {
-    salary: 150000,
-    currency: 'USD',
-    frequency: 'annual'
-  }
+export default Workday({
+  name: 'acme-corp',
+  domain: 'hr.acme.com',
+  features: {
+    effectiveDating: true,
+    aiAssistant: true,
+  },
 })
 ```
 
@@ -74,153 +97,129 @@ await hr.workers.hire({
 
 ### Workers
 
-The heart of any HCM. Not "employees" - **workers**. Because the future includes contractors, AI agents, and work arrangements we haven't invented yet.
+```typescript
+// Find anyone
+const alex = await workday`Alex Chen`
+const engineers = await workday`engineers in Austin`
+const managers = await workday`managers with more than 5 direct reports`
+
+// AI infers what you need
+await workday`Alex Chen`               // returns worker
+await workday`Alex's compensation`     // returns comp details
+await workday`Alex's full history`     // returns complete record
+```
+
+### Hiring
 
 ```typescript
-// Every worker has a complete history
-const alex = await hr.workers.get('alex-chen')
+// Hire naturally
+await workday`hire Alex Chen as Software Engineer in Engineering at $150k starting Jan 15`
+await workday`hire Maria Santos as contractor, product design, $100/hour`
+await workday`onboard Alex with standard engineering checklist`
 
-// See their current state
-alex.position           // Software Engineer
-alex.organization       // Engineering
-alex.manager            // Sarah Kim
-alex.compensation       // $150,000/year
-
-// Or as of any date
-const alexLastYear = await hr.workers.get('alex-chen', { asOf: '2024-01-01' })
+// Batch hiring reads like a roster
+await workday`
+  hire for Engineering starting Feb 1:
+  - Sarah Kim, Senior Engineer, $180k
+  - James Liu, Staff Engineer, $220k
+  - Priya Patel, Engineering Manager, $200k
+`
 ```
 
 ### Positions
 
-Jobs exist independent of people. Positions are the boxes on the org chart - workers fill them.
-
 ```typescript
-await hr.positions.create({
-  title: 'Senior Software Engineer',
-  organization: 'Engineering',
-  level: 'IC4',
-  headcount: 3,           // Budget for 3
-  filled: 2,              // 2 currently filled
-  compensationRange: {
-    min: 140000,
-    max: 200000,
-    currency: 'USD'
-  }
-})
+// Create positions naturally
+await workday`create Senior Software Engineer position in Engineering, level IC4, budget 3 headcount, $140k-200k range`
+await workday`open positions in Engineering`
+await workday`unfilled roles this quarter`
 ```
 
 ### Organizations
 
-Hierarchies that actually work. Teams within teams within teams - traversable, queryable, time-aware.
-
 ```typescript
-// Get the entire org tree
-const company = await hr.orgs.tree()
-
-// Find all engineers (including sub-orgs)
-const engineering = await hr.orgs.get('engineering')
-const allEngineers = await engineering.allWorkers()  // Recursive
-
-// See the org as it was
-const orgLastQuarter = await hr.orgs.tree({ asOf: '2024-10-01' })
+// Query the org naturally
+await workday`org chart`
+await workday`Engineering team`
+await workday`everyone in Engineering including sub-teams`
+await workday`who reports to Sarah Kim`
+await workday`org chart as of last quarter`
 ```
 
 ### Compensation
 
-Total rewards, not just salary. Base, bonus, equity, benefits - all versioned, all auditable.
-
 ```typescript
-await hr.compensation.adjust({
-  worker: 'alex-chen',
-  effectiveDate: '2025-03-01',
-  changes: {
-    baseSalary: 165000,      // Promotion raise
-    bonus: { target: 15 },   // 15% target bonus
-    equity: {
-      grant: 5000,           // RSU grant
-      vestingSchedule: '4-year-1-cliff'
-    }
-  },
-  reason: 'promotion',
-  approvedBy: 'sarah-kim'
-})
+// Adjust comp naturally
+await workday`give Alex a raise to $165k effective March 1`
+await workday`Alex promotion to Senior with 15% bonus target and 5000 RSUs`
+await workday`market adjustment for all engineers, 5% increase July 1`
+
+// Review compensation
+await workday`Alex's total comp`
+await workday`engineering comp by level`
+await workday`who's below market in Austin`
 ```
 
 ### Time Off
 
-Accruals, balances, requests, approvals. No spreadsheets required.
-
 ```typescript
-// Check balance
-const pto = await hr.timeOff.balance('alex-chen', 'vacation')
-// { accrued: 120, used: 40, available: 80, unit: 'hours' }
+// Check balance naturally
+await workday`how much PTO does Alex have`
+await workday`Alex's vacation balance`
 
 // Request time off
-await hr.timeOff.request({
-  worker: 'alex-chen',
-  type: 'vacation',
-  start: '2025-02-17',
-  end: '2025-02-21',
-  hours: 40,
-  notes: 'Family vacation'
-})
-// Automatically routes to manager for approval
+await workday`request vacation for Alex Feb 17-21`
+  .route('manager-approval')
+  .onApprove(async () => await workday`block Alex's calendar`)
+
+// Manage leave
+await workday`who's out next week`
+await workday`Engineering PTO calendar for March`
 ```
 
 ### Recruiting
 
-Open requisitions, candidates, interview workflows. The pipeline before the payroll.
-
 ```typescript
-await hr.recruiting.openReq({
-  position: 'senior-software-engineer-001',
-  hiringManager: 'sarah-kim',
-  targetStartDate: '2025-04-01',
-  interviewPlan: ['recruiter-screen', 'tech-phone', 'onsite', 'offer']
-})
+// Open reqs naturally
+await workday`open Senior Engineer req for Sarah's team, start April 1`
+await workday`open positions in Engineering`
+await workday`candidates in pipeline for senior engineer`
+
+// Move candidates through
+await workday`schedule Alex Chen for onsite with Sarah's team`
+await workday`extend offer to Alex Chen for Senior Engineer at $175k`
 ```
 
 ### Performance
 
-Goals, reviews, feedback. Continuous performance management, not annual paperwork.
-
 ```typescript
-await hr.performance.setGoals('alex-chen', {
-  period: '2025-H1',
-  goals: [
-    { objective: 'Ship authentication system', keyResults: ['...'], weight: 40 },
-    { objective: 'Mentor two junior engineers', keyResults: ['...'], weight: 30 },
-    { objective: 'Reduce API latency by 50%', keyResults: ['...'], weight: 30 }
-  ]
-})
+// Set goals naturally
+await workday`Alex's goals for H1: ship auth system, mentor 2 junior engineers, reduce API latency 50%`
+await workday`who's missing goals for this quarter`
+
+// Reviews
+await workday`start Q1 performance reviews for Engineering`
+await workday`Alex's review history`
+await workday`outstanding reviews for Sarah's team`
 ```
 
 ## Effective Dating
 
-This is the superpower most HR systems lack (or charge enterprise prices for).
-
-**Every change in workday.do is versioned with an effective date.** Not just "when it was entered" - when it takes effect.
+Every change is versioned. Not just "when it was entered" - when it takes effect.
 
 ```typescript
-// Schedule a future promotion
-await hr.workers.update('alex-chen', {
-  effectiveDate: '2025-03-01',  // Takes effect March 1st
-  position: 'Senior Software Engineer',
-  compensation: { salary: 165000 }
-})
+// Schedule future changes
+await workday`promote Alex to Senior Engineer at $165k effective March 1`
 
-// The change is recorded now, but...
-const alexToday = await hr.workers.get('alex-chen')
-alexToday.position  // 'Software Engineer' (still)
+// Query point-in-time
+await workday`Alex's position`                    // Software Engineer (now)
+await workday`Alex's position as of March 1`      // Senior Software Engineer (future)
+await workday`who was Alex's manager last January`
 
-const alexMarch = await hr.workers.get('alex-chen', { asOf: '2025-03-01' })
-alexMarch.position  // 'Senior Software Engineer' (future state)
-
-// Time travel through your entire org
-const orgHistory = await hr.orgs.history('engineering', {
-  from: '2024-01-01',
-  to: '2025-12-31'
-})
+// Time travel through your org
+await workday`Engineering headcount over the last year`
+await workday`org changes between Q1 and Q3 2024`
+await workday`who reported to Sarah on March 15, 2024`
 ```
 
 **Why this matters:**
@@ -230,49 +229,58 @@ const orgHistory = await hr.orgs.history('engineering', {
 - **Compliance** - Answer "who reported to whom on March 15th, 2024?"
 - **Analytics** - Accurate point-in-time headcount, compensation, structure
 
-## AI HR Assistant
+## AI-Native HR
 
 Your HR team gets an AI colleague on day one.
 
 ```typescript
-import { ada } from 'workday.do/agents'
-
 // Employees ask questions naturally
-await ada`How much PTO do I have left?`
-// "You have 80 hours of vacation remaining. Your next accrual of 6.67 hours is on February 1st."
+await workday`how much PTO do I have`
+// "You have 80 hours of vacation remaining. Your next accrual is February 1st."
 
-await ada`I need to take next Friday off`
-// "I've created a time-off request for Friday, January 17th (8 hours vacation).
-//  This has been sent to Sarah Kim for approval."
+await workday`I need next Friday off`
+// Creates time-off request, routes to manager for approval
 
-await ada`What's the process for referring a candidate?`
-// "To refer a candidate: [detailed process with links]
-//  Would you like me to start a referral for a specific person?"
+await workday`what's the process for referring a candidate`
+// Returns process with links, offers to start a referral
+
+await workday`explain my benefits`
+// Personalized benefits summary based on their elections
 ```
 
-**AI-powered workflows:**
-
-- **Onboarding** - Ada guides new hires through paperwork, introductions, setup
-- **Offboarding** - Ensures nothing falls through the cracks
-- **Policy questions** - Instant answers, not support tickets
-- **Manager support** - Helps with reviews, promotions, difficult conversations
-- **Analytics** - "Show me attrition trends in Engineering over the last year"
+### AI-Powered Workflows
 
 ```typescript
-// Configure your AI assistant
-await hr.config.ai({
-  assistant: {
-    name: 'Ada',
-    personality: 'helpful, professional, slightly warm',
-    knowledgeSources: ['handbook', 'policies', 'benefits-guide'],
-    escalateTo: 'hr-team@company.com',
-    capabilities: {
-      createTimeOffRequests: true,
-      answerCompensationQuestions: false,  // Sensitive - human only
-      scheduleOnboarding: true
-    }
-  }
-})
+// Onboarding that handles itself
+await workday`onboard Alex Chen starting Jan 15`
+  .guide()       // AI walks them through paperwork
+  .introduce()   // schedules meet-the-team
+  .setup()       // IT provisioning, badge, etc.
+
+// Offboarding that misses nothing
+await workday`offboard Sarah Kim last day Feb 28`
+  .checklist()   // ensures complete handoff
+  .exit()        // schedules exit interview
+  .process()     // handles all systems access
+
+// Manager support
+await workday`help me write Alex's performance review`
+await workday`how do I handle a difficult conversation about performance`
+await workday`attrition trends in Engineering over the last year`
+```
+
+### Population Health for HR
+
+```typescript
+// Query your workforce like a database
+await workday`flight risk in Engineering`
+await workday`employees with no manager meeting in 30 days`
+await workday`contractors approaching 18-month limit`
+
+// Close HR gaps at scale
+await workday`employees missing emergency contacts`
+  .outreach()    // personalized reminders
+  .track()       // compliance reporting
 ```
 
 ## Enterprise Grade
@@ -281,21 +289,14 @@ Open-source doesn't mean toy.
 
 ### Audit Trails
 
-Every action is logged. Who changed what, when, why.
-
 ```typescript
-const history = await hr.audit.query({
-  entity: 'worker',
-  entityId: 'alex-chen',
-  from: '2024-01-01'
-})
-// [{
-//   timestamp: '2024-03-01T00:00:00Z',
-//   action: 'compensation.adjust',
-//   actor: 'sarah-kim',
-//   changes: { baseSalary: { from: 140000, to: 165000 } },
-//   reason: 'promotion'
-// }, ...]
+// Query audit naturally
+await workday`who changed Alex's compensation and when`
+await workday`all changes to Engineering org this quarter`
+await workday`audit trail for Alex since January`
+
+// AI surfaces anomalies
+await workday`unusual changes this month`
 ```
 
 ### Role-Based Security
@@ -303,16 +304,10 @@ const history = await hr.audit.query({
 Fine-grained permissions. Managers see their teams. HR sees everyone. Employees see themselves.
 
 ```typescript
-await hr.security.defineRole('manager', {
-  workers: {
-    read: 'direct-reports',      // Only their team
-    update: 'direct-reports',    // Can update their reports
-    compensation: 'view-only'    // Can see but not change
-  },
-  timeOff: {
-    approve: 'direct-reports'    // Approve their team's requests
-  }
-})
+// Query access naturally
+await workday`what can Sarah see`
+await workday`who has access to compensation data`
+await workday`break glass access log this month`
 ```
 
 ### Business Process Flows
@@ -320,16 +315,17 @@ await hr.security.defineRole('manager', {
 Complex approvals made simple. Promotions, transfers, terminations - all with proper routing.
 
 ```typescript
-await hr.workflows.define('promotion', {
-  trigger: 'compensation.adjust where reason = promotion',
-  steps: [
-    { actor: 'manager', action: 'initiate' },
-    { actor: 'hr-partner', action: 'review' },
-    { actor: 'comp-team', action: 'approve', condition: 'change > 20%' },
-    { actor: 'vp', action: 'approve', condition: 'new-level >= director' }
-  ],
-  onComplete: 'notify worker, update systems'
-})
+// Approvals route themselves
+await workday`promote Alex to Senior at $165k`
+  .route('manager')           // Sarah initiates
+  .route('hr-partner')        // HR reviews
+  .route('comp-team')         // comp approves (if >20% change)
+  .route('vp')                // VP approves (if director+)
+  .onComplete(async () => await workday`notify Alex`)
+
+// Check approval status
+await workday`pending approvals for Sarah`
+await workday`where is Alex's promotion in the workflow`
 ```
 
 ### Compliance Ready
@@ -343,60 +339,164 @@ Built for the regulatory reality of HR.
 
 ## Architecture
 
-workday.do is built on Cloudflare Durable Objects - the same technology powering real-time collaboration at scale.
+### Durable Object per Organization
 
 ```
-WorkerDO              - Individual employee record
-  |                     Bi-temporal data (effective date + transaction time)
-  |                     Complete employment history
+CompanyDO (config, branding, policies)
   |
-PositionDO            - Job definition
-  |                     Headcount, compensation bands, requirements
+  +-- WorkersDO (demographics, employment)
+  |     |-- SQLite: Worker records (encrypted)
+  |     +-- R2: Documents, photos (encrypted)
   |
-OrganizationDO        - Org unit (team, department, division)
-  |                     Hierarchy traversal, effective-dated structure
+  +-- OrgsDO (structure, hierarchy)
+  |     |-- SQLite: Org units, positions
+  |     +-- Effective-dated changes
   |
-CompensationDO        - Compensation record
-  |                     All components, versioned
+  +-- CompensationDO (payroll, benefits)
+  |     |-- SQLite: Comp data (encrypted)
   |
-TimeOffDO             - Leave balances and requests
-  |                     Accrual rules, approval workflows
+  +-- TimeOffDO (accruals, balances, requests)
+  |     |-- SQLite: Leave records
   |
-WorkflowDO            - Business process instance
-                        Multi-step approvals, routing
+  +-- WorkflowsDO (approvals, routing)
+        |-- SQLite: Process instances
+        +-- State machines
 ```
 
-**Bi-temporal data model:**
+### Bi-Temporal Data Model
 
 ```typescript
 // Every record has two time dimensions
-{
-  effectiveDate: '2025-03-01',    // When it takes effect in reality
-  transactionTime: '2025-01-15',  // When it was recorded in the system
+// "What was true on March 1st?" (as-of query)
+await workday`Alex's manager as of March 1`
 
-  // This enables:
-  // - "What was true on March 1st?" (as-of query)
-  // - "What did we think was true on Jan 15th?" (as-at query)
-  // - "What did we think on Jan 15th would be true on March 1st?" (bi-temporal)
-}
+// "What did we know on Jan 15th?" (as-at query)
+await workday`Alex's record as we knew it on Jan 15`
+
+// "What did we think on Jan 15th would be true on March 1st?" (bi-temporal)
+await workday`Alex's planned promotion as recorded Jan 15`
 ```
 
-**Storage tiers:**
+### Storage Tiers
 
-- **Hot (SQLite in DO)** - Active employees, recent history
-- **Warm (R2)** - Terminated employees, older history
-- **Cold (R2 Archive)** - Compliance retention, rarely accessed
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Active employees, recent history | <10ms |
+| **Warm** | R2 + SQLite Index | Terminated employees (2-7 years) | <100ms |
+| **Cold** | R2 Archive | Compliance retention (7+ years) | <1s |
 
-## Why This Exists
+## vs Workday
 
-We believe:
+| Feature | Workday | workday.do |
+|---------|---------|-----------|
+| **Implementation** | $500K-5M+ | Deploy in minutes |
+| **Annual Cost** | $100K-1M+ | ~$100/month |
+| **Timeline** | 6-18 months | Same day |
+| **AI** | Bolt-on, additional SKU | AI-native foundation |
+| **Data Location** | Workday's cloud | Your Cloudflare account |
+| **Customization** | $300/hour consultants | Code it yourself |
+| **Effective Dating** | Enterprise tier | Included |
+| **Updates** | Bi-annual releases | Continuous deployment |
+| **Lock-in** | Decades of migration | MIT licensed |
 
-1. **HR software should be accessible to all companies** - Not just those with $100K+ budgets
-2. **AI should be native, not an add-on** - The future of HR is AI-assisted
-3. **Your people data is yours** - Not locked in a vendor's cloud
-4. **Open source wins** - The best software is built in the open
+## Use Cases
 
-Workday (the company) did something important - they proved cloud HR could work. Now it's time for the next evolution: open, AI-native, deployable anywhere.
+### Self-Service Portal
+
+```typescript
+// Employees help themselves
+await workday`my PTO balance`
+await workday`request Friday off`
+await workday`update my address to 123 Main St`
+await workday`my pay stubs`
+```
+
+### Manager Dashboard
+
+```typescript
+// Managers manage
+await workday`my team`
+await workday`pending approvals`
+await workday`who's out this week`
+await workday`compensation review for my team`
+```
+
+### HR Analytics
+
+```typescript
+// HR gets insights
+await workday`headcount by department`
+await workday`attrition trends this year`
+await workday`time to fill by role type`
+await workday`diversity metrics for Engineering`
+```
+
+### Payroll Integration
+
+```typescript
+// Seamless payroll prep
+await workday`payroll changes this period`
+await workday`export to ADP`
+await workday`employees with tax form changes`
+```
+
+## Why Open Source for HCM?
+
+### 1. Cost Liberation
+
+$500K-5M implementations are resources diverted from your people. Open source means:
+- Minutes to deploy, not months
+- No implementation consultants
+- No per-employee licensing
+- No vendor lock-in
+
+### 2. AI Enablement
+
+Closed HCM systems control what AI you can use. Open source means:
+- Integrate any LLM
+- Build custom HR automation
+- Reduce administrative burden
+- Natural language for everything
+
+### 3. Your People Data is Yours
+
+HR data is sensitive. Open source enables:
+- True data portability
+- Deploy where you need (sovereignty)
+- No vendor data mining
+- Full audit control
+
+### 4. Innovation Velocity
+
+HCM moves slowly because vendors profit from complexity. Open source enables:
+- HR teams to influence development
+- Startups to integrate without approval
+- Organizations to customize for their needs
+
+## Deployment Options
+
+### Cloudflare Workers
+
+```bash
+npx create-dotdo workday
+# Deploys to your Cloudflare account
+```
+
+### Private Cloud
+
+```bash
+docker run -p 8787:8787 dotdo/workday
+# Or Kubernetes
+kubectl apply -f workday-do.yaml
+```
+
+### On-Premises
+
+For organizations requiring complete control:
+
+```bash
+./workday-do-install.sh --on-premises --employee-count=500
+```
 
 ## Contributing
 
@@ -405,16 +505,23 @@ workday.do is open source under the MIT license.
 ```bash
 git clone https://github.com/dotdo/workday.do
 cd workday.do
-npm install
-npm test
+pnpm install
+pnpm test
 ```
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 ## License
 
-MIT - Use it, fork it, build on it.
+MIT License - For the people who manage people.
 
 ---
 
-**Workers work for you.** Even the ones managing your workers.
+<p align="center">
+  <strong>The enterprise HCM monopoly ends here.</strong>
+  <br />
+  AI-native. Effective-dated. Your data.
+  <br /><br />
+  <a href="https://workday.do">Website</a> |
+  <a href="https://docs.workday.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/workday.do">GitHub</a>
+</p>

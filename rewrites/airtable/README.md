@@ -1,10 +1,38 @@
 # airtable.do
 
-> The spreadsheet-database. Open source. AI-supercharged.
+> The spreadsheet-database. Edge-Native. Open by Default. AI-First.
 
-Airtable bridged the gap between spreadsheets and databases. Anyone could build apps without code. But at $20-45/user/month with row limits, record caps, and AI locked behind enterprise pricing, it's become expensive for what it is.
+Airtable bridged the gap between spreadsheets and databases. But at $20-45/user/month with row limits, record caps, and AI locked behind enterprise pricing, it's become expensive for what it is.
 
 **airtable.do** is the spreadsheet-database reimagined. No row limits. No per-seat pricing. AI that builds apps for you. Own your data infrastructure.
+
+## AI-Native API
+
+```typescript
+import { airtable } from 'airtable.do'           // Full SDK
+import { airtable } from 'airtable.do/tiny'      // Minimal client
+import { airtable } from 'airtable.do/sync'      // Real-time sync
+```
+
+Natural language for data workflows:
+
+```typescript
+import { airtable } from 'airtable.do'
+
+// Talk to it like a colleague
+const deals = await airtable`deals over $50k closing this month`
+const forecast = await airtable`projected revenue for Q2`
+const churn = await airtable`customers at risk of churning`
+
+// Chain like sentences
+await airtable`leads needing followup`
+  .notify(`Time to reach out`)
+
+// Apps that build themselves
+await airtable`create project tracker with tasks, owners, and deadlines`
+  .addView('kanban by status')
+  .addView('calendar by deadline')
+```
 
 ## The Problem
 
@@ -51,638 +79,228 @@ npx create-dotdo airtable
 
 Your own Airtable. Running on Cloudflare. No limits.
 
-```bash
-# Or add to existing workers.do project
-npx dotdo add airtable
-```
-
-## The workers.do Way
-
-You're building a product. Your team needs a flexible database. Airtable wants $27k/year with row limits and 5 requests/second API throttling. AI locked behind enterprise. There's a better way.
-
-**Natural language. Tagged templates. AI agents that work.**
-
 ```typescript
-import { airtable } from 'airtable.do'
-import { priya, ralph, mark } from 'agents.do'
+import { Airtable } from 'airtable.do'
 
-// Talk to your database like a human
-const deals = await airtable`show deals over $50k closing this month`
-const forecast = await airtable`projected revenue for Q2?`
-const churn = await airtable`which customers are at risk?`
+export default Airtable({
+  name: 'my-workspace',
+  domain: 'data.my-company.com',
+})
 ```
-
-**Promise pipelining - chain work without Promise.all:**
-
-```typescript
-// CRM automation pipeline
-const processed = await airtable`get new leads`
-  .map(lead => priya`qualify ${lead}`)
-  .map(lead => sally`draft outreach for ${lead}`)
-  .map(lead => airtable`update ${lead} status`)
-
-// Data cleanup pipeline
-const cleaned = await airtable`find records with missing data`
-  .map(record => ralph`enrich ${record} from sources`)
-  .map(record => airtable`update ${record}`)
-```
-
-One network round trip. Record-replay pipelining. Workers working for you.
 
 ## Features
 
 ### Bases & Tables
 
-The familiar structure:
+```typescript
+// Create bases naturally
+await airtable`create Product Development base`
+await airtable`add Features table with name, status, priority, owner, and due date`
+await airtable`add Sprints table linked to Features`
+
+// AI infers the schema from your description
+await airtable`
+  create CRM with:
+  - Companies with name, industry, size, and website
+  - Contacts linked to companies with name, email, role
+  - Deals linked to contacts with amount, stage, close date
+`
+```
+
+### Records
 
 ```typescript
-import { Base, Table, Field } from 'airtable.do'
+// Create records naturally
+await airtable`add task "Design homepage" for Sarah due Friday`
+await airtable`new deal Acme Corp $50k in negotiation with John`
+await airtable`
+  add contacts:
+  - Jane Smith, CEO at TechCo, jane@techco.com
+  - Bob Wilson, CTO at StartupX, bob@startupx.com
+`
 
-// Create a base
-const productBase = await Base.create({
-  name: 'Product Development',
-  tables: [
-    Table.create({
-      name: 'Features',
-      fields: {
-        Name: Field.text({ primary: true }),
-        Description: Field.longText(),
-        Status: Field.singleSelect(['Planned', 'In Progress', 'Shipped']),
-        Priority: Field.singleSelect(['Low', 'Medium', 'High', 'Critical']),
-        Owner: Field.user(),
-        Team: Field.multipleSelect(['Frontend', 'Backend', 'Mobile', 'Platform']),
-        Sprint: Field.linkedRecord('Sprints'),
-        StartDate: Field.date(),
-        DueDate: Field.date(),
-        Progress: Field.percent(),
-        Attachments: Field.attachment(),
-        Created: Field.createdTime(),
-        Modified: Field.lastModifiedTime(),
-      },
-    }),
-    Table.create({
-      name: 'Sprints',
-      fields: {
-        Name: Field.text({ primary: true }),
-        StartDate: Field.date(),
-        EndDate: Field.date(),
-        Features: Field.linkedRecord('Features', { bidirectional: true }),
-        TotalPoints: Field.rollup({
-          linkedField: 'Features',
-          rollupField: 'Points',
-          aggregation: 'SUM',
-        }),
-      },
-    }),
-  ],
-})
+// Query naturally
+const tasks = await airtable`tasks assigned to Sarah`
+const overdue = await airtable`overdue items`
+const pipeline = await airtable`deals in negotiation over $25k`
+
+// Update naturally
+await airtable`mark "Design homepage" complete`
+await airtable`move Acme deal to closed won`
+await airtable`assign all unassigned tasks to Mike`
 ```
 
 ### Field Types
 
-All the field types you need:
-
-| Type | Description |
-|------|-------------|
-| **Text** | Single line text |
-| **Long Text** | Rich text with formatting |
-| **Number** | Integers and decimals with formatting |
-| **Currency** | Money with currency symbol |
-| **Percent** | Percentage values |
-| **Checkbox** | Boolean values |
-| **Date** | Date with optional time |
-| **Duration** | Time duration |
-| **Single Select** | Dropdown with one choice |
-| **Multiple Select** | Tags, multiple choices |
-| **User** | Collaborators |
-| **Linked Record** | Relations to other tables |
-| **Lookup** | Values from linked records |
-| **Rollup** | Aggregations across links |
-| **Count** | Count of linked records |
-| **Formula** | Calculated values |
-| **Attachment** | Files, images |
-| **URL** | Links with preview |
-| **Email** | Email addresses |
-| **Phone** | Phone numbers |
-| **Rating** | Star ratings |
-| **Barcode** | Barcode/QR data |
-| **Auto Number** | Auto-incrementing IDs |
-| **Created Time** | When record was created |
-| **Last Modified** | When record was updated |
-| **Created By** | Who created it |
-| **Last Modified By** | Who last updated it |
+All the field types you'd expect - text, numbers, dates, dropdowns, linked records, formulas, attachments, and more. AI infers the right type from context.
 
 ### Formulas
 
-Powerful calculations:
-
 ```typescript
-// Simple formulas
-const fullName = Field.formula('FirstName & " " & LastName')
-const daysUntilDue = Field.formula('DATETIME_DIFF(DueDate, TODAY(), "days")')
-const isOverdue = Field.formula('AND(Status != "Done", DueDate < TODAY())')
+// Describe the calculation, AI writes the formula
+await airtable`add formula "days until due" to Tasks`
+await airtable`add field showing whether tasks are overdue`
+await airtable`calculate total deal value per company`
 
-// Complex formulas
-const priorityScore = Field.formula(`
-  IF(Priority = "Critical", 100,
-    IF(Priority = "High", 75,
-      IF(Priority = "Medium", 50, 25)))
-  * IF(DueDate < TODAY(), 1.5, 1)
-`)
-
-// Rollup with filter
-const completedPoints = Field.rollup({
-  linkedField: 'Tasks',
-  rollupField: 'Points',
-  aggregation: 'SUM',
-  filter: '{Status} = "Done"',
-})
+// Or express complex logic naturally
+await airtable`
+  add priority score that's higher for:
+  - critical items (100 points)
+  - overdue items (1.5x multiplier)
+  - high value deals (extra 25 points if over $50k)
+`
 ```
 
 ### Views
 
-Same data, infinite perspectives:
-
 ```typescript
-// Grid View (default)
-const allFeatures = View.grid({
-  fields: ['Name', 'Status', 'Priority', 'Owner', 'DueDate'],
-  sort: [{ field: 'Priority', direction: 'desc' }],
-  filter: { Status: { neq: 'Shipped' } },
-})
+// Create views naturally
+await airtable`show tasks as kanban by status`
+await airtable`show deals as calendar by close date`
+await airtable`show projects as timeline from start to due date`
+await airtable`show designs as gallery with mockups`
 
-// Kanban View
-const featureBoard = View.kanban({
-  groupBy: 'Status',
-  cardFields: ['Name', 'Owner', 'Priority', 'DueDate'],
-  coverField: 'Attachments',
-})
-
-// Calendar View
-const roadmapCalendar = View.calendar({
-  dateField: 'DueDate',
-  endDateField: 'EndDate',  // Optional, for ranges
-  color: 'Priority',
-})
-
-// Timeline View (Gantt)
-const projectTimeline = View.timeline({
-  startField: 'StartDate',
-  endField: 'DueDate',
-  groupBy: 'Team',
-  color: 'Status',
-})
-
-// Gallery View
-const designGallery = View.gallery({
-  coverField: 'Mockups',
-  titleField: 'Name',
-  descriptionField: 'Description',
-})
-
-// Form View
-const featureRequest = View.form({
-  title: 'Submit Feature Request',
-  fields: ['Name', 'Description', 'Priority'],
-  submitMessage: 'Thanks! We\'ll review your request.',
-  allowAnonymous: true,
-})
+// Filtered views
+await airtable`show my tasks sorted by priority`
+await airtable`show overdue items grouped by owner`
+await airtable`show Q1 deals over $50k as funnel by stage`
 ```
 
 ### Forms
 
-Collect data from anyone:
-
 ```typescript
-const feedbackForm = Form.create({
-  table: 'Feedback',
-  title: 'Product Feedback',
-  description: 'Help us improve our product',
-  fields: {
-    Name: { required: true },
-    Email: { required: true },
-    Category: {
-      required: true,
-      options: ['Bug', 'Feature Request', 'General']
-    },
-    Description: { required: true },
-    Priority: { required: false },
-    Attachments: { required: false },
-  },
-  branding: {
-    logo: '/logo.png',
-    color: '#0066FF',
-  },
-  notifications: {
-    slack: '#feedback',
-    email: 'product@company.com',
-  },
-})
+// Create forms from tables
+await airtable`create feedback form from Feedback table`
+await airtable`create job application form with name, email, resume, and cover letter`
 
-// Public URL: https://your-org.airtable.do/forms/feedbackForm
+// Configure with natural language
+await airtable`make feedback form public with logo and custom thank you message`
+await airtable`notify #product-feedback on Slack when form submitted`
 ```
 
 ## AI-Native Data Management
 
 AI doesn't just assist - it builds with you.
 
-### AI Schema Design
-
-Describe your data, AI builds the schema:
+### Schema Design
 
 ```typescript
-import { ai } from 'airtable.do'
-
-const schema = await ai.designSchema(`
-  I need to track our content marketing.
-  We have blog posts, authors, and topics.
-  Posts go through draft, review, published stages.
-  Need to track SEO metrics and social engagement.
-`)
-
-// AI creates:
-{
-  tables: [
-    {
-      name: 'Posts',
-      fields: {
-        Title: Field.text({ primary: true }),
-        Slug: Field.formula('LOWER(SUBSTITUTE(Title, " ", "-"))'),
-        Status: Field.singleSelect(['Draft', 'In Review', 'Published']),
-        Author: Field.linkedRecord('Authors'),
-        Topics: Field.linkedRecord('Topics', { multiple: true }),
-        PublishDate: Field.date(),
-        Content: Field.longText(),
-        FeaturedImage: Field.attachment(),
-        SEOTitle: Field.text(),
-        SEODescription: Field.text(),
-        PageViews: Field.number(),
-        TimeOnPage: Field.duration(),
-        SocialShares: Field.number(),
-        // ...
-      },
-    },
-    {
-      name: 'Authors',
-      fields: { /* ... */ },
-    },
-    {
-      name: 'Topics',
-      fields: { /* ... */ },
-    },
-  ],
-  relationships: [/* ... */],
-  suggestedViews: [/* ... */],
-}
+// Describe what you need, AI builds the schema
+await airtable`
+  I need to track content marketing:
+  - blog posts with authors and topics
+  - draft, review, published workflow
+  - SEO metrics and social engagement
+`
+// AI creates Posts, Authors, Topics tables with proper relationships
 ```
 
-### AI Data Entry
-
-Enter data in natural language:
+### Data Entry
 
 ```typescript
-// Create records from natural language
-await ai.createRecord('Posts', `
-  New blog post about AI in project management by Sarah,
-  topics: AI, Productivity. Ready for review.
-`)
-// Creates record with fields populated
-
-// Bulk create from text
-await ai.createRecords('Contacts', `
-  John Smith, CEO at Acme Corp, john@acme.com, met at conference
-  Jane Doe, CTO at TechCo, jane@techco.com, inbound lead
-  Bob Wilson, PM at StartupX, bob@startupx.com, referral from John
-`)
+// Enter data naturally
+await airtable`add post "AI in Project Management" by Sarah, topics AI and Productivity`
+await airtable`
+  add contacts:
+  - John Smith, CEO at Acme, john@acme.com, met at conference
+  - Jane Doe, CTO at TechCo, jane@techco.com, inbound lead
+`
 ```
 
-### AI Data Cleanup
-
-Fix messy data automatically:
+### Data Cleanup
 
 ```typescript
-// Clean and standardize data
-const cleanup = await ai.cleanData({
-  table: 'Contacts',
-  operations: [
-    { type: 'normalize', field: 'Phone', format: 'E.164' },
-    { type: 'deduplicate', fields: ['Email'], action: 'merge' },
-    { type: 'categorize', field: 'Company', into: 'Industry' },
-    { type: 'fix-typos', field: 'Country' },
-    { type: 'parse-names', source: 'FullName', into: ['FirstName', 'LastName'] },
-  ],
-})
-
-// Preview changes before applying
-console.log(`${cleanup.recordsAffected} records will be updated`)
-cleanup.preview.forEach(change => console.log(change))
-
-// Apply changes
-await cleanup.apply()
+// Fix messy data with one command
+await airtable`clean up Contacts: fix phone formats, merge duplicates, categorize companies`
+await airtable`standardize country names in Leads table`
+await airtable`split full names into first and last name`
 ```
 
-### AI Formula Generation
-
-Describe calculations, AI writes formulas:
+### Insights
 
 ```typescript
-// Generate formula from description
-const formula = await ai.formula(`
-  Calculate the health score based on:
-  - Days since last activity (more recent = better)
-  - Number of completed tasks (more = better)
-  - Whether payment is overdue (bad)
-  Scale should be 0-100
-`)
+// Ask questions about your data
+await airtable`which products are performing best this quarter?`
+await airtable`who's exceeding quota?`
+await airtable`show me churn risk by customer segment`
 
-// Returns:
-'100 - (IF(DaysSinceActivity > 30, 30, DaysSinceActivity)) + (CompletedTasks * 2) - (IF(PaymentOverdue, 50, 0))'
-```
-
-### AI Insights
-
-Get insights from your data:
-
-```typescript
-const insights = await ai.analyze({
-  table: 'Sales',
-  questions: [
-    'What products are performing best this quarter?',
-    'Which sales reps are exceeding quota?',
-    'What\'s the trend in deal size over time?',
-  ],
-})
-
-// Returns:
-[
-  {
-    question: 'What products are performing best?',
-    insight: 'Enterprise Plan leads with $1.2M in Q4, up 45% from Q3. Growth is driven by new security features.',
-    visualization: { type: 'bar', data: [/* ... */] },
-    recommendation: 'Consider bundling security add-ons with Team plan to increase average deal size.',
-  },
-  // ...
-]
-```
-
-### Natural Language Queries
-
-Query your data conversationally:
-
-```typescript
-const results = await ai.query('Sales', `
-  show me all deals over $50k that closed this month
-  with the enterprise plan, sorted by size
-`)
-
-const forecast = await ai.query('Pipeline', `
-  what's our projected revenue for Q2 based on current pipeline?
-`)
-
-const analysis = await ai.query('Customers', `
-  which customers are at risk of churning?
-`)
+// Get actionable recommendations
+await airtable`what should we focus on to hit Q2 targets?`
 ```
 
 ## Automations
 
-Powerful automations without limits:
-
 ```typescript
-import { Automation, Trigger, Action } from 'airtable.do'
+// Create automations naturally
+await airtable`when new user signs up, send welcome email and notify #signups`
+await airtable`when deal over $100k changes, notify sales director`
+await airtable`every Monday at 9am, email pipeline report to sales team`
 
-// Record-based trigger
-const welcomeEmail = Automation.create({
-  name: 'Welcome new signup',
-  trigger: Trigger.recordCreated('Users'),
-  actions: [
-    Action.sendEmail({
-      to: '{Email}',
-      template: 'welcome',
-      data: { name: '{Name}' },
-    }),
-    Action.createRecord('Onboarding', {
-      User: '{Record ID}',
-      Status: 'Started',
-      StartDate: 'TODAY()',
-    }),
-    Action.slack({
-      channel: '#new-signups',
-      message: 'New signup: {Name} ({Email})',
-    }),
-  ],
-})
+// Chain automations with agents
+await airtable`new leads`
+  .map(lead => priya`qualify ${lead}`)
+  .map(lead => airtable`update ${lead} with qualification score`)
+  .filter(lead => lead.score > 80)
+  .map(lead => sally`draft outreach for ${lead}`)
 
-// Conditional automation
-const escalateHighValue = Automation.create({
-  name: 'Escalate high-value deals',
-  trigger: Trigger.fieldChanged('Deals', 'Amount'),
-  conditions: [
-    Condition.field('Amount', '>', 100000),
-    Condition.field('Status', '!=', 'Won'),
-  ],
-  actions: [
-    Action.updateRecord({
-      Priority: 'Critical',
-      Owner: '@sales-director',
-    }),
-    Action.notify({
-      user: '@sales-director',
-      message: 'High-value deal needs attention: {Name} - ${Amount}',
-    }),
-  ],
-})
-
-// Scheduled automation
-const weeklyReport = Automation.create({
-  name: 'Weekly pipeline report',
-  trigger: Trigger.schedule({ day: 'Monday', time: '09:00' }),
-  actions: [
-    Action.runScript(async (base) => {
-      const deals = await base.table('Deals').records({
-        filter: { Status: { in: ['Negotiation', 'Proposal'] } },
-      })
-      const total = deals.reduce((sum, d) => sum + d.Amount, 0)
-      return { deals: deals.length, total }
-    }),
-    Action.sendEmail({
-      to: 'sales-team@company.com',
-      subject: 'Weekly Pipeline Report',
-      template: 'pipeline-report',
-      data: '{{script.output}}',
-    }),
-  ],
-})
+// Bulk operations as pipelines
+await airtable`overdue tasks`
+  .map(task => airtable`notify owner of ${task}`)
+  .map(task => airtable`escalate ${task} if over 7 days`)
 ```
 
 ## Interfaces (Apps)
 
-Build custom apps from your data:
-
 ```typescript
-import { Interface, Page, Component } from 'airtable.do'
+// Build dashboards naturally
+await airtable`create sales dashboard with pipeline value, deals by stage, and recent activity`
+await airtable`add funnel chart showing deals by status`
+await airtable`add team performance page with quotas and leaderboard`
 
-const salesDashboard = Interface.create({
-  name: 'Sales Dashboard',
-  pages: [
-    Page.create({
-      name: 'Overview',
-      components: [
-        Component.number({
-          title: 'Pipeline Value',
-          table: 'Deals',
-          aggregation: 'SUM',
-          field: 'Amount',
-          filter: { Status: { neq: 'Lost' } },
-          format: 'currency',
-        }),
-        Component.chart({
-          title: 'Deals by Stage',
-          table: 'Deals',
-          type: 'funnel',
-          groupBy: 'Status',
-          value: { field: 'Amount', aggregation: 'SUM' },
-        }),
-        Component.grid({
-          title: 'Recent Deals',
-          table: 'Deals',
-          fields: ['Name', 'Company', 'Amount', 'Status', 'Owner'],
-          sort: [{ field: 'Created', direction: 'desc' }],
-          limit: 10,
-          editable: true,
-        }),
-        Component.kanban({
-          title: 'Pipeline',
-          table: 'Deals',
-          groupBy: 'Status',
-          cardFields: ['Name', 'Amount', 'Owner'],
-        }),
-      ],
-    }),
-    Page.create({
-      name: 'Team Performance',
-      components: [/* ... */],
-    }),
-  ],
-})
-
-// Deploy as standalone app
-const appUrl = await salesDashboard.deploy({
-  subdomain: 'sales',
-  auth: 'sso',  // or 'public', 'password'
-})
-// https://sales.your-org.airtable.do
+// Deploy as standalone apps
+await airtable`publish sales dashboard at sales.my-company.com with SSO`
+await airtable`create public status page from Projects table`
 ```
 
 ## API Compatible
 
-Full Airtable API compatibility:
-
-```typescript
-// REST API
-GET    /v0/{baseId}/{tableName}
-POST   /v0/{baseId}/{tableName}
-PATCH  /v0/{baseId}/{tableName}
-DELETE /v0/{baseId}/{tableName}
-
-GET    /v0/{baseId}/{tableName}/{recordId}
-PATCH  /v0/{baseId}/{tableName}/{recordId}
-DELETE /v0/{baseId}/{tableName}/{recordId}
-
-// With standard parameters
-?filterByFormula=...
-?sort[0][field]=...
-?sort[0][direction]=...
-?maxRecords=...
-?pageSize=...
-?offset=...
-?view=...
-```
-
-Existing Airtable SDK code works:
+Full Airtable REST API compatibility. Existing Airtable SDK code works - just change the URL:
 
 ```typescript
 import Airtable from 'airtable'
 
 const base = new Airtable({
   apiKey: process.env.AIRTABLE_TOKEN,
-  endpointUrl: 'https://your-org.airtable.do',  // Just change the URL
+  endpointUrl: 'https://your-org.airtable.do',  // Just change this
 }).base('appXXXXXXXX')
-
-const records = await base('Features').select({
-  filterByFormula: '{Status} = "In Progress"',
-  sort: [{ field: 'Priority', direction: 'desc' }],
-}).all()
 ```
 
 ## Architecture
 
 ### Durable Object per Base
 
-Each base is fully isolated:
-
 ```
 WorkspaceDO (bases, permissions)
   |
   +-- BaseDO:product-base
-  |     +-- SQLite: all tables, records, relations
-  |     +-- Views, filters, sorts
-  |     +-- Formulas computed on read
+  |     +-- SQLite: tables, records, relations
+  |     +-- Views, filters, formulas
   |     +-- WebSocket: real-time sync
   |
   +-- BaseDO:crm-base
   +-- BaseDO:content-base
   +-- AutomationDO (automation engine)
-  +-- InterfaceDO (custom apps)
 ```
 
-### Efficient Storage
-
-Records stored efficiently:
-
-```typescript
-interface RecordRow {
-  id: string
-  table_id: string
-  fields: object  // JSON of field values
-  created_time: string
-  modified_time: string
-  created_by: string
-  modified_by: string
-}
-
-// Indexes on common query patterns
-// Linked records resolved efficiently via SQLite joins
-// Formulas computed on read, cached
-```
-
-### No Row Limits
-
-```typescript
-// SQLite handles millions of rows efficiently
-// Pagination for API responses
-// Indexed queries stay fast
-// R2 for cold storage if needed
-```
+Each base is fully isolated. SQLite handles millions of rows efficiently. No artificial limits.
 
 ## Migration from Airtable
 
-Import your existing bases:
-
 ```bash
-npx airtable-do migrate \
-  --token=your_airtable_pat \
-  --base=appXXXXXXXX
+npx airtable-do migrate --token=your_pat --base=appXXXXXXXX
 ```
 
-Imports:
-- All tables and fields
-- All records and data
-- Views and view configurations
-- Linked records and relations
-- Formulas (converted)
-- Automations
-- Interfaces (basic conversion)
+Imports everything: tables, records, views, linked records, formulas, automations.
 
 ## Roadmap
 
@@ -724,12 +342,17 @@ Key areas:
 
 ## License
 
-MIT License - Use it however you want. Build your business on it. Fork it. Make it your own.
+MIT License - Build your business on it.
 
 ---
 
 <p align="center">
-  <strong>airtable.do</strong> is part of the <a href="https://dotdo.dev">dotdo</a> platform.
+  <strong>The row limits end here.</strong>
   <br />
-  <a href="https://airtable.do">Website</a> | <a href="https://docs.airtable.do">Docs</a> | <a href="https://discord.gg/dotdo">Discord</a>
+  No caps. No per-seat pricing. AI-native.
+  <br /><br />
+  <a href="https://airtable.do">Website</a> |
+  <a href="https://docs.airtable.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/airtable.do">GitHub</a>
 </p>

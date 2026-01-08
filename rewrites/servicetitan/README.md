@@ -6,14 +6,47 @@ ServiceTitan charges $300-500+/month. That prices out 90% of contractors.
 
 Your neighborhood plumber deserves the same tools as a $10B franchise.
 
+## AI-Native API
+
+```typescript
+import { servicetitan } from 'servicetitan.do'           // Full SDK
+import { servicetitan } from 'servicetitan.do/tiny'      // Minimal client
+import { servicetitan } from 'servicetitan.do/mobile'    // Tech mobile app
+```
+
+Natural language for field service:
+
+```typescript
+import { servicetitan } from 'servicetitan.do'
+
+// Talk to it like you're on the phone with dispatch
+const job = await servicetitan`AC repair 123 Main St, Johnson Residence, same-day`
+await servicetitan`assign ${job} to Mike`
+await servicetitan`optimize routes for today`
+
+// Chain like a conversation
+await servicetitan`jobs scheduled for tomorrow`
+  .map(job => servicetitan`send ETA reminder to ${job.customer}`)
+
+// The whole call-to-cash cycle
+await servicetitan`water heater install 456 Oak Ave, urgent`
+  .assign()           // AI picks best tech
+  .estimate()         // good-better-best options
+  .complete()         // tech marks done
+  .invoice()          // auto-generate invoice
+  .collect()          // tap to pay on-site
+```
+
 ## The Problem
 
 Field service management software has become a gatekeeper:
 
-- **ServiceTitan**: $300-500+/month minimum, enterprise sales process
-- **Housecall Pro**: $65-200/month, AI features locked behind premium tiers
-- **Jobber**: $49-199/month, dispatch optimization costs extra
-- **FieldEdge**: Enterprise pricing, 12-month contracts
+| What They Charge | The Reality |
+|------------------|-------------|
+| **ServiceTitan** | $300-500+/month minimum, enterprise sales process |
+| **Housecall Pro** | $65-200/month, AI features locked behind premium tiers |
+| **Jobber** | $49-199/month, dispatch optimization costs extra |
+| **FieldEdge** | Enterprise pricing, 12-month contracts |
 
 Meanwhile, your local HVAC tech runs their business from sticky notes and a whiteboard.
 
@@ -23,13 +56,16 @@ The result? Small contractors work harder, earn less, and lose jobs to companies
 
 **servicetitan.do** is open-source field service management that deploys in one click.
 
-Every plumber, electrician, and HVAC technician gets:
-- Intelligent scheduling and dispatch
-- Real-time GPS tracking
-- Professional estimates and invoices
-- Inventory management
-- Customer history and communication
-- AI that actually helps (not upsells)
+```
+ServiceTitan                        servicetitan.do
+-----------------------------------------------------------------
+$300-500+/month                     $0 (self-host)
+Enterprise sales process            Deploy in 5 minutes
+AI features cost extra              AI-first, included
+12-month contracts                  No contracts
+Proprietary data                    Your data, your servers
+$500/hour customization             Open source, modify anything
+```
 
 Running on Cloudflare's edge. Costing pennies. Owned by you.
 
@@ -41,172 +77,158 @@ npx create-dotdo servicetitan
 
 That's it. Your HVAC company now has its own scheduling, dispatch, and invoicing system.
 
-Or deploy instantly to Cloudflare:
+```typescript
+import { ServiceTitan } from 'servicetitan.do'
 
-[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/dotdo/servicetitan.do)
+export default ServiceTitan({
+  name: 'johnson-hvac',
+  domain: 'dispatch.johnsonhvac.com',
+  timezone: 'America/Chicago',
+})
+```
 
 ## Features
 
 ### Jobs & Work Orders
 
 ```typescript
-import { fsm } from 'servicetitan.do'
+// Create jobs like you're talking to dispatch
+const job = await servicetitan`AC not cooling at Johnson Residence, 123 Main St`
+const urgent = await servicetitan`emergency water leak at 456 Oak Ave`
+const scheduled = await servicetitan`tune-up for Maria next Tuesday morning`
 
-// Create a job from a customer call
-const job = await fsm.jobs.create({
-  customer: 'Johnson Residence',
-  address: '123 Main St',
-  type: 'hvac-repair',
-  urgency: 'same-day',
-  description: 'AC not cooling, thermostat reads 85F'
-})
-
-// AI suggests the best technician
-const assignment = await fsm.dispatch.recommend(job)
-// -> { technician: 'Mike', eta: '2:30 PM', confidence: 0.94 }
+// AI infers what you need
+await servicetitan`Johnson Residence`              // returns customer
+await servicetitan`jobs at Johnson Residence`      // returns job history
+await servicetitan`Johnson Residence equipment`    // returns installed units
 ```
 
-### Intelligent Dispatch Board
-
-Real-time dispatch with WebSocket updates:
+### Intelligent Dispatch
 
 ```typescript
-// Subscribe to dispatch board changes
-fsm.dispatch.subscribe(board => {
-  // Live updates as jobs move, techs report status
-  console.log(board.unassigned)  // Jobs needing techs
-  console.log(board.enroute)     // Techs heading to jobs
-  console.log(board.onsite)      // Active jobs
-})
+// Dispatch like you're talking to the board
+await servicetitan`assign ${job} to best tech for HVAC`
+await servicetitan`who's closest to 123 Main St?`
+await servicetitan`Mike's schedule today`
+
+// AI handles the complexity
+await servicetitan`assign ${job}`
+// -> Considers: skills, location, traffic, workload, customer history
+// -> Returns: { tech: 'Mike', eta: '2:30 PM', confidence: 0.94 }
+
+// Bulk dispatch just works
+await servicetitan`jobs needing assignment`
+  .each(job => servicetitan`assign ${job}`)
 ```
 
-### Pricebook & Estimates
+### Route Optimization
 
 ```typescript
-// Generate professional estimates with your pricebook
-const estimate = await fsm.estimates.create({
-  job: job.id,
-  options: [
-    { name: 'Repair', items: ['capacitor-replacement', 'refrigerant-recharge'] },
-    { name: 'Replace', items: ['ac-unit-3ton', 'installation-labor'] }
-  ]
-})
+// One line to optimize the day
+await servicetitan`optimize routes for today`
+await servicetitan`optimize routes to maximize revenue`
+await servicetitan`optimize routes to minimize drive time`
 
-// AI-generated good-better-best options
-const aiEstimate = await fsm.estimates.generate({
-  job: job.id,
-  diagnosis: 'Compressor failing, unit is 15 years old'
-})
+// Re-optimize on the fly
+await servicetitan`shuffle today's routes, emergency came in`
+```
+
+### Estimates & Pricebook
+
+```typescript
+// Generate estimates naturally
+await servicetitan`estimate for ${job}: capacitor replacement or full AC swap`
+await servicetitan`good-better-best for water heater install`
+
+// AI builds from diagnosis
+await servicetitan`compressor failing, unit is 15 years old`
+  .estimate()   // generates repair vs replace options
+
+// Present and close on-site
+await servicetitan`customer approved the replacement option`
 ```
 
 ### Invoicing & Payments
 
 ```typescript
-// Convert completed job to invoice
-const invoice = await fsm.invoices.create({
-  job: job.id,
-  items: estimate.selectedOption.items,
-  labor: { hours: 2.5, rate: 125 }
-})
+// Job complete? Invoice it
+await servicetitan`invoice ${job}`
 
-// Accept payment on-site
-await fsm.payments.charge({
-  invoice: invoice.id,
-  method: 'card-present',  // Tap to pay
-  amount: invoice.total
-})
+// Or let the workflow handle it
+await servicetitan`complete ${job}: replaced capacitor, 2.5 hours`
+  .invoice()    // auto-generates from parts + labor
+  .collect()    // tap to pay on-site
+
+// Check payment status
+await servicetitan`unpaid invoices this week`
+await servicetitan`Johnson Residence balance`
 ```
 
-### GPS Fleet Tracking
+### Fleet Tracking
 
 ```typescript
-// Real-time technician locations
-fsm.fleet.track(technicianId, location => {
-  // Updates every 30 seconds (configurable)
-  map.updateMarker(technicianId, location)
-})
+// Real-time location
+await servicetitan`where is Mike?`
+await servicetitan`techs near downtown`
+await servicetitan`Mike's route progress`
 
-// Route optimization for the day
-const routes = await fsm.routes.optimize({
-  technicians: ['mike', 'sarah', 'dave'],
-  jobs: todaysJobs,
-  constraints: {
-    maxDriveTime: 45,  // minutes between jobs
-    lunchWindow: ['12:00', '13:00']
-  }
-})
+// Customers get Uber-style tracking
+await servicetitan`send ETA to Johnson Residence`
+// -> "Mike is 10 minutes away!"
 ```
 
 ### Inventory Management
 
 ```typescript
-// Track parts on trucks and in warehouse
-await fsm.inventory.use({
-  technician: 'mike',
-  part: 'capacitor-45/5',
-  job: job.id
-})
+// Track parts naturally
+await servicetitan`Mike used a 45/5 capacitor on ${job}`
+await servicetitan`parts low on Mike's truck`
+await servicetitan`warehouse inventory for capacitors`
 
-// Auto-reorder when low
-fsm.inventory.setThreshold('capacitor-45/5', {
-  warehouse: 20,
-  truck: 3,
-  supplier: 'grainger',
-  autoOrder: true
-})
+// Auto-reorder just works
+await servicetitan`reorder parts running low`
 ```
 
-## AI-Powered Dispatch
+## AI-Powered Operations
 
 This isn't "AI" as a marketing checkbox. It's intelligence that makes contractors money.
 
 ### Smart Assignment
 
 ```typescript
-// AI considers everything:
-// - Technician skills and certifications
-// - Current location and traffic
-// - Job complexity and history
-// - Customer preferences ("Sarah was great last time")
-// - Profitability (senior tech for premium jobs)
+// AI considers everything, you just ask
+await servicetitan`assign ${job}`
 
-const assignment = await fsm.dispatch.recommend(job)
+// Factors: skills, certs, location, traffic, workload,
+// customer history ("Sarah was great last time"), profitability
 ```
 
-### Route Optimization
+### Duration Prediction
 
 ```typescript
-// Minimize drive time, maximize billable hours
-await fsm.routes.optimize({
-  objective: 'maximize-revenue',  // or 'minimize-fuel', 'balance-workload'
-  constraints: {
-    technicianHours: 8,
-    priorityJobs: ['emergency', 'callback']
-  }
-})
-```
-
-### Job Duration Prediction
-
-```typescript
-// AI learns from your historical data
-const prediction = await fsm.jobs.predictDuration({
-  type: 'water-heater-install',
-  equipment: 'rheem-50gal-gas',
-  location: job.address
-})
-// -> { estimate: 3.5, confidence: 0.87, factors: ['older home', 'basement access'] }
+// AI learns from your data
+await servicetitan`how long for a water heater install at ${job.address}?`
+// -> "3.5 hours - older home, basement access adds time"
 ```
 
 ### Automatic Scheduling
 
 ```typescript
 // Customer self-books, AI slots them perfectly
-fsm.scheduling.enableSelfBook({
-  types: ['tune-up', 'estimate', 'maintenance'],
-  availability: 'auto',  // AI manages the calendar
-  confirmationChannel: 'sms'
-})
+await servicetitan`enable online booking for tune-ups and estimates`
+
+// AI manages capacity, prevents overbooking
+await servicetitan`can we fit an emergency today?`
+```
+
+### Revenue Insights
+
+```typescript
+// Ask about your business
+await servicetitan`revenue this week`
+await servicetitan`top performing tech this month`
+await servicetitan`average ticket by job type`
+await servicetitan`callbacks this quarter`
 ```
 
 ## Offline-First
@@ -216,82 +238,48 @@ Contractors work in basements. Rural areas. Job sites with zero signal.
 **servicetitan.do** works offline. Period.
 
 ```typescript
-// Durable Objects maintain local state
-// Changes sync automatically when connected
-
-// On the job site (offline):
-await fsm.jobs.update(job.id, {
-  status: 'completed',
-  notes: 'Replaced capacitor, tested operation',
-  parts: ['capacitor-45/5']
-})
+// On the job site (no signal):
+await servicetitan`complete ${job}: replaced capacitor, tested operation`
 // -> Stored locally, queued for sync
 
 // Back in the truck (online):
 // -> Syncs automatically, dispatch board updates
 ```
 
-### How It Works
-
-Each technician's device maintains a local Durable Object replica:
-
-```
-Phone/Tablet
-  |
-  v
-[Local DO] <-- Works offline
-  |
-  v (when connected)
-[Edge DO] --> [Central DO]
-```
-
-No "sync failed" errors. No lost work orders. No excuses.
+Each technician's device maintains a local Durable Object replica. No "sync failed" errors. No lost work orders. No excuses.
 
 ## Real-Time
 
-Everything updates instantly across all devices:
+Everything updates instantly across all devices.
 
-### WebSocket Dispatch Board
+### Dispatch Board
 
 ```typescript
-// Office sees real-time status
-fsm.dispatch.subscribe(update => {
-  switch (update.type) {
-    case 'tech-location':
-      map.moveMarker(update.techId, update.coords)
-      break
-    case 'job-status':
-      board.updateJob(update.jobId, update.status)
-      break
-    case 'new-job':
-      board.addJob(update.job)
-      playAlert('new-call')
-      break
-  }
-})
+// Office sees everything live
+await servicetitan`watch dispatch board`
+// -> Real-time: job status, tech locations, new calls
+
+// Techs see their queue update
+await servicetitan`watch my jobs`
 ```
 
 ### Customer Updates
 
 ```typescript
-// Customers get Uber-style tracking
-fsm.notifications.enable(job.id, {
-  channels: ['sms', 'email'],
-  events: ['tech-assigned', 'on-the-way', 'arriving-soon', 'completed']
-})
+// Customers get Uber-style tracking automatically
+await servicetitan`notify ${job.customer} when tech is on the way`
 
-// "Mike is 10 minutes away!"
+// Or enable for all jobs
+await servicetitan`enable customer notifications for all jobs`
+// -> "Mike is 10 minutes away!"
 ```
 
 ### Team Communication
 
 ```typescript
-// Instant messaging between office and field
-fsm.chat.send({
-  to: 'mike',
-  message: 'Customer called - they found the leak under the sink',
-  job: job.id
-})
+// Message between office and field
+await servicetitan`tell Mike: customer found the leak under the sink`
+await servicetitan`message all techs: office closing early today`
 ```
 
 ## Architecture
@@ -369,59 +357,17 @@ npm test
 npm run deploy
 ```
 
-### Configuration
-
-```typescript
-// wrangler.toml
-name = "my-hvac-company"
-compatibility_date = "2024-01-01"
-
-[vars]
-COMPANY_NAME = "Johnson HVAC"
-TIMEZONE = "America/Chicago"
-
-[[durable_objects.bindings]]
-name = "JOBS"
-class_name = "JobDO"
-
-[[durable_objects.bindings]]
-name = "DISPATCH"
-class_name = "DispatchDO"
-
-[[durable_objects.bindings]]
-name = "TECHNICIANS"
-class_name = "TechnicianDO"
-```
-
 ## Integrations
 
-### Payments
-
 ```typescript
-// Stripe Connect (payments.do)
-fsm.payments.configure({
-  provider: 'stripe',
-  accountId: 'acct_xxx'
-})
-```
+// Connect to everything naturally
+await servicetitan`connect Stripe for payments`
+await servicetitan`connect QuickBooks for accounting`
+await servicetitan`connect Twilio for customer SMS`
 
-### Communication
-
-```typescript
-// Twilio for SMS
-fsm.notifications.configure({
-  sms: { provider: 'twilio', accountSid: 'xxx' }
-})
-```
-
-### Accounting
-
-```typescript
-// QuickBooks sync
-fsm.accounting.connect({
-  provider: 'quickbooks',
-  realmId: 'xxx'
-})
+// Then just use them
+await servicetitan`sync today's invoices to QuickBooks`
+await servicetitan`text Johnson Residence their appointment reminder`
 ```
 
 ## Pricing
@@ -466,15 +412,36 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 ## Roadmap
 
-- [x] Core job management
-- [x] Dispatch board with WebSocket
-- [x] Basic scheduling
-- [ ] AI route optimization
-- [ ] Pricebook builder
-- [ ] QuickBooks integration
-- [ ] Mobile apps (React Native)
-- [ ] Membership/service agreement management
-- [ ] Marketing automation
+### Core
+- [x] Jobs & Work Orders
+- [x] Intelligent Dispatch
+- [x] Route Optimization
+- [x] Estimates & Invoicing
+- [x] Payments (Stripe)
+- [x] Fleet Tracking
+- [x] Inventory Management
+- [ ] Memberships & Service Agreements
+- [ ] Marketing Automation
+
+### AI
+- [x] Smart Tech Assignment
+- [x] Route Optimization
+- [x] Duration Prediction
+- [ ] Demand Forecasting
+- [ ] Automated Follow-ups
+- [ ] Voice Dispatch
+
+### Integrations
+- [x] Stripe Payments
+- [ ] QuickBooks
+- [ ] Twilio SMS
+- [ ] Google Calendar
+- [ ] Zapier
+
+### Mobile
+- [ ] Tech Mobile App (React Native)
+- [ ] Customer Booking App
+- [ ] Offline-First Sync
 
 ## License
 
@@ -484,10 +451,13 @@ Your business software shouldn't hold your business hostage.
 
 ---
 
-<div align="center">
-
-**Built with [workers.do](https://workers.do)**
-
-*Workers work for you.*
-
-</div>
+<p align="center">
+  <strong>Your neighborhood plumber deserves enterprise tools.</strong>
+  <br />
+  AI-first. Offline-ready. Contractor-owned.
+  <br /><br />
+  <a href="https://servicetitan.do">Website</a> |
+  <a href="https://docs.servicetitan.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/servicetitan.do">GitHub</a>
+</p>

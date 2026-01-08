@@ -1,219 +1,197 @@
 # make.do
 
-Make.com reimagined for the AI era. Natural language automation with promise pipelining.
+> Visual Automation. Edge-Native. AI-First. Zero Per-Op Costs.
+
+Make.com charges $10k+/month for 10M operations. They trap your scenarios in proprietary formats. Every webhook costs you money. Traditional automation platforms were built for a world without AI.
+
+**make.do** is the open-source alternative. Natural language automation. Promise pipelining. Deploys in seconds. AI that orchestrates instead of executes.
+
+## AI-Native API
+
+```typescript
+import { make } from 'make.do'              // Full SDK
+import { make } from 'make.do/tiny'         // Minimal client
+import { make } from 'make.do/scenarios'    // Scenario builder only
+```
+
+Natural language for automation workflows:
+
+```typescript
+import { make } from 'make.do'
+
+// Talk to it like a colleague
+const leads = await make`when webhook /leads: validate, enrich, route to salesforce`
+const inventory = await make`every hour check inventory`
+const report = await make`summarize yesterday's sales`
+
+// Chain like sentences
+await make`fetch leads from /api/leads`
+  .map(lead => make`enrich ${lead} from clearbit`)
+  .map(enriched => make`route ${enriched} to salesforce if enterprise else hubspot`)
+
+// Scenarios that think
+await make`when email arrives`
+  .classify()         // AI determines intent
+  .draft()            // AI generates response
+  .route()            // to agent or human
+```
 
 ## The Problem
 
-**For automation architects who've outgrown Make.com's pricing** - processing millions of operations at $10k+/month while watching every webhook cost you money.
+Make.com dominates automation alongside Zapier:
 
-The stakes are real:
-- **Per-operation fees compound** - 10M ops/month at $0.001 = $10,000
-- **Vendor lock-in** - Your scenarios are trapped in their proprietary format
-- **Data leaving your infrastructure** - Every operation routes through their cloud
-- **Limited by their imagination** - No AI-native operations, no code when you need it
+| What Make.com Charges | The Reality |
+|-----------------------|-------------|
+| **Per-Operation Fees** | 10M ops/month at $0.001 = $10,000 |
+| **Enterprise Pricing** | $10k-50k/year for serious usage |
+| **Vendor Lock-in** | Scenarios trapped in proprietary format |
+| **Data Transit** | Every operation routes through their cloud |
+| **AI as Add-on** | Extra fees for any intelligence |
 
-Traditional automation platforms were built for a world without AI. They charge per click while AI agents need to orchestrate millions.
+### The Per-Op Tax
 
-## The Vision
+Every webhook, every transform, every API call - they charge you. At scale:
 
-Automation that speaks your language. Literally.
+- 1M ops/month = $1,000
+- 10M ops/month = $10,000
+- 100M ops/month = $100,000
 
-```typescript
-import { make } from '@dotdo/make'
+AI agents need to orchestrate millions. Make.com's pricing model doesn't survive contact with AI.
 
-make`when webhook /leads: validate, enrich from clearbit, route to salesforce or hubspot`
-make`every hour: check inventory, alert slack if low stock`
-make`process uploaded CSV: parse, validate, insert to database`
+### The Lock-in Problem
+
+Your automations exist only in Make.com:
+
+- No code export
+- No version control
+- No local testing
+- No custom modules without their approval
+- No way out
+
+### The AI Gap
+
+Make.com added "AI blocks" as an afterthought:
+
+- Extra per-token fees on top of provider costs
+- Limited model selection
+- No ambient intelligence
+- AI as a step, not a foundation
+
+## The Solution
+
+**make.do** reimagines automation for AI:
+
+```
+Make.com                          make.do
+-----------------------------------------------------------------
+$10k/month for 10M ops            Zero per-op costs
+Proprietary scenario format       Code you own
+Their cloud                       Your Cloudflare account
+AI as add-on                      AI-native foundation
+Visual-only                       Natural language + visual
+No version control                Git your scenarios
+Vendor lock-in                    Open source, MIT licensed
 ```
 
-No drag-and-drop. No per-operation costs. Just describe what you want.
+## One-Click Deploy
+
+```bash
+npx create-dotdo make
+```
+
+Automation running on your infrastructure. Zero per-op costs.
+
+```typescript
+import { Make } from 'make.do'
+
+export default Make({
+  name: 'my-automations',
+  domain: 'automation.mycompany.com',
+})
+```
+
+## Features
+
+### Webhooks
+
+```typescript
+// Incoming webhooks - just say it
+await make`when webhook /leads: validate email, enrich, route to CRM`
+await make`when /orders webhook: validate, save, send confirmation`
+await make`when POST /payments: verify signature, process, notify`
+
+// Outgoing webhooks
+await make`POST to ${url} with ${payload}`
+await make`POST to ${url}: on error retry 3 times with backoff`
+```
+
+### Schedules
+
+```typescript
+// Scheduled jobs read like calendar entries
+await make`every hour: check inventory, alert if low`
+await make`every monday at 9am: generate weekly report, send to #team`
+await make`every day at midnight: archive old records`
+await make`every 5 minutes: sync new orders to warehouse`
+```
+
+### Data Processing
+
+```typescript
+// File processing
+await make`when file uploaded to /inbox:
+  extract text with OCR,
+  classify document type,
+  route to appropriate folder`
+
+// CSV/batch processing
+await make`process uploaded CSV: parse, validate, insert to database`
+
+// Aggregation
+await make`collect hourly metrics, aggregate daily, send summary`
+```
+
+### Routing
+
+```typescript
+// Conditional routing as natural language
+await make`when webhook /leads:
+  validate email has @,
+  enrich from clearbit,
+  route to salesforce if enterprise else hubspot`
+
+// Multi-path routing
+await make`when order placed:
+  if value > $1000 route to enterprise,
+  if international route to global-fulfillment,
+  else route to standard`
+
+// AI-powered routing
+await make`when support ticket:
+  classify urgency,
+  if critical page on-call else queue for morning`
+```
+
+### Error Handling
+
+```typescript
+// Natural language error handling
+await make`POST to ${url}: on error retry 3 times with backoff`
+await make`fetch from ${api}: on timeout alert slack`
+await make`process payment: on failure refund and notify customer`
+
+// Error routes
+await make`when /orders webhook:
+  validate, process, confirm,
+  on any error: log, alert ops, queue for retry`
+```
 
 ### Promise Pipelining
 
 Chain operations without `Promise.all`. One network round trip:
 
 ```typescript
-const processed = await make`watch /inbox`
-  .map(file => make`classify ${file}`)
-  .map(classified => make`route ${classified} to handler`)
-// Single network round trip - CapnWeb pipelining!
-
-const enriched = await make`fetch new leads from webhook`
-  .map(lead => make`enrich ${lead} with clearbit`)
-  .map(enriched => [
-    make`create ${enriched} in salesforce`,
-    make`notify slack about ${enriched}`
-  ])
-```
-
-### AI-Native from the Ground Up
-
-Every scenario understands AI. Every module can think:
-
-```typescript
-make`when email arrives: classify intent, draft response, route to agent or human`
-
-make`every day at 9am:
-  summarize yesterday's sales,
-  identify trends,
-  draft report for team`
-
-make`when order placed:
-  analyze for fraud risk,
-  if suspicious alert security else process normally`
-```
-
-Built-in LLM operations - no "AI block" add-on. No extra per-token fees on top of your provider costs.
-
-### Agent Integration
-
-Let agents build your automations:
-
-```typescript
-import { ralph } from 'agents.do'
-
-ralph`build a scenario that syncs Stripe invoices to Airtable`
-ralph`create a webhook that enriches leads and routes to salesforce`
-ralph`automate our onboarding emails based on user behavior`
-```
-
-Priya plans the automation. Ralph builds it. Quinn tests it. The whole team, automated.
-
-## When You Need Control
-
-For complex scenarios, drop down to the structured API:
-
-```typescript
-import { Make } from '@dotdo/make'
-
-const make = new Make({ id: 'my-automation' })
-
-export const leadCapture = make.createScenario({
-  id: 'lead-capture',
-  trigger: { type: 'webhook', path: '/leads' },
-  modules: [
-    {
-      id: 'validate',
-      type: 'filter',
-      condition: '{{data.email}} contains "@"'
-    },
-    {
-      id: 'enrich',
-      type: 'http',
-      action: 'GET',
-      url: 'https://api.clearbit.com/v2/people/email/{{data.email}}'
-    },
-    {
-      id: 'route',
-      type: 'router',
-      routes: [
-        { condition: '{{enrich.company.employees}} > 100', target: 'enterprise' },
-        { condition: 'true', target: 'smb' }
-      ]
-    },
-    {
-      id: 'enterprise',
-      type: 'salesforce',
-      action: 'create',
-      object: 'Lead',
-      mapping: { Email: '{{data.email}}', Company: '{{enrich.company.name}}' }
-    },
-    {
-      id: 'smb',
-      type: 'hubspot',
-      action: 'create',
-      object: 'contact',
-      mapping: { email: '{{data.email}}' }
-    }
-  ]
-})
-
-await make.run('lead-capture', { email: 'ceo@bigcorp.com' })
-```
-
-Full type safety. Full control. Same runtime.
-
-## Features
-
-- **Natural Language** - Describe scenarios in plain English
-- **Promise Pipelining** - Chain operations with `.map()`, single round trip
-- **AI-Native** - LLM operations are first-class citizens
-- **Agent Integration** - Let AI agents build your automations
-- **Visual Canvas** - Drag-and-drop builder (coming soon)
-- **Module Types** - Triggers, actions, aggregators, iterators, routers, filters
-- **Data Mapping** - JSONPath and Mustache-style variable interpolation
-- **Error Handling** - Error routes, retries, break/continue handlers
-- **Edge Native** - Runs on Cloudflare's global network
-- **Zero Per-Op Costs** - Flat rate, unlimited operations
-
-## Architecture
-
-```
-                    +----------------------+
-                    |      make.do         |
-                    |  (Cloudflare Worker) |
-                    +----------------------+
-                              |
-              +---------------+---------------+---------------+
-              |               |               |               |
-    +------------------+ +------------------+ +------------------+ +------------------+
-    |    ScenarioDO    | |    ModuleDO      | |    RouterDO      | |   SchedulerDO    |
-    |  (orchestration) | | (step execution) | | (data routing)   | |  (cron/webhooks) |
-    +------------------+ +------------------+ +------------------+ +------------------+
-              |               |               |               |
-              +---------------+---------------+---------------+
-                              |
-                    +-------------------+
-                    |  Cloudflare Queues |
-                    | (module execution) |
-                    +-------------------+
-                              |
-              +---------------+---------------+
-              |               |               |
-        +----------+   +----------+    +----------+
-        |  fsx.do  |   | gitx.do  |    |  llm.do  |
-        |   (MCP)  |   |   (MCP)  |    |   (MCP)  |
-        +----------+   +----------+    +----------+
-```
-
-**Key insight**: Durable Objects provide single-threaded, strongly consistent state. Each scenario execution gets its own ScenarioDO for orchestration. Module execution uses ModuleDO for isolation. Routers handle complex data flow patterns.
-
-## Installation
-
-```bash
-npm install @dotdo/make
-```
-
-## Quick Start
-
-### Natural Language Scenarios
-
-```typescript
-import { make } from '@dotdo/make'
-
-// Simple webhook handler
-make`when /orders webhook: validate, save to database, send confirmation email`
-
-// Scheduled jobs
-make`every monday at 9am: generate weekly report, send to #team-updates`
-
-// File processing
-make`when file uploaded to /inbox:
-  extract text with OCR,
-  classify document type,
-  route to appropriate folder`
-
-// Multi-step with AI
-make`when support ticket created:
-  analyze sentiment and urgency,
-  if urgent escalate to human else draft AI response,
-  log to analytics`
-```
-
-### Promise Pipelining in Action
-
-```typescript
-// Process a batch of leads with enrichment and routing
+// Lead enrichment pipeline
 const results = await make`fetch leads from /api/leads`
   .map(lead => make`enrich ${lead} from clearbit`)
   .map(enriched => make`score ${enriched} for sales readiness`)
@@ -225,198 +203,194 @@ const results = await make`fetch leads from /api/leads`
 const reports = await make`list all departments`
   .map(dept => make`generate monthly report for ${dept}`)
   .map(report => make`send ${report} to department head`)
+
+// Fan-out and fan-in
+const analyzed = await make`fetch transactions this week`
+  .map(tx => [
+    make`check ${tx} for fraud`,
+    make`categorize ${tx}`,
+    make`match ${tx} to invoice`
+  ])
+  .reduce((results) => make`consolidate ${results} into report`)
 ```
 
-### Module Types
+### AI Operations
 
 ```typescript
-// Trigger modules (start scenarios)
-{ type: 'webhook', path: '/events' }
-{ type: 'cron', schedule: '*/5 * * * *' }
-{ type: 'email', mailbox: 'inbox@make.do' }
+// AI is built in, not an add-on
+await make`when email arrives: classify intent, draft response, route`
 
-// Action modules (do things)
-{ type: 'http', action: 'POST', url: '...', body: '...' }
-{ type: 'fsx', action: 'writeFile', path: '...', content: '...' }
-{ type: 'gitx', action: 'commit', message: '...', files: [...] }
-{ type: 'llm', action: 'generate', prompt: '...' }
+await make`every day at 9am:
+  summarize yesterday's sales,
+  identify trends,
+  draft report for team`
 
-// Flow control modules
-{ type: 'filter', condition: '{{data.value}} > 10' }
-{ type: 'router', routes: [...] }
-{ type: 'iterator', source: '{{array}}' }
-{ type: 'aggregator', source: '{{items}}', groupBy: '{{item.category}}' }
+await make`when document uploaded:
+  extract key data,
+  validate against schema,
+  create structured record`
 
-// Error handling modules
-{ type: 'error-handler', action: 'retry', maxRetries: 3 }
-{ type: 'error-handler', action: 'ignore' }
-{ type: 'error-handler', action: 'route', target: 'error-path' }
+await make`when customer feedback received:
+  analyze sentiment,
+  categorize topic,
+  route to product or support`
 ```
 
-### Data Mapping
+### Agent Integration
 
 ```typescript
-// Variable interpolation
-'{{module.output.field}}'
+import { ralph, priya, quinn } from 'agents.do'
 
-// Nested access
-'{{module.output.nested.deep.value}}'
+// Let agents build your automations
+ralph`build a scenario that syncs Stripe invoices to Airtable`
+ralph`create a webhook that enriches leads and routes to salesforce`
 
-// Array access
-'{{module.output.items[0].name}}'
-
-// Built-in functions
-'{{data.name | uppercase}}'
-'{{data.amount | currency}}'
-'{{data.date | formatDate "YYYY-MM-DD"}}'
-'{{data.items | length}}'
-'{{data.value | default "N/A"}}'
-
-// JSON serialization
-'{{data | json}}'
-'{{data | json 2}}'  // Pretty print with 2-space indent
+// Agents in your automations
+await make`when feature request:
+  ${priya} analyze and prioritize,
+  ${ralph} create implementation plan,
+  ${quinn} write acceptance tests`
 ```
 
-### Error Handling
+## Architecture
+
+```
+Scenario Request Flow:
+
+make`when webhook...` --> ScenarioDO --> ModuleDO --> Integration
+                              |              |
+                          SQLite          Queues
+                       (scenario state)  (reliable execution)
+                              |
+                        +-----+-----+
+                        |     |     |
+                     fsx.do gitx.do llm.do
+```
+
+### Durable Object per Scenario
+
+```
+ScenarioDO (orchestration, state machine)
+  |
+  +-- ModuleDO (step execution, isolation)
+  |     |-- SQLite: execution logs
+  |
+  +-- RouterDO (data routing, fan-out)
+  |
+  +-- SchedulerDO (cron, webhooks)
+        |-- SQLite: schedule state
+```
+
+## Integrations
+
+### Pre-built Connectors
 
 ```typescript
-make.createScenario({
-  id: 'error-example',
-  trigger: { type: 'webhook', path: '/process' },
-  modules: [
-    {
-      id: 'risky-operation',
-      type: 'http',
-      action: 'POST',
-      url: '{{data.url}}',
-      errorHandler: {
-        action: 'route',
-        target: 'error-path',
-        // Or: action: 'retry', maxRetries: 3, backoff: 'exponential'
-        // Or: action: 'ignore'
-        // Or: action: 'break' (stop scenario)
-      }
-    },
-    {
-      id: 'error-path',
-      type: 'slack',
-      action: 'postMessage',
-      channel: '#errors',
-      text: 'Operation failed: {{error.message}}'
-    }
-  ]
-})
+// Just mention the service
+await make`when Stripe payment: add to HubSpot, notify Slack`
+await make`when GitHub issue: create Jira ticket`
+await make`when Shopify order: update inventory in Airtable`
+
+// AI infers the integration
+await make`sync Stripe customers to Salesforce nightly`
+await make`when new Typeform: enrich with Clearbit, add to Mailchimp`
 ```
 
-### Serve with Hono
+### MCP Tools
 
 ```typescript
-import { Hono } from 'hono'
-import { serve } from '@dotdo/make/hono'
-
-const app = new Hono()
-
-app.all('/api/make/*', serve({
-  client: make,
-  scenarios: [leadCapture, orderProcessing]
-}))
-
-export default app
+// Any MCP tool works automatically
+await make`when webhook: read config from fsx.do, process, commit to gitx.do`
+await make`every hour: query with llm.do, summarize, post to Slack`
 ```
 
-## MCP Integration
-
-make.do exposes all operations as MCP tools for AI orchestration:
+### HTTP Requests
 
 ```typescript
-// Use fsx.do for filesystem operations
-{
-  id: 'read-config',
-  type: 'fsx',
-  action: 'readFile',
-  path: '/config/settings.json'
-}
-
-// Use gitx.do for version control
-{
-  id: 'commit-changes',
-  type: 'gitx',
-  action: 'commit',
-  message: 'Auto-generated by make.do',
-  files: ['{{modified-files}}']
-}
-
-// Use llm.do for AI operations
-{
-  id: 'summarize',
-  type: 'llm',
-  action: 'generate',
-  model: 'claude-3-opus',
-  prompt: 'Summarize this document: {{document.content}}'
-}
+// Just describe it
+await make`GET ${url} then POST to ${webhook}`
+await make`fetch ${api} with bearer ${token}, transform, send to ${dest}`
 ```
 
-## API Reference
+## vs Make.com
 
-### Make Client
-
-```typescript
-const make = new Make({
-  id: 'my-app',          // App identifier
-  logging: true,         // Enable execution logs
-  timezone: 'UTC'        // Default timezone
-})
-
-// Create scenarios
-make.createScenario(config)
-
-// Run a scenario
-await make.run('scenario-id', inputData)
-
-// List scenarios
-await make.listScenarios()
-
-// Get execution history
-await make.getHistory('scenario-id', { limit: 100 })
-
-// Pause/resume scenarios
-await make.pause('scenario-id')
-await make.resume('scenario-id')
-```
-
-### Scenario Definition
-
-```typescript
-interface ScenarioConfig {
-  id: string
-  name?: string
-  description?: string
-  trigger: TriggerConfig
-  modules: ModuleConfig[]
-  errorHandler?: ErrorHandlerConfig
-  timeout?: string  // e.g., '30m'
-}
-```
-
-## The Rewrites Ecosystem
-
-make.do is part of the rewrites family - reimplementations of popular infrastructure on Cloudflare:
-
-| Rewrite | Original | Purpose |
+| Feature | Make.com | make.do |
 |---------|----------|---------|
-| [fsx.do](https://fsx.do) | fs (Node.js) | Filesystem for AI |
-| [gitx.do](https://gitx.do) | git | Version control for AI |
-| [supabase.do](https://supabase.do) | Supabase | Postgres/BaaS for AI |
-| [inngest.do](https://inngest.do) | Inngest | Workflows/Jobs for AI |
-| **make.do** | Make.com | Visual automation for AI |
-| kafka.do | Kafka | Event streaming for AI |
-| nats.do | NATS | Messaging for AI |
+| **Pricing** | $10k+/month for 10M ops | Zero per-op costs |
+| **Format** | Proprietary visual | Natural language + code |
+| **Version Control** | None | Git your scenarios |
+| **AI** | Add-on blocks | Native foundation |
+| **Testing** | In-platform only | Local + CI/CD |
+| **Lock-in** | Complete | Open source, MIT |
+| **Deployment** | Their cloud | Your Cloudflare |
+| **Custom Code** | Limited | Full TypeScript |
 
-Each rewrite follows the same pattern:
-- Durable Objects for state
-- SQLite for persistence
-- Cloudflare Queues for messaging
-- Compatible API with the original
+## Use Cases
+
+### Lead Management
+
+```typescript
+// Full lead capture pipeline
+await make`when webhook /leads:
+  validate email,
+  enrich from clearbit,
+  score for sales readiness,
+  route to salesforce if enterprise else hubspot,
+  notify slack #sales-leads`
+
+// Bulk enrichment
+await make`all contacts missing company size`
+  .map(contact => make`enrich ${contact} from clearbit`)
+  .map(enriched => make`update ${enriched} in hubspot`)
+```
+
+### E-commerce
+
+```typescript
+// Order processing
+await make`when Shopify order:
+  validate inventory,
+  process payment,
+  create fulfillment,
+  send confirmation email`
+
+// Abandoned cart
+await make`every hour:
+  find carts abandoned 30+ minutes,
+  send recovery email,
+  track opens and clicks`
+```
+
+### DevOps
+
+```typescript
+// Deploy pipeline
+await make`when GitHub push to main:
+  run tests,
+  if pass deploy to staging,
+  notify #engineering,
+  on failure page on-call`
+
+// Monitoring
+await make`every minute:
+  check health of ${services},
+  if any unhealthy alert PagerDuty`
+```
+
+### Data Sync
+
+```typescript
+// CRM to data warehouse
+await make`every night:
+  export Salesforce opportunities,
+  transform to BigQuery schema,
+  load to warehouse,
+  refresh dashboards`
+
+// Two-way sync
+await make`when Salesforce contact updated: sync to HubSpot`
+await make`when HubSpot contact updated: sync to Salesforce`
+```
 
 ## Why Cloudflare?
 
@@ -425,6 +399,18 @@ Each rewrite follows the same pattern:
 3. **Unlimited Duration** - No execution timeouts
 4. **Built-in Queues** - Reliable module execution
 5. **Single-Threaded DO** - No race conditions in data routing
+
+## The Rewrites Ecosystem
+
+make.do is part of the rewrites family:
+
+| Rewrite | Original | Purpose |
+|---------|----------|---------|
+| [fsx.do](https://fsx.do) | fs (Node.js) | Filesystem for AI |
+| [gitx.do](https://gitx.do) | git | Version control for AI |
+| [supabase.do](https://supabase.do) | Supabase | Postgres/BaaS for AI |
+| [inngest.do](https://inngest.do) | Inngest | Workflows/Jobs for AI |
+| **make.do** | Make.com | Visual automation for AI |
 
 ## Related Domains
 
@@ -435,4 +421,17 @@ Each rewrite follows the same pattern:
 
 ## License
 
-MIT
+MIT License - Automate everything.
+
+---
+
+<p align="center">
+  <strong>Zero per-op costs. Natural language. Your infrastructure.</strong>
+  <br />
+  AI-native automation that speaks your language.
+  <br /><br />
+  <a href="https://make.do">Website</a> |
+  <a href="https://docs.make.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/make.do">GitHub</a>
+</p>

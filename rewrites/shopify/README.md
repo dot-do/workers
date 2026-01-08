@@ -6,40 +6,33 @@ Shopify powers millions of stores, taking a cut of every transaction. 2.9% + $0.
 
 **shopify.do** is the open-source alternative. Deploy your own e-commerce platform. Choose your payment processor. AI that actually sells for you.
 
-## The workers.do Way
-
-You built a brand people love. You've got product-market fit. But every sale, Shopify takes nearly 3%. At scale, that's hundreds of thousands of dollars - money that should go into inventory, marketing, or your own pocket.
-
-**workers.do** gives you AI that actually sells:
+## AI-Native API
 
 ```typescript
-import { shopify, mark } from 'workers.do'
-
-// Natural language for commerce
-const orders = await shopify`find orders from ${campaign} this week`
-const inventory = await shopify`which SKUs are below reorder point`
-const customers = await shopify`show VIP customers who haven't ordered in 60 days`
+import { shopify } from 'shopify.do'           // Full SDK
+import { shopify } from 'shopify.do/tiny'      // Minimal client
+import { shopify } from 'shopify.do/storefront' // Storefront-only
 ```
 
-Promise pipelining for order fulfillment - one network round trip:
+Natural language for commerce:
 
 ```typescript
-// Campaign to customer delight
-const delighted = await shopify`find orders from ${campaign}`
-  .map(order => shopify`fulfill ${order} with expedited shipping`)
-  .map(fulfilled => mark`send thank you to ${fulfilled.customer}`)
-  .map(thanked => shopify`add ${thanked.customer} to VIP segment`)
-```
+import { shopify } from 'shopify.do'
 
-AI agents that grow your store:
+// Talk to it like a colleague
+const sales = await shopify`best selling products this month`
+const inventory = await shopify`SKUs below reorder point`
+const vips = await shopify`VIP customers who haven't ordered in 60 days`
 
-```typescript
-import { priya, ralph, sally } from 'agents.do'
+// Chain like sentences
+await shopify`orders from Black Friday campaign`
+  .map(order => shopify`fulfill ${order} with tracking`)
+  .map(fulfilled => shopify`send thank you to ${fulfilled.customer}`)
 
-// E-commerce intelligence
-await priya`analyze cart abandonment and recommend recovery flow`
-await ralph`optimize product page for ${sku} based on conversion data`
-await sally`draft win-back email sequence for churned subscribers`
+// Products document themselves
+await shopify`create product "Premium Headphones" - Black $299, White $299`
+await shopify`add to Audio collection`
+await shopify`feature on homepage`
 ```
 
 ## The Problem
@@ -81,284 +74,112 @@ Your own e-commerce platform. With AI that actually sells.
 
 ## Features
 
-### Storefront
-
-Beautiful, fast, customizable:
-
-```typescript
-import { store } from 'shopify.do'
-
-// Configure your store
-await store.configure({
-  name: 'Acme Co',
-  domain: 'shop.acme.com',
-  currency: 'USD',
-  theme: 'minimal', // or 'bold', 'classic', or custom
-  features: {
-    multiCurrency: true,
-    multilingual: ['en', 'es', 'fr'],
-    subscriptions: true,
-    b2b: false,
-  },
-})
-```
-
 ### Products
 
-Rich catalog management:
-
 ```typescript
-// Create product
-await store.products.create({
-  title: 'Premium Wireless Headphones',
-  handle: 'premium-wireless-headphones',
-  description: 'Crystal-clear audio with 30-hour battery life...',
-  vendor: 'Acme Audio',
-  type: 'Electronics',
-  tags: ['wireless', 'bluetooth', 'audio', 'premium'],
-  variants: [
-    {
-      title: 'Midnight Black',
-      sku: 'AWH-001-BLK',
-      price: 299.99,
-      compareAtPrice: 349.99,
-      inventory: 150,
-      weight: 0.5,
-      weightUnit: 'lb',
-    },
-    {
-      title: 'Pearl White',
-      sku: 'AWH-001-WHT',
-      price: 299.99,
-      inventory: 75,
-      weight: 0.5,
-      weightUnit: 'lb',
-    },
-  ],
-  images: [
-    { url: 'https://...', alt: 'Headphones front view' },
-    { url: 'https://...', alt: 'Headphones side view' },
-  ],
-  seo: {
-    title: 'Premium Wireless Headphones | Acme Co',
-    description: 'Experience crystal-clear audio...',
-  },
-})
+// Create products naturally
+await shopify`create product "Premium Headphones" - Black $299, White $299`
+await shopify`add "Coffee Subscription" - 12oz monthly $24.99, weekly $19.99`
 
-// Create collection
-await store.collections.create({
-  title: 'Audio Equipment',
-  handle: 'audio',
-  rules: [
-    { field: 'type', relation: 'equals', value: 'Electronics' },
-    { field: 'tags', relation: 'contains', value: 'audio' },
-  ],
-  sortOrder: 'best-selling',
-})
+// AI infers what you need
+await shopify`headphones`                    // returns product
+await shopify`headphones inventory`          // returns stock levels
+await shopify`headphones sales this month`   // returns analytics
+
+// Collections just work
+await shopify`create "Audio Equipment" collection from electronics tagged audio`
+await shopify`best sellers this quarter`
+await shopify`products under $50 with low stock`
 ```
 
 ### Checkout
 
-Conversion-optimized, flexible:
-
 ```typescript
-// Create checkout
-const checkout = await store.checkout.create({
-  lineItems: [
-    { variantId: 'AWH-001-BLK', quantity: 1 },
-    { variantId: 'CASE-001', quantity: 1 },
-  ],
-  email: 'customer@example.com',
-})
+// Checkout is just a sentence
+await shopify`checkout ${cart} with SAVE20 discount`
+await shopify`complete order for sarah@example.com express shipping`
 
-// Apply discount
-await checkout.applyDiscount('SAVE20')
-
-// Calculate shipping
-const rates = await checkout.shippingRates({
-  address: {
-    country: 'US',
-    state: 'CA',
-    zip: '94102',
-  },
-})
-
-// Complete with any processor
-await checkout.complete({
-  paymentMethod: 'stripe',
-  token: 'tok_...',
-  shippingRate: rates[0].id,
-})
+// Or let AI handle it
+await shopify`process abandoned carts from today`
+  .map(cart => shopify`send recovery email to ${cart.customer}`)
 ```
 
 ### Orders
 
-Full lifecycle management:
-
 ```typescript
-// Order created automatically from checkout
-const order = await store.orders.get('ORD-1001')
+// Natural order management
+await shopify`orders from Black Friday`
+await shopify`unfulfilled orders over $500`
+await shopify`Sarah Chen's order history`
 
-// Fulfill order
-await order.fulfill({
-  lineItems: [{ id: 'line-1', quantity: 1 }],
-  tracking: {
-    company: 'UPS',
-    number: '1Z999AA10123456784',
-    url: 'https://ups.com/track/...',
-  },
-  notifyCustomer: true,
-})
+// Fulfill in bulk with pipelining
+await shopify`orders ready to ship`
+  .map(order => shopify`fulfill ${order} with tracking`)
+  .map(fulfilled => shopify`notify ${fulfilled.customer}`)
 
-// Handle return
-await order.return({
-  lineItems: [{ id: 'line-1', quantity: 1, reason: 'Defective' }],
-  refund: {
-    amount: 299.99,
-    method: 'original', // or 'store_credit'
-  },
-})
+// Returns are just as simple
+await shopify`return headphones from order 1001 - defective`
+await shopify`refund $299 to original payment method`
 ```
 
 ### Subscriptions
 
-Recurring revenue built-in:
-
 ```typescript
-// Create subscription product
-await store.products.create({
-  title: 'Coffee Subscription',
-  type: 'Subscription',
-  variants: [
-    {
-      title: '12oz Monthly',
-      price: 24.99,
-      subscription: {
-        interval: 'month',
-        intervalCount: 1,
-      },
-    },
-    {
-      title: '12oz Weekly',
-      price: 19.99,
-      subscription: {
-        interval: 'week',
-        intervalCount: 1,
-      },
-    },
-  ],
-})
+// Manage subscriptions naturally
+await shopify`pause Sarah's coffee subscription`
+await shopify`change John to bi-weekly delivery`
+await shopify`cancel subscription 1001 - too much coffee`
 
-// Manage subscription
-await store.subscriptions.pause('SUB-1001')
-await store.subscriptions.changeFrequency('SUB-1001', 'week', 2)
-await store.subscriptions.cancel('SUB-1001', { reason: 'Too much coffee' })
+// Subscription analytics
+await shopify`churned subscribers this month`
+await shopify`subscriptions renewing tomorrow`
+await shopify`MRR trend last 6 months`
 ```
 
 ### Inventory
 
-Real-time stock management:
-
 ```typescript
-// Configure locations
-await store.inventory.locations([
-  { name: 'Main Warehouse', type: 'warehouse', address: {...} },
-  { name: 'NYC Store', type: 'retail', address: {...} },
-  { name: 'LA Store', type: 'retail', address: {...} },
-])
+// Query inventory naturally
+await shopify`headphones stock across all locations`
+await shopify`what's below reorder point`
+await shopify`NYC store inventory`
 
-// Set inventory by location
-await store.inventory.set({
-  sku: 'AWH-001-BLK',
-  location: 'Main Warehouse',
-  quantity: 500,
-})
+// Manage stock
+await shopify`add 500 black headphones to warehouse`
+await shopify`transfer 50 headphones from warehouse to NYC store`
+await shopify`reserve 10 units for order 1001`
 
-// Reserve for order
-await store.inventory.reserve({
-  sku: 'AWH-001-BLK',
-  location: 'Main Warehouse',
-  quantity: 1,
-  orderId: 'ORD-1001',
-})
-
-// Transfer between locations
-await store.inventory.transfer({
-  sku: 'AWH-001-BLK',
-  from: 'Main Warehouse',
-  to: 'NYC Store',
-  quantity: 50,
-})
+// AI inventory alerts
+await shopify`SKUs that will stockout this week`
+  .map(sku => shopify`create PO for ${sku}`)
 ```
 
 ### Discounts & Promotions
 
-Flexible pricing rules:
-
 ```typescript
-// Percentage discount
-await store.discounts.create({
-  code: 'SAVE20',
-  type: 'percentage',
-  value: 20,
-  appliesTo: 'all',
-  usageLimit: 1000,
-  startsAt: '2025-01-01',
-  endsAt: '2025-01-31',
-})
+// Create discounts naturally
+await shopify`create SAVE20 for 20% off everything, limit 1000 uses, expires Jan 31`
+await shopify`buy 2 shirts get 1 free`
+await shopify`free shipping over $100`
 
-// Buy X get Y
-await store.discounts.create({
-  type: 'buyXgetY',
-  rules: {
-    buy: { quantity: 2, collection: 'shirts' },
-    get: { quantity: 1, collection: 'shirts', discount: 100 },
-  },
-})
-
-// Automatic discount
-await store.discounts.create({
-  type: 'automatic',
-  name: 'Free shipping over $100',
-  rules: {
-    cartMinimum: 100,
-    discount: { type: 'shipping', value: 100 },
-  },
-})
+// Query promotions
+await shopify`active discount codes`
+await shopify`most used promos this quarter`
+await shopify`revenue impact of Black Friday sale`
 ```
 
 ### Shipping
 
-Carrier-agnostic rate calculation:
-
 ```typescript
-// Configure shipping zones
-await store.shipping.zones([
-  {
-    name: 'US Domestic',
-    countries: ['US'],
-    rates: [
-      { name: 'Standard', price: 7.99, deliveryDays: '5-7' },
-      { name: 'Express', price: 14.99, deliveryDays: '2-3' },
-      { name: 'Overnight', price: 29.99, deliveryDays: '1' },
-    ],
-  },
-  {
-    name: 'International',
-    countries: ['*'],
-    exclude: ['US'],
-    rates: [
-      { name: 'International', price: 24.99, deliveryDays: '7-14' },
-    ],
-  },
-])
+// Shipping rates in plain English
+await shopify`standard shipping $7.99 for US, 5-7 days`
+await shopify`express $14.99, 2-3 days`
+await shopify`international $24.99, 7-14 days`
 
-// Or use carrier rates
-await store.shipping.carriers({
-  ups: { accountNumber: '...', enabled: true },
-  fedex: { accountNumber: '...', enabled: true },
-  usps: { enabled: true },
-})
+// Track shipments
+await shopify`where is order 1001`
+await shopify`orders stuck in transit`
+await shopify`late deliveries this week`
 ```
 
 ## AI-Native Commerce
@@ -370,27 +191,13 @@ This is where shopify.do transforms e-commerce.
 ```typescript
 import { mark } from 'agents.do'
 
-// Generate product descriptions
+// Generate product descriptions naturally
+await mark`write description for headphones - 30hr battery, ANC, for remote workers`
+
+// Generate entire listings
 await mark`
-  Write a compelling product description for these headphones:
-  - 30-hour battery
-  - Active noise cancellation
-  - Bluetooth 5.2
-  - Memory foam ear cushions
-
-  Make it benefit-focused, not feature-focused.
-  Target audience: work-from-home professionals.
-`
-
-// Generate entire product listing
-await mark`
-  Create a complete product listing for a new coffee subscription:
-  - Origin: Ethiopia Yirgacheffe
-  - Roast: Medium
-  - Process: Washed
-  - Flavor notes: Blueberry, jasmine, citrus
-
-  Include: title, description, SEO metadata, suggested pricing.
+  create listing for Ethiopian coffee subscription:
+  medium roast, washed, notes of blueberry and jasmine
 `
 ```
 
@@ -399,24 +206,14 @@ await mark`
 ```typescript
 import { sally } from 'agents.do'
 
-// Customer chatbot that actually sells
-await store.ai.configure({
-  assistant: sally,
-  capabilities: [
-    'productRecommendation',
-    'sizeAdvice',
-    'orderTracking',
-    'returnInitiation',
-    'discountApplication',
-  ],
-})
-
+// Sally handles the conversation
 // Customer: "I need running shoes for marathon training"
-// Sally: "For marathon training, you'll want shoes with great cushioning
-//         and durability. Based on your previous orders (size 10, neutral
-//         gait), I'd recommend our CloudStride Pro at $159. It's our
-//         best seller for long-distance. Would you like me to add it
-//         to your cart with free shipping?"
+// Sally: "For marathon training, you'll want shoes with great cushioning.
+//         Based on your previous orders (size 10), I'd recommend our
+//         CloudStride Pro at $159. Want me to add it to your cart?"
+
+await sally`help ${customer} find running shoes for marathons`
+await sally`recommend products based on ${customer}'s purchase history`
 ```
 
 ### AI Merchandising
@@ -424,48 +221,25 @@ await store.ai.configure({
 ```typescript
 import { priya } from 'agents.do'
 
-// Optimize product placement
-await priya`
-  Analyze our store performance:
-  1. Which products should be featured on homepage?
-  2. What collections need reordering by conversion rate?
-  3. Which products are underperforming vs inventory level?
+// Optimize your store with one line
+await priya`which products should be featured on homepage`
+await priya`reorder collections by conversion rate`
+await priya`find underperforming products with high inventory`
 
-  Recommend merchandising changes to maximize revenue.
-`
-
-// Priya analyzes and acts:
-// "Recommending:
-// 1. Feature 'Premium Headphones' (high margin, low visibility, good reviews)
-// 2. Move 'Accessories' collection up - 3.2% conversion vs 1.8% average
-// 3. Discount 'Vintage Speaker' - 180 days inventory, declining views
-//
-// Shall I implement these changes?"
+// Chain analysis to action
+await priya`products with declining views but good reviews`
+  .map(product => shopify`promote ${product} in email campaign`)
 ```
 
 ### AI Dynamic Pricing
 
 ```typescript
-import { ada } from 'shopify.do/agents'
+// Pricing in plain English
+await shopify`optimize prices for margin, min 30%, max 40% discount`
+await shopify`price headphones competitively vs Amazon`
+await shopify`increase price on low-stock items`
 
-// Configure dynamic pricing
-await store.pricing.ai({
-  mode: 'optimize-margin', // or 'maximize-volume', 'competitive'
-  constraints: {
-    minMargin: 30, // Never go below 30% margin
-    maxDiscount: 40, // Never discount more than 40%
-    priceChangeFrequency: 'daily',
-  },
-  factors: [
-    'inventoryLevel',
-    'competitorPricing',
-    'demandForecast',
-    'customerSegment',
-    'timeOfYear',
-  ],
-})
-
-// Prices adjust automatically based on:
+// AI adjusts automatically based on:
 // - Stock levels (low stock = higher price)
 // - Competitor monitoring
 // - Purchase intent signals
@@ -477,85 +251,49 @@ await store.pricing.ai({
 ```typescript
 import { mark } from 'agents.do'
 
-// Generate abandoned cart emails
-await mark`
-  Write an abandoned cart email sequence (3 emails):
-  - Email 1: 1 hour after abandonment (gentle reminder)
-  - Email 2: 24 hours (address objections)
-  - Email 3: 72 hours (urgency/discount)
+// Generate campaigns naturally
+await mark`write abandoned cart sequence - friendly but premium voice`
+await mark`win-back email for customers inactive 60 days`
 
-  Include personalization placeholders.
-  Our brand voice is friendly but premium.
-`
+// Automate with pipelining
+await shopify`customers who abandoned cart today`
+  .map(customer => mark`send recovery email to ${customer}`)
 
-// Auto-send personalized emails
-await store.email.configure({
-  automation: {
-    abandonedCart: { enabled: true, ai: mark },
-    postPurchase: { enabled: true, ai: mark },
-    winback: { enabled: true, ai: mark, inactiveDays: 60 },
-  },
-})
+await shopify`VIPs who haven't ordered in 30 days`
+  .map(vip => mark`send personalized win-back to ${vip}`)
 ```
 
 ### AI Customer Service
 
 ```typescript
-// 24/7 AI support that actually resolves issues
-await store.support.configure({
-  ai: {
-    enabled: true,
-    agent: sally,
-    canPerformActions: [
-      'lookupOrder',
-      'trackShipment',
-      'initiateReturn',
-      'applyDiscount', // Up to 15%
-      'escalateToHuman',
-    ],
-    escalationRules: {
-      refundOver: 100, // Escalate refunds > $100
-      angryCustomer: true, // Escalate heated conversations
-      complexIssue: true, // Escalate multi-issue tickets
-    },
-  },
-})
+import { sally } from 'agents.do'
 
+// Sally handles support naturally
 // Customer: "Where's my order? It was supposed to arrive yesterday!"
-// Sally: "I see your order ORD-1001 is currently in transit with UPS.
-//         It looks like there was a weather delay in Memphis. Current
-//         estimated delivery is tomorrow by 5pm. I apologize for the
-//         inconvenience - would you like a 15% discount code for your
-//         next order?"
+// Sally: "I see your order is in transit with UPS - weather delay in Memphis.
+//         Estimated delivery tomorrow by 5pm. Would you like a 15% discount
+//         code for the inconvenience?"
+
+await sally`help ${customer} track order 1001`
+await sally`process return request for ${customer}`
+await sally`resolve ${ticket} or escalate if needed`
 ```
 
 ## Storefront API
 
-Build any frontend:
+Build any frontend with the same natural syntax:
 
 ```typescript
-import { createStorefrontClient } from 'shopify.do/client'
+import { shopify } from 'shopify.do'
 
-const client = createStorefrontClient({
-  domain: 'shop.acme.com',
-  storefrontToken: 'sf_...',
-})
+// Fetch products naturally
+const products = await shopify`audio products, first 10`
+const featured = await shopify`featured collection`
 
-// Fetch products (GraphQL-compatible)
-const products = await client.products.list({
-  first: 10,
-  filters: { collection: 'audio' },
-})
-
-// Add to cart
-const cart = await client.cart.create({
-  lines: [{ variantId: 'gid://shopify/ProductVariant/123', quantity: 1 }],
-})
-
-// Checkout
-const checkout = await client.checkout.create({
-  cartId: cart.id,
-})
+// Cart operations
+await shopify`add headphones to cart`
+await shopify`apply SAVE20 to cart`
+await shopify`checkout cart with express shipping`
 ```
 
 ### Headless Commerce
@@ -564,22 +302,19 @@ Use any frontend framework:
 
 ```typescript
 // Next.js
-// app/products/[handle]/page.tsx
 export default async function ProductPage({ params }) {
-  const product = await shopify.products.getByHandle(params.handle)
+  const product = await shopify`product ${params.handle}`
   return <ProductDetail product={product} />
 }
 
 // Remix
-// app/routes/products.$handle.tsx
 export async function loader({ params }) {
-  const product = await shopify.products.getByHandle(params.handle)
+  const product = await shopify`product ${params.handle}`
   return json({ product })
 }
 
 // Astro
-// src/pages/products/[handle].astro
-const product = await shopify.products.getByHandle(Astro.params.handle)
+const product = await shopify`product ${Astro.params.handle}`
 ```
 
 ## Architecture
@@ -610,40 +345,15 @@ StoreDO (config, settings, theme)
 
 ### Edge Commerce
 
-```
-Customer Browser              Cloudflare Edge              Origin
-       |                            |                        |
-       |---[Product Page]---------->|                        |
-       |                      [Cache HIT]                    |
-       |<--[Instant Response]-------|                        |
-       |                            |                        |
-       |---[Add to Cart]----------->|                        |
-       |                      [Edge DO]                      |
-       |<--[Updated Cart]-----------|                        |
-       |                            |                        |
-       |---[Checkout]-------------->|                        |
-       |                      [Edge DO]---[Payment]--------->|
-       |<--[Confirmation]-----------|<--[Webhook]------------|
-```
+Product pages cached at edge. Cart and checkout run in Durable Objects. Payment processing via any provider. Sub-50ms response times globally.
 
 ### Payment Abstraction
 
 ```typescript
-// Unified payment interface
-interface PaymentProcessor {
-  createPaymentIntent(amount: number, currency: string): Promise<PaymentIntent>
-  confirmPayment(intentId: string, token: string): Promise<PaymentResult>
-  refund(chargeId: string, amount?: number): Promise<RefundResult>
-}
-
-// Implementations for every major processor
-const stripe = new StripeProcessor({ apiKey: '...' })
-const adyen = new AdyenProcessor({ apiKey: '...', merchantAccount: '...' })
-const square = new SquareProcessor({ accessToken: '...' })
-const paypal = new PayPalProcessor({ clientId: '...', clientSecret: '...' })
-
-// Use any processor
-await store.payments.configure({ processor: stripe })
+// Use any processor - just say it
+await shopify`use Stripe for payments`
+await shopify`enable PayPal checkout`
+await shopify`add Apple Pay and Google Pay`
 ```
 
 ## Why Open Source E-commerce?
@@ -695,10 +405,7 @@ kubectl apply -f shopify-do-deployment.yaml
 
 ```typescript
 // Edge for storefront, origin for admin
-await store.config.hybrid({
-  edge: ['storefront', 'cart', 'checkout'],
-  origin: ['admin', 'reporting', 'inventory'],
-})
+await shopify`run storefront at edge, admin at origin`
 ```
 
 ## Roadmap

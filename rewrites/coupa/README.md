@@ -6,41 +6,34 @@ Coupa built a $8B company (acquired by Thoma Bravo) managing enterprise procurem
 
 **coupa.do** is the open-source alternative. One-click deploy your own procurement platform. AI that actually finds savings. No per-seat ransomware.
 
-## The workers.do Way
-
-You're a CFO trying to control spend across a growing company. But your "spend management" platform costs more than some of the things you're buying. And half your team doesn't have seats because of per-user pricing.
-
-**workers.do** gives you AI that finds real savings:
+## AI-Native API
 
 ```typescript
-import { coupa, mark } from 'workers.do'
-
-// Natural language for procurement
-const savings = await coupa`find contracts up for renewal with negotiation leverage`
-const maverick = await coupa`show off-contract spend by department this quarter`
-const suppliers = await coupa`which suppliers have declining performance scores`
+import { coupa } from 'coupa.do'           // Full SDK
+import { coupa } from 'coupa.do/tiny'      // Minimal client
+import { coupa } from 'coupa.do/p2p'       // Procure-to-pay only
 ```
 
-Promise pipelining for procure-to-pay - one network round trip:
+Natural language for procurement workflows:
 
 ```typescript
-// Requisition to payment
-const paid = await coupa`create requisition for ${items} from ${supplier}`
-  .map(req => coupa`route for approval based on amount and category`)
-  .map(approved => coupa`generate PO and send to supplier portal`)
-  .map(received => coupa`three-way match and schedule payment`)
-  .map(invoice => mark`notify AP that ${invoice} is ready for payment`)
-```
+import { coupa } from 'coupa.do'
 
-AI agents that optimize your spend:
+// Talk to it like a procurement manager
+const pending = await coupa`POs pending approval over $10k`
+const maverick = await coupa`off-contract spend by department this quarter`
+const savings = await coupa`find me $500k in savings this year`
 
-```typescript
-import { priya, tom, sally } from 'agents.do'
+// Chain like sentences
+await coupa`contracts expiring Q2`
+  .map(contract => coupa`prepare renewal brief for ${contract}`)
 
-// Procurement intelligence
-await priya`analyze supplier concentration risk across categories`
-await tom`benchmark our SaaS spend against industry rates`
-await sally`prepare negotiation brief for ${vendor} renewal`
+// Procure-to-pay in one flow
+await coupa`requisition 5 laptops for Engineering`
+  .approve()      // routes based on amount and policy
+  .order()        // generates PO to preferred vendor
+  .receive()      // confirms delivery
+  .pay()          // three-way match and payment
 ```
 
 ## The Problem
@@ -77,7 +70,16 @@ Proprietary workflows           Open, customizable
 npx create-dotdo coupa
 ```
 
-Your own procurement platform. Every user. Every supplier. No per-seat pricing.
+A full procurement platform. Running on infrastructure you control. Every user, every supplier, no per-seat pricing.
+
+```typescript
+import { Coupa } from 'coupa.do'
+
+export default Coupa({
+  name: 'acme-procurement',
+  domain: 'procurement.acme.com',
+})
+```
 
 ## Features
 
@@ -86,579 +88,227 @@ Your own procurement platform. Every user. Every supplier. No per-seat pricing.
 Request what you need:
 
 ```typescript
-import { procure } from 'coupa.do'
+import { coupa } from 'coupa.do'
 
-// Create requisition
-const req = await procure.requisitions.create({
-  requestor: 'user-001',
-  department: 'Engineering',
-  type: 'goods',
-  justification: 'New laptops for Q1 hires',
-  lines: [
-    {
-      description: 'MacBook Pro 16" M3 Max',
-      category: 'IT Equipment',
-      quantity: 5,
-      unitPrice: 3499,
-      currency: 'USD',
-      supplier: 'Apple',
-      deliverTo: 'HQ - IT Closet',
-      needBy: '2025-02-15',
-    },
-    {
-      description: 'Apple Care+',
-      category: 'IT Equipment',
-      quantity: 5,
-      unitPrice: 399,
-      currency: 'USD',
-      supplier: 'Apple',
-    },
-  ],
-  attachments: ['equipment-justification.pdf'],
-  coding: {
-    costCenter: 'CC-001',
-    glAccount: '6410',
-    project: 'Q1-HIRING',
-  },
-})
+// Just ask for it
+await coupa`5 MacBook Pro M3 Max for Q1 hires, deliver to HQ IT closet by Feb 15`
 
-// Submit for approval
-await req.submit()
+// AI figures out supplier, pricing, coding, routing
+await coupa`office supplies for marketing, about $500`
+
+// Bulk requests read like a shopping list
+await coupa`
+  Engineering needs:
+  - 10 monitors for new hires
+  - standing desks for the Austin office
+  - ergonomic keyboards, same as last order
+`
 ```
 
 ### Approvals
 
-Flexible, rule-based workflows:
+Approvals flow naturally:
 
 ```typescript
-// Define approval rules
-await procure.approvals.configure({
-  rules: [
-    {
-      name: 'Manager Approval',
-      condition: 'amount > 0',
-      approvers: ['requestor.manager'],
-      required: true,
-    },
-    {
-      name: 'Director Approval',
-      condition: 'amount > 5000',
-      approvers: ['department.director'],
-      required: true,
-    },
-    {
-      name: 'VP Approval',
-      condition: 'amount > 25000',
-      approvers: ['department.vp'],
-      required: true,
-    },
-    {
-      name: 'Finance Review',
-      condition: 'amount > 50000 OR category IN ("Capital", "Professional Services")',
-      approvers: ['finance-team'],
-      required: true,
-    },
-    {
-      name: 'Executive Approval',
-      condition: 'amount > 100000',
-      approvers: ['cfo'],
-      required: true,
-    },
-  ],
+// Check what needs your attention
+await coupa`my pending approvals`
+await coupa`urgent approvals over $50k`
 
-  delegation: {
-    enabled: true,
-    maxDays: 30,
-    notifyDelegator: true,
-  },
+// Approve with context
+await coupa`approve REQ-001, consolidate with Q2 order if possible`
+await coupa`reject REQ-002, use preferred vendor instead`
+await coupa`return REQ-003 to Sarah for more detail`
 
-  escalation: {
-    afterDays: 3,
-    escalateTo: 'approver.manager',
-    notifyRequestor: true,
-  },
-})
-
-// Approve/reject with comments
-await procure.approvals.decide({
-  request: 'REQ-001',
-  decision: 'approve', // or 'reject', 'return'
-  comments: 'Approved. Please consolidate with Q2 order if possible.',
-  approver: 'user-002',
-})
+// Delegation when you're out
+await coupa`delegate my approvals to Mike for two weeks`
 ```
 
 ### Purchase Orders
 
-Professional PO management:
+POs in plain English:
 
 ```typescript
 // Create PO from approved requisition
-const po = await procure.purchaseOrders.create({
-  requisition: 'REQ-001',
-  supplier: 'SUP-APPLE',
-  terms: {
-    paymentTerms: 'Net 30',
-    incoterms: 'DDP',
-    currency: 'USD',
-  },
-  shippingAddress: {
-    attention: 'IT Department',
-    line1: '100 Main Street',
-    city: 'San Francisco',
-    state: 'CA',
-    postalCode: '94102',
-  },
-  instructions: 'Deliver to loading dock. Call (555) 123-4567 on arrival.',
-})
+await coupa`create PO for REQ-001 to Apple, Net 30, ship to SF office`
 
-// Send to supplier
-await po.send({
-  method: 'email', // or 'supplier-portal', 'edi', 'cxml'
-  contacts: ['orders@apple.com'],
-})
+// Or generate directly
+await coupa`PO to Dell for 20 laptops from the IT equipment contract`
 
-// Acknowledge receipt (by supplier)
-await po.acknowledge({
-  confirmedBy: 'apple-rep',
-  estimatedDelivery: '2025-02-10',
-  notes: 'All items in stock, shipping next week',
-})
+// Check status
+await coupa`open POs for Engineering this month`
+await coupa`POs pending supplier acknowledgment`
 
-// Receive goods
-await procure.receiving.create({
-  purchaseOrder: po.id,
-  receivedBy: 'user-003',
-  lines: [
-    { line: 1, quantityReceived: 5, condition: 'good' },
-    { line: 2, quantityReceived: 5, condition: 'good' },
-  ],
-  packing: 'SN12345678',
-})
+// Receiving is one line
+await coupa`received all items on PO-001`
+await coupa`received 5 of 10 monitors on PO-002, rest backordered`
 ```
 
 ### Invoices
 
-Three-way matching and payment:
+Three-way matching in natural language:
 
 ```typescript
-// Receive invoice
-const invoice = await procure.invoices.create({
-  supplier: 'SUP-APPLE',
-  invoiceNumber: 'INV-2025-001234',
-  invoiceDate: '2025-02-10',
-  dueDate: '2025-03-12',
-  lines: [
-    {
-      purchaseOrderLine: 'PO-001-1',
-      description: 'MacBook Pro 16" M3 Max',
-      quantity: 5,
-      unitPrice: 3499,
-      total: 17495,
-    },
-    {
-      purchaseOrderLine: 'PO-001-2',
-      description: 'Apple Care+',
-      quantity: 5,
-      unitPrice: 399,
-      total: 1995,
-    },
-  ],
-  tax: 1558.32,
-  total: 21048.32,
-  attachments: ['invoice-scan.pdf'],
-})
+// Process incoming invoices
+await coupa`match invoice from Apple INV-2025-001234`
 
-// Three-way match (PO, Receipt, Invoice)
-const match = await invoice.match()
-// {
-//   status: 'matched',
-//   poMatch: true,
-//   receiptMatch: true,
-//   priceMatch: true,
-//   quantityMatch: true,
-//   exceptions: []
-// }
+// Query invoice status
+await coupa`invoices not matched to POs`
+await coupa`invoices pending approval over $10k`
+await coupa`overdue invoices by supplier`
 
-// Auto-approve if matched
-if (match.status === 'matched') {
-  await invoice.approve({ auto: true })
-}
+// Handle exceptions naturally
+await coupa`why won't INV-001 match?`
+await coupa`approve INV-001 despite price variance, vendor raised prices`
 
 // Payment scheduling
-await procure.payments.schedule({
-  invoice: invoice.id,
-  paymentDate: '2025-03-10', // 2 days early for 2% discount
-  paymentMethod: 'ACH',
-  earlyPayDiscount: {
-    percentage: 2,
-    savings: 420.97,
-  },
-})
+await coupa`schedule INV-001 for early pay discount`
+await coupa`hold payment on INV-002 until quality issue resolved`
 ```
 
 ### Supplier Management
 
-Your supplier network:
+Know your suppliers:
 
 ```typescript
-// Onboard supplier
-const supplier = await procure.suppliers.create({
-  name: 'Apple Inc.',
-  type: 'vendor',
-  categories: ['IT Equipment', 'Software'],
-  contacts: [
-    {
-      name: 'Enterprise Sales',
-      email: 'enterprise@apple.com',
-      phone: '1-800-800-2775',
-      type: 'sales',
-    },
-    {
-      name: 'Accounts Receivable',
-      email: 'ar@apple.com',
-      type: 'billing',
-    },
-  ],
-  addresses: [
-    {
-      type: 'remit',
-      line1: 'One Apple Park Way',
-      city: 'Cupertino',
-      state: 'CA',
-      postalCode: '95014',
-    },
-  ],
-  payment: {
-    terms: 'Net 30',
-    method: 'ACH',
-    bankAccount: {
-      // Encrypted
-      bankName: 'Bank of America',
-      accountNumber: '****1234',
-      routingNumber: '****5678',
-    },
-  },
-  tax: {
-    id: '94-2404110',
-    w9OnFile: true,
-    type: '1099-NEC',
-  },
-})
+// Find and query suppliers
+await coupa`our top 10 suppliers by spend`
+await coupa`suppliers in IT Equipment category`
+await coupa`which suppliers have declining scores?`
 
-// Supplier qualification
-await procure.suppliers.qualify({
-  supplier: supplier.id,
-  questionnaire: 'standard-vendor',
-  responses: {
-    yearsInBusiness: 48,
-    annualRevenue: 394000000000,
-    publicCompany: true,
-    diversityCertifications: [],
-    insuranceCoverage: true,
-    socCompliance: true,
-  },
-  documents: ['w9.pdf', 'insurance-certificate.pdf'],
-})
+// Onboard naturally
+await coupa`add Apple as IT Equipment vendor, enterprise@apple.com`
+await coupa`request W-9 and insurance certificate from Apple`
 
-// Supplier performance
-const performance = await procure.suppliers.scorecard('SUP-APPLE')
-// {
-//   overall: 4.5,
-//   metrics: {
-//     onTimeDelivery: 0.96,
-//     qualityScore: 0.99,
-//     responsiveness: 4.2,
-//     priceCompetitiveness: 3.8,
-//     invoiceAccuracy: 0.98,
-//   },
-//   trend: 'stable',
-//   spendTTM: 250000,
-// }
+// Performance tracking
+await coupa`Apple scorecard`
+await coupa`suppliers with late delivery issues this quarter`
+await coupa`suppliers with expiring certifications`
 ```
 
 ### Contracts
 
-Procurement contract management:
+Contract management without the forms:
 
 ```typescript
-// Create contract
-await procure.contracts.create({
-  supplier: 'SUP-APPLE',
-  type: 'master-agreement',
-  title: 'Apple Enterprise Agreement 2025',
-  effectiveDate: '2025-01-01',
-  expirationDate: '2027-12-31',
-  value: {
-    type: 'estimated',
-    amount: 500000,
-    period: 'annual',
-  },
-  terms: {
-    paymentTerms: 'Net 30 with 2% 10-day discount',
-    priceProtection: '12 months',
-    volumeDiscounts: [
-      { threshold: 50, discount: 5 },
-      { threshold: 100, discount: 10 },
-      { threshold: 250, discount: 15 },
-    ],
-  },
-  pricingSchedule: 'pricing-schedule-2025.xlsx',
-  renewalType: 'auto',
-  noticePeriod: 90,
-})
+// Query contracts
+await coupa`contracts expiring in 90 days`
+await coupa`our agreement with Apple`
+await coupa`contracts with volume discounts we're not hitting`
 
-// Contract compliance check on PO
-await procure.purchaseOrders.checkContract('PO-001')
-// Validates pricing, terms, supplier status against contract
+// Contract intelligence
+await coupa`which contracts have renewal leverage?`
+await coupa`off-contract spend by category this quarter`
+await coupa`are we getting the contracted price on PO-001?`
+
+// Renewal prep
+await coupa`prepare negotiation brief for Apple renewal`
 ```
 
 ### Catalogs
 
-Guided buying from approved sources:
+Shopping from approved sources:
 
 ```typescript
-// Configure punch-out catalog
-await procure.catalogs.punchout({
-  supplier: 'SUP-AMAZON-BUSINESS',
-  name: 'Amazon Business',
-  protocol: 'cxml', // or 'oci'
-  credentials: {
-    identity: '...',
-    sharedSecret: '...',
-  },
-  url: 'https://www.amazon.com/punchout',
-  categories: ['Office Supplies', 'IT Accessories'],
-  maxOrderValue: 5000,
-})
+// Browse what's available
+await coupa`show me approved laptops`
+await coupa`office supplies catalog`
+await coupa`what can I buy from Amazon Business?`
 
-// Static catalog
-await procure.catalogs.create({
-  name: 'Preferred IT Equipment',
-  supplier: 'SUP-APPLE',
-  items: [
-    {
-      sku: 'MBP16-M3MAX',
-      name: 'MacBook Pro 16" M3 Max',
-      description: 'Laptop with M3 Max chip, 36GB RAM, 1TB SSD',
-      price: 3499,
-      category: 'IT Equipment',
-      image: 'https://...',
-    },
-    // ... more items
-  ],
-  contract: 'CTR-APPLE-2025',
-  validThrough: '2025-12-31',
-})
+// Smart recommendations
+await coupa`I need a laptop for a new developer`
+// AI suggests: "MacBook Pro 16" M3 Max from Apple contract at $3,499
+//              - 15% discount vs list
+//              - 2-day delivery available
+//              - 47 others ordered this quarter"
 ```
 
 ## Spend Analytics
 
-Understand where the money goes:
+Ask questions about your spend:
 
 ```typescript
-// Spend by category
-const categorySpend = await procure.analytics.spendByCategory({
-  period: '2024',
-  groupBy: 'category',
-})
-// [
-//   { category: 'IT Equipment', spend: 2400000, percentage: 24 },
-//   { category: 'Professional Services', spend: 1800000, percentage: 18 },
-//   { category: 'Marketing', spend: 1500000, percentage: 15 },
-//   ...
-// ]
+// Understand where money goes
+await coupa`spend by category this year`
+await coupa`top 20 suppliers by spend`
+await coupa`IT spend trend last 12 months`
 
-// Spend by supplier
-const supplierSpend = await procure.analytics.spendBySupplier({
-  period: '2024',
-  topN: 20,
-})
+// Find savings opportunities
+await coupa`maverick spend by department this quarter`
+await coupa`contracts we're underutilizing`
+await coupa`duplicate purchases across departments`
 
-// Maverick spend (off-contract)
-const maverickSpend = await procure.analytics.maverickSpend({
-  period: '2024-Q4',
-})
-// {
-//   total: 450000,
-//   percentage: 12,
-//   categories: [...],
-//   departments: [...],
-//   recommendations: [...]
-// }
-
-// Contract utilization
-const utilization = await procure.analytics.contractUtilization({
-  period: '2024',
-})
-// Shows spend vs contract commitments
+// Executive dashboards
+await coupa`spend summary for the board`
+await coupa`year-over-year savings from procurement`
 ```
 
 ## AI-Native Procurement
 
-### AI Spend Analysis
+### Procurement Intelligence
 
 ```typescript
-import { ada } from 'coupa.do/agents'
+// One question unlocks insights
+await coupa`find me $500K in savings this year`
+// AI analyzes spend patterns, contract leverage, pricing variance,
+// maverick spend, and early pay discounts - returns actionable plan
 
-// Identify savings opportunities
-await ada`
-  Analyze our 2024 spend data and identify:
-  1. Categories with supplier consolidation opportunity
-  2. Contracts up for renewal with negotiation leverage
-  3. Price variance for same items across suppliers
-  4. Maverick spend that should go through contracts
-  5. Early payment discount opportunities not being captured
-
-  Quantify potential savings for each opportunity.
-`
-
-// Ada analyzes and returns:
-// "Total identified savings opportunities: $847,000
-//
-// 1. SUPPLIER CONSOLIDATION: $320,000
-//    - IT Accessories: 12 suppliers, recommend 3 preferred
-//    - Office Supplies: Consolidate to Amazon Business
-//
-// 2. CONTRACT RENEWALS: $180,000
-//    - AWS contract expires Q2 - usage up 40%, negotiate volume discount
-//    - Salesforce - paying list price, competitors offering 25% off
-//
-// 3. PRICE VARIANCE: $127,000
-//    - Same Dell monitors: $499 vs $449 depending on buyer
-//    - Professional services: Rate card not enforced
-//
-// 4. MAVERICK SPEND: $145,000
-//    - Marketing buying software outside IT agreements
-//    - Regional offices purchasing office supplies locally
-//
-// 5. EARLY PAY DISCOUNTS: $75,000
-//    - $3.2M eligible for 2/10 Net 30, only capturing 40%"
+// Continuous monitoring
+await coupa`supplier risk alerts`
+await coupa`contracts expiring without coverage`
+await coupa`price increases above inflation`
 ```
 
-### AI Invoice Processing
+### Invoice Automation
 
 ```typescript
-import { ralph } from 'agents.do'
+// Drop in an invoice, AI handles the rest
+await coupa`process invoice from Apple`
+  .match()     // three-way match to PO and receipt
+  .code()      // GL coding from patterns
+  .approve()   // auto-approve if clean
 
-// Auto-extract invoice data
-await ralph`
-  Process the attached invoice image:
-  1. Extract supplier, invoice number, date, amounts
-  2. Match line items to open POs
-  3. Identify any discrepancies
-  4. Flag unusual items or pricing
-  5. Code to appropriate GL accounts
-`
-
-// Ralph processes:
-// "Invoice processed: INV-2025-001234
-//
-// Match Results:
-// - Line 1: Matched to PO-001 Line 1 (5x MacBook Pro) ✓
-// - Line 2: Matched to PO-001 Line 2 (5x AppleCare) ✓
-// - Tax: Matches expected rate (8%) ✓
-//
-// No exceptions. Ready for auto-approval."
+// Exception handling
+await coupa`invoices with matching exceptions`
+  .map(inv => coupa`explain why ${inv} won't match`)
 ```
 
-### AI Contract Negotiation
+### Negotiation Support
 
 ```typescript
 import { sally } from 'agents.do'
 
-// Prepare for supplier negotiation
-await sally`
-  We're renewing our Salesforce contract:
-  - Current annual spend: $450,000
-  - Contract expires: March 31, 2025
-  - Current discount: 15% off list
+// Prep for renewals in one line
+await sally`prepare Salesforce renewal brief, current spend $450K`
+// Returns: market benchmarks, leverage points, target pricing, BATNA
 
-  Research:
-  1. What are competitors paying? (benchmark data)
-  2. What leverage do we have?
-  3. What additional services should we negotiate?
-  4. What's our BATNA?
-
-  Provide negotiation strategy and target pricing.
-`
-
-// Sally provides:
-// "NEGOTIATION BRIEF: Salesforce Renewal
-//
-// MARKET INTELLIGENCE:
-// - Similar-sized companies averaging 25-30% discount
-// - New competitors (HubSpot, Dynamics) actively pursuing accounts
-// - Salesforce pushing multi-year deals for better rates
-//
-// LEVERAGE POINTS:
-// - Contract expiring in 60 days - time pressure on both sides
-// - 85% license utilization - room to right-size
-// - Competitor quote in hand (HubSpot -40%)
-//
-// TARGET:
-// - 30% discount (from 15%)
-// - Right-size to 90% current licenses
-// - Include Premier Support (currently paying extra)
-// - 2-year term max (preserve flexibility)
-//
-// EXPECTED OUTCOME: $130,000 annual savings"
+// Bulk renewal prep
+await coupa`contracts expiring Q2`
+  .map(contract => sally`negotiation brief for ${contract}`)
 ```
 
-### AI Supplier Risk
+### Supplier Risk Monitoring
 
 ```typescript
 import { tom } from 'agents.do'
 
-// Monitor supplier risk
-await tom`
-  Assess risk across our top 50 suppliers:
-  1. Financial stability (public filings, credit ratings)
-  2. Concentration risk (% of our spend, alternatives)
-  3. Geographic risk (single source, political stability)
-  4. Compliance risk (certifications, audits)
-  5. Cyber risk (security posture, breaches)
+// Continuous risk assessment
+await tom`assess risk across our top 50 suppliers`
 
-  Flag any suppliers requiring immediate action.
-`
-
-// Tom monitors continuously:
-// "SUPPLIER RISK ALERT
-//
-// HIGH RISK (Immediate Action Required):
-// - SUP-047 (ChipTech Inc): Credit rating downgraded B- to C+
-//   Action: Accelerate second-source qualification
-//   Exposure: $2.1M annual spend, 90-day lead time
-//
-// MEDIUM RISK (Monitor):
-// - SUP-012 (GlobalWidgets): 100% of Category X spend
-//   Recommendation: Qualify alternative supplier
-//
-// - SUP-089 (DataCorp): SOC 2 certification expired
-//   Action: Request updated certification"
+// Alert on changes
+await coupa`suppliers with credit downgrades`
+await coupa`single-source categories`
+await coupa`suppliers with expiring SOC 2 certs`
 ```
 
-### AI Purchase Recommendations
+### Smart Recommendations
 
 ```typescript
 import { priya } from 'agents.do'
 
-// Smart recommendations
-await priya`
-  User wants to purchase 10 laptops for new hires.
-  Based on:
-  - Our preferred vendors and contracts
-  - Historical purchases
-  - Budget constraints
-  - Delivery requirements
-
-  Recommend:
-  1. Best value option
-  2. Best performance option
-  3. Most compliant option
-
-  Include pricing, availability, and approval requirements.
-`
+// AI suggests based on context
+await priya`recommend laptops for 10 new hires`
+// Returns options ranked by value, performance, compliance
+// with pricing, availability, and approval requirements
 ```
 
 ## Architecture
@@ -689,90 +339,33 @@ CompanyDO (config, users, approval rules)
         +-- R2: Data warehouse
 ```
 
-### Integration Architecture
+### Integrations
+
+Connect to your systems naturally:
 
 ```typescript
-// ERP Integration
-await procure.integrations.erp({
-  system: 'netsuite', // or 'sap', 'oracle', 'dynamics'
-  sync: {
-    vendors: 'bidirectional',
-    glAccounts: 'pull',
-    purchaseOrders: 'push',
-    invoices: 'push',
-    payments: 'pull',
-  },
-  schedule: 'real-time', // or 'hourly', 'daily'
-})
+// ERP sync just works
+await coupa`sync vendors and GL accounts from NetSuite`
+await coupa`push approved POs to SAP`
 
-// Banking Integration
-await procure.integrations.banking({
-  provider: 'plaid', // or direct bank API
-  accounts: ['operating', 'payables'],
-  capabilities: ['balance', 'payments', 'reconciliation'],
-})
-
-// Supplier Portal
-await procure.supplierPortal.configure({
-  domain: 'suppliers.yourcompany.com',
-  capabilities: [
-    'view-pos',
-    'submit-invoices',
-    'update-profile',
-    'view-payments',
-    'upload-documents',
-  ],
-})
+// Supplier portal included
+await coupa`enable supplier portal for our vendors`
+// Suppliers can view POs, submit invoices, check payment status
 ```
 
-### Workflow Engine
+## vs Coupa
 
-```typescript
-// Complex approval workflows
-await procure.workflows.create({
-  name: 'Capital Equipment Approval',
-  trigger: {
-    type: 'requisition',
-    conditions: ['category = Capital', 'amount > 10000'],
-  },
-  steps: [
-    {
-      name: 'Manager Approval',
-      type: 'approval',
-      assignee: 'requestor.manager',
-      sla: '2 business days',
-    },
-    {
-      name: 'Budget Check',
-      type: 'automatic',
-      action: 'checkBudget',
-      onFail: 'routeToFinance',
-    },
-    {
-      name: 'IT Review',
-      type: 'approval',
-      assignee: 'it-team',
-      condition: 'category = IT Equipment',
-    },
-    {
-      name: 'Finance Approval',
-      type: 'approval',
-      assignee: 'finance-team',
-      parallel: true,
-    },
-    {
-      name: 'Executive Approval',
-      type: 'approval',
-      assignee: 'cfo',
-      condition: 'amount > 50000',
-    },
-  ],
-  escalation: {
-    after: '5 business days',
-    action: 'notifyProcurement',
-  },
-})
-```
+| Feature | Coupa | coupa.do |
+|---------|-------|----------|
+| **Per-User Cost** | $150-300/month | $0 - run your own |
+| **Implementation** | $500K-2M | Deploy in hours |
+| **Supplier Network** | Locked to their network | Your suppliers, direct |
+| **AI/Analytics** | Premium upsell | AI-native from day one |
+| **Customization** | Consultant required | Configure yourself |
+| **Data Location** | Their cloud | Your Cloudflare account |
+| **Workflow Changes** | Change request process | Code it yourself |
+| **API Access** | Limited, extra cost | Full access, open |
+| **Lock-in** | Years of migration | MIT licensed |
 
 ## Why Open Source for Procurement?
 
@@ -846,11 +439,9 @@ kubectl apply -f coupa-do-deployment.yaml
 ### Hybrid
 
 ```typescript
-// Edge for requisitions, origin for analytics
-await procure.config.hybrid({
-  edge: ['requisitions', 'approvals', 'catalogs'],
-  origin: ['invoices', 'payments', 'analytics'],
-})
+// Edge for fast user experience, origin for heavy analytics
+await coupa`run requisitions and approvals at the edge`
+await coupa`run analytics on origin for heavy queries`
 ```
 
 ## Roadmap
@@ -918,7 +509,12 @@ MIT License - Procure freely.
 ---
 
 <p align="center">
-  <strong>coupa.do</strong> is part of the <a href="https://dotdo.dev">dotdo</a> platform.
+  <strong>The $8B acquisition ends here.</strong>
   <br />
-  <a href="https://coupa.do">Website</a> | <a href="https://docs.coupa.do">Docs</a> | <a href="https://discord.gg/dotdo">Discord</a>
+  AI-native. Every user. No per-seat pricing.
+  <br /><br />
+  <a href="https://coupa.do">Website</a> |
+  <a href="https://docs.coupa.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/coupa.do">GitHub</a>
 </p>

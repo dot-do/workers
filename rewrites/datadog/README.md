@@ -6,46 +6,71 @@ Datadog dominates modern observability. But at $15-34/host/month for infrastruct
 
 **datadog.do** reimagines observability for the AI era. Full APM. Unlimited logs. Zero per-host pricing.
 
+## AI-Native API
+
+```typescript
+import { datadog } from 'datadog.do'           // Full SDK
+import { datadog } from 'datadog.do/tiny'      // Minimal client
+import { datadog } from 'datadog.do/metrics'   // Metrics-only operations
+```
+
+Natural language for observability:
+
+```typescript
+import { datadog } from 'datadog.do'
+
+// Talk to it like an SRE
+const health = await datadog`production health right now`
+const errors = await datadog`errors in production last hour`
+const slow = await datadog`slowest endpoints this week`
+
+// Chain like sentences
+await datadog`services with high error rate`
+  .map(service => datadog`root cause for ${service}`)
+  .map(cause => datadog`recommended fix for ${cause}`)
+
+// Incidents that investigate themselves
+await datadog`investigate the 3am outage`
+  .correlate()      // cross-reference logs, traces, metrics
+  .timeline()       // build incident timeline
+  .report()         // generate post-mortem
+```
+
 ## The Problem
 
 Datadog built an observability empire on:
 
-- **Per-host pricing** - $15/host/month (Infrastructure), $31/host/month (APM)
-- **Per-GB log pricing** - $0.10/GB ingested, $1.27/GB indexed (15-day retention)
-- **Custom metrics explosion** - $0.05/metric/month, scales to $100k+ easily
-- **Data retention costs** - Historical data requires expensive plans
-- **Feature fragmentation** - APM, Logs, Metrics, RUM, Security all priced separately
-- **Unpredictable bills** - Usage spikes = surprise invoices
+| What Datadog Charges | The Reality |
+|----------------------|-------------|
+| **Per-host pricing** | $15/host (Infra), $31/host (APM) |
+| **Per-GB logs** | $0.10/GB ingested, $1.27/GB indexed |
+| **Custom metrics** | $0.05/metric/month, scales to $100k+ |
+| **Retention** | Historical data requires expensive plans |
+| **Fragmentation** | APM, Logs, Metrics, RUM all priced separately |
+| **Unpredictable** | Usage spikes = surprise invoices |
+
+### The Observability Tax
 
 A 500-host infrastructure with logs and APM? **$300k+/year**. With custom metrics and long retention? **$500k+**.
 
-## The workers.do Way
+### The Dashboard Maze
 
-It's 3am. Your pager goes off. Production is down. You need answers now - not after navigating five dashboards and writing three queries. Every minute of downtime costs money. Every metric you track costs money. You're paying to find problems and paying while they burn.
+When production is down:
+- Navigate five dashboards
+- Write three queries
+- Correlate manually
+- Every minute costs money
 
-What if incident response was a conversation?
+### The Alert Fatigue
 
-```typescript
-import { datadog, tom } from 'workers.do'
-
-// Natural language observability
-const status = await datadog`what's the health of production right now?`
-const cause = await datadog`why is the API slow?`
-const alert = await datadog`alert when ${metric} exceeds ${threshold}`
-
-// Chain diagnostics into resolution
-const resolution = await datadog`show me the error spike timeline`
-  .map(timeline => datadog`correlate with deployments and changes`)
-  .map(correlation => tom`identify root cause and suggest fix for ${correlation}`)
-```
-
-One import. Natural language. AI-powered incident response.
-
-That's observability that works for you.
+- Too many alerts = ignored alerts
+- Too few alerts = missed incidents
+- Threshold tuning is a full-time job
+- AI "assistants" add complexity, not clarity
 
 ## The Solution
 
-**datadog.do** is Datadog reimagined:
+**datadog.do** reimagines observability:
 
 ```
 Traditional Datadog             datadog.do
@@ -66,449 +91,188 @@ npx create-dotdo datadog
 
 Your own Datadog. Running on Cloudflare. No per-host fees.
 
-## Full-Stack Observability
-
-Everything you need to monitor your infrastructure:
-
 ```typescript
-import { datadog } from 'datadog.do'
+import { Datadog } from 'datadog.do'
 
-// Metrics
-datadog.gauge('app.queue.size', 42, { queue: 'main' })
-datadog.count('app.requests.count', 1, { endpoint: '/api/users' })
-datadog.histogram('app.request.duration', 0.234, { endpoint: '/api/users' })
-
-// Logs
-datadog.log.info('User signed up', {
-  userId: 'user-123',
-  plan: 'pro',
-  source: 'auth-service',
-})
-
-// Traces
-const span = datadog.trace.startSpan('http.request', {
-  service: 'api-gateway',
-  resource: '/api/users',
-})
-
-// Events
-datadog.event({
-  title: 'Deployment completed',
-  text: 'Version 2.3.1 deployed to production',
-  tags: ['environment:production', 'service:api'],
+export default Datadog({
+  name: 'acme-observability',
+  domain: 'monitor.acme.io',
+  retention: {
+    metrics: '90d',
+    logs: '365d',
+    traces: '30d',
+  },
 })
 ```
 
 ## Features
 
-### Infrastructure Monitoring
-
-Monitor hosts, containers, and services:
-
-```typescript
-import { Infrastructure } from 'datadog.do/infra'
-
-// Host metrics (auto-collected with agent)
-// CPU, memory, disk, network, processes
-
-// Container metrics
-const containers = await Infrastructure.containers({
-  filter: 'kube_namespace:production',
-})
-
-// Kubernetes
-const k8s = await Infrastructure.kubernetes({
-  cluster: 'production',
-  metrics: ['pods', 'deployments', 'nodes'],
-})
-
-// Cloud integrations
-await Infrastructure.integrate({
-  provider: 'cloudflare',
-  metrics: ['workers', 'r2', 'd1'],
-})
-```
-
-### Application Performance Monitoring (APM)
-
-End-to-end distributed tracing:
-
-```typescript
-import { tracer } from 'datadog.do/apm'
-
-// Auto-instrument common libraries
-tracer.use('http')
-tracer.use('pg')
-tracer.use('redis')
-tracer.use('fetch')
-
-// Manual instrumentation
-app.get('/api/users', async (c) => {
-  const span = tracer.startSpan('get_users')
-
-  try {
-    const users = await span.trace('db.query', async () => {
-      return db.query('SELECT * FROM users')
-    })
-
-    span.setTag('user.count', users.length)
-    return c.json(users)
-  } catch (error) {
-    span.setError(error)
-    throw error
-  } finally {
-    span.finish()
-  }
-})
-
-// Service map auto-generated from traces
-// Latency distributions, error rates, throughput
-```
-
-### Log Management
-
-Unlimited log ingestion and analysis:
-
-```typescript
-import { logs } from 'datadog.do/logs'
-
-// Structured logging
-logs.info('Order processed', {
-  orderId: 'order-123',
-  amount: 99.99,
-  customer: 'user-456',
-})
-
-// Log parsing pipelines
-const pipeline = logs.pipeline({
-  name: 'Nginx Access Logs',
-  source: 'nginx',
-  processors: [
-    { type: 'grok', pattern: '%{COMBINEDAPACHELOG}' },
-    { type: 'date', source: 'timestamp', target: '@timestamp' },
-    { type: 'geo', source: 'client_ip', target: 'geo' },
-    { type: 'useragent', source: 'agent', target: 'browser' },
-  ],
-})
-
-// Log queries
-const results = await logs.query({
-  query: 'service:api-gateway status:error',
-  from: '-15m',
-  to: 'now',
-  facets: ['@http.status_code', '@error.type'],
-})
-
-// Log archives (to R2)
-logs.archive({
-  query: '*',
-  destination: 'r2://logs-archive',
-  retention: '365d',
-})
-```
-
 ### Metrics
 
-Custom metrics without the per-metric cost:
-
 ```typescript
-import { metrics } from 'datadog.do/metrics'
+// Query metrics naturally
+await datadog`CPU usage for web servers last 24 hours`
+await datadog`memory trend for api-gateway this week`
+await datadog`disk usage above 80%`
 
-// Gauge (current value)
-metrics.gauge('app.connections.active', 42, {
-  service: 'api',
-  region: 'us-east',
-})
-
-// Count (increments)
-metrics.count('app.requests', 1, {
-  endpoint: '/api/users',
-  method: 'GET',
-  status: '200',
-})
-
-// Histogram (distributions)
-metrics.histogram('app.latency', 0.234, {
-  endpoint: '/api/users',
-  percentiles: [0.5, 0.95, 0.99],
-})
-
-// Distribution (global percentiles)
-metrics.distribution('app.request.duration', 0.234, {
-  service: 'api',
-})
-
-// Rate (per-second)
-metrics.rate('app.throughput', eventCount, {
-  service: 'api',
-})
-
-// Set (unique values)
-metrics.set('app.users.unique', userId, {
-  time_window: '1h',
-})
+// AI infers what you need
+await datadog`web servers`                    // returns host list
+await datadog`web servers CPU`                // returns metrics
+await datadog`web servers CPU trending up`    // returns analysis
 ```
 
-### Dashboards
-
-Build real-time dashboards:
+### Logs
 
 ```typescript
-import { Dashboard, Widget } from 'datadog.do/dashboard'
+// Search logs naturally
+await datadog`logs containing "timeout" in production`
+await datadog`errors from api-gateway last hour`
+await datadog`payment failures today`
 
-const infraDashboard = Dashboard({
-  title: 'Infrastructure Overview',
-  layout: 'ordered',
-  widgets: [
-    Widget.timeseries({
-      title: 'CPU Usage',
-      query: 'avg:system.cpu.user{*} by {host}',
-      display: 'line',
-    }),
-    Widget.topList({
-      title: 'Top Hosts by Memory',
-      query: 'top(avg:system.mem.used{*} by {host}, 10)',
-    }),
-    Widget.queryValue({
-      title: 'Total Requests',
-      query: 'sum:app.requests{*}.as_count()',
-      precision: 0,
-    }),
-    Widget.heatmap({
-      title: 'Request Latency',
-      query: 'avg:app.latency{*} by {endpoint}',
-    }),
-    Widget.hostmap({
-      title: 'Host Map',
-      query: 'avg:system.cpu.user{*} by {host}',
-      color: 'cpu',
-      size: 'memory',
-    }),
-    Widget.logStream({
-      title: 'Error Logs',
-      query: 'status:error',
-      columns: ['timestamp', 'service', 'message'],
-    }),
-  ],
-})
+// Chain for investigation
+await datadog`errors spiking in checkout`
+  .each(error => error.trace())    // get related traces
+```
+
+### Traces
+
+```typescript
+// Distributed tracing in plain English
+await datadog`slow requests to /api/users`
+await datadog`traces with errors in payment-service`
+await datadog`p99 latency for checkout flow`
+
+// Follow the request path
+await datadog`trace the slow request from user-123`
+  .visualize()   // flame graph
 ```
 
 ### Alerting
 
-Proactive monitoring with alerts:
-
 ```typescript
-import { Monitor } from 'datadog.do/monitors'
+// Alerts as sentences
+await datadog`alert when CPU > 90% for 5 minutes`
+await datadog`alert when error rate > 5% for 5 minutes`
+await datadog`alert when p99 latency > 2 seconds`
+await datadog`alert when disk usage > 80%`
 
-// Metric alert
-const cpuAlert = Monitor({
-  name: 'High CPU Usage',
-  type: 'metric',
-  query: 'avg(last_5m):avg:system.cpu.user{*} by {host} > 90',
-  message: `
-    CPU usage is above 90% on {{host.name}}.
+// Smart alerts
+await datadog`alert when traffic is anomalous`
+await datadog`alert when checkout errors spike`
 
-    Current value: {{value}}
-
-    @slack-ops-alerts
-  `,
-  thresholds: {
-    critical: 90,
-    warning: 80,
-  },
-  renotify_interval: 300,
-})
-
-// Log alert
-const errorAlert = Monitor({
-  name: 'Error Rate Spike',
-  type: 'log',
-  query: 'logs("status:error").rollup("count").by("service").last("5m") > 100',
-  message: 'Error rate spike in {{service.name}}',
-})
-
-// APM alert
-const latencyAlert = Monitor({
-  name: 'High Latency',
-  type: 'apm',
-  query: 'avg(last_5m):avg:trace.http.request.duration{service:api} > 1',
-  message: 'API latency exceeds 1 second',
-})
-
-// Composite alert
-const compositeAlert = Monitor({
-  name: 'Service Degradation',
-  type: 'composite',
-  query: '${cpu_alert} && ${error_alert}',
-  message: 'Service experiencing both high CPU and error spikes',
-})
-
-// Anomaly detection
-const anomalyAlert = Monitor({
-  name: 'Traffic Anomaly',
-  type: 'metric',
-  query: 'avg(last_4h):anomalies(avg:app.requests{*}, "basic", 2) >= 1',
-  message: 'Unusual traffic pattern detected',
-})
+// Composite alerts
+await datadog`alert when high CPU and high error rate together`
 ```
 
-### Real User Monitoring (RUM)
-
-Monitor frontend performance:
+### Dashboards
 
 ```typescript
-import { RUM } from 'datadog.do/rum'
+// Create dashboards naturally
+await datadog`dashboard for production infrastructure`
+await datadog`dashboard for api-gateway performance`
+await datadog`dashboard for checkout flow`
 
-// Initialize RUM
-RUM.init({
-  applicationId: 'your-app-id',
-  clientToken: 'your-token',
-  site: 'your-org.datadog.do',
-  service: 'my-web-app',
-  trackInteractions: true,
-  trackResources: true,
-  trackLongTasks: true,
-})
+// Query dashboards
+await datadog`show me the infrastructure dashboard`
+```
 
-// Custom user actions
-RUM.addAction('checkout_clicked', {
-  cartValue: 99.99,
-  itemCount: 3,
-})
+### Infrastructure
 
-// Custom errors
-RUM.addError(error, {
-  context: { userId: 'user-123' },
-})
+```typescript
+// Host and container monitoring
+await datadog`hosts with high CPU`
+await datadog`containers in production namespace`
+await datadog`pods restarting in kubernetes`
 
-// User identification
-RUM.setUser({
-  id: 'user-123',
-  email: 'user@example.com',
-  plan: 'pro',
-})
+// Cloud resources
+await datadog`cloudflare workers by region`
+await datadog`r2 buckets by size`
+await datadog`d1 databases by query count`
+```
+
+### APM
+
+```typescript
+// Application performance in plain English
+await datadog`services with highest error rate`
+await datadog`slowest database queries`
+await datadog`api-gateway dependencies`
+
+// Service health
+await datadog`is checkout service healthy?`
+await datadog`what's blocking payment-service?`
+```
+
+### RUM
+
+```typescript
+// Real user monitoring
+await datadog`page load times this week`
+await datadog`javascript errors on checkout page`
+await datadog`users affected by slow performance`
+
+// User journeys
+await datadog`users dropping off at checkout`
+await datadog`conversion rate by browser`
 ```
 
 ### Synthetic Monitoring
 
-Proactive testing:
-
 ```typescript
-import { Synthetics } from 'datadog.do/synthetics'
-
-// API test
-const apiTest = Synthetics.api({
-  name: 'Health Check',
-  request: {
-    method: 'GET',
-    url: 'https://api.example.com/health',
-  },
-  assertions: [
-    { type: 'statusCode', operator: 'is', target: 200 },
-    { type: 'responseTime', operator: 'lessThan', target: 500 },
-    { type: 'body', operator: 'contains', target: '"status":"healthy"' },
-  ],
-  locations: ['us-east-1', 'eu-west-1', 'ap-southeast-1'],
-  frequency: 60,
-})
-
-// Browser test
-const browserTest = Synthetics.browser({
-  name: 'Login Flow',
-  startUrl: 'https://app.example.com/login',
-  steps: [
-    { type: 'typeText', selector: '#email', value: 'test@example.com' },
-    { type: 'typeText', selector: '#password', value: 'password' },
-    { type: 'click', selector: 'button[type="submit"]' },
-    { type: 'assertText', selector: '.welcome', value: 'Welcome' },
-  ],
-  frequency: 300,
-})
+// Proactive testing as sentences
+await datadog`check api.acme.com/health every minute`
+await datadog`test login flow from all regions`
+await datadog`verify checkout completes under 3 seconds`
 ```
 
-## AI-Native Features
+## AI-Native Observability
 
-### Natural Language Queries
-
-Ask questions about your infrastructure:
+### Incident Response
 
 ```typescript
-import { ask } from 'datadog.do'
-
-// Simple questions
-const q1 = await ask('what is the current CPU usage across all hosts?')
-// { value: 45, unit: '%', trend: 'stable' }
+// Ask questions about your infrastructure
+await datadog`what's wrong with production right now?`
+await datadog`why is the API slow?`
+await datadog`what changed before the errors started?`
 
 // Diagnostic questions
-const q2 = await ask('why is the API slow right now?')
-// {
-//   diagnosis: 'Database connection pool saturated',
-//   evidence: [...],
-//   recommendations: ['Increase pool size', 'Add read replicas']
-// }
-
-// Comparative questions
-const q3 = await ask('how does this week compare to last week?')
-// { comparison: {...}, anomalies: [...] }
-
-// Root cause questions
-const q4 = await ask('what caused the outage at 3pm?')
-// { timeline: [...], rootCause: '...', impact: '...' }
+await datadog`root cause of the 3am outage`
+await datadog`how does this week compare to last week?`
+await datadog`what's different about the slow requests?`
 ```
 
 ### Watchdog (AI Detection)
 
-AI-powered anomaly detection:
-
 ```typescript
-import { Watchdog } from 'datadog.do'
+// AI finds anomalies automatically
+await datadog`enable watchdog for production services`
+await datadog`watchdog alerts last 24 hours`
+await datadog`explain the latency anomaly in api-gateway`
 
-// Enable AI monitoring
-Watchdog.enable({
-  services: ['api', 'web', 'worker'],
-  sensitivity: 'medium',
-})
-
-// Get AI-detected issues
-const issues = await Watchdog.issues({
-  from: '-24h',
-  severity: ['critical', 'high'],
-})
-
-for (const issue of issues) {
-  console.log(issue.title)
-  // "Latency spike in api-gateway"
-
-  console.log(issue.impact)
-  // "Affecting 15% of requests"
-
-  console.log(issue.rootCause)
-  // "Correlated with database connection spike"
-
-  console.log(issue.relatedSpans)
-  // Links to affected traces
-}
+// AI correlates across signals
+await datadog`correlate error spike with recent deployments`
+await datadog`what else changed when checkout broke?`
 ```
 
 ### AI Agents as SREs
-
-AI agents for incident response:
 
 ```typescript
 import { tom, quinn } from 'agents.do'
 import { datadog } from 'datadog.do'
 
 // Tech lead investigates incident
-const investigation = await tom`
-  investigate the current elevated error rate in production
-  correlate logs, traces, and metrics to find the root cause
-`
+await tom`investigate the elevated error rate in production`
+  .using(datadog)
+  .report()
 
 // QA validates fix
-const validation = await quinn`
-  verify that the deployment fixed the issue
-  compare error rates before and after
-`
+await quinn`verify the deployment fixed the issue`
+  .compare('error rate before and after')
+
+// Chain investigation into resolution
+await datadog`services with errors right now`
+  .map(service => tom`diagnose ${service} and suggest fix`)
+  .map(fix => quinn`test that ${fix} resolves the issue`)
 ```
 
 ## Architecture
@@ -569,17 +333,15 @@ Metrics Logs Traces Events
 ### Query Engine
 
 ```typescript
-// Metrics queries (Datadog Query Language compatible)
-query('avg:system.cpu.user{*} by {host}')
-query('sum:app.requests{env:prod}.as_count().rollup(sum, 60)')
-query('top(avg:app.latency{*} by {endpoint}, 10, mean)')
+// Natural language queries compile to DQL
+await datadog`average CPU across web servers`
+// -> avg:system.cpu.user{role:web} by {host}
 
-// Log queries
-query('service:api status:error @http.status_code:500')
-query('service:api @duration:>1000')
+await datadog`requests per second in production`
+// -> sum:app.requests{env:prod}.as_count().rollup(sum, 60)
 
-// Trace queries
-query('service:api operation:http.request @duration:>1s')
+await datadog`slowest 10 endpoints`
+// -> top(avg:app.latency{*} by {endpoint}, 10, mean)
 ```
 
 ## Agent Installation
@@ -622,16 +384,14 @@ spec:
 ### Cloudflare Workers
 
 ```typescript
-import { instrument } from 'datadog.do/worker'
+import { datadog } from 'datadog.do'
 
-export default instrument({
+// Auto-instrumentation - just wrap your worker
+export default datadog.instrument({
   async fetch(request, env, ctx) {
     // Your worker code
-    // Automatically captures traces, logs, metrics
+    // Traces, logs, metrics collected automatically
   },
-}, {
-  service: 'my-worker',
-  env: 'production',
 })
 ```
 
@@ -639,52 +399,64 @@ export default instrument({
 
 ### Agent Compatibility
 
-The datadog.do agent is compatible with Datadog's agent protocol:
+Point your existing agent to datadog.do:
 
 ```bash
-# Switch site to your datadog.do instance
-DD_SITE=your-org.datadog.do DD_API_KEY=your-key \
-  datadog-agent run
-```
-
-### API Compatibility
-
-Drop-in replacement for Datadog API:
-
-```
-Endpoint                        Status
------------------------------------------------------------------
-POST /api/v1/series             Supported
-POST /api/v1/distribution_points Supported
-POST /api/v1/check_run          Supported
-POST /api/v1/events             Supported
-POST /api/v1/logs               Supported (v2 also)
-POST /api/v1/intake             Supported
-GET  /api/v1/query              Supported
+DD_SITE=your-org.datadog.do DD_API_KEY=your-key datadog-agent run
 ```
 
 ### Dashboard Migration
 
-```bash
-# Export from Datadog
-datadog-export dashboards --output ./dashboards
+```typescript
+// Migrate dashboards with one command
+await datadog`import dashboards from datadog`
+await datadog`import monitors from datadog`
+await datadog`import synthetic tests from datadog`
+```
 
-# Import to datadog.do
-npx datadog-migrate import ./dashboards
+Or use the CLI:
+
+```bash
+npx datadog-migrate import --from-datadog --all
 ```
 
 ## Integrations
 
+```typescript
+// Enable integrations naturally
+await datadog`connect to AWS`
+await datadog`connect to Cloudflare`
+await datadog`connect to PostgreSQL`
+
+// Or specify details
+await datadog`monitor kubernetes cluster production`
+await datadog`track GitHub Actions deployments`
+```
+
 Pre-built integrations for common services:
 
 | Category | Integrations |
-|----------|-------------|
+|----------|-----------|
 | **Cloud** | AWS, GCP, Azure, Cloudflare |
 | **Containers** | Docker, Kubernetes, ECS |
 | **Databases** | PostgreSQL, MySQL, Redis, MongoDB |
 | **Web** | Nginx, Apache, HAProxy |
 | **Languages** | Node.js, Python, Go, Java, Ruby |
 | **CI/CD** | GitHub Actions, GitLab CI, Jenkins |
+
+## vs Datadog
+
+| Feature | Datadog | datadog.do |
+|---------|---------|------------|
+| **Infrastructure** | $15/host/month | $0 - run your own |
+| **APM** | $31/host/month | $0 - run your own |
+| **Logs** | $1.27/GB indexed | Unlimited (R2 storage) |
+| **Custom metrics** | $0.05/metric/month | Unlimited |
+| **Retention** | 15 days (logs) | Unlimited |
+| **Data location** | Datadog's cloud | Your Cloudflare account |
+| **Query language** | DQL | Natural language + DQL |
+| **AI features** | Watchdog | AI-native from day one |
+| **Lock-in** | Proprietary | MIT licensed |
 
 ## Roadmap
 
@@ -712,6 +484,23 @@ Observability shouldn't cost millions:
 
 Datadog showed the world what modern observability could be. **datadog.do** makes it accessible to everyone.
 
+## Contributing
+
+datadog.do is open source under the MIT license.
+
+We especially welcome contributions from:
+- SREs and DevOps engineers
+- Observability experts
+- AI/ML engineers
+- Infrastructure engineers
+
+```bash
+git clone https://github.com/dotdo/datadog.do
+cd datadog.do
+pnpm install
+pnpm test
+```
+
 ## License
 
 MIT License - Monitor everything. Alert on anything. Pay for storage, not seats.
@@ -719,7 +508,12 @@ MIT License - Monitor everything. Alert on anything. Pay for storage, not seats.
 ---
 
 <p align="center">
-  <strong>datadog.do</strong> is part of the <a href="https://dotdo.dev">dotdo</a> platform.
+  <strong>The $18B valuation ends here.</strong>
   <br />
-  <a href="https://datadog.do">Website</a> | <a href="https://docs.datadog.do">Docs</a> | <a href="https://discord.gg/dotdo">Discord</a>
+  AI-native. Open source. Your data.
+  <br /><br />
+  <a href="https://datadog.do">Website</a> |
+  <a href="https://docs.datadog.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/datadog.do">GitHub</a>
 </p>

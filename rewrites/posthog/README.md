@@ -1,53 +1,205 @@
 # posthog.do
 
-PostHog on Cloudflare Durable Objects - Product analytics for every AI agent.
+> Product Analytics. Edge-Native. AI-First. Open by Default.
+
+PostHog charges $450/month for 2M events. Requires self-hosting for privacy. Treats AI agents as afterthoughts. Feature flags need configuration UIs. Funnels require point-and-click builders.
+
+**posthog.do** is the open-source alternative. Privacy-first. Edge-native. Deploys in seconds. AI agents are first-class citizens.
+
+## AI-Native API
+
+```typescript
+import { posthog } from 'posthog.do'           // Full SDK
+import { posthog } from 'posthog.do/tiny'      // Minimal client
+import { posthog } from 'posthog.do/flags'     // Feature flags only
+```
+
+Natural language for product analytics:
+
+```typescript
+import { posthog } from 'posthog.do'
+
+// Talk to it like a PM
+const funnel = await posthog`users who clicked buy but didn't checkout`
+const cohort = await posthog`power users who logged in 10+ times last week`
+const trend = await posthog`signups by country this month`
+
+// Chain like sentences
+await posthog`pro users who haven't used feature X`
+  .notify(`Check out our new feature X!`)
+
+// Feature flags that read like questions
+const enabled = await posthog`is new-checkout-flow on for user-123?`
+const variant = await posthog`which pricing-experiment variant for user-456?`
+```
 
 ## The Problem
 
-AI agents need analytics. Millions of them. Running in parallel. Each isolated. Each with their own telemetry.
+PostHog dominates open-source analytics but:
 
-Traditional analytics were built for humans:
-- One shared analytics instance for many users
-- Centralized data warehouses
-- Manual event schema management
-- Expensive per-project
+| What PostHog Charges | The Reality |
+|----------------------|-------------|
+| **Cloud Pricing** | $450/month for 2M events |
+| **Self-Hosting** | Complex Kubernetes setup |
+| **Feature Flags** | UI configuration required |
+| **AI Agents** | No first-class support |
+| **Edge Performance** | Centralized servers |
 
-AI agents need the opposite:
+### AI Agents Need Analytics Too
+
+Traditional analytics track humans clicking buttons. But AI agents need:
 - One analytics instance per agent
 - Distributed by default
 - Automatic schema evolution
-- Free at the instance level, pay for usage
+- Events captured at the edge
 
-## The Vision
+## The Solution
 
-Every AI agent gets their own PostHog.
+**posthog.do** reimagines analytics for AI-native applications:
 
-```typescript
-import { tom, ralph, priya } from 'agents.do'
-import { PostHog } from 'posthog.do'
-
-// Each agent has their own isolated analytics
-const tomAnalytics = PostHog.for(tom)
-const ralphAnalytics = PostHog.for(ralph)
-const priyaAnalytics = PostHog.for(priya)
-
-// Full PostHog API
-await tomAnalytics.capture('code_reviewed', { pr: 123, approved: true })
-await ralphAnalytics.capture('build_completed', { success: true, duration: 42 })
-await priyaAnalytics.capture('spec_written', { feature: 'auth' })
+```
+PostHog Cloud                      posthog.do
+-----------------------------------------------------------------
+$450/month for 2M events          Usage-based, starts free
+Complex self-hosting              Deploy in seconds
+Centralized servers               Edge-native, global
+UI configuration                  Code-first, natural language
+Human-only analytics              AI agents are first-class
 ```
 
-Not a shared analytics platform with project keys. Not a multi-tenant nightmare. Each agent has their own complete PostHog instance.
+## One-Click Deploy
+
+```bash
+npx create-dotdo posthog
+```
+
+Product analytics on infrastructure you control. Edge-native from day one.
+
+```typescript
+import { PostHog } from 'posthog.do'
+
+export default PostHog({
+  name: 'my-app',
+  domain: 'analytics.my-app.com',
+})
+```
 
 ## Features
 
-- **Event Capture** - `posthog.capture()` with full API compatibility
-- **Feature Flags** - `posthog.isFeatureEnabled()` evaluated at the edge
-- **Experiments** - A/B testing with deterministic bucketing
-- **Analytics Queries** - Funnels, retention, cohorts
-- **MCP Tools** - Model Context Protocol for AI-native analytics
-- **Session Recording** - DOM snapshots (future)
-- **Surveys** - In-app feedback (future)
+### Event Capture
+
+```typescript
+// Just say what happened
+await posthog`user-123 viewed dashboard on pro plan`
+await posthog`user-123 purchased $99.99 USD`
+await posthog`user-123 clicked buy then added to cart`
+
+// AI infers the schema
+await posthog`user-123 viewed dashboard`        // creates $pageview
+await posthog`user-123 signed up`               // creates signup_completed
+await posthog`user-123 purchased item abc`      // creates purchase with item_id
+```
+
+### Feature Flags
+
+```typescript
+// Flags are questions
+const enabled = await posthog`is new-checkout-flow on for user-123?`
+const variant = await posthog`which pricing-experiment for user-456?`
+const flags = await posthog`all flags for user-123`
+
+// With context - just describe it
+const result = await posthog`is premium-feature on for user-123 on pro plan at acme-corp?`
+```
+
+### Experiments
+
+```typescript
+// Get experiment variant
+const variant = await posthog`signup-flow variant for user-123`
+// 'control' | 'variant-a' | 'variant-b'
+
+// Track the whole experiment naturally
+await posthog`user-123 started signup-flow experiment as ${variant}`
+await posthog`user-123 completed signup in signup-flow experiment`
+```
+
+### Funnels
+
+```typescript
+// Funnels read like sentences
+await posthog`funnel: pageview -> signup -> purchase in Jan 2024`
+await posthog`funnel: landing -> trial -> paid last 30 days`.by('source')
+await posthog`funnel: add to cart -> checkout -> payment for pro users`
+
+// Get conversion rates
+const conversion = await posthog`how many users go from trial to paid?`
+const dropoff = await posthog`where do users drop off in onboarding?`
+```
+
+### Retention
+
+```typescript
+// Retention in plain English
+await posthog`retention: signup -> return visit last month`
+await posthog`retention: first purchase -> second purchase by week`
+await posthog`do pro users come back more than free users?`
+```
+
+### Trends
+
+```typescript
+// Trends are just questions
+await posthog`signups per day this month`
+await posthog`purchases by country last 30 days`
+await posthog`pageviews vs signups this week`.by('plan')
+
+// Breakdowns are natural
+await posthog`revenue by plan by month in 2024`
+```
+
+### Cohorts
+
+```typescript
+// Define cohorts naturally
+await posthog`users who signed up in January`
+await posthog`power users: 10+ logins last week`
+await posthog`churned: no activity in 30 days`
+
+// Use cohorts in queries
+await posthog`retention for power users`
+await posthog`funnel for users who came from Google`
+```
+
+### User Identification
+
+```typescript
+// Identify and alias
+await posthog`user-123 is john@example.com on pro plan`
+await posthog`anonymous-456 is actually user-123`
+
+// Set properties
+await posthog`user-123 upgraded to enterprise`
+await posthog`user-123 works at Acme Corp with 50 employees`
+```
+
+## Agent Analytics
+
+Every AI agent gets their own analytics instance:
+
+```typescript
+import { tom, ralph, priya } from 'agents.do'
+import { posthog } from 'posthog.do'
+
+// Each agent has isolated analytics
+await posthog.for(tom)`reviewed PR 123 and approved`
+await posthog.for(ralph)`build completed in 42s`
+await posthog.for(priya)`wrote spec for auth feature`
+
+// Query agent performance
+await posthog.for(tom)`average review time this week`
+await posthog`which agent completes tasks fastest?`
+```
 
 ## Architecture
 
@@ -60,7 +212,7 @@ Not a shared analytics platform with project keys. Not a multi-tenant nightmare.
               +---------------+---------------+
               |               |               |
     +------------------+ +------------------+ +------------------+
-    | EventsDO (Tom)   | | EventsDO (Ralph) | | EventsDO (...)   |
+    | EventsDO (User)  | | EventsDO (Agent) | | EventsDO (...)   |
     |   SQLite + AE    | |   SQLite + AE    | |   SQLite + AE    |
     +------------------+ +------------------+ +------------------+
               |               |               |
@@ -74,209 +226,60 @@ Not a shared analytics platform with project keys. Not a multi-tenant nightmare.
     +----------+       +-----------+        +------------+
 ```
 
-**Key insight**: Durable Objects provide single-threaded, strongly consistent state. Each agent's analytics is a Durable Object. SQLite handles recent events. Analytics Engine handles aggregations at scale.
+**Key insight**: Durable Objects provide single-threaded, strongly consistent state. Each project's analytics is a Durable Object. SQLite handles recent events. Analytics Engine handles aggregations at scale.
 
-## Installation
+## vs PostHog
 
-```bash
-npm install posthog.do
-```
+| Feature | PostHog | posthog.do |
+|---------|---------|------------|
+| **Pricing** | $450/month for 2M events | Usage-based, starts free |
+| **Self-Hosting** | Complex Kubernetes | Deploy in seconds |
+| **Configuration** | UI point-and-click | Natural language |
+| **Feature Flags** | Dashboard required | Code-first |
+| **AI Agents** | Not supported | First-class citizens |
+| **Edge Performance** | Centralized | Global edge |
+| **Data Location** | Their servers | Your Cloudflare account |
+| **Open Source** | Yes | Yes, MIT licensed |
 
-## Quick Start
+## Promise Pipelining
 
-### Event Capture
-
-```typescript
-import { PostHog } from 'posthog.do'
-
-const posthog = new PostHog(env.POSTHOG)
-
-// Capture events
-await posthog.capture('$pageview', {
-  distinct_id: 'user-123',
-  properties: {
-    $current_url: 'https://example.com/dashboard',
-    plan: 'pro'
-  }
-})
-
-// Capture with timestamp
-await posthog.capture('purchase_completed', {
-  distinct_id: 'user-123',
-  timestamp: new Date('2024-01-15T10:30:00Z'),
-  properties: {
-    amount: 99.99,
-    currency: 'USD'
-  }
-})
-
-// Batch capture
-await posthog.captureBatch([
-  { event: 'item_viewed', distinct_id: 'user-123', properties: { item_id: 'abc' } },
-  { event: 'item_added_to_cart', distinct_id: 'user-123', properties: { item_id: 'abc' } }
-])
-```
-
-### Feature Flags
+Chain operations without `Promise.all`:
 
 ```typescript
-import { PostHog } from 'posthog.do'
+// Find users, analyze, and act - one network round trip
+await posthog`users who abandoned checkout`
+  .map(user => posthog`${user} purchase history`)
+  .filter(history => history.total > 100)
+  .notify(`Come back for 10% off!`)
 
-const posthog = new PostHog(env.POSTHOG)
-
-// Simple boolean flag
-const enabled = await posthog.isFeatureEnabled('new-checkout-flow', 'user-123')
-
-// With context for targeting
-const variant = await posthog.getFeatureFlag('pricing-experiment', 'user-123', {
-  personProperties: {
-    plan: 'pro',
-    company_size: 50
-  },
-  groups: {
-    company: 'acme-corp'
-  }
-})
-
-// Get all flags for a user
-const flags = await posthog.getAllFlags('user-123')
-// { 'new-checkout-flow': true, 'pricing-experiment': 'variant-b', ... }
+// Parallel cohort analysis
+await posthog`compare pro vs free users`
+  .retention()
+  .funnel(`signup -> activation -> payment`)
+  .export()
 ```
 
-### Experiments
+## MCP Tools
+
+AI-native analytics access via Model Context Protocol:
 
 ```typescript
-import { PostHog } from 'posthog.do'
+// AI agents query analytics naturally
+await agent`analyze our conversion funnel`
+// Agent uses posthog MCP tools automatically
 
-const posthog = new PostHog(env.POSTHOG)
-
-// Get experiment variant (deterministic)
-const variant = await posthog.getExperimentVariant('signup-flow', 'user-123')
-// 'control' | 'variant-a' | 'variant-b'
-
-// Track experiment exposure
-await posthog.capture('$experiment_started', {
-  distinct_id: 'user-123',
-  properties: {
-    $experiment_name: 'signup-flow',
-    $experiment_variant: variant
-  }
-})
-
-// Track conversion
-await posthog.capture('signup_completed', {
-  distinct_id: 'user-123',
-  properties: {
-    experiment: 'signup-flow',
-    variant: variant
-  }
-})
+// Available tools
+// - capture_event: Track user actions
+// - query_funnel: Analyze conversion paths
+// - query_retention: Measure user return rates
+// - get_feature_flag: Check flag status
+// - define_cohort: Create user segments
 ```
-
-### Analytics Queries
-
-```typescript
-import { PostHog } from 'posthog.do'
-
-const posthog = new PostHog(env.POSTHOG)
-
-// Funnel analysis
-const funnel = await posthog.query.funnel({
-  steps: ['$pageview', 'signup_started', 'signup_completed'],
-  dateRange: { from: '2024-01-01', to: '2024-01-31' }
-})
-// { steps: [{ event: '$pageview', count: 1000, dropoff: 0.3 }, ...] }
-
-// Retention analysis
-const retention = await posthog.query.retention({
-  startEvent: 'signup_completed',
-  returnEvent: '$pageview',
-  dateRange: { from: '2024-01-01', to: '2024-01-31' }
-})
-// { cohorts: [{ date: '2024-01-01', size: 100, retention: [1.0, 0.4, 0.3, ...] }] }
-
-// Event trends
-const trends = await posthog.query.trends({
-  events: ['$pageview', 'signup_completed'],
-  breakdown: 'plan',
-  dateRange: { from: '2024-01-01', to: '2024-01-31' },
-  interval: 'day'
-})
-```
-
-### MCP Tools
-
-```typescript
-import { posthogTools, invokeTool } from 'posthog.do/mcp'
-
-// List available analytics tools
-console.log(posthogTools.map(t => t.name))
-// ['capture_event', 'get_feature_flag', 'query_funnel', 'query_retention', ...]
-
-// Invoke a tool
-const result = await invokeTool('capture_event', {
-  event: 'task_completed',
-  distinct_id: 'agent-tom',
-  properties: { task_type: 'code_review' }
-})
-
-// AI-native analytics access
-await invokeTool('query_funnel', {
-  natural: 'show me the signup funnel for pro users last month'
-})
-```
-
-## API Overview
-
-### Capture (`posthog.do`)
-
-- `capture(event, options)` - Capture single event
-- `captureBatch(events)` - Capture multiple events
-- `identify(distinctId, properties)` - Set person properties
-- `alias(alias, distinctId)` - Link identities
-
-### Feature Flags (`posthog.do/flags`)
-
-- `isFeatureEnabled(flag, distinctId, context?)` - Boolean check
-- `getFeatureFlag(flag, distinctId, context?)` - Get variant
-- `getAllFlags(distinctId, context?)` - Get all flags
-
-### Experiments (`posthog.do/experiments`)
-
-- `getExperimentVariant(experiment, distinctId)` - Get bucket
-- `getExperimentResults(experiment)` - Get statistics
-
-### Analytics (`posthog.do/analytics`)
-
-- `query.funnel(options)` - Funnel analysis
-- `query.retention(options)` - Retention analysis
-- `query.trends(options)` - Event trends
-- `query.paths(options)` - User paths
-
-## The Rewrites Ecosystem
-
-posthog.do is part of the rewrites family - reimplementations of popular infrastructure on Cloudflare Durable Objects:
-
-| Rewrite | Original | Purpose |
-|---------|----------|---------|
-| [fsx.do](https://fsx.do) | fs (Node.js) | Filesystem for AI |
-| [gitx.do](https://gitx.do) | git | Version control for AI |
-| [supabase.do](https://supabase.do) | Supabase | Postgres/BaaS for AI |
-| **posthog.do** | PostHog | Product analytics for AI |
-| mongo.do | MongoDB | Document database for AI |
-| kafka.do | Kafka | Event streaming for AI |
-
-Each rewrite follows the same pattern:
-- Durable Object per instance (per agent)
-- SQLite for hot tier storage
-- Cloudflare primitives for scale (KV, Analytics Engine, D1)
-- MCP tools for AI-native access
-- Compatible API with the original
 
 ## Why Durable Objects?
 
 1. **Single-threaded consistency** - No race conditions in event ordering
-2. **Per-instance isolation** - Each agent's analytics is completely separate
+2. **Per-instance isolation** - Each project's analytics is completely separate
 3. **Automatic scaling** - Millions of instances, zero configuration
 4. **Global distribution** - Events captured at the edge
 5. **SQLite inside** - Real SQL for analytics queries
@@ -288,25 +291,18 @@ posthog.do is a core service of [workers.do](https://workers.do) - the platform 
 
 ```typescript
 import { priya, ralph, tom, mark } from 'agents.do'
-import { PostHog } from 'posthog.do'
+import { posthog } from 'posthog.do'
 
-// AI agents with full-stack analytics
-const startup = {
-  product: priya,
-  engineering: ralph,
-  tech: tom,
-  marketing: mark,
-}
+// Track your AI startup naturally
+await posthog`priya wrote spec for auth feature`
+await posthog`ralph implemented auth in 2 hours`
+await posthog`tom reviewed and approved auth PR`
+await posthog`mark wrote launch blog post`
 
-// Track agent activity
-for (const [role, agent] of Object.entries(startup)) {
-  const analytics = PostHog.for(agent)
-  await analytics.capture('agent_started', {
-    role,
-    started: new Date(),
-    status: 'active'
-  })
-}
+// Query startup metrics
+await posthog`average feature completion time this week`
+await posthog`which agent ships fastest?`
+await posthog`funnel: spec -> implement -> review -> ship`
 ```
 
 Both kinds of workers. Working for you.
@@ -314,3 +310,16 @@ Both kinds of workers. Working for you.
 ## License
 
 MIT
+
+---
+
+<p align="center">
+  <strong>Analytics that speak your language.</strong>
+  <br />
+  Edge-native. AI-first. Open source.
+  <br /><br />
+  <a href="https://posthog.do">Website</a> |
+  <a href="https://docs.posthog.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/posthog.do">GitHub</a>
+</p>

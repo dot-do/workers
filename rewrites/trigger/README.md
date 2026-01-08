@@ -103,70 +103,92 @@ for await (const update of job.progress()) {
 }
 ```
 
-## When You Need Control
+## Resilience That Reads Like English
 
-For complex retry policies, concurrency limits, and precise configuration:
+Configure retry and concurrency with fluent methods:
 
 ```typescript
-import { task, schedules } from 'trigger.do'
+// Retry with exponential backoff
+const job = trigger`process video ${videoId}`
+  .retry(10)
+  .backoff('exponential')
+  .jitter()
 
-// Define a task with full control
-export const processVideo = task({
-  id: 'process-video',
-  retry: { maxAttempts: 3, backoff: 'exponential' },
-  concurrency: { limit: 10, key: 'payload.userId' },
-  run: async (payload: { videoId: string }) => {
-    const video = await downloadVideo(payload.videoId)
-    await checkpoint('downloaded', { size: video.size })
+// Concurrency per user
+await trigger`sync data for ${userId}`
+  .concurrency(5, 'userId')
+  .rateLimit(100, '1m')
 
-    const encoded = await encodeVideo(video)
-    await checkpoint('encoded', { format: encoded.format })
-
-    const uploaded = await uploadToStorage(encoded)
-    return { url: uploaded.url }
-  }
-})
-
-// Scheduled job with cron
-export const dailyCleanup = schedules.task({
-  id: 'daily-cleanup',
-  cron: '0 3 * * *', // 3am daily
-  run: async () => {
-    await cleanupOldFiles()
-    await compactDatabase()
-  }
-})
-
-// Trigger programmatically
-await processVideo.trigger({ videoId: 'abc123' })
+// Chain them naturally
+await trigger`download, encode, upload ${videoId}`
+  .retry(3)
+  .backoff('exponential')
+  .concurrency(10)
+  .checkpoint('each-stage')
 ```
 
-### Retry Policies
+### Full Control, Still Natural
 
 ```typescript
-task({
-  id: 'resilient-task',
-  retry: {
-    maxAttempts: 10,        // Max retry attempts
-    backoff: 'exponential', // 'exponential' | 'linear' | 'fixed'
-    initialDelay: '1s',     // First retry delay
-    maxDelay: '1h',         // Maximum delay between retries
-    factor: 2,              // Backoff multiplier
-    jitter: true            // Prevent thundering herd
-  },
-  run: handler
-})
+// Video processing with checkpoints
+const processed = await trigger`process video ${videoId}`
+  .retry(3)
+  .backoff('exponential')
+  .concurrency(10)
+  .map(async (video) => {
+    const downloaded = await downloadVideo(video.id)
+    return { downloaded, size: downloaded.size }
+  })
+  .checkpoint('downloaded')
+  .map(({ downloaded }) => encodeVideo(downloaded))
+  .checkpoint('encoded')
+  .map(encoded => uploadToStorage(encoded))
+
+// Scheduled cleanup - say it like you mean it
+trigger`every day at 3am: cleanup old files, compact database`
+
+// Or with explicit cron
+trigger`0 3 * * *: cleanup and compact`
 ```
 
-### Concurrency Control
+### Retry Strategies
 
 ```typescript
-task({
-  id: 'rate-limited',
-  concurrency: { limit: 10, key: 'payload.orgId' },
-  rateLimit: { limit: 100, period: '1m' },
-  run: handler
-})
+// Exponential backoff with jitter
+trigger`call flaky API for ${customerId}`
+  .retry(10)
+  .backoff('exponential')
+  .initialDelay('1s')
+  .maxDelay('1h')
+  .jitter()
+
+// Linear backoff for rate limits
+trigger`sync to third-party ${service}`
+  .retry(5)
+  .backoff('linear')
+  .initialDelay('30s')
+
+// Fixed delay for retries
+trigger`send webhook to ${endpoint}`
+  .retry(3)
+  .backoff('fixed', '10s')
+```
+
+### Concurrency That Makes Sense
+
+```typescript
+// Per-org concurrency
+trigger`import data for ${orgId}`
+  .concurrency(10, 'orgId')
+
+// Global rate limit
+trigger`call external API`
+  .rateLimit(100, '1m')
+
+// Both together
+trigger`sync ${customerId} data to ${service}`
+  .concurrency(5, 'customerId')
+  .rateLimit(1000, '1h')
 ```
 
 ## AI-Native Integration
@@ -191,85 +213,32 @@ const review = await trigger`review PR ${prNumber} in ${repo}`
 
 ## MCP Tools
 
-Full AI agent access to job management:
+AI agents manage jobs with natural language:
 
 ```typescript
-import { defineTool } from 'trigger.do/mcp'
+import { trigger } from 'trigger.do'
 
-// List all registered tasks
-export const listTasks = defineTool({
-  name: 'list_tasks',
-  description: 'List all registered background tasks',
-  parameters: {},
-  execute: async () => {
-    return await trigger.tasks.list()
-  }
-})
+// List jobs
+await trigger`list all running jobs`
+await trigger`show failed jobs from yesterday`
+await trigger`what's queued for video processing?`
 
-// Get task run status
-export const getTaskStatus = defineTool({
-  name: 'get_task_status',
-  description: 'Get the status of a task run',
-  parameters: {
-    runId: { type: 'string', description: 'The run ID to check' }
-  },
-  execute: async ({ runId }) => {
-    return await trigger.runs.get(runId)
-  }
-})
+// Monitor jobs
+await trigger`status of job ${runId}`
+await trigger`logs for ${runId}`
+await trigger`why did ${runId} fail?`
 
-// Cancel a running task
-export const cancelTask = defineTool({
-  name: 'cancel_task',
-  description: 'Cancel a running task',
-  parameters: {
-    runId: { type: 'string', description: 'The run ID to cancel' }
-  },
-  execute: async ({ runId }) => {
-    return await trigger.runs.cancel(runId)
-  }
-})
+// Control jobs
+await trigger`cancel ${runId}`
+await trigger`retry all failed jobs from today`
+await trigger`pause video processing queue`
 
-// List recent runs
-export const listRuns = defineTool({
-  name: 'list_runs',
-  description: 'List recent task runs with optional filtering',
-  parameters: {
-    taskId: { type: 'string', description: 'Filter by task ID', optional: true },
-    status: { type: 'string', description: 'Filter by status', optional: true },
-    limit: { type: 'number', description: 'Max results', optional: true }
-  },
-  execute: async ({ taskId, status, limit }) => {
-    return await trigger.runs.list({ taskId, status, limit })
-  }
-})
+// Bulk operations
+await trigger`failed jobs this week`
+  .map(job => trigger`retry ${job}`)
 
-// Get execution logs
-export const getLogs = defineTool({
-  name: 'get_logs',
-  description: 'Get logs for a task run',
-  parameters: {
-    runId: { type: 'string', description: 'The run ID' },
-    tail: { type: 'number', description: 'Last N lines', optional: true }
-  },
-  execute: async ({ runId, tail }) => {
-    return await trigger.runs.logs(runId, { tail })
-  }
-})
-
-// Trigger a task
-export const triggerTask = defineTool({
-  name: 'trigger_task',
-  description: 'Trigger a background task with payload',
-  parameters: {
-    taskId: { type: 'string', description: 'Task identifier' },
-    payload: { type: 'object', description: 'Task payload' }
-  },
-  execute: async ({ taskId, payload }) => {
-    const handle = await trigger.tasks.trigger(taskId, payload)
-    return { runId: handle.id, status: 'triggered' }
-  }
-})
+await trigger`stuck jobs older than 1 hour`
+  .map(job => trigger`cancel and restart ${job}`)
 ```
 
 ## Architecture

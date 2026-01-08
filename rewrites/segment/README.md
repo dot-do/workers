@@ -1,22 +1,101 @@
 # segment.do
 
-Segment on Cloudflare Durable Objects - A Customer Data Platform for every AI agent.
+> Customer Data Platform. Edge-Native. Open by Default. AI-First.
+
+Twilio paid $3.2 billion for Segment. Now they charge per Monthly Tracked User, gate identity resolution behind enterprise tiers, and treat your customer data as their asset. Simple event tracking costs more than your database.
+
+**segment.do** is the open-source alternative. Edge-native. GDPR-compliant by design. Deploys in minutes, not weeks. AI agents and humans share the same analytics pipeline.
+
+## AI-Native API
+
+```typescript
+import { segment } from 'segment.do'           // Full SDK
+import { segment } from 'segment.do/tiny'      // Minimal client
+import { segment } from 'segment.do/server'    // Server-side only
+```
+
+Natural language for analytics:
+
+```typescript
+import { segment } from 'segment.do'
+
+// Talk to it like a colleague
+await segment`user-123 signed up from Google Ads`
+await segment`user-123 started checkout with $99.99 in cart`
+await segment`user-123 completed order #456 revenue $99.99`
+
+// Chain like sentences
+await segment`users who abandoned checkout`
+  .notify(`Complete your purchase for 10% off`)
+
+// Identity resolution just works
+await segment`link anonymous-xyz to user-123`
+await segment`merge user-123 with user-456`
+```
 
 ## The Problem
 
-AI agents need to track events. Millions of them. In real-time. Each routed to dozens of destinations.
+Twilio Segment dominates customer data:
 
-Traditional CDPs were built for humans:
-- Centralized infrastructure
-- Complex pricing per MTU
-- Slow identity resolution
-- Data leaves your control
+| What Segment Charges | The Reality |
+|----------------------|-------------|
+| **10K MTU** | $120/month |
+| **100K MTU** | $1,200/month |
+| **1M MTU** | $25,000+/month custom |
+| **Identity Resolution** | Enterprise add-on |
+| **Warehouse Sync** | Enterprise add-on |
+| **First-Party Tracking** | DIY proxy setup |
 
-AI agents need the opposite:
-- Edge-native, sub-millisecond ingestion
-- Simple usage-based pricing
-- Real-time identity resolution
-- Data stays in your infrastructure
+### The MTU Tax
+
+Every user you track costs money. But:
+
+- Segment counts everyone, even anonymous visitors
+- Price tiers punish growth
+- "Business" tier gates essential features
+- Enterprise sales calls for anything serious
+
+### The Data Hostage Problem
+
+Your customer data lives in Segment's infrastructure:
+
+- They process your events in their cloud
+- Cross-border data transfers (GDPR nightmare)
+- Vendor lock-in via proprietary schemas
+- Data portability means paying for exports
+
+## The Solution
+
+**segment.do** reimagines CDP for the edge:
+
+```
+Twilio Segment                      segment.do
+-----------------------------------------------------------------
+$120/mo for 10K MTU                 ~$5/mo for 10K MTU
+Enterprise for identity             Identity resolution included
+Enterprise for warehouse            Warehouse sync included
+Proxy DIY for first-party           First-party native
+Their infrastructure                Your Cloudflare account
+Cross-border transfers              Process in-region
+Proprietary schemas                 Open source, MIT licensed
+```
+
+## One-Click Deploy
+
+```bash
+npx create-dotdo segment
+```
+
+A complete CDP. Running on infrastructure you control. GDPR-compliant from day one.
+
+```typescript
+import { Segment } from 'segment.do'
+
+export default Segment({
+  name: 'my-analytics',
+  domain: 'analytics.mysite.com',
+})
+```
 
 ## The Vision
 
@@ -24,288 +103,281 @@ Every AI agent gets their own analytics pipeline.
 
 ```typescript
 import { tom, ralph, priya } from 'agents.do'
-import { Analytics } from 'segment.do'
+import { segment } from 'segment.do'
 
-// Each agent tracks their own events
-const tomAnalytics = Analytics.for(tom)
-const ralphAnalytics = Analytics.for(ralph)
-const priyaAnalytics = Analytics.for(priya)
+// Each agent tracks naturally
+await segment`tom reviewed PR 123 - 450 lines approved`
+await segment`ralph deployed v2.1.0 to production`
+await segment`priya updated Q1 roadmap`
 
-// Full Segment-compatible API
-await tomAnalytics.track('Code Review Completed', {
-  pr: 123,
-  approved: true,
-  linesReviewed: 450
-})
-
-await ralphAnalytics.identify('ralph@agents.do', {
-  role: 'developer',
-  expertise: ['typescript', 'rust']
-})
-
-await priyaAnalytics.page('Roadmap', {
-  section: 'Q1 Planning'
-})
+// Query your agents like a database
+await segment`tom activity this week`
+await segment`most active agents today`
 ```
 
 Not a shared analytics account. Not MTU-based billing. Each agent has their own complete analytics pipeline.
 
 ## Features
 
-- **Segment-Compatible API** - Drop-in replacement for analytics.js
-- **Identity Resolution** - Durable Object-based identity graph
-- **300+ Destinations** - Route events to GA4, Mixpanel, Amplitude, etc.
-- **Warehouse Sync** - Real-time export to R2/Parquet/Iceberg
-- **First-Party Tracking** - Bypass ad blockers with same-domain collection
-- **Edge-Native** - Sub-millisecond ingestion at the edge
-- **GDPR Compliant** - Process data in-region, no cross-border transfers
-
-## Architecture
-
-```
-                    +-----------------------+
-                    |     segment.do        |
-                    |   (Cloudflare Worker) |
-                    +-----------------------+
-                              |
-              +---------------+---------------+
-              |               |               |
-    +------------------+ +------------------+ +------------------+
-    | IdentityDO (Tom) | |IdentityDO (Ralph)| | IdentityDO (...) |
-    |   SQLite Graph   | |   SQLite Graph   | |   SQLite Graph   |
-    +------------------+ +------------------+ +------------------+
-              |               |               |
-              +---------------+---------------+
-                              |
-                    +-------------------+
-                    |    Destinations   |
-                    | (Queues + Workers)|
-                    +-------------------+
-                              |
-              +---------------+---------------+
-              |               |               |
-        +-----------+   +-----------+   +-----------+
-        |    GA4    |   | Mixpanel  |   | Webhooks  |
-        +-----------+   +-----------+   +-----------+
-```
-
-**Key insight**: Durable Objects provide single-threaded identity resolution. Each user's identity graph is a Durable Object. Workers handle ingestion. Queues handle destination delivery.
-
-## Installation
-
-```bash
-npm install segment.do
-```
-
-## Quick Start
-
-### Browser SDK
+### Event Tracking
 
 ```typescript
-import { Analytics } from 'segment.do'
+// Just say what happened
+await segment`user-123 clicked signup button`
+await segment`user-123 viewed pricing page`
+await segment`user-123 searched for widgets`
 
-const analytics = Analytics({
-  writeKey: 'your-write-key',
-  // First-party tracking (bypass ad blockers)
-  apiHost: 'analytics.yoursite.com'
-})
+// Revenue tracking reads like a receipt
+await segment`user-123 purchased widget for $49.99`
+await segment`user-123 subscribed to pro plan $99/month`
+await segment`user-123 upgraded from starter to business`
 
-// Track events
-analytics.track('Button Clicked', {
-  buttonId: 'cta-signup',
-  page: '/pricing'
-})
-
-// Identify users
-analytics.identify('user_123', {
-  email: 'user@example.com',
-  plan: 'pro'
-})
-
-// Track page views
-analytics.page('Pricing', {
-  section: 'enterprise'
-})
-```
-
-### Server SDK
-
-```typescript
-import { Analytics } from 'segment.do/server'
-
-const analytics = Analytics({ writeKey: 'your-write-key' })
-
-// Track server-side events
-await analytics.track({
-  userId: 'user_123',
-  event: 'Order Completed',
-  properties: {
-    orderId: 'order_456',
-    revenue: 99.99,
-    products: [
-      { id: 'prod_1', name: 'Widget', price: 49.99 }
-    ]
-  }
-})
-
-// Batch multiple events
-await analytics.batch([
-  { type: 'track', userId: 'user_123', event: 'Checkout Started' },
-  { type: 'identify', userId: 'user_123', traits: { cartValue: 99.99 } }
-])
+// Batch events read like a story
+await segment`
+  user-123:
+  - viewed homepage
+  - clicked pricing
+  - started trial
+  - invited teammate
+`
 ```
 
 ### Identity Resolution
 
 ```typescript
-import { Analytics } from 'segment.do'
+// Link anonymous to known
+await segment`link anon-xyz to user-123`
 
-const analytics = Analytics({ writeKey: 'your-write-key' })
+// Merge identities across devices
+await segment`merge mobile-user with desktop-user`
 
-// Anonymous tracking
-analytics.track('Page Viewed')  // Uses anonymousId
+// B2B account association
+await segment`user-123 joined Acme Corp enterprise plan`
 
-// Later, identify the user
-analytics.identify('user_123', {
-  email: 'user@example.com'
-})
-// Anonymous events are now merged with user_123
-
-// Alias for cross-device tracking
-analytics.alias('user_123', 'previous_anonymous_id')
+// The identity graph updates automatically
+await segment`who is user-123?`
 ```
 
-### Group (B2B)
+### Destinations
 
 ```typescript
-import { Analytics } from 'segment.do'
+// Route events naturally
+await segment`send to GA4 and Mixpanel`
+await segment`send purchases to Facebook Pixel`
+await segment`webhook all signups to Slack`
 
-const analytics = Analytics({ writeKey: 'your-write-key' })
-
-// Associate user with organization
-analytics.group('org_456', {
-  name: 'Acme Corp',
-  plan: 'enterprise',
-  employees: 500
-})
-
-// Events now include group context
-analytics.track('Feature Used', {
-  feature: 'advanced-reporting'
-})
+// Query destinations
+await segment`where does user signup go?`
+await segment`active destinations`
 ```
 
-## API Overview
-
-### Track API
-
-| Endpoint | Description |
-|----------|-------------|
-| `POST /v1/track` | Track a single event |
-| `POST /v1/page` | Track a page view |
-| `POST /v1/screen` | Track a mobile screen view |
-| `POST /v1/identify` | Identify a user with traits |
-| `POST /v1/group` | Associate user with group |
-| `POST /v1/alias` | Merge user identities |
-| `POST /v1/batch` | Send multiple events |
-
-### Event Schema
+### Warehouse Sync
 
 ```typescript
-interface SegmentEvent {
-  type: 'track' | 'identify' | 'page' | 'screen' | 'group' | 'alias'
-  anonymousId?: string
-  userId?: string
-  timestamp: string
-  context: {
-    ip?: string
-    userAgent?: string
-    locale?: string
-    campaign?: { source, medium, term, content, name }
-    device?: { type, manufacturer, model }
-    os?: { name, version }
-  }
-  // Type-specific fields
-  properties?: Record<string, unknown>  // track, page, screen
-  traits?: Record<string, unknown>       // identify, group
-  event?: string                          // track only
-  groupId?: string                        // group only
-}
+// Query your events like a database
+await segment`signups this week`
+await segment`revenue by campaign last month`
+await segment`users who viewed but didnt purchase`
+
+// Export for analysis
+await segment`export signups to parquet`
+await segment`sync to BigQuery hourly`
 ```
 
-## Destinations
+## Architecture
 
-### Supported Destinations
+### Durable Object per Identity
+
+```
+Event Ingestion Flow:
+
+Browser/Server --> Cloudflare Worker --> IdentityDO --> Destinations
+                        |                    |              |
+                   Edge Auth           SQLite Graph    Queues + Workers
+                  (same domain)       (per-user)      (fan-out)
+```
+
+### Storage Tiers
+
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Recent events (30 days) | <10ms |
+| **Warm** | R2 + Index | Historical (30-365 days) | <100ms |
+| **Cold** | R2 Archive | Compliance (1+ years) | <1s |
+
+### Identity Graph
+
+Each user is a Durable Object. Single-threaded consistency for:
+- Anonymous to known identity merging
+- Cross-device identity resolution
+- B2B account association
+- GDPR right-to-erasure
+
+## Browser Tracking
+
+```typescript
+import { segment } from 'segment.do'
+
+// Just drop it in - no config needed
+await segment`page view pricing`
+await segment`button click signup-cta`
+await segment`form submit contact-us`
+
+// Automatic context capture
+// - UTM parameters
+// - Referrer
+// - Device info
+// - Geo location
+
+// First-party tracking (bypass ad blockers)
+// Deploy to analytics.yoursite.com
+```
+
+## Server Tracking
+
+```typescript
+import { segment } from 'segment.do/server'
+
+// Server-side events
+await segment`user-123 completed order $99.99`
+await segment`user-123 subscription renewed`
+await segment`user-123 api call to /users endpoint`
+
+// Backend events with full context
+await segment`
+  user-123 checkout completed:
+  - order: order-456
+  - revenue: $99.99
+  - items: 3
+  - coupon: SAVE10
+`
+```
+
+## Population Analytics
+
+```typescript
+// Query your users like a database
+await segment`users who signed up this week`
+await segment`users from Google Ads who converted`
+await segment`churned users last 30 days`
+
+// Cohort analysis
+await segment`users who did X but not Y`
+await segment`users active in January inactive in February`
+
+// Funnel analysis
+await segment`signup to purchase funnel this month`
+```
+
+## Supported Destinations
 
 | Category | Destinations |
 |----------|--------------|
-| Analytics | GA4, Mixpanel, Amplitude, Heap, Posthog |
-| Marketing | HubSpot, Mailchimp, Intercom, Customer.io |
-| Advertising | Google Ads, Facebook Pixel, LinkedIn |
-| Data Warehouse | BigQuery, Snowflake, ClickHouse, R2 |
-| Custom | Webhooks, HTTP API |
+| **Analytics** | GA4, Mixpanel, Amplitude, Heap, Posthog |
+| **Marketing** | HubSpot, Mailchimp, Intercom, Customer.io |
+| **Advertising** | Google Ads, Facebook Pixel, LinkedIn |
+| **Data Warehouse** | BigQuery, Snowflake, ClickHouse, R2 |
+| **Custom** | Webhooks, HTTP API |
 
-### Destination Configuration
-
-```typescript
-// Configure destinations in dashboard or via API
-const config = {
-  destinations: {
-    ga4: {
-      enabled: true,
-      measurementId: 'G-XXXXX',
-      apiSecret: 'xxxxx'
-    },
-    mixpanel: {
-      enabled: true,
-      projectToken: 'xxxxx'
-    },
-    webhook: {
-      enabled: true,
-      url: 'https://your-server.com/webhook',
-      headers: { 'X-API-Key': 'xxxxx' }
-    }
-  }
-}
-```
-
-## Warehouse Sync
-
-Real-time export to R2 in Parquet/Iceberg format:
+### Destination Routing
 
 ```typescript
-import { query } from 'segment.do/warehouse'
+// Route by event type
+await segment`send signups to HubSpot`
+await segment`send purchases to GA4 and Facebook`
+await segment`send all events to BigQuery`
 
-// Query events directly
-const results = await query.sql(`
-  SELECT
-    event,
-    count(*) as count,
-    avg(revenue) as avgRevenue
-  FROM events
-  WHERE timestamp > now() - INTERVAL 7 DAY
-  GROUP BY event
-  ORDER BY count DESC
-`)
-
-// Export to external warehouse
-await query.export({
-  format: 'parquet',
-  destination: 's3://your-bucket/events/',
-  partitionBy: ['date', 'event']
-})
+// Conditional routing
+await segment`send enterprise signups to Salesforce`
+await segment`send errors to PagerDuty`
 ```
 
-## Pricing Comparison
+## vs Twilio Segment
 
-| Feature | Segment | segment.do |
-|---------|---------|------------|
-| 10K MTU | $120/mo | ~$5/mo |
-| 100K MTU | $1,200/mo | ~$20/mo |
-| 1M MTU | Custom ($25K+) | ~$150/mo |
-| Identity Resolution | Add-on | Included |
-| Warehouse Sync | Add-on | Included |
-| First-Party Tracking | Proxy setup | Native |
+| Feature | Twilio Segment | segment.do |
+|---------|----------------|------------|
+| **10K MTU** | $120/mo | ~$5/mo |
+| **100K MTU** | $1,200/mo | ~$20/mo |
+| **1M MTU** | $25,000+/mo | ~$150/mo |
+| **Identity Resolution** | Enterprise add-on | Included |
+| **Warehouse Sync** | Enterprise add-on | Included |
+| **First-Party Tracking** | DIY proxy | Native |
+| **Data Location** | Segment's cloud | Your account |
+| **GDPR Compliance** | Their responsibility | Your control |
+| **Lock-in** | Proprietary schemas | MIT licensed |
+
+## Use Cases
+
+### E-commerce
+
+```typescript
+// Track the full customer journey
+await segment`user-123 viewed product widget-500`
+await segment`user-123 added widget to cart`
+await segment`user-123 started checkout $49.99`
+await segment`user-123 completed purchase order-789`
+
+// Abandonment recovery
+await segment`users with abandoned carts`
+  .notify(`Complete your purchase for free shipping`)
+```
+
+### SaaS
+
+```typescript
+// Product analytics
+await segment`user-123 used feature advanced-reporting`
+await segment`user-123 invited teammate to workspace`
+await segment`user-123 hit usage limit on API calls`
+
+// Churn prediction
+await segment`users inactive 14 days with active subscription`
+```
+
+### Marketing
+
+```typescript
+// Campaign attribution
+await segment`users from utm_source=google who converted`
+await segment`compare conversion Facebook vs Google Q1`
+
+// Audience sync
+await segment`sync high-value users to Facebook Custom Audience`
+await segment`export churned users to email re-engagement`
+```
+
+## GDPR Compliance
+
+```typescript
+// Right to access
+await segment`export all data for user-123`
+
+// Right to erasure
+await segment`delete user-123`
+
+// Data stays in your region
+// No cross-border transfers
+// You control the infrastructure
+```
+
+## Deployment Options
+
+### Cloudflare Workers (Recommended)
+
+```bash
+npx create-dotdo segment
+# Deploys to your Cloudflare account
+```
+
+### Self-Hosted
+
+```bash
+# Docker
+docker run -p 8787:8787 dotdo/segment
+
+# Kubernetes
+kubectl apply -f segment-do.yaml
+```
 
 ## The Rewrites Ecosystem
 
@@ -317,8 +389,8 @@ segment.do is part of the rewrites family:
 | [gitx.do](https://gitx.do) | git | Version control for AI |
 | [supabase.do](https://supabase.do) | Supabase | Postgres/BaaS for AI |
 | **segment.do** | Segment | CDP for AI |
-| kafka.do | Kafka | Event streaming for AI |
-| mongo.do | MongoDB | Document database for AI |
+| [kafka.do](https://kafka.do) | Kafka | Event streaming for AI |
+| [mongo.do](https://mongo.do) | MongoDB | Document database for AI |
 
 ## The workers.do Platform
 
@@ -326,28 +398,107 @@ segment.do is a core service of [workers.do](https://workers.do) - the platform 
 
 ```typescript
 import { priya, ralph, tom, mark } from 'agents.do'
-import { Analytics } from 'segment.do'
+import { segment } from 'segment.do'
 
 // AI agents with full analytics
-const startup = {
-  product: priya,
-  engineering: ralph,
-  tech: tom,
-  marketing: mark,
-}
+await segment`priya started Q1 roadmap planning`
+await segment`ralph deployed authentication service`
+await segment`tom approved PR 456 for merge`
+await segment`mark published launch announcement`
 
-// Each agent tracks their own events
-for (const [role, agent] of Object.entries(startup)) {
-  const analytics = Analytics.for(agent)
-  await analytics.track('Agent Started', {
-    role,
-    timestamp: new Date()
-  })
-}
+// Query agent activity
+await segment`agent activity this week`
+await segment`most productive agent today`
 ```
 
 Both kinds of workers. Working for you.
 
+## Why Open Source for CDP?
+
+### 1. Data Sovereignty
+
+Your customer data is your most valuable asset:
+- Process events in your infrastructure
+- No vendor access to your data
+- Full GDPR compliance by design
+- Export anytime, no lock-in
+
+### 2. Cost Transparency
+
+MTU pricing punishes growth:
+- Pay for compute, not users
+- No enterprise sales calls
+- No surprise tier jumps
+- Scale predictably
+
+### 3. Real Interoperability
+
+Segment destinations are vendor agreements:
+- Build your own destinations
+- Modify existing connectors
+- No API rate limit surprises
+- Community-driven integrations
+
+### 4. Privacy First
+
+First-party tracking should be default:
+- Same-domain collection
+- No third-party cookies
+- Ad blocker resistant
+- User trust preserved
+
+## Roadmap
+
+### Core CDP
+- [x] Event tracking (track, identify, page, group)
+- [x] Identity resolution
+- [x] Destination routing
+- [x] First-party tracking
+- [ ] Computed traits
+- [ ] Predictive audiences
+- [ ] Journey orchestration
+
+### Destinations
+- [x] Google Analytics 4
+- [x] Mixpanel
+- [x] Amplitude
+- [x] Webhooks
+- [ ] Facebook Pixel
+- [ ] Google Ads
+- [ ] Salesforce
+- [ ] HubSpot
+
+### Warehouse
+- [x] R2 export
+- [x] Parquet format
+- [ ] Iceberg tables
+- [ ] BigQuery sync
+- [ ] Snowflake sync
+
+## Contributing
+
+segment.do is open source under the MIT license.
+
+```bash
+git clone https://github.com/dotdo/segment.do
+cd segment.do
+pnpm install
+pnpm test
+```
+
 ## License
 
-MIT
+MIT License - Track everything. Own everything.
+
+---
+
+<p align="center">
+  <strong>The $3.2B acquisition ends here.</strong>
+  <br />
+  Edge-native. Privacy-first. User-owned.
+  <br /><br />
+  <a href="https://segment.do">Website</a> |
+  <a href="https://docs.segment.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/segment.do">GitHub</a>
+</p>

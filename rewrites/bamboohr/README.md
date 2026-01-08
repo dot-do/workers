@@ -4,29 +4,37 @@
 
 You're a startup founder. Your team just hit 50 people. HR software wants $6/employee/month - that's $3,600/year just to track PTO and store employee records. For what is essentially a spreadsheet with a nice UI. Your growing team shouldn't be penalized for growing.
 
-## The workers.do Way
+**bamboohr.do** is the open-source alternative. Run it yourself or let us host it. No per-employee fees. Ever.
+
+## AI-Native API
 
 ```typescript
-import { bamboohr, olive } from 'bamboohr.do'
-
-// Natural language HR operations
-const balance = await bamboohr`get ${employee} PTO balance`
-const directory = await bamboohr`who reports to ${manager}?`
-const policy = await olive`what's our remote work policy?`
-
-// Promise pipelining for onboarding workflows
-const onboarded = await bamboohr`hire ${candidate}`
-  .map(emp => bamboohr`provision ${emp} with ${apps}`)
-  .map(emp => bamboohr`assign ${emp} to ${team}`)
-  .map(emp => olive`guide ${emp} through day one`)
-
-// AI-assisted performance reviews
-const review = await olive`prepare ${employee}'s quarterly review`
-  .map(draft => manager`review and approve ${draft}`)
-  .map(final => bamboohr`submit ${final} to HR`)
+import { bamboohr } from 'bamboohr.do'           // Full SDK
+import { bamboohr } from 'bamboohr.do/tiny'      // Minimal client
+import { olive } from 'bamboohr.do/agents'       // AI HR assistant
 ```
 
-One API call. Natural language. AI handles the complexity.
+Natural language for HR workflows:
+
+```typescript
+import { bamboohr } from 'bamboohr.do'
+
+// Talk to it like a colleague
+await bamboohr`hire Sarah Chen as Engineer starting Jan 15`
+await bamboohr`who's on PTO next week?`
+await bamboohr`employees in Engineering with anniversaries this month`
+
+// Chain like sentences
+await bamboohr`new hires this month`
+  .map(emp => bamboohr`assign ${emp} onboarding workflow`)
+  .map(emp => bamboohr`schedule ${emp} orientation`)
+
+// Onboarding that flows naturally
+await bamboohr`onboard Sarah Chen`
+  .provision(`laptop, Slack, GitHub`)
+  .assign(`Engineering`)
+  .buddy(`Alex Kim`)
+```
 
 ## The Problem
 
@@ -60,16 +68,11 @@ npx create-dotdo bamboohr
 Your SMB-grade HR system is live. No per-employee fees. Ever.
 
 ```typescript
-import { hr } from 'bamboohr.do'
+import { BambooHR } from 'bamboohr.do'
 
-// Add your first employee
-await hr.employees.add({
-  firstName: 'Sarah',
-  lastName: 'Chen',
-  email: 'sarah@startup.com',
-  department: 'Engineering',
-  startDate: '2025-01-15',
-  manager: 'alex-kim'
+export default BambooHR({
+  name: 'acme-startup',
+  domain: 'hr.acme.com',
 })
 ```
 
@@ -80,22 +83,16 @@ await hr.employees.add({
 The heart of any HR system. Everyone in one place.
 
 ```typescript
-// Full employee profiles
-const sarah = await hr.employees.get('sarah-chen')
+// Find anyone
+const sarah = await bamboohr`Sarah Chen`
+const engineering = await bamboohr`everyone in Engineering`
+const managers = await bamboohr`all managers in San Francisco`
 
-sarah.firstName        // Sarah
-sarah.department       // Engineering
-sarah.manager          // Alex Kim
-sarah.location         // San Francisco
-sarah.startDate        // 2025-01-15
-sarah.tenure           // "2 months" (computed)
-
-// Org chart built-in
-const engineering = await hr.directory.team('engineering')
-// Returns hierarchy: manager -> reports -> their reports
-
-// Search across all fields
-await hr.directory.search('san francisco engineering')
+// AI infers what you need
+await bamboohr`Sarah Chen`              // returns employee
+await bamboohr`Sarah's manager`         // returns Alex Kim
+await bamboohr`who reports to Alex?`    // returns team list
+await bamboohr`org chart Engineering`   // returns hierarchy
 ```
 
 ### Time Off
@@ -103,34 +100,21 @@ await hr.directory.search('san francisco engineering')
 Request, approve, track. No spreadsheets.
 
 ```typescript
-// Check balances
-const balance = await hr.timeOff.balance('sarah-chen')
-// {
-//   vacation: { available: 80, accrued: 96, used: 16, unit: 'hours' },
-//   sick: { available: 40, accrued: 40, used: 0, unit: 'hours' },
-//   personal: { available: 16, accrued: 16, used: 0, unit: 'hours' }
-// }
+// Natural as asking a coworker
+await bamboohr`how much PTO does Sarah have?`
+await bamboohr`who's out this week?`
+await bamboohr`vacation calendar for March`
 
-// Request time off
-await hr.timeOff.request({
-  employee: 'sarah-chen',
-  type: 'vacation',
-  start: '2025-03-17',
-  end: '2025-03-21',
-  hours: 40,
-  notes: 'Spring break trip'
-})
+// Request time off in one line
+await bamboohr`Sarah taking March 17-21 off for spring break`
 // Auto-routes to manager for approval
 
-// Manager approves
-await hr.timeOff.approve('request-123', {
-  approver: 'alex-kim',
-  notes: 'Enjoy your trip!'
-})
+// Manager approves naturally
+await bamboohr`approve Sarah's PTO request`
 
-// Calendar view
-await hr.timeOff.calendar('2025-03')
-// Shows who's out when
+// Bulk queries just work
+await bamboohr`employees with more than 80 hours unused PTO`
+await bamboohr`team utilization this quarter`
 ```
 
 ### Onboarding
@@ -138,36 +122,21 @@ await hr.timeOff.calendar('2025-03')
 New hire checklists that actually get completed.
 
 ```typescript
-// Create onboarding workflow
-await hr.onboarding.createWorkflow('engineering-new-hire', {
-  tasks: [
-    // Before day 1
-    { task: 'Send welcome email', due: -7, assignee: 'hr' },
-    { task: 'Order laptop', due: -7, assignee: 'it' },
-    { task: 'Set up accounts', due: -3, assignee: 'it' },
-    { task: 'Assign buddy', due: -3, assignee: 'manager' },
+// Onboard in one line
+await bamboohr`onboard Sarah Chen as Engineer on Alex's team`
+  .provision(`laptop, Slack, GitHub, Figma`)
+  .buddy(`Jamie Wong`)
 
-    // Day 1
-    { task: 'Complete I-9', due: 0, assignee: 'employee' },
-    { task: 'Review handbook', due: 0, assignee: 'employee' },
-    { task: 'Team introductions', due: 0, assignee: 'manager' },
+// Or step by step
+await bamboohr`hire Sarah Chen as Engineer starting Jan 15`
+await bamboohr`assign Sarah to Engineering onboarding`
+await bamboohr`order laptop for Sarah`
+await bamboohr`set up Sarah's accounts`
 
-    // First week
-    { task: 'Set up dev environment', due: 3, assignee: 'employee' },
-    { task: '1:1 with manager', due: 5, assignee: 'manager' },
-    { task: 'First project assignment', due: 5, assignee: 'manager' },
-
-    // First month
-    { task: '30-day check-in', due: 30, assignee: 'hr' },
-  ]
-})
-
-// Start onboarding for new hire
-await hr.onboarding.start('sarah-chen', 'engineering-new-hire')
-
-// Track progress
-const status = await hr.onboarding.status('sarah-chen')
-// { completed: 5, total: 11, nextTask: 'Set up dev environment', dueIn: '2 days' }
+// Track progress naturally
+await bamboohr`Sarah's onboarding status`
+await bamboohr`incomplete onboarding tasks this week`
+await bamboohr`new hires without assigned buddies`
 ```
 
 ### Performance Management
@@ -175,65 +144,23 @@ const status = await hr.onboarding.status('sarah-chen')
 Goal setting, reviews, feedback. Lightweight but effective.
 
 ```typescript
-// Set goals
-await hr.performance.setGoals('sarah-chen', {
-  period: '2025-Q1',
-  goals: [
-    {
-      title: 'Ship authentication service',
-      description: 'Design and implement OAuth2 + SAML support',
-      weight: 40,
-      keyResults: [
-        'OAuth2 provider integration complete',
-        'SAML SSO working with 3+ IdPs',
-        '< 100ms auth latency'
-      ]
-    },
-    {
-      title: 'Reduce API errors by 50%',
-      description: 'Improve error handling and monitoring',
-      weight: 30,
-      keyResults: [
-        'Error rate < 0.1%',
-        'All errors properly categorized',
-        'Alerting in place for anomalies'
-      ]
-    },
-    {
-      title: 'Mentor junior developer',
-      description: 'Help Jamie ramp up on the codebase',
-      weight: 30,
-      keyResults: [
-        'Weekly 1:1s scheduled',
-        'Code review feedback provided',
-        'Jamie shipping independently by end of Q1'
-      ]
-    }
-  ]
-})
+// Set goals naturally
+await bamboohr`Sarah's Q1 goal: ship auth service with OAuth2 and SAML`
+await bamboohr`Sarah's Q1 goal: reduce API errors by 50%`
+await bamboohr`Sarah's Q1 goal: mentor Jamie on the codebase`
 
 // Request feedback
-await hr.performance.requestFeedback('sarah-chen', {
-  from: ['alex-kim', 'jamie-wong', 'chris-taylor'],
-  questions: [
-    'What should Sarah keep doing?',
-    'What could Sarah improve?',
-    'Any other feedback?'
-  ],
-  due: '2025-03-15'
-})
+await bamboohr`request feedback on Sarah from her teammates`
+await bamboohr`360 review for Sarah due March 15`
 
-// Conduct review
-await hr.performance.createReview('sarah-chen', {
-  reviewer: 'alex-kim',
-  period: '2025-Q1',
-  rating: 'exceeds-expectations',
-  summary: 'Sarah has been exceptional...',
-  goalAssessments: [
-    { goal: 'Ship authentication service', rating: 'met', notes: '...' },
-    // ...
-  ]
-})
+// Reviews flow naturally
+await bamboohr`start Sarah's Q1 review`
+await bamboohr`Sarah exceeded expectations this quarter`
+
+// Bulk operations
+await bamboohr`employees without Q1 goals`
+await bamboohr`pending reviews this week`
+await bamboohr`team feedback completion rates`
 ```
 
 ### Document Storage
@@ -241,27 +168,18 @@ await hr.performance.createReview('sarah-chen', {
 Employee documents in one place.
 
 ```typescript
-// Store documents
-await hr.documents.upload('sarah-chen', {
-  type: 'offer-letter',
-  file: offerLetterPdf,
-  visibility: 'employee-and-hr'
-})
+// Store documents naturally
+await bamboohr`upload Sarah's offer letter`
+await bamboohr`add I-9 for Sarah`
 
-// Organize by type
-await hr.documents.list('sarah-chen')
-// [
-//   { type: 'offer-letter', uploaded: '2025-01-01' },
-//   { type: 'i9', uploaded: '2025-01-15' },
-//   { type: 'w4', uploaded: '2025-01-15' },
-//   { type: 'direct-deposit', uploaded: '2025-01-15' }
-// ]
+// Find documents
+await bamboohr`Sarah's documents`
+await bamboohr`unsigned policy acknowledgments`
+await bamboohr`expiring certifications this month`
 
-// E-signature integration
-await hr.documents.requestSignature('sarah-chen', {
-  document: 'policy-update-2025',
-  due: '2025-02-01'
-})
+// E-signatures
+await bamboohr`send handbook acknowledgment to Sarah for signature`
+await bamboohr`policy update needs signature from all employees by Feb 1`
 ```
 
 ### Reporting
@@ -269,36 +187,16 @@ await hr.documents.requestSignature('sarah-chen', {
 See your workforce data clearly.
 
 ```typescript
-// Headcount over time
-await hr.reports.headcount({
-  from: '2024-01-01',
-  to: '2025-01-01',
-  groupBy: 'department'
-})
+// Ask for what you need
+await bamboohr`headcount by department this year`
+await bamboohr`turnover rate by department 2024`
+await bamboohr`PTO utilization across Engineering`
+await bamboohr`tenure distribution company-wide`
 
-// Turnover analysis
-await hr.reports.turnover({
-  period: '2024',
-  groupBy: 'department'
-})
-// { engineering: 8%, sales: 22%, support: 15% }
-
-// Time off utilization
-await hr.reports.timeOffUtilization({
-  period: '2024',
-  type: 'vacation'
-})
-
-// Tenure distribution
-await hr.reports.tenure()
-// { '<1 year': 35%, '1-2 years': 25%, '2-5 years': 30%, '5+ years': 10% }
-
-// Custom reports
-await hr.reports.custom({
-  select: ['department', 'location', 'count(*)'],
-  groupBy: ['department', 'location'],
-  where: { status: 'active' }
-})
+// Complex queries, natural language
+await bamboohr`employees by department and location`
+await bamboohr`hiring trend last 12 months`
+await bamboohr`average tenure in Sales vs Engineering`
 ```
 
 ## AI Assistant
@@ -308,26 +206,18 @@ await hr.reports.custom({
 ```typescript
 import { olive } from 'bamboohr.do/agents'
 
-// Employees get instant answers
+// Employees talk to Olive naturally
 await olive`How much PTO do I have?`
-// "You have 80 hours of vacation, 40 hours of sick leave, and 16 hours of personal time available."
+await olive`I need next Friday off`
+await olive`what's our remote work policy?`
+await olive`who's out this week?`
 
-await olive`I need to take next Friday off`
-// "I've created a vacation request for Friday, March 21st (8 hours).
-//  I've sent this to Alex Kim for approval. You'll be notified when approved."
-
-await olive`What's the policy on remote work?`
-// "According to our Employee Handbook (last updated January 2025):
-//  - Engineering can work remotely up to 3 days per week
-//  - Remote work requires manager approval for more than 3 consecutive days
-//  - International remote work requires HR approval
-//  Would you like me to submit a remote work request?"
-
-await olive`Who's out this week?`
-// "This week in Engineering:
-//  - Jamie Wong: Out Monday (sick)
-//  - Chris Taylor: Out Thursday-Friday (vacation)
-//  - Maria Garcia: Working remotely Tuesday-Thursday"
+// Olive handles the complexity
+// - Checks balances
+// - Creates requests
+// - Routes for approval
+// - Answers policy questions
+// - All from natural language
 ```
 
 ### AI-Powered Onboarding
@@ -335,88 +225,46 @@ await olive`Who's out this week?`
 Olive guides new hires through their first days:
 
 ```typescript
-// New hire asks Olive for help
-await olive`Hi, I'm new here. What should I do first?`
-// "Welcome to the team, Sarah! I'm Olive, your HR assistant.
-//
-// For today, here's what you need to complete:
-// 1. Complete your I-9 form (I can help you with this)
-// 2. Review the employee handbook
-// 3. Your team intro meeting is at 2pm in Conf Room A
-//
-// Would you like to start with the I-9? I can walk you through it."
+// New hires talk to Olive
+await olive`I'm new here, what should I do first?`
+await olive`help me with my I-9`
+await olive`where do I find the employee handbook?`
+await olive`who's my buddy?`
 
-await olive`Yes, let's do the I-9`
-// "Great! The I-9 verifies your identity and work authorization.
-//
-// I've pulled up the form. For Section 1, I'll need:
-// - Full legal name (I have Sarah Chen from your profile)
-// - Address (I have 123 Main St, San Francisco)
-// - Date of birth
-// - Social Security Number
-// - Citizenship status
-//
-// Does 'Sarah Chen' at '123 Main St' look correct?"
+// Olive walks them through everything
+// - Forms and paperwork
+// - Account setup
+// - Team introductions
+// - First week tasks
 ```
 
 ### AI-Assisted Performance Reviews
 
 ```typescript
-// Manager asks for help writing reviews
-await olive`Help me write Sarah's performance review`
-// "Based on Sarah's goals and activity this quarter:
-//
-// GOALS ACHIEVED:
-// - Authentication service shipped 2 weeks early
-// - API errors reduced by 62% (exceeded 50% target)
-// - Weekly mentoring sessions with Jamie documented
-//
-// FEEDBACK RECEIVED:
-// - Peers praised her code review thoroughness
-// - Jamie mentioned her patience and clear explanations
-//
-// DRAFT SUMMARY:
-// 'Sarah exceeded expectations in Q1. She delivered the critical
-// authentication service ahead of schedule while significantly
-// improving system reliability. Her mentorship of Jamie has
-// accelerated his onboarding and demonstrates leadership potential.'
-//
-// Would you like me to draft the full review based on this?"
+// Managers get help writing reviews
+await olive`help me write Sarah's performance review`
+await olive`summarize Sarah's Q1 accomplishments`
+await olive`what feedback did Sarah receive this quarter?`
+
+// Olive drafts, you approve
+// - Pulls goals and achievements
+// - Incorporates peer feedback
+// - Drafts review summary
+// - You review and finalize
 ```
 
 ### AI for HR Operations
 
 ```typescript
-// HR asks for insights
-await olive`Show me onboarding completion rates by department`
-// "Onboarding completion rates (last 12 months):
-//
-// Engineering: 94% completed within 30 days
-// Sales: 87% completed within 30 days
-// Marketing: 91% completed within 30 days
-// Support: 78% completed within 30 days (below target)
-//
-// Support has the most 'buddy assignment' task failures.
-// Recommend: Review Support buddy program capacity."
+// HR gets insights
+await olive`onboarding completion rates by department`
+await olive`which teams have low buddy assignment rates?`
+await olive`draft announcement for new PTO policy`
 
-await olive`Draft an announcement for the new PTO policy`
-// "Here's a draft announcement:
-//
-// Subject: Updated PTO Policy - More Flexibility in 2025
-//
-// Team,
-//
-// We're excited to announce updates to our PTO policy, effective March 1st:
-//
-// - Vacation increases from 15 to 20 days annually
-// - Unused PTO now rolls over (up to 5 days)
-// - New 'floating holidays' - 3 days for personal observances
-//
-// Full details in the updated handbook. Questions? Ask me or Olive.
-//
-// - HR Team
-//
-// Want me to adjust the tone or add anything?"
+// Olive surfaces actionable insights
+// - Identifies bottlenecks
+// - Drafts communications
+// - Suggests improvements
 ```
 
 ## Self-Service
@@ -424,33 +272,14 @@ await olive`Draft an announcement for the new PTO policy`
 Employees handle their own HR tasks. No tickets required.
 
 ```typescript
-// Employee updates their own info
-await hr.self.updateAddress('sarah-chen', {
-  street: '456 Oak Ave',
-  city: 'San Francisco',
-  state: 'CA',
-  zip: '94102'
-})
+// Employees update their own info naturally
+await bamboohr`update my address to 456 Oak Ave, San Francisco`
+await bamboohr`my emergency contact is John Chen, spouse, 415-555-1234`
+await bamboohr`update my direct deposit`
+await bamboohr`show my pay stubs`
+await bamboohr`update my profile photo`
 
-// Emergency contact
-await hr.self.updateEmergencyContact('sarah-chen', {
-  name: 'John Chen',
-  relationship: 'Spouse',
-  phone: '415-555-1234'
-})
-
-// Direct deposit
-await hr.self.updateBankAccount('sarah-chen', {
-  routingNumber: '******456',
-  accountNumber: '******7890',
-  accountType: 'checking'
-})
-
-// View pay stubs (if using payroll integration)
-await hr.self.payStubs('sarah-chen')
-
-// Update profile photo
-await hr.self.updatePhoto('sarah-chen', photoBlob)
+// All self-service, no HR tickets needed
 ```
 
 ## Architecture
@@ -484,54 +313,23 @@ DocumentDO               - Employee documents
 
 ## Integrations
 
-### Payroll (Optional)
-
-Connect to your payroll provider:
+Connect naturally:
 
 ```typescript
-await hr.integrations.connect('gusto', {
-  apiKey: process.env.GUSTO_API_KEY
-})
+// Payroll
+await bamboohr`connect to Gusto`
+await bamboohr`sync payroll with gusto.do`
 
-// Or use gusto.do for fully integrated payroll
-await hr.integrations.connect('gusto.do', {
-  // Same account - seamless integration
-})
-```
+// SSO
+await bamboohr`enable Okta SSO`
 
-### SSO
-
-```typescript
-await hr.integrations.connect('okta', {
-  clientId: process.env.OKTA_CLIENT_ID,
-  clientSecret: process.env.OKTA_CLIENT_SECRET
-})
-
-// Employees sign in with company SSO
-```
-
-### Slack
-
-```typescript
-await hr.integrations.connect('slack', {
-  botToken: process.env.SLACK_BOT_TOKEN
-})
-
-// Notifications in Slack
-// - "Sarah Chen joined the team!"
-// - "Time off request approved"
-// - "New company announcement"
-
-// Ask Olive in Slack
+// Slack
+await bamboohr`connect Slack`
+// Then employees ask Olive in Slack:
 // @Olive how much PTO do I have?
-```
 
-### Calendar
-
-```typescript
-await hr.integrations.connect('google-calendar', {
-  // Syncs time-off to team calendars
-})
+// Calendar
+await bamboohr`sync time-off to Google Calendar`
 ```
 
 ## Pricing
@@ -552,14 +350,10 @@ Same company on bamboohr.do Managed: $1,188/year
 Import from BambooHR:
 
 ```typescript
-import { migrate } from 'bamboohr.do/migrate'
+// One line migration
+await bamboohr`import from BambooHR`
 
-await migrate.fromBambooHR({
-  apiKey: process.env.BAMBOOHR_API_KEY,
-  subdomain: 'your-company'
-})
-
-// Imports:
+// Imports everything:
 // - All employee records
 // - Time off balances and history
 // - Documents

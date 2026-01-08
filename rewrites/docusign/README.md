@@ -6,40 +6,33 @@ DocuSign turned "send a PDF for signature" into a $15B company charging $10-60 p
 
 **docusign.do** is the open-source alternative. Send documents for signature. Full contract lifecycle management. AI that actually reads and negotiates contracts.
 
-## The workers.do Way
-
-You're a founder who just wants to close deals. But every contract becomes a negotiation nightmare - redlines flying back and forth, legal review backlogs, signature chasing. Meanwhile, DocuSign charges you per envelope to send PDFs.
-
-**workers.do** gives you AI that closes deals:
+## AI-Native API
 
 ```typescript
-import { docusign, mark } from 'workers.do'
-
-// Natural language for agreements
-const contracts = await docusign`find contracts expiring in 90 days`
-const risks = await docusign`analyze ${vendor} agreement for liability gaps`
-const status = await docusign`which signatures are we waiting on for ${deal}`
+import { docusign } from 'docusign.do'           // Full SDK
+import { docusign } from 'docusign.do/tiny'      // Minimal client
+import { docusign } from 'docusign.do/clm'       // CLM-only operations
 ```
 
-Promise pipelining for contract workflows - one network round trip:
+Natural language for agreements:
 
 ```typescript
+import { docusign } from 'docusign.do'
+
+// Talk to it like an assistant
+const nda = await docusign`send NDA to alice@acme.com`
+const pending = await docusign`envelopes pending signature`
+const expiring = await docusign`contracts expiring in 90 days`
+
+// Chain like sentences
+await docusign`envelopes pending over 7 days`
+  .map(env => docusign`remind ${env.recipient}`)
+
 // Proposal to signed deal
-const signed = await docusign`generate ${service} agreement for ${customer}`
-  .map(contract => docusign`apply our standard negotiation playbook`)
-  .map(redlined => docusign`send for signature to ${customer.legal}`)
-  .map(executed => mark`notify sales team about ${executed}`)
-```
-
-AI agents that negotiate for you:
-
-```typescript
-import { priya, tom, sally } from 'agents.do'
-
-// Contract intelligence
-await priya`compare ${vendor} terms against our standard positions`
-await tom`identify non-standard clauses in ${agreement} requiring review`
-await sally`draft response to ${vendor} redlines - protect our interests`
+await docusign`generate MSA for Acme Corp`
+  .map(contract => docusign`apply standard negotiation playbook`)
+  .map(redlined => docusign`send to legal@acme.com for signature`)
+  .notify(`Deal closed with Acme`)
 ```
 
 ## The Problem
@@ -85,162 +78,61 @@ Your own e-signature and CLM platform. Legally binding. AI-powered.
 Send, sign, done:
 
 ```typescript
-import { sign } from 'docusign.do'
+// Send documents for signature
+await docusign`send service agreement to john@acme.com`
+await docusign`send NDA to alice@startup.com and bob@startup.com`
+await docusign`send offer letter to candidate@email.com cc hr@company.com`
 
-// Create envelope
-const envelope = await sign.envelopes.create({
-  name: 'Service Agreement - Acme Corp',
-  documents: [
-    {
-      name: 'Service Agreement',
-      file: agreementPdf,
-      fileType: 'pdf',
-    },
-  ],
-  recipients: [
-    {
-      role: 'signer',
-      name: 'John Smith',
-      email: 'john@acme.com',
-      order: 1,
-      fields: [
-        { type: 'signature', page: 5, x: 100, y: 600, required: true },
-        { type: 'date', page: 5, x: 300, y: 600, required: true },
-        { type: 'initial', page: 2, x: 450, y: 700, required: true },
-        { type: 'initial', page: 3, x: 450, y: 700, required: true },
-      ],
-    },
-    {
-      role: 'signer',
-      name: 'Jane Doe',
-      email: 'jane@vendor.com',
-      order: 2,
-      fields: [
-        { type: 'signature', page: 5, x: 100, y: 650, required: true },
-        { type: 'date', page: 5, x: 300, y: 650, required: true },
-      ],
-    },
-    {
-      role: 'cc',
-      name: 'Legal Team',
-      email: 'legal@acme.com',
-    },
-  ],
-  message: {
-    subject: 'Please sign: Service Agreement',
-    body: 'Please review and sign the attached service agreement.',
-  },
-  options: {
-    reminderDays: 3,
-    expireDays: 30,
-  },
-})
-
-// Send for signature
-await envelope.send()
+// Check status naturally
+await docusign`status of Acme agreement`
+await docusign`who hasn't signed the NDA yet?`
+await docusign`envelopes sent this week`
 ```
 
-### Signing Experience
-
-Beautiful, mobile-friendly:
+### Signing Workflows
 
 ```typescript
-// Customize signing experience
-await sign.branding.configure({
-  logo: 'https://...',
-  primaryColor: '#0066CC',
-  buttonText: 'Sign Document',
-  signatureOptions: ['draw', 'type', 'upload'],
-  languageOptions: ['en', 'es', 'fr', 'de', 'zh'],
-})
+// Sequential signing
+await docusign`send contract to cfo@acme.com then ceo@acme.com`
+
+// Parallel signing
+await docusign`send NDA to all founders at once`
 
 // In-person signing
-await sign.envelopes.signInPerson({
-  envelope: 'ENV-001',
-  hostEmail: 'host@company.com',
-  signerName: 'John Smith',
-  signerEmail: 'john@acme.com',
-})
+await docusign`start in-person signing for John Smith hosted by reception`
 
-// Embedded signing (in your app)
-const signingUrl = await sign.envelopes.embeddedSigningUrl({
-  envelope: 'ENV-001',
-  signer: 'john@acme.com',
-  returnUrl: 'https://yourapp.com/signed',
-})
+// Embedded in your app
+const url = await docusign`signing link for john@acme.com`
 ```
 
 ### Templates
 
-Reusable agreement templates:
-
 ```typescript
-// Create template
-const template = await sign.templates.create({
-  name: 'Standard NDA',
-  documents: [
-    {
-      name: 'Non-Disclosure Agreement',
-      file: ndaTemplate,
-    },
-  ],
-  roles: [
-    {
-      name: 'Disclosing Party',
-      fields: [
-        { type: 'text', label: 'Company Name', page: 1, x: 200, y: 150 },
-        { type: 'signature', page: 3, x: 100, y: 500 },
-        { type: 'date', page: 3, x: 300, y: 500 },
-      ],
-    },
-    {
-      name: 'Receiving Party',
-      fields: [
-        { type: 'text', label: 'Company Name', page: 1, x: 200, y: 200 },
-        { type: 'signature', page: 3, x: 100, y: 600 },
-        { type: 'date', page: 3, x: 300, y: 600 },
-      ],
-    },
-  ],
-  defaultMessage: {
-    subject: 'NDA for your signature',
-    body: 'Please review and sign the attached NDA.',
-  },
-})
+// Use templates naturally
+await docusign`send standard NDA to alice@acme.com`
+await docusign`send employee offer to candidate using senior-engineer template`
 
-// Use template
-await sign.envelopes.createFromTemplate({
-  template: template.id,
-  recipients: {
-    'Disclosing Party': { name: 'Acme Corp', email: 'legal@acme.com' },
-    'Receiving Party': { name: 'Vendor Inc', email: 'contracts@vendor.com' },
-  },
-  prefillData: {
-    'Company Name': { 'Disclosing Party': 'Acme Corporation' },
-  },
-})
+// Create templates from examples
+await docusign`save this as our standard MSA template`
+
+// List available templates
+await docusign`our templates`
+await docusign`NDA templates`
 ```
 
 ### Bulk Send
 
-Thousands of agreements, one click:
+Thousands of agreements, one line:
 
 ```typescript
-// Send same agreement to many recipients
-await sign.bulk.send({
-  template: 'standard-nda',
-  recipients: [
-    { name: 'John Smith', email: 'john@company1.com', data: { company: 'Company 1' } },
-    { name: 'Jane Doe', email: 'jane@company2.com', data: { company: 'Company 2' } },
-    { name: 'Bob Wilson', email: 'bob@company3.com', data: { company: 'Company 3' } },
-    // ...thousands more
-  ],
-  options: {
-    batchSize: 100,
-    delayBetweenBatches: '1 minute',
-    notifyOnComplete: 'admin@company.com',
-  },
-})
+// Bulk send to a list
+await docusign`send annual NDA renewal to all vendors`
+await docusign`send policy update to all employees`
+
+// With tracking
+await docusign`send Q1 agreements to all customers`
+  .track()
+  .notify(`Q1 agreements complete`)
 ```
 
 ## Contract Lifecycle Management
@@ -252,45 +144,16 @@ Full CLM, not an afterthought:
 All your agreements, searchable:
 
 ```typescript
-import { clm } from 'docusign.do'
+// Search contracts naturally
+await docusign`contracts with auto-renewal`
+await docusign`active contracts expiring in 90 days`
+await docusign`contracts worth over $100k`
+await docusign`all Acme Corp agreements`
 
 // Import existing contracts
-await clm.contracts.import({
-  source: 'folder',
-  path: '/contracts',
-  extract: {
-    parties: true,
-    dates: true,
-    values: true,
-    terms: true,
-  },
-})
+await docusign`import contracts from /contracts folder`
 
-// Search contracts
-const results = await clm.contracts.search({
-  query: 'auto-renewal',
-  filters: {
-    status: 'active',
-    expiresWithin: '90 days',
-    value: { min: 100000 },
-  },
-})
-
-// Get contract details
-const contract = await clm.contracts.get('CTR-001')
-// {
-//   id: 'CTR-001',
-//   title: 'Master Service Agreement',
-//   parties: ['Acme Corp', 'Vendor Inc'],
-//   effectiveDate: '2024-01-15',
-//   expirationDate: '2027-01-14',
-//   value: 500000,
-//   renewalType: 'auto',
-//   noticePeriod: 90,
-//   keyTerms: [...],
-//   documents: [...],
-//   amendments: [...],
-// }
+// AI extracts parties, dates, values, key terms automatically
 ```
 
 ### Contract Requests
@@ -298,48 +161,18 @@ const contract = await clm.contracts.get('CTR-001')
 Intake and approval workflows:
 
 ```typescript
-// Create contract request
-await clm.requests.create({
-  type: 'new-vendor',
-  requestor: 'user-001',
-  details: {
-    vendorName: 'New Vendor Inc',
-    contractType: 'SaaS Subscription',
-    annualValue: 50000,
-    department: 'Engineering',
-    businessJustification: 'Required for CI/CD pipeline',
-  },
-  attachments: ['vendor-proposal.pdf'],
-})
+// Request new contracts naturally
+await docusign`request vendor contract for CloudTech $50k/year for Engineering`
 
-// Approval workflow
-await clm.workflows.define({
-  name: 'Vendor Contract Approval',
-  trigger: { type: 'new-vendor' },
-  steps: [
-    {
-      name: 'Department Review',
-      approvers: ['department-head'],
-      condition: 'all',
-    },
-    {
-      name: 'Legal Review',
-      approvers: ['legal-team'],
-      condition: 'any',
-      required: true,
-    },
-    {
-      name: 'Finance Approval',
-      approvers: ['finance'],
-      condition: 'value > 25000',
-    },
-    {
-      name: 'Executive Approval',
-      approvers: ['cfo'],
-      condition: 'value > 100000',
-    },
-  ],
-})
+// Approvals flow automatically based on value
+// - Department head reviews all
+// - Legal reviews all
+// - Finance approves > $25k
+// - CFO approves > $100k
+
+// Check approval status
+await docusign`status of CloudTech contract request`
+await docusign`pending approvals for Engineering`
 ```
 
 ### Clause Library
@@ -347,42 +180,16 @@ await clm.workflows.define({
 Standard clauses, consistent language:
 
 ```typescript
-// Define clause library
-await clm.clauses.create({
-  name: 'Standard Limitation of Liability',
-  category: 'Liability',
-  text: `
-    IN NO EVENT SHALL EITHER PARTY BE LIABLE TO THE OTHER FOR ANY
-    INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES,
-    REGARDLESS OF THE CAUSE OF ACTION OR THE FORM OF ACTION.
+// Query your clause library
+await docusign`our standard liability clause`
+await docusign`indemnification alternatives`
+await docusign`confidentiality clauses`
 
-    THE TOTAL LIABILITY OF EITHER PARTY SHALL NOT EXCEED [AMOUNT].
-  `,
-  variables: [
-    { name: 'AMOUNT', type: 'currency', default: 'fees paid in prior 12 months' },
-  ],
-  alternatives: [
-    {
-      name: 'Mutual Cap',
-      text: '...total liability shall not exceed the greater of $[CAP] or...',
-    },
-    {
-      name: 'Unlimited for IP',
-      text: '...except for claims arising from intellectual property infringement...',
-    },
-  ],
-  fallbackPosition: 'mutual-cap',
-})
+// Author contracts from clauses
+await docusign`draft MSA for CloudTech using standard clauses`
 
-// Use in contract authoring
-await clm.contracts.author({
-  template: 'msa-template',
-  clauses: [
-    { id: 'standard-limitation-of-liability', variables: { AMOUNT: '$1,000,000' } },
-    { id: 'standard-indemnification' },
-    { id: 'standard-confidentiality' },
-  ],
-})
+// Compare against standards
+await docusign`how does this liability cap compare to our standard?`
 ```
 
 ### Obligations Tracking
@@ -390,29 +197,17 @@ await clm.contracts.author({
 Never miss a deadline:
 
 ```typescript
-// Extract obligations from contract
-await clm.obligations.extract('CTR-001')
+// Track upcoming obligations
+await docusign`obligations due in 30 days`
+await docusign`renewal notices needed this quarter`
+await docusign`insurance certificates expiring`
 
-// Track obligations
-const obligations = await clm.obligations.list({
-  contract: 'CTR-001',
-  upcoming: '30 days',
-})
-// [
-//   { type: 'renewal-notice', dueDate: '2025-10-15', action: 'Send 90-day notice' },
-//   { type: 'audit-rights', dueDate: '2025-06-01', action: 'Annual audit window opens' },
-//   { type: 'insurance', dueDate: '2025-12-31', action: 'Provide certificate renewal' },
-// ]
+// AI extracts obligations from contracts automatically
+await docusign`extract obligations from Acme MSA`
 
-// Set up alerts
-await clm.obligations.alerts({
-  contract: 'CTR-001',
-  notifications: [
-    { daysBefore: 30, recipients: ['contract-owner'] },
-    { daysBefore: 7, recipients: ['contract-owner', 'legal'] },
-    { daysBefore: 1, recipients: ['contract-owner', 'legal', 'executive'] },
-  ],
-})
+// Set up alerts naturally
+await docusign`alert me 30 days before any renewal deadline`
+await docusign`notify legal 7 days before compliance deadlines`
 ```
 
 ### Amendment Management
@@ -420,230 +215,114 @@ await clm.obligations.alerts({
 Track changes over time:
 
 ```typescript
-// Create amendment
-await clm.amendments.create({
-  contract: 'CTR-001',
-  title: 'First Amendment - Price Increase',
-  effectiveDate: '2025-07-01',
-  changes: [
-    {
-      section: '4.1',
-      original: 'Annual fee: $50,000',
-      amended: 'Annual fee: $55,000',
-      reason: 'Annual price adjustment per Section 4.3',
-    },
-  ],
-  signatories: [
-    { party: 'Acme Corp', signer: 'legal@acme.com' },
-    { party: 'Vendor Inc', signer: 'contracts@vendor.com' },
-  ],
-})
+// Create amendments naturally
+await docusign`amend Acme contract: increase annual fee to $55k effective July 1`
 
-// View contract with all amendments
-const consolidatedContract = await clm.contracts.consolidated('CTR-001')
+// View full history
+await docusign`Acme contract with all amendments`
+await docusign`what changed in the Acme contract?`
+
+// Send amendment for signature
+await docusign`send price increase amendment to Acme for signature`
 ```
 
 ## AI-Native Agreements
 
-### AI Contract Analysis
+### Contract Analysis
 
 ```typescript
-import { tom } from 'agents.do'
+// Analyze any contract
+await docusign`analyze vendor contract for risks`
+await docusign`review ${contract} against our standard positions`
+await docusign`risk score for Acme MSA`
 
-// Analyze contract
-await tom`
-  Review this vendor contract and identify:
-  1. Terms that deviate from our standard positions
-  2. Missing protective clauses
-  3. Unusual risk allocations
-  4. Auto-renewal and termination provisions
-  5. Hidden fees or escalation clauses
-
-  Provide risk score and negotiation recommendations.
-`
-
-// Tom analyzes and returns:
-// "RISK SCORE: 7/10 (Elevated)
-//
-// Key Issues:
-// 1. Liability cap is only $50K vs our standard of fees paid
-// 2. Missing mutual confidentiality - only one-way
-// 3. 60-day auto-renewal notice (our standard is 30)
-// 4. Includes 5% annual escalator not discussed in proposal
-// 5. Change of control provision is vendor-favorable
-//
-// Recommended Actions:
-// 1. Request mutual liability cap at 12-month fees
-// 2. Add mutual confidentiality provision
-// 3. Negotiate 30-day notice period
-// 4. Remove or cap annual escalator
-// 5. Add mutual change of control rights"
+// AI identifies automatically:
+// - Terms deviating from standards
+// - Missing protective clauses
+// - Unusual risk allocations
+// - Hidden fees or escalators
+// - Auto-renewal traps
 ```
 
-### AI Contract Negotiation
+### Contract Negotiation
 
 ```typescript
-import { sally } from 'agents.do'
+// Generate redlines
+await docusign`redline vendor contract using our playbook`
+await docusign`propose our standard liability language`
 
-// Generate redline
-await sally`
-  Based on the contract analysis, generate a redline that:
-  1. Proposes our standard liability language
-  2. Adds mutual confidentiality
-  3. Adjusts notice periods
-  4. Removes the escalator clause
-  5. Includes brief explanatory comments
+// Draft negotiation responses
+await docusign`draft response to vendor redlines - protect our interests`
+await docusign`email to vendor legal: accept their indemnity, counter on liability`
 
-  Tone: Professional, collaborative, focused on fairness
-`
-
-// Auto-generate negotiation email
-await sally`
-  Draft an email to the vendor's legal team:
-  - Acknowledge receipt of the contract
-  - Express interest in moving forward
-  - Summarize our proposed changes (high-level)
-  - Offer to discuss on a call
-
-  Tone: Positive, business-focused, not adversarial
-`
+// AI maintains professional, collaborative tone
 ```
 
-### AI Contract Generation
+### Contract Generation
 
 ```typescript
-import { ralph } from 'agents.do'
+// Generate from term sheets
+await docusign`draft MSA for CloudTech: 3 years, $120k/year, 99.9% SLA`
 
-// Generate contract from term sheet
-await ralph`
-  Create a Master Service Agreement based on these terms:
-  - Vendor: CloudTech Inc
-  - Service: Cloud infrastructure management
-  - Term: 3 years
-  - Annual fee: $120,000
-  - SLA: 99.9% uptime
-  - Payment terms: Net 30
-  - Both parties based in Delaware
+// AI uses clause library and standard positions automatically
 
-  Use our standard MSA template.
-  Include appropriate SaaS-specific provisions.
-`
-
-// Ralph generates complete contract
-// Using clause library and standard positions
+// Or from natural descriptions
+await docusign`create NDA for discussing potential acquisition with Acme`
+await docusign`draft consulting agreement for Jane Doe $200/hr`
 ```
 
-### AI Clause Comparison
+### Clause Comparison
 
 ```typescript
-import { priya } from 'agents.do'
-
-// Compare clauses across contracts
-await priya`
-  Compare the indemnification clauses in:
-  - CTR-001 (Microsoft)
-  - CTR-002 (AWS)
-  - CTR-003 (Google Cloud)
-
-  Which is most favorable to us?
-  What's the market standard?
-  Recommend our go-forward position.
-`
+// Compare across contracts
+await docusign`compare indemnification in Microsoft vs AWS vs Google contracts`
+await docusign`which vendor has the best liability terms?`
+await docusign`market standard for data processing agreements`
 ```
 
-### AI Obligation Extraction
+### Obligation Extraction
 
 ```typescript
-import { ada } from 'docusign.do/agents'
+// Extract obligations automatically
+await docusign`extract obligations from Acme MSA`
 
-// Extract all obligations from contract
-await ada`
-  Read CTR-001 and extract ALL obligations for both parties:
-
-  For each obligation:
-  - Who is obligated (us or them)
-  - What the obligation is
-  - When it's due (one-time or recurring)
-  - Consequences of non-compliance
-  - Related contract section
-
-  Format as structured data for our obligations tracker.
-`
+// Returns structured data:
+// - Who is obligated (us or them)
+// - What the obligation is
+// - When it's due
+// - Consequences of non-compliance
 ```
 
 ## Legal Validity
 
 E-signatures are legally binding:
 
-### ESIGN Act Compliance (US)
+### Compliance Built In
+
+ESIGN Act (US), UETA (all states), eIDAS (EU) - all supported automatically. Consumer consent, record retention, tamper-evident timestamps, comprehensive audit trails.
 
 ```typescript
-// US federal e-signature law since 2000
-await sign.compliance.esign({
-  // Consumer consent
-  consent: {
-    required: true,
-    withdrawable: true,
-    recordRetention: true,
-  },
+// Check compliance status
+await docusign`compliance status for Acme agreement`
+await docusign`audit trail for ENV-001`
 
-  // Record retention
-  retention: {
-    duration: '7 years',
-    format: 'original',
-    accessible: true,
-  },
-
-  // Attribution
-  attribution: {
-    identity: 'email',
-    timestamp: 'tamper-evident',
-    auditTrail: 'comprehensive',
-  },
-})
-```
-
-### UETA Compliance
-
-```typescript
-// Uniform Electronic Transactions Act (all states except NY)
-await sign.compliance.ueta({
-  agreement: 'electronic-records',
-  attribution: true,
-  integrity: true,
-})
-```
-
-### eIDAS Compliance (EU)
-
-```typescript
-// European e-signature regulation
-await sign.compliance.eidas({
-  signatureLevel: 'advanced', // or 'simple', 'qualified'
-  timestamping: 'qualified-service',
-  validation: 'long-term',
-  // For qualified signatures
-  qualifiedSignatureDevice: 'optional',
-})
+// Get certificate of completion
+await docusign`certificate for Acme NDA`
+// Includes: All parties, timestamps, IP addresses, signature images, document hash
 ```
 
 ### Audit Trail
 
-Every action recorded:
+Every action recorded automatically:
 
 ```typescript
-const auditTrail = await sign.envelopes.auditTrail('ENV-001')
-// [
-//   { action: 'created', timestamp: '2025-01-15T10:00:00Z', actor: 'sender@company.com', ip: '...' },
-//   { action: 'sent', timestamp: '2025-01-15T10:01:00Z', recipient: 'john@acme.com' },
-//   { action: 'viewed', timestamp: '2025-01-15T14:30:00Z', actor: 'john@acme.com', ip: '...', device: '...' },
-//   { action: 'signed', timestamp: '2025-01-15T14:35:00Z', actor: 'john@acme.com', ip: '...', signature: '...' },
-//   { action: 'completed', timestamp: '2025-01-15T14:35:00Z' },
-// ]
+// View audit history
+await docusign`audit trail for Acme agreement`
 
-// Certificate of completion
-const certificate = await sign.envelopes.certificate('ENV-001')
-// Includes: All parties, timestamps, IP addresses, signature images, document hash
+// Returns complete history:
+// - Created, sent, viewed, signed, completed
+// - Timestamps, IP addresses, devices
+// - Tamper-evident, legally admissible
 ```
 
 ## Architecture
@@ -674,49 +353,7 @@ OrgDO (config, users, branding)
 
 ### Document Integrity
 
-```typescript
-// Every document is hashed
-const document = {
-  content: documentBuffer,
-  hash: await crypto.subtle.digest('SHA-256', documentBuffer),
-  hashAlgorithm: 'SHA-256',
-  timestamp: new Date().toISOString(),
-}
-
-// Signature binds to document hash
-const signature = {
-  documentHash: document.hash,
-  signerIdentity: 'john@acme.com',
-  signatureImage: signatureBlob,
-  timestamp: signedAt,
-  ip: signerIP,
-  userAgent: signerUA,
-}
-
-// Any tampering detectable
-const isValid = await verify(document.hash, signature.documentHash)
-```
-
-### Long-Term Validation
-
-```typescript
-// Signatures remain valid even after certificate expiry
-await sign.validation.configure({
-  timestamping: {
-    provider: 'rfc3161-compliant',
-    embed: true,
-  },
-  archival: {
-    format: 'PDF/A-3',
-    embedSignatures: true,
-    embedAuditTrail: true,
-  },
-  retention: {
-    duration: '10 years',
-    format: 'unmodified',
-  },
-})
-```
+Every document is SHA-256 hashed. Signatures bind to document hash. Any tampering is detectable. RFC 3161 timestamping. PDF/A-3 archival format. 10-year retention. All automatic.
 
 ## Why Open Source for E-Signatures?
 
@@ -753,6 +390,19 @@ DocuSign charges per envelope/user. At scale:
 - 10,000 envelopes/year = $30K-100K
 - Open source = marginal cost approaches zero
 
+## vs DocuSign
+
+| Feature | DocuSign | docusign.do |
+|---------|----------|-------------|
+| **Pricing** | $10-60/user/month | $0 - run your own |
+| **Per-Envelope Fees** | Yes, beyond limits | Unlimited |
+| **CLM** | Expensive add-on | Included |
+| **AI** | Premium tier | AI-native from day one |
+| **Templates** | Proprietary | Open formats, portable |
+| **Data Location** | Their servers | Your infrastructure |
+| **Customization** | Configuration UI | Code it yourself |
+| **Lock-in** | Years of migration | MIT licensed |
+
 ## Deployment
 
 ### Cloudflare Workers
@@ -775,13 +425,7 @@ kubectl apply -f docusign-do-deployment.yaml
 
 ### Hybrid
 
-```typescript
-// Edge for signing, origin for CLM
-await sign.config.hybrid({
-  edge: ['signing', 'templates', 'branding'],
-  origin: ['clm', 'analytics', 'bulk-operations'],
-})
-```
+Edge for signing (fast worldwide), origin for CLM and bulk operations. Configure via environment or natural language.
 
 ## Roadmap
 
@@ -846,7 +490,12 @@ MIT License - Sign freely.
 ---
 
 <p align="center">
-  <strong>docusign.do</strong> is part of the <a href="https://dotdo.dev">dotdo</a> platform.
+  <strong>The $15B toll booth ends here.</strong>
   <br />
-  <a href="https://docusign.do">Website</a> | <a href="https://docs.docusign.do">Docs</a> | <a href="https://discord.gg/dotdo">Discord</a>
+  AI-native. Legally binding. Open source.
+  <br /><br />
+  <a href="https://docusign.do">Website</a> |
+  <a href="https://docs.docusign.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/docusign.do">GitHub</a>
 </p>

@@ -1,61 +1,199 @@
 # temporal.do
 
-Durable workflows for startup founders. No servers. No Cassandra. Just code.
+> Durable Workflows. Edge-Native. Zero Infrastructure. AI-First.
+
+Temporal charges enterprises millions. Clusters, Cassandra, Elasticsearch, DevOps teams, months of setup. All to run a workflow that sends an email, waits a week, and follows up.
+
+**temporal.do** is the open-source alternative. Deploys in seconds. Runs on Cloudflare. Natural language workflows that read like business logic.
+
+## AI-Native API
+
+```typescript
+import { temporal } from 'temporal.do'           // Full SDK
+import { temporal } from 'temporal.do/tiny'      // Minimal client
+import { temporal } from 'temporal.do/durable'   // Durable-only operations
+```
+
+Natural language for durable workflows:
+
+```typescript
+import { temporal } from 'temporal.do'
+
+// Talk to it like you're dictating
+await temporal`onboard ${user.email}`
+  .send(`Welcome! Thanks for joining`)
+  .wait('7 days')
+  .notify(`How are things?`)
+
+// Approvals that wait forever
+await temporal`request approval for ${request}`
+  .waitFor('approval')
+  .then(a => a.approved ? temporal`process ${request}` : temporal`reject ${request}`)
+
+// Schedules read like calendar entries
+await temporal`run daily at 9am: generate sales report`
+```
 
 ## The Problem
 
-You're building a startup. You need durable workflows:
-- Send a welcome email, wait 7 days, send a follow-up
-- Process an order with payment, inventory, and shipping
-- Onboard a customer with approval gates and retries
-
 Traditional Temporal requires:
-- Running Temporal server clusters
-- Managing Cassandra or MySQL persistence
-- Operating Elasticsearch for visibility
-- Complex networking and service mesh
-- **47 hours to production** (and a DevOps engineer you don't have)
 
-**Every hour debugging infrastructure is an hour not building your product.**
-**Every $500/month on servers is runway burned.**
+| What Temporal Needs | The Reality |
+|---------------------|-------------|
+| **Temporal Server** | Complex multi-service cluster |
+| **Cassandra/MySQL** | Production database ops |
+| **Elasticsearch** | Another cluster to manage |
+| **Networking** | Service mesh complexity |
+| **DevOps Team** | $150k/year minimum |
+| **Time to Production** | 47 hours (optimistic) |
 
-## The Vision
+Every hour debugging infrastructure is an hour not building your product. Every $500/month on servers is runway burned.
 
-Durable workflows in 47 seconds.
+## The Solution
 
-```typescript
-import { temporal } from '@dotdo/temporal'
-
-temporal`process order ${order} with payment and shipping`
-temporal`onboard ${user.email} with welcome email, wait 7 days, then follow up`
-temporal`run daily at 9am: generate sales report`
+```
+Traditional Temporal              temporal.do
+-----------------------------------------------------------------
+47 hours to production            47 seconds
+$500/month infrastructure         $0 (included)
+3+ services to manage             0 services
+Cassandra expertise required      Just TypeScript
+DevOps team needed                Solo founder ready
+Complex Worker setup              One line deploys
 ```
 
-Natural language. Tagged templates. Workflows as conversations.
+## One-Click Deploy
+
+```bash
+npx create-dotdo temporal
+```
+
+A durable workflow engine. Running on infrastructure you control. Natural language from day one.
+
+```typescript
+import { Temporal } from 'temporal.do'
+
+export default Temporal({
+  name: 'my-startup',
+  domain: 'workflows.my-startup.com',
+})
+```
+
+## Features
+
+### Order Processing
+
+```typescript
+// Just say what you want
+await temporal`process order ${orderId}`
+
+// AI infers the workflow
+await temporal`process order ${orderId}`
+  .validate()
+  .charge()
+  .ship()
+  .notify()
+
+// Or chain explicitly
+await temporal`validate order ${order}`
+  .map(validated => temporal`charge ${validated.payment}`)
+  .map(charged => temporal`ship ${charged.items}`)
+  .map(shipped => temporal`email tracking to ${order.customer}`)
+```
+
+### User Onboarding
+
+```typescript
+// The canonical example - one readable chain
+await temporal`create account for ${email}`
+  .send(`Welcome! Thanks for joining`)
+  .wait('7 days')
+  .send(`How are things going?`)
+  .check('completed onboarding')
+  .then(done => done
+    ? temporal`mark ${email} as active`
+    : temporal`escalate ${email} to sales`)
+```
+
+### Approvals
+
+```typescript
+// Wait for human input, forever if needed
+await temporal`request budget approval for ${expense}`
+  .waitFor('approval', { timeout: '48h' })
+  .then(result => result?.approved
+    ? temporal`reimburse ${expense}`
+    : temporal`notify ${expense.submitter} of rejection`)
+
+// Multi-level approvals
+await temporal`purchase request ${request}`
+  .waitFor('manager approval')
+  .waitFor('finance approval')
+  .waitFor('legal approval')
+  .process()
+```
+
+### Scheduled Jobs
+
+```typescript
+// Cron in plain English
+await temporal`run daily at 9am: generate sales report`
+await temporal`run weekly on Monday: sync CRM data`
+await temporal`run monthly on the 1st: process billing`
+
+// Intervals
+await temporal`run every 5 minutes: check queue depth`
+await temporal`run hourly: aggregate metrics`
+```
+
+### Compensation (Sagas)
+
+```typescript
+// When things go wrong, undo gracefully
+await temporal`book trip ${booking}`
+  .reserve('flight')
+  .reserve('hotel')
+  .reserve('car')
+  .onFailure(step => temporal`cancel ${step}`)
+
+// AI handles compensation automatically
+await temporal`order ${order} with compensation`
+```
+
+### Long-Running Workflows
+
+```typescript
+// Workflows that span days, weeks, months
+await temporal`subscription lifecycle for ${customer}`
+  .onStart(() => temporal`provision ${customer}`)
+  .onRenewal(() => temporal`charge ${customer}`)
+  .onCancel(() => temporal`offboard ${customer}`)
+
+// Insurance claims that take months
+await temporal`process claim ${claimId}`
+  .waitFor('documentation')
+  .waitFor('adjuster review')
+  .waitFor('approval')
+  .payout()
+```
 
 ## Promise Pipelining
 
 Chain workflows without `Promise.all`. One network round trip:
 
 ```typescript
+// All of this is ONE network request
 const result = await temporal`validate order ${order}`
   .map(validated => temporal`charge ${validated.payment}`)
   .map(charged => temporal`ship ${charged.items}`)
   .map(shipped => temporal`email tracking to ${order.customer}`)
-// One network round trip!
-```
 
-Compose complex business processes:
-
-```typescript
-const onboarding = await temporal`create account for ${email}`
-  .map(account => temporal`send welcome email to ${account.email}`)
-  .map(() => temporal`wait 7 days`)
-  .map(() => temporal`send follow-up to ${email}`)
-  .map(() => temporal`check if ${email} completed onboarding`)
-  .map(status => status.completed
-    ? temporal`mark ${email} as active`
-    : temporal`escalate ${email} to sales`)
+// Branching logic
+const support = await temporal`customer ticket ${ticket}`
+  .map(t => priya`triage: ${t.description}`)
+  .map(priority => priority === 'urgent'
+    ? temporal`page on-call with ${ticket}`
+    : temporal`queue ${ticket} for next business day`)
 ```
 
 ## Agent Integration
@@ -65,7 +203,7 @@ Ask Ralph to build your workflows:
 ```typescript
 import { ralph, tom, priya } from 'agents.do'
 
-ralph`implement an order processing workflow with retries and compensation`
+ralph`implement order processing with retries and compensation`
 tom`review the workflow for failure handling edge cases`
 priya`add monitoring for workflow SLA violations`
 ```
@@ -73,414 +211,145 @@ priya`add monitoring for workflow SLA violations`
 Workflows can invoke agents:
 
 ```typescript
-const support = await temporal`customer ${customer.id} submitted ticket ${ticket}`
-  .map(ticket => priya`triage support ticket: ${ticket.description}`)
+await temporal`support ticket ${ticket}`
+  .map(t => priya`triage: ${t.description}`)
   .map(priority => priority === 'urgent'
-    ? temporal`page on-call with ${ticket}`
-    : temporal`queue ${ticket} for next business day`)
+    ? temporal`page on-call`
+    : temporal`queue for next business day`)
 ```
 
-## The Transformation
-
-| Before (Traditional) | After (temporal.do) |
-|---------------------|---------------------|
-| 47 hours to production | 47 seconds |
-| $500/month infrastructure | $0 (included) |
-| 3 services to manage | 0 services |
-| Cassandra expertise required | Just TypeScript |
-| DevOps team needed | Solo founder ready |
-
-```bash
-# Before
-docker-compose up temporal cassandra elasticsearch
-# 47 hours of configuration, debugging, and prayer
-
-# After
-npm install @dotdo/temporal
-# Ship your product
-```
-
-## For Temporal Users (Familiar API)
-
-Already know Temporal? Use the structured API:
+## Signals and Queries
 
 ```typescript
-import { Temporal } from '@dotdo/temporal'
+// Query any workflow's state
+const status = await temporal`order ${orderId}`.query('status')
 
-const temporal = new Temporal({ namespace: 'my-app' })
+// Send signals to running workflows
+await temporal`order ${orderId}`.signal('approval', { approved: true })
 
-// Define a workflow
-const orderWorkflow = temporal.defineWorkflow(
-  'order-workflow',
-  async (ctx, order: Order) => {
-    // Each activity is retried automatically
-    const validated = await ctx.activity('validate-order', () =>
-      validateOrder(order)
-    )
-
-    // Timers without blocking workers
-    await ctx.sleep('wait-for-payment', '5m')
-
-    // Wait for external signals
-    const approval = await ctx.waitForSignal('approval', { timeout: '24h' })
-
-    // Execute child workflow
-    const shipping = await ctx.executeChild(shippingWorkflow, validated)
-
-    return { orderId: order.id, status: 'completed', shipping }
-  }
-)
-
-// Start workflow execution
-const handle = await temporal.startWorkflow(orderWorkflow, {
-  workflowId: `order-${orderId}`,
-  args: [orderData]
-})
-
-// Query workflow state
-const status = await handle.query('status')
-
-// Send signals
-await handle.signal('approval', { approved: true })
+// Wait for signals in workflows
+await temporal`process refund ${refundId}`
+  .waitFor('customer confirmation')
+  .then(() => temporal`issue refund`)
 ```
 
-No servers to manage. No databases to operate. Just durable workflows that work.
+## Child Workflows
 
-## Features
+```typescript
+// Compose workflows naturally
+await temporal`fulfill order ${orderId}`
+  .spawn(temporal`process payment ${payment}`)
+  .spawn(temporal`reserve inventory ${items}`)
+  .spawn(temporal`schedule shipping ${address}`)
+  .join()  // wait for all
 
-- **Natural Language Workflows** - Define business logic in plain English
-- **Promise Pipelining** - Chain workflows with `.map()` in one round trip
-- **Activity Execution** - Automatic retries with exponential backoff
-- **Signals and Queries** - Real-time workflow interaction
-- **Child Workflows** - Compose workflows hierarchically
-- **Timers and Scheduling** - Sleep, cron schedules, delayed execution
-- **Event History Replay** - Deterministic replay for failure recovery
-- **TypeScript First** - Full type safety matching Temporal SDK patterns
-- **Edge Native** - Runs on Cloudflare's global network
+// Or let AI compose them
+await temporal`fulfill order ${orderId} with parallel payment and shipping`
+```
+
+## Why temporal.do?
+
+| Feature | Traditional Temporal | temporal.do |
+|---------|---------------------|-------------|
+| **Time to Production** | 47 hours | 47 seconds |
+| **Infrastructure** | Temporal + Cassandra + Elasticsearch | Zero |
+| **Monthly Cost** | $500+ (servers) | $0 (included) |
+| **Deployment** | Multi-service cluster | One line |
+| **Expertise Required** | DevOps team | Just TypeScript |
+| **Cold Starts** | Yes | No (Durable Objects) |
+| **Global Distribution** | Complex | Automatic (Edge) |
 
 ## Architecture
 
+### Durable Object per Workflow
+
 ```
-                    +----------------------+
-                    |    temporal.do       |
-                    |  (Cloudflare Worker) |
-                    +----------------------+
-                              |
-              +---------------+---------------+---------------+
-              |               |               |               |
-    +------------------+ +------------------+ +------------------+ +------------------+
-    |   WorkflowDO     | |   ActivityDO     | |    TimerDO       | |   HistoryDO      |
-    | (execution state)| | (retry/timeout)  | | (schedules)      | | (event sourcing) |
-    +------------------+ +------------------+ +------------------+ +------------------+
-              |               |               |               |
-              +---------------+---------------+---------------+
-                              |
-                    +-------------------+
-                    |  Cloudflare Queues |
-                    |  (task dispatch)   |
-                    +-------------------+
-                              |
-                    +-------------------+
-                    |   fsx.do / gitx.do |
-                    |  (AI-native state) |
-                    +-------------------+
+WorkflowEngineDO (routing, scheduling)
+  |
+  +-- WorkflowDO (execution state per workflow)
+  |     |-- SQLite: Event history, state snapshots
+  |     +-- Alarm: Timer management
+  |
+  +-- ActivityDO (retry isolation per activity)
+  |     |-- SQLite: Attempt tracking
+  |     +-- Queues: Task dispatch
+  |
+  +-- SchedulerDO (cron, intervals)
+        |-- SQLite: Schedule definitions
+        +-- Alarms: Next execution times
 ```
 
-**Key insight**: Durable Objects provide single-threaded, strongly consistent state per workflow execution. Each workflow gets its own WorkflowDO for deterministic execution. Activities run in separate ActivityDOs with retry isolation. Event history enables replay for recovery.
+**Key insight**: Durable Objects provide single-threaded, strongly consistent state per workflow execution. Each workflow gets its own DO for deterministic execution. Activities run in separate DOs with retry isolation.
 
-## Installation
+### Storage Tiers
 
-```bash
-npm install @dotdo/temporal
-```
-
-## Quick Start
-
-### Tagged Template Style (Recommended)
-
-```typescript
-import { temporal } from '@dotdo/temporal'
-
-// Simple workflow
-await temporal`send welcome email to ${user.email}`
-
-// With timing
-await temporal`wait 7 days then send follow-up to ${user.email}`
-
-// With conditions
-await temporal`
-  if ${user.plan} is premium
-  then schedule onboarding call
-  else send self-service guide
-`
-
-// Scheduled
-await temporal`run daily at 9am: generate sales report and email to ${team}`
-```
-
-### Define Activities
-
-```typescript
-import { Temporal } from '@dotdo/temporal'
-
-const temporal = new Temporal({ namespace: 'my-app' })
-
-// Define activities with automatic retry
-const activities = temporal.defineActivities({
-  fetchUser: async (userId: string) => {
-    return await db.users.findById(userId)
-  },
-
-  sendEmail: async (to: string, subject: string, body: string) => {
-    return await emailService.send({ to, subject, body })
-  },
-
-  chargePayment: async (amount: number, customerId: string) => {
-    return await stripe.charges.create({ amount, customer: customerId })
-  }
-})
-```
-
-### Define Workflows
-
-```typescript
-const userOnboardingWorkflow = temporal.defineWorkflow(
-  'user-onboarding',
-  async (ctx, userId: string) => {
-    // Fetch user data (auto-retried on failure)
-    const user = await ctx.activity('fetch-user', () =>
-      activities.fetchUser(userId)
-    )
-
-    // Send welcome email
-    await ctx.activity('send-welcome', () =>
-      activities.sendEmail(user.email, 'Welcome!', 'Thanks for joining')
-    )
-
-    // Wait 7 days
-    await ctx.sleep('onboarding-delay', '7d')
-
-    // Send follow-up
-    await ctx.activity('send-followup', () =>
-      activities.sendEmail(user.email, 'How are things?', 'Check in message')
-    )
-
-    return { userId, status: 'onboarded' }
-  }
-)
-```
-
-### Start Workflows
-
-```typescript
-// Start a workflow execution
-const handle = await temporal.startWorkflow(userOnboardingWorkflow, {
-  workflowId: `onboard-${userId}`,
-  taskQueue: 'onboarding',
-  args: [userId]
-})
-
-// Get the result (waits for completion)
-const result = await handle.result()
-
-// Or get handle to existing workflow
-const existing = temporal.getHandle('onboard-123')
-```
-
-### Signals and Queries
-
-```typescript
-const approvalWorkflow = temporal.defineWorkflow(
-  'approval-workflow',
-  async (ctx, request: ApprovalRequest) => {
-    // Set up queryable state
-    let status = 'pending'
-    ctx.setQueryHandler('status', () => status)
-
-    // Wait for approval signal
-    const approval = await ctx.waitForSignal<{ approved: boolean }>('approval', {
-      timeout: '48h'
-    })
-
-    if (!approval || !approval.approved) {
-      status = 'rejected'
-      return { status: 'rejected' }
-    }
-
-    status = 'approved'
-    await ctx.activity('process-approval', () => processApproval(request))
-
-    return { status: 'completed' }
-  }
-)
-
-// Query workflow state
-const handle = temporal.getHandle('approval-123')
-const status = await handle.query('status')
-
-// Send signal
-await handle.signal('approval', { approved: true })
-```
-
-### Child Workflows
-
-```typescript
-const parentWorkflow = temporal.defineWorkflow(
-  'parent-workflow',
-  async (ctx, orderId: string) => {
-    const order = await ctx.activity('fetch-order', () =>
-      fetchOrder(orderId)
-    )
-
-    // Execute child workflows in parallel
-    const [payment, shipping] = await Promise.all([
-      ctx.executeChild(paymentWorkflow, {
-        workflowId: `payment-${orderId}`,
-        args: [order.payment]
-      }),
-      ctx.executeChild(shippingWorkflow, {
-        workflowId: `shipping-${orderId}`,
-        args: [order.shipping]
-      })
-    ])
-
-    return { orderId, payment, shipping }
-  }
-)
-```
-
-### Scheduled Workflows
-
-```typescript
-// Run workflow on a schedule
-await temporal.scheduleWorkflow(dailyReportWorkflow, {
-  scheduleId: 'daily-report',
-  cron: '0 9 * * *',  // Daily at 9am UTC
-  args: []
-})
-
-// Or with more control
-await temporal.scheduleWorkflow(cleanupWorkflow, {
-  scheduleId: 'cleanup',
-  interval: '1h',  // Every hour
-  jitter: '5m',    // Random delay up to 5 minutes
-  args: []
-})
-```
+| Tier | Storage | Use Case | Query Speed |
+|------|---------|----------|-------------|
+| **Hot** | SQLite | Active workflows, recent history | <10ms |
+| **Warm** | R2 + SQLite Index | Completed workflows (30 days) | <100ms |
+| **Cold** | R2 Archive | Compliance retention (years) | <1s |
 
 ## Retry Policies
 
 ```typescript
-const robustWorkflow = temporal.defineWorkflow(
-  'robust-workflow',
-  async (ctx, data: Data) => {
-    // Custom retry policy for specific activity
-    const result = await ctx.activity('risky-operation', () =>
-      riskyOperation(data),
-      {
-        retry: {
-          initialInterval: '1s',
-          backoffCoefficient: 2,
-          maximumAttempts: 10,
-          maximumInterval: '1h',
-          nonRetryableErrors: ['ValidationError']
-        },
-        startToCloseTimeout: '10m',
-        heartbeatTimeout: '1m'
-      }
-    )
+// Automatic retries with sensible defaults
+await temporal`charge customer ${customerId}`
+  .retry({ max: 10, backoff: 'exponential' })
 
-    return result
-  }
-)
+// Or specify inline
+await temporal`risky operation ${data}`
+  .retry({ max: 5, interval: '1s', maxInterval: '1h' })
+
+// Non-retryable errors
+await temporal`validate input ${data}`
+  .noRetry(['ValidationError', 'AuthError'])
 ```
 
-Default retry policy:
-- Initial interval: 1s
-- Backoff coefficient: 2
-- Maximum attempts: unlimited
-- Maximum interval: 100s
+Default policy: exponential backoff, 1s initial, 2x coefficient, unlimited attempts.
 
-## Worker Setup
+## MCP Tools
 
 ```typescript
-import { Worker } from '@dotdo/temporal'
+// AI agents can manage workflows directly
+await mcp`start order workflow for ${orderId}`
+await mcp`what's the status of order ${orderId}?`
+await mcp`approve order ${orderId}`
+await mcp`list running workflows`
 
-// Create worker to process workflows and activities
-const worker = new Worker({
-  namespace: 'my-app',
-  taskQueue: 'main',
-  workflows: [orderWorkflow, userOnboardingWorkflow],
-  activities
-})
-
-// Start the worker
-export default {
-  async fetch(request: Request, env: Env) {
-    return worker.fetch(request, env)
-  }
-}
+// Or use structured tools
+await mcp.invoke('temporal.start', { workflow: 'order', args: [orderId] })
+await mcp.invoke('temporal.query', { workflowId: orderId, query: 'status' })
+await mcp.invoke('temporal.signal', { workflowId: orderId, signal: 'approve' })
 ```
 
-## MCP Tools Integration
+## vs Traditional Temporal
 
-temporal.do exposes MCP tools for AI-native workflow management:
+```bash
+# Before - Traditional Temporal
+docker-compose up temporal cassandra elasticsearch
+# 47 hours of configuration, debugging, and prayer
+# $500/month minimum for servers
+# DevOps team on call
 
-```typescript
-// AI can start workflows
-await mcp.invoke('temporal.startWorkflow', {
-  workflow: 'order-workflow',
-  workflowId: 'order-123',
-  args: [{ productId: 'abc', quantity: 2 }]
-})
-
-// AI can query state
-const status = await mcp.invoke('temporal.query', {
-  workflowId: 'order-123',
-  queryType: 'status'
-})
-
-// AI can send signals
-await mcp.invoke('temporal.signal', {
-  workflowId: 'order-123',
-  signalName: 'approval',
-  args: [{ approved: true }]
-})
-
-// AI can list workflows
-const workflows = await mcp.invoke('temporal.list', {
-  namespace: 'my-app',
-  status: 'running'
-})
-```
-
-Integration with fsx.do for workflow state persistence:
-```typescript
-// Workflow state automatically persisted to fsx.do
-await fsx.read('/.temporal/workflows/order-123/history.json')
-
-// Version control with gitx.do
-await gitx.log('/.temporal/workflows/order-123')
+# After - temporal.do
+npm install temporal.do
+# Ship your product
+# $0 infrastructure
+# Sleep well
 ```
 
 ## The Rewrites Ecosystem
 
-temporal.do is part of the rewrites family - reimplementations of popular infrastructure on Cloudflare:
+temporal.do is part of the rewrites family - popular infrastructure reimplemented on Cloudflare:
 
-| Rewrite | Original | Purpose |
+| Rewrite | Replaces | Purpose |
 |---------|----------|---------|
-| [fsx.do](https://fsx.do) | fs (Node.js) | Filesystem for AI |
-| [gitx.do](https://gitx.do) | git | Version control for AI |
-| [inngest.do](https://inngest.do) | Inngest | Event-driven workflows |
-| **temporal.do** | Temporal | Durable workflow orchestration |
+| **temporal.do** | Temporal | Durable workflows |
+| [inngest.do](https://inngest.do) | Inngest | Event-driven functions |
 | [kafka.do](https://kafka.do) | Kafka | Event streaming |
 | [nats.do](https://nats.do) | NATS | Messaging |
-
-Each rewrite follows the same pattern:
-- Durable Objects for state
-- SQLite for persistence
-- Cloudflare Queues for messaging
-- Compatible API with the original
+| [fsx.do](https://fsx.do) | fs | Filesystem for AI |
+| [gitx.do](https://gitx.do) | git | Version control for AI |
 
 ## Why Cloudflare?
 
@@ -488,17 +357,60 @@ Each rewrite follows the same pattern:
 2. **No Cold Starts** - Durable Objects stay warm
 3. **Unlimited Duration** - No execution timeouts
 4. **Built-in Queues** - Reliable task dispatch
-5. **Single-Threaded DO** - No race conditions in workflow execution
-6. **SQLite + R2** - Event history persistence with infinite retention
+5. **Single-Threaded DO** - No race conditions
+6. **SQLite + R2** - Infinite retention
 
-## Related Domains
+## Roadmap
 
-- **workflows.do** - Workflow orchestration
-- **inngest.do** - Event-driven functions
-- **jobs.do** - Background job queue
-- **cron.do** - Scheduled tasks
-- **triggers.do** - Event triggers
+### Core Workflows
+- [x] Natural Language Workflows
+- [x] Promise Pipelining
+- [x] Activity Retry with Backoff
+- [x] Timers and Sleep
+- [x] Signals and Queries
+- [x] Child Workflows
+- [x] Cron Scheduling
+- [ ] Workflow Versioning
+- [ ] Continue-as-new
+
+### Durability
+- [x] Event History
+- [x] Replay Recovery
+- [x] Activity Heartbeats
+- [ ] Sticky Execution
+- [ ] Search Attributes
+
+### Observability
+- [x] Workflow Status
+- [x] Activity Tracking
+- [ ] OpenTelemetry Export
+- [ ] Metrics Dashboard
+- [ ] Workflow Visualization
+
+## Contributing
+
+temporal.do is open source under the MIT license.
+
+```bash
+git clone https://github.com/dotdo/temporal.do
+cd temporal.do
+pnpm install
+pnpm test
+```
 
 ## License
 
 MIT
+
+---
+
+<p align="center">
+  <strong>47 seconds beats 47 hours.</strong>
+  <br />
+  Durable workflows. Zero infrastructure. Natural language.
+  <br /><br />
+  <a href="https://temporal.do">Website</a> |
+  <a href="https://docs.temporal.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/temporal.do">GitHub</a>
+</p>

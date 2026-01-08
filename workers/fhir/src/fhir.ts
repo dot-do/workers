@@ -14,7 +14,7 @@
  * @see https://oauth.net/2/grant-types/client-credentials/
  */
 
-import { Patient, Encounter, Observation, Condition, Bundle, OperationOutcome } from './types.js'
+import { Patient, Encounter, Observation, Condition, DiagnosticReport, Procedure, MedicationRequest, AllergyIntolerance, Bundle, OperationOutcome } from './types.js'
 
 /**
  * Durable Object State interface
@@ -476,6 +476,626 @@ export class FHIRDO {
 
     return conditions
   }
+  /**
+   * Create a new DiagnosticReport resource
+   */
+  async createDiagnosticReport(report: Omit<DiagnosticReport, 'id' | 'meta'>): Promise<DiagnosticReport> {
+    // Generate a unique ID for the report
+    const id = `rep-${this.generateToken().substring(0, 16)}`
+
+    // Create metadata
+    const now = new Date().toISOString()
+    const meta = {
+      versionId: '1',
+      lastUpdated: now
+    }
+
+    // Create the full report resource
+    const newReport: DiagnosticReport = {
+      ...report,
+      id,
+      meta
+    }
+
+    // Store the report
+    await this.ctx.storage.put(`DiagnosticReport:${id}`, newReport)
+    await this.ctx.storage.put(`DiagnosticReport:${id}:_history:1`, newReport)
+
+    return newReport
+  }
+
+  /**
+   * Read a DiagnosticReport resource by ID
+   */
+  async readDiagnosticReport(id: string): Promise<DiagnosticReport | null> {
+    const report = await this.ctx.storage.get<DiagnosticReport>(`DiagnosticReport:${id}`)
+    return report || null
+  }
+
+  /**
+   * Update a DiagnosticReport resource
+   */
+  async updateDiagnosticReport(id: string, updates: Partial<DiagnosticReport>): Promise<DiagnosticReport | null> {
+    // Get existing report
+    const existing = await this.readDiagnosticReport(id)
+    if (!existing) {
+      return null
+    }
+
+    // Increment version
+    const currentVersion = parseInt(existing.meta.versionId)
+    const newVersion = (currentVersion + 1).toString()
+
+    // Create updated report
+    const updated: DiagnosticReport = {
+      ...existing,
+      ...updates,
+      id, // Preserve ID
+      meta: {
+        versionId: newVersion,
+        lastUpdated: new Date().toISOString()
+      }
+    }
+
+    // Store updated report
+    await this.ctx.storage.put(`DiagnosticReport:${id}`, updated)
+    await this.ctx.storage.put(`DiagnosticReport:${id}:_history:${newVersion}`, updated)
+
+    return updated
+  }
+
+  /**
+   * Delete a DiagnosticReport resource
+   */
+  async deleteDiagnosticReport(id: string): Promise<boolean> {
+    const existing = await this.readDiagnosticReport(id)
+    if (!existing) {
+      return false
+    }
+
+    await this.ctx.storage.delete(`DiagnosticReport:${id}`)
+    return true
+  }
+
+  /**
+   * Search for DiagnosticReport resources
+   */
+  async searchDiagnosticReports(params: {
+    patient?: string
+    category?: string
+    status?: string
+    code?: string
+    date?: string
+  }): Promise<DiagnosticReport[]> {
+    // Get all reports from storage
+    const allReports = await this.ctx.storage.list<DiagnosticReport>({ prefix: 'DiagnosticReport:' })
+
+    // Filter out history entries (only get current versions)
+    let reports = Array.from(allReports.entries())
+      .filter(([key]) => !key.includes(':_history:'))
+      .map(([, value]) => value)
+
+    // Filter by patient
+    if (params.patient) {
+      const patientRef = params.patient.startsWith('Patient/')
+        ? params.patient
+        : `Patient/${params.patient}`
+      reports = reports.filter(report => report.subject?.reference === patientRef)
+    }
+
+    // Filter by category
+    if (params.category) {
+      reports = reports.filter(report =>
+        report.category?.some(cat =>
+          cat.coding.some(coding => coding.code === params.category)
+        )
+      )
+    }
+
+    // Filter by status
+    if (params.status) {
+      reports = reports.filter(report => report.status === params.status)
+    }
+
+    // Filter by code
+    if (params.code) {
+      reports = reports.filter(report =>
+        report.code.coding.some(coding => coding.code === params.code)
+      )
+    }
+
+    // Filter by date
+    if (params.date) {
+      const dateMatch = params.date.match(/^(eq|ne|lt|le|gt|ge)?(.+)$/)
+      if (dateMatch) {
+        const [, prefix = 'eq', dateStr] = dateMatch
+        const searchDate = new Date(dateStr).getTime()
+
+        reports = reports.filter(report => {
+          const effectiveDate = report.effectiveDateTime || report.effectivePeriod?.start
+          if (!effectiveDate) return false
+          const reportDate = new Date(effectiveDate).getTime()
+
+          switch (prefix) {
+            case 'eq':
+              return reportDate === searchDate
+            case 'ne':
+              return reportDate !== searchDate
+            case 'lt':
+              return reportDate < searchDate
+            case 'le':
+              return reportDate <= searchDate
+            case 'gt':
+              return reportDate > searchDate
+            case 'ge':
+              return reportDate >= searchDate
+            default:
+              return false
+          }
+        })
+      }
+    }
+
+    return reports
+  }
+
+
+  /**
+   * Create a new Procedure resource
+   */
+  async createProcedure(procedure: Omit<Procedure, 'id' | 'meta'>): Promise<Procedure> {
+    // Generate a unique ID for the procedure
+    const id = `proc-${this.generateToken().substring(0, 16)}`
+
+    // Create metadata
+    const now = new Date().toISOString()
+    const meta = {
+      versionId: '1',
+      lastUpdated: now
+    }
+
+    // Create the full procedure resource
+    const newProcedure: Procedure = {
+      ...procedure,
+      id,
+      meta
+    }
+
+    // Store the procedure
+    await this.ctx.storage.put(`Procedure:${id}`, newProcedure)
+    await this.ctx.storage.put(`Procedure:${id}:_history:1`, newProcedure)
+
+    return newProcedure
+  }
+
+  /**
+   * Read a Procedure resource by ID
+   */
+  async readProcedure(id: string): Promise<Procedure | null> {
+    const procedure = await this.ctx.storage.get<Procedure>(`Procedure:${id}`)
+    return procedure || null
+  }
+
+  /**
+   * Update a Procedure resource
+   */
+  async updateProcedure(id: string, updates: Partial<Procedure>): Promise<Procedure | null> {
+    // Get existing procedure
+    const existing = await this.readProcedure(id)
+    if (!existing) {
+      return null
+    }
+
+    // Increment version
+    const currentVersion = parseInt(existing.meta.versionId)
+    const newVersion = (currentVersion + 1).toString()
+
+    // Create updated procedure
+    const updated: Procedure = {
+      ...existing,
+      ...updates,
+      id, // Preserve ID
+      meta: {
+        versionId: newVersion,
+        lastUpdated: new Date().toISOString()
+      }
+    }
+
+    // Store updated procedure
+    await this.ctx.storage.put(`Procedure:${id}`, updated)
+    await this.ctx.storage.put(`Procedure:${id}:_history:${newVersion}`, updated)
+
+    return updated
+  }
+
+  /**
+   * Delete a Procedure resource
+   */
+  async deleteProcedure(id: string): Promise<boolean> {
+    const existing = await this.readProcedure(id)
+    if (!existing) {
+      return false
+    }
+
+    await this.ctx.storage.delete(`Procedure:${id}`)
+    return true
+  }
+
+  /**
+   * Search for Procedure resources
+   */
+  async searchProcedures(params: {
+    patient?: string
+    date?: string
+    code?: string
+    status?: string
+  }): Promise<Procedure[]> {
+    // Get all procedures from storage
+    const allProcedures = await this.ctx.storage.list<Procedure>({ prefix: 'Procedure:' })
+
+    // Filter out history entries (only get current versions)
+    let procedures = Array.from(allProcedures.entries())
+      .filter(([key]) => !key.includes(':_history:'))
+      .map(([, value]) => value)
+
+    // Filter by patient
+    if (params.patient) {
+      const patientRef = params.patient.startsWith('Patient/')
+        ? params.patient
+        : `Patient/${params.patient}`
+      procedures = procedures.filter(proc => proc.subject.reference === patientRef)
+    }
+
+    // Filter by status
+    if (params.status) {
+      procedures = procedures.filter(proc => proc.status === params.status)
+    }
+
+    // Filter by code
+    if (params.code) {
+      procedures = procedures.filter(proc =>
+        proc.code?.coding.some(coding => coding.code === params.code)
+      )
+    }
+
+    // Filter by date
+    if (params.date) {
+      const dateMatch = params.date.match(/^(eq|ne|lt|le|gt|ge)?(.+)$/)
+      if (dateMatch) {
+        const [, prefix = 'eq', dateStr] = dateMatch
+        const searchDate = new Date(dateStr).getTime()
+
+        procedures = procedures.filter(proc => {
+          const performedDate = proc.performedDateTime || proc.performedPeriod?.start
+          if (!performedDate) return false
+          const procedureDate = new Date(performedDate).getTime()
+
+          switch (prefix) {
+            case 'eq':
+              return procedureDate === searchDate
+            case 'ne':
+              return procedureDate !== searchDate
+            case 'lt':
+              return procedureDate < searchDate
+            case 'le':
+              return procedureDate <= searchDate
+            case 'gt':
+              return procedureDate > searchDate
+            case 'ge':
+              return procedureDate >= searchDate
+            default:
+              return false
+          }
+        })
+      }
+    }
+
+    return procedures
+  }
+
+  /**
+   * Create a new MedicationRequest resource
+   */
+  async createMedicationRequest(medicationRequest: Omit<MedicationRequest, 'id' | 'meta'>): Promise<MedicationRequest> {
+    // Generate a unique ID for the medication request
+    const id = `medrq-${this.generateToken().substring(0, 16)}`
+
+    // Create metadata
+    const now = new Date().toISOString()
+    const meta = {
+      versionId: '1',
+      lastUpdated: now
+    }
+
+    // Create the full medication request resource
+    const newMedicationRequest: MedicationRequest = {
+      ...medicationRequest,
+      id,
+      meta
+    }
+
+    // Store the medication request
+    await this.ctx.storage.put(`MedicationRequest:${id}`, newMedicationRequest)
+    await this.ctx.storage.put(`MedicationRequest:${id}:_history:1`, newMedicationRequest)
+
+    return newMedicationRequest
+  }
+
+  /**
+   * Read a MedicationRequest resource by ID
+   */
+  async readMedicationRequest(id: string): Promise<MedicationRequest | null> {
+    const medicationRequest = await this.ctx.storage.get<MedicationRequest>(`MedicationRequest:${id}`)
+    return medicationRequest || null
+  }
+
+  /**
+   * Update a MedicationRequest resource
+   */
+  async updateMedicationRequest(id: string, updates: Partial<MedicationRequest>): Promise<MedicationRequest | null> {
+    // Get existing medication request
+    const existing = await this.readMedicationRequest(id)
+    if (!existing) {
+      return null
+    }
+
+    // Increment version
+    const currentVersion = parseInt(existing.meta.versionId)
+    const newVersion = (currentVersion + 1).toString()
+
+    // Create updated medication request
+    const updated: MedicationRequest = {
+      ...existing,
+      ...updates,
+      id, // Preserve ID
+      meta: {
+        versionId: newVersion,
+        lastUpdated: new Date().toISOString()
+      }
+    }
+
+    // Store updated medication request
+    await this.ctx.storage.put(`MedicationRequest:${id}`, updated)
+    await this.ctx.storage.put(`MedicationRequest:${id}:_history:${newVersion}`, updated)
+
+    return updated
+  }
+
+  /**
+   * Delete a MedicationRequest resource
+   */
+  async deleteMedicationRequest(id: string): Promise<boolean> {
+    const existing = await this.readMedicationRequest(id)
+    if (!existing) {
+      return false
+    }
+
+    await this.ctx.storage.delete(`MedicationRequest:${id}`)
+    return true
+  }
+
+  /**
+   * Search for MedicationRequest resources
+   */
+  async searchMedicationRequests(params: {
+    patient?: string
+    status?: string
+    medication?: string
+    intent?: string
+    authoredon?: string
+  }): Promise<MedicationRequest[]> {
+    // Get all medication requests from storage
+    const allMedicationRequests = await this.ctx.storage.list<MedicationRequest>({ prefix: 'MedicationRequest:' })
+
+    // Filter out history entries (only get current versions)
+    let medicationRequests = Array.from(allMedicationRequests.entries())
+      .filter(([key]) => !key.includes(':_history:'))
+      .map(([, value]) => value)
+
+    // Filter by patient
+    if (params.patient) {
+      const patientRef = params.patient.startsWith('Patient/')
+        ? params.patient
+        : `Patient/${params.patient}`
+      medicationRequests = medicationRequests.filter(medrq => medrq.subject.reference === patientRef)
+    }
+
+    // Filter by status
+    if (params.status) {
+      medicationRequests = medicationRequests.filter(medrq => medrq.status === params.status)
+    }
+
+    // Filter by medication code
+    if (params.medication) {
+      medicationRequests = medicationRequests.filter(medrq =>
+        medrq.medicationCodeableConcept?.coding.some(coding => coding.code === params.medication)
+      )
+    }
+
+    // Filter by intent
+    if (params.intent) {
+      medicationRequests = medicationRequests.filter(medrq => medrq.intent === params.intent)
+    }
+
+    // Filter by authoredOn date
+    if (params.authoredon) {
+      const dateMatch = params.authoredon.match(/^(eq|ne|lt|le|gt|ge)?(.+)$/)
+      if (dateMatch) {
+        const [, prefix = 'eq', dateStr] = dateMatch
+        const searchDate = new Date(dateStr).getTime()
+
+        medicationRequests = medicationRequests.filter(medrq => {
+          if (!medrq.authoredOn) return false
+          const authoredDate = new Date(medrq.authoredOn).getTime()
+
+          switch (prefix) {
+            case 'eq':
+              return authoredDate === searchDate
+            case 'ne':
+              return authoredDate !== searchDate
+            case 'lt':
+              return authoredDate < searchDate
+            case 'le':
+              return authoredDate <= searchDate
+            case 'gt':
+              return authoredDate > searchDate
+            case 'ge':
+              return authoredDate >= searchDate
+            default:
+              return false
+          }
+        })
+      }
+    }
+
+    return medicationRequests
+  }
+
+  /**
+   * Create a new AllergyIntolerance resource
+   */
+  async createAllergyIntolerance(allergyIntolerance: Omit<AllergyIntolerance, 'id' | 'meta'>): Promise<AllergyIntolerance> {
+    // Generate a unique ID for the allergy intolerance
+    const id = `allergy-${this.generateToken().substring(0, 16)}`
+
+    // Create metadata
+    const now = new Date().toISOString()
+    const meta = {
+      versionId: '1',
+      lastUpdated: now
+    }
+
+    // Create the full allergy intolerance resource
+    const newAllergyIntolerance: AllergyIntolerance = {
+      ...allergyIntolerance,
+      id,
+      meta
+    }
+
+    // Store the allergy intolerance
+    await this.ctx.storage.put(`AllergyIntolerance:${id}`, newAllergyIntolerance)
+    await this.ctx.storage.put(`AllergyIntolerance:${id}:_history:1`, newAllergyIntolerance)
+
+    return newAllergyIntolerance
+  }
+
+  /**
+   * Read an AllergyIntolerance resource by ID
+   */
+  async readAllergyIntolerance(id: string): Promise<AllergyIntolerance | null> {
+    const allergyIntolerance = await this.ctx.storage.get<AllergyIntolerance>(`AllergyIntolerance:${id}`)
+    return allergyIntolerance || null
+  }
+
+  /**
+   * Update an AllergyIntolerance resource
+   */
+  async updateAllergyIntolerance(id: string, updates: Partial<AllergyIntolerance>): Promise<AllergyIntolerance | null> {
+    // Get existing allergy intolerance
+    const existing = await this.readAllergyIntolerance(id)
+    if (!existing) {
+      return null
+    }
+
+    // Increment version
+    const currentVersion = parseInt(existing.meta.versionId)
+    const newVersion = (currentVersion + 1).toString()
+
+    // Create updated allergy intolerance
+    const updated: AllergyIntolerance = {
+      ...existing,
+      ...updates,
+      id, // Preserve ID
+      meta: {
+        versionId: newVersion,
+        lastUpdated: new Date().toISOString()
+      }
+    }
+
+    // Store updated allergy intolerance
+    await this.ctx.storage.put(`AllergyIntolerance:${id}`, updated)
+    await this.ctx.storage.put(`AllergyIntolerance:${id}:_history:${newVersion}`, updated)
+
+    return updated
+  }
+
+  /**
+   * Delete an AllergyIntolerance resource
+   */
+  async deleteAllergyIntolerance(id: string): Promise<boolean> {
+    const existing = await this.readAllergyIntolerance(id)
+    if (!existing) {
+      return false
+    }
+
+    await this.ctx.storage.delete(`AllergyIntolerance:${id}`)
+    return true
+  }
+
+  /**
+   * Search for AllergyIntolerance resources
+   */
+  async searchAllergyIntolerances(params: {
+    patient?: string
+    category?: string
+    clinicalStatus?: string
+    verificationStatus?: string
+    criticality?: string
+    type?: string
+  }): Promise<AllergyIntolerance[]> {
+    // Get all allergy intolerances from storage
+    const allAllergyIntolerances = await this.ctx.storage.list<AllergyIntolerance>({ prefix: 'AllergyIntolerance:' })
+
+    // Filter out history entries (only get current versions)
+    let allergyIntolerances = Array.from(allAllergyIntolerances.entries())
+      .filter(([key]) => !key.includes(':_history:'))
+      .map(([, value]) => value)
+
+    // Filter by patient
+    if (params.patient) {
+      const patientRef = params.patient.startsWith('Patient/')
+        ? params.patient
+        : `Patient/${params.patient}`
+      allergyIntolerances = allergyIntolerances.filter(allergy => allergy.patient.reference === patientRef)
+    }
+
+    // Filter by category
+    if (params.category) {
+      allergyIntolerances = allergyIntolerances.filter(allergy =>
+        allergy.category?.includes(params.category as 'food' | 'medication' | 'environment' | 'biologic')
+      )
+    }
+
+    // Filter by clinical status
+    if (params.clinicalStatus) {
+      allergyIntolerances = allergyIntolerances.filter(allergy =>
+        allergy.clinicalStatus?.coding.some(coding => coding.code === params.clinicalStatus)
+      )
+    }
+
+    // Filter by verification status
+    if (params.verificationStatus) {
+      allergyIntolerances = allergyIntolerances.filter(allergy =>
+        allergy.verificationStatus?.coding.some(coding => coding.code === params.verificationStatus)
+      )
+    }
+
+    // Filter by criticality
+    if (params.criticality) {
+      allergyIntolerances = allergyIntolerances.filter(allergy =>
+        allergy.criticality === params.criticality
+      )
+    }
+
+    // Filter by type
+    if (params.type) {
+      allergyIntolerances = allergyIntolerances.filter(allergy =>
+        allergy.type === params.type
+      )
+    }
+
+    return allergyIntolerances
+  }
 
   /**
    * HTTP fetch handler
@@ -544,6 +1164,56 @@ export class FHIRDO {
       // FHIR Condition delete endpoint
       if (path.match(/^\/fhir\/r4\/Condition\/[\w-]+$/) && method === 'DELETE') {
         return this.handleConditionDelete(request, path)
+      }
+
+      // FHIR Procedure search endpoint
+      if (path === '/fhir/r4/Procedure' && method === 'GET') {
+        return this.handleProcedureSearch(request, url)
+      }
+
+      // FHIR Procedure create endpoint
+      if (path === '/fhir/r4/Procedure' && method === 'POST') {
+        return this.handleProcedureCreate(request)
+      }
+
+      // FHIR Procedure read endpoint
+      if (path.match(/^\/fhir\/r4\/Procedure\/[\w-]+$/) && method === 'GET') {
+        return this.handleProcedureRead(request, path)
+      }
+
+      // FHIR Procedure update endpoint
+      if (path.match(/^\/fhir\/r4\/Procedure\/[\w-]+$/) && method === 'PUT') {
+        return this.handleProcedureUpdate(request, path)
+      }
+
+      // FHIR Procedure delete endpoint
+      if (path.match(/^\/fhir\/r4\/Procedure\/[\w-]+$/) && method === 'DELETE') {
+        return this.handleProcedureDelete(request, path)
+      }
+
+      // FHIR MedicationRequest search endpoint
+      if (path === '/fhir/r4/MedicationRequest' && method === 'GET') {
+        return this.handleMedicationRequestSearch(request, url)
+      }
+
+      // FHIR MedicationRequest create endpoint
+      if (path === '/fhir/r4/MedicationRequest' && method === 'POST') {
+        return this.handleMedicationRequestCreate(request)
+      }
+
+      // FHIR MedicationRequest read endpoint
+      if (path.match(/^\/fhir\/r4\/MedicationRequest\/[\w-]+$/) && method === 'GET') {
+        return this.handleMedicationRequestRead(request, path)
+      }
+
+      // FHIR MedicationRequest update endpoint
+      if (path.match(/^\/fhir\/r4\/MedicationRequest\/[\w-]+$/) && method === 'PUT') {
+        return this.handleMedicationRequestUpdate(request, path)
+      }
+
+      // FHIR MedicationRequest delete endpoint
+      if (path.match(/^\/fhir\/r4\/MedicationRequest\/[\w-]+$/) && method === 'DELETE') {
+        return this.handleMedicationRequestDelete(request, path)
       }
 
       return new Response(JSON.stringify({ error: 'Not found' }), {
@@ -936,6 +1606,356 @@ export class FHIRDO {
         'error',
         'not-found',
         `Condition resource with id ${conditionId} not found`,
+        404
+      )
+    }
+
+    return new Response(null, {
+      status: 204,
+    })
+  }
+
+  /**
+   * Handle FHIR Procedure read
+   */
+  private async handleProcedureRead(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/Procedure\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const procedureId = match[1]
+    const procedure = await this.readProcedure(procedureId)
+
+    if (!procedure) {
+      return this.createOperationOutcome(
+        'error',
+        'not-found',
+        `Procedure resource with id ${procedureId} not found`,
+        404
+      )
+    }
+
+    return new Response(JSON.stringify(procedure), {
+      status: 200,
+      headers: { 'Content-Type': 'application/fhir+json' },
+    })
+  }
+
+  /**
+   * Handle FHIR Procedure search
+   */
+  private async handleProcedureSearch(request: Request, url: URL): Promise<Response> {
+    const params = {
+      patient: url.searchParams.get('patient') || undefined,
+      date: url.searchParams.get('date') || undefined,
+      code: url.searchParams.get('code') || undefined,
+      status: url.searchParams.get('status') || undefined,
+    }
+
+    const procedures = await this.searchProcedures(params)
+
+    // Create Bundle response
+    const bundle: Bundle<Procedure> = {
+      resourceType: 'Bundle',
+      type: 'searchset',
+      total: procedures.length,
+      entry: procedures.map(resource => ({
+        fullUrl: `Procedure/${resource.id}`,
+        resource,
+        search: {
+          mode: 'match'
+        }
+      }))
+    }
+
+    return new Response(JSON.stringify(bundle), {
+      status: 200,
+      headers: { 'Content-Type': 'application/fhir+json' },
+    })
+  }
+
+  /**
+   * Handle FHIR Procedure create
+   */
+  private async handleProcedureCreate(request: Request): Promise<Response> {
+    try {
+      const body = await request.json() as Omit<Procedure, 'id' | 'meta'>
+
+      // Validate required fields
+      if (!body.subject?.reference) {
+        return this.createOperationOutcome(
+          'error',
+          'invalid',
+          'Procedure must have a subject reference',
+          400
+        )
+      }
+
+      if (!body.status) {
+        return this.createOperationOutcome(
+          'error',
+          'invalid',
+          'Procedure must have a status',
+          400
+        )
+      }
+
+      const procedure = await this.createProcedure(body)
+
+      return new Response(JSON.stringify(procedure), {
+        status: 201,
+        headers: {
+          'Content-Type': 'application/fhir+json',
+          'Location': `/fhir/r4/Procedure/${procedure.id}`
+        },
+      })
+    } catch (error) {
+      return this.createOperationOutcome(
+        'error',
+        'processing',
+        `Failed to create Procedure: ${(error as Error).message}`,
+        400
+      )
+    }
+  }
+
+  /**
+   * Handle FHIR Procedure update
+   */
+  private async handleProcedureUpdate(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/Procedure\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const procedureId = match[1]
+
+    try {
+      const body = await request.json() as Partial<Procedure>
+
+      const updated = await this.updateProcedure(procedureId, body)
+
+      if (!updated) {
+        return this.createOperationOutcome(
+          'error',
+          'not-found',
+          `Procedure resource with id ${procedureId} not found`,
+          404
+        )
+      }
+
+      return new Response(JSON.stringify(updated), {
+        status: 200,
+        headers: { 'Content-Type': 'application/fhir+json' },
+      })
+    } catch (error) {
+      return this.createOperationOutcome(
+        'error',
+        'processing',
+        `Failed to update Procedure: ${(error as Error).message}`,
+        400
+      )
+    }
+  }
+
+  /**
+   * Handle FHIR Procedure delete
+   */
+  private async handleProcedureDelete(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/Procedure\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const procedureId = match[1]
+    const deleted = await this.deleteProcedure(procedureId)
+
+    if (!deleted) {
+      return this.createOperationOutcome(
+        'error',
+        'not-found',
+        `Procedure resource with id ${procedureId} not found`,
+        404
+      )
+    }
+
+    return new Response(null, {
+      status: 204,
+    })
+  }
+
+  /**
+   * Handle FHIR MedicationRequest read
+   */
+  private async handleMedicationRequestRead(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/MedicationRequest\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const medicationRequestId = match[1]
+    const medicationRequest = await this.readMedicationRequest(medicationRequestId)
+
+    if (!medicationRequest) {
+      return this.createOperationOutcome(
+        'error',
+        'not-found',
+        `MedicationRequest resource with id ${medicationRequestId} not found`,
+        404
+      )
+    }
+
+    return new Response(JSON.stringify(medicationRequest), {
+      status: 200,
+      headers: { 'Content-Type': 'application/fhir+json' },
+    })
+  }
+
+  /**
+   * Handle FHIR MedicationRequest search
+   */
+  private async handleMedicationRequestSearch(request: Request, url: URL): Promise<Response> {
+    const params = {
+      patient: url.searchParams.get('patient') || undefined,
+      status: url.searchParams.get('status') || undefined,
+      medication: url.searchParams.get('medication') || undefined,
+      intent: url.searchParams.get('intent') || undefined,
+      authoredon: url.searchParams.get('authoredon') || undefined,
+    }
+
+    const medicationRequests = await this.searchMedicationRequests(params)
+
+    // Create Bundle response
+    const bundle: Bundle<MedicationRequest> = {
+      resourceType: 'Bundle',
+      type: 'searchset',
+      total: medicationRequests.length,
+      entry: medicationRequests.map(resource => ({
+        fullUrl: `MedicationRequest/${resource.id}`,
+        resource,
+        search: {
+          mode: 'match'
+        }
+      }))
+    }
+
+    return new Response(JSON.stringify(bundle), {
+      status: 200,
+      headers: { 'Content-Type': 'application/fhir+json' },
+    })
+  }
+
+  /**
+   * Handle FHIR MedicationRequest create
+   */
+  private async handleMedicationRequestCreate(request: Request): Promise<Response> {
+    try {
+      const body = await request.json() as Omit<MedicationRequest, 'id' | 'meta'>
+
+      // Validate required fields
+      if (!body.subject?.reference) {
+        return this.createOperationOutcome(
+          'error',
+          'invalid',
+          'MedicationRequest must have a subject reference',
+          400
+        )
+      }
+
+      if (!body.status) {
+        return this.createOperationOutcome(
+          'error',
+          'invalid',
+          'MedicationRequest must have a status',
+          400
+        )
+      }
+
+      if (!body.intent) {
+        return this.createOperationOutcome(
+          'error',
+          'invalid',
+          'MedicationRequest must have an intent',
+          400
+        )
+      }
+
+      const medicationRequest = await this.createMedicationRequest(body)
+
+      return new Response(JSON.stringify(medicationRequest), {
+        status: 201,
+        headers: {
+          'Content-Type': 'application/fhir+json',
+          'Location': `/fhir/r4/MedicationRequest/${medicationRequest.id}`
+        },
+      })
+    } catch (error) {
+      return this.createOperationOutcome(
+        'error',
+        'processing',
+        `Failed to create MedicationRequest: ${(error as Error).message}`,
+        400
+      )
+    }
+  }
+
+  /**
+   * Handle FHIR MedicationRequest update
+   */
+  private async handleMedicationRequestUpdate(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/MedicationRequest\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const medicationRequestId = match[1]
+
+    try {
+      const body = await request.json() as Partial<MedicationRequest>
+
+      const updated = await this.updateMedicationRequest(medicationRequestId, body)
+
+      if (!updated) {
+        return this.createOperationOutcome(
+          'error',
+          'not-found',
+          `MedicationRequest resource with id ${medicationRequestId} not found`,
+          404
+        )
+      }
+
+      return new Response(JSON.stringify(updated), {
+        status: 200,
+        headers: { 'Content-Type': 'application/fhir+json' },
+      })
+    } catch (error) {
+      return this.createOperationOutcome(
+        'error',
+        'processing',
+        `Failed to update MedicationRequest: ${(error as Error).message}`,
+        400
+      )
+    }
+  }
+
+  /**
+   * Handle FHIR MedicationRequest delete
+   */
+  private async handleMedicationRequestDelete(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/MedicationRequest\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const medicationRequestId = match[1]
+    const deleted = await this.deleteMedicationRequest(medicationRequestId)
+
+    if (!deleted) {
+      return this.createOperationOutcome(
+        'error',
+        'not-found',
+        `MedicationRequest resource with id ${medicationRequestId} not found`,
         404
       )
     }

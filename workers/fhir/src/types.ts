@@ -455,6 +455,189 @@ export interface Condition {
     text: string
   }>
 }
+/**
+ * FHIR R4 DiagnosticReport Resource
+ * @see http://hl7.org/fhir/R4/diagnosticreport.html
+ */
+export interface DiagnosticReport {
+  resourceType: 'DiagnosticReport'
+  id: string
+  meta: {
+    versionId: string
+    lastUpdated: string
+  }
+  identifier?: Array<{
+    use?: string
+    system?: string
+    value: string
+  }>
+  status: 'registered' | 'partial' | 'preliminary' | 'final' | 'amended' | 'corrected' | 'appended' | 'cancelled' | 'entered-in-error' | 'unknown'
+  category?: Array<{
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }>
+  code: {
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }
+  subject?: {
+    reference: string
+    display?: string
+  }
+  encounter?: {
+    reference: string
+    display?: string
+  }
+  effectiveDateTime?: string
+  effectivePeriod?: {
+    start?: string
+    end?: string
+  }
+  issued?: string
+  performer?: Array<{
+    reference: string
+    display?: string
+  }>
+  result?: Array<{
+    reference: string
+    display?: string
+  }>
+  conclusion?: string
+  conclusionCode?: Array<{
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }>
+  presentedForm?: Array<{
+    contentType: string
+    data?: string
+    url?: string
+    title?: string
+  }>
+}
+
+
+/**
+ * FHIR R4 AllergyIntolerance Resource
+ * @see http://hl7.org/fhir/R4/allergyintolerance.html
+ */
+export interface AllergyIntolerance {
+  resourceType: 'AllergyIntolerance'
+  id: string
+  meta: {
+    versionId: string
+    lastUpdated: string
+  }
+  clinicalStatus?: {
+    coding: Array<{
+      system: string
+      code: 'active' | 'inactive' | 'resolved'
+      display?: string
+    }>
+    text?: string
+  }
+  verificationStatus?: {
+    coding: Array<{
+      system: string
+      code: 'unconfirmed' | 'confirmed' | 'refuted' | 'entered-in-error'
+      display?: string
+    }>
+    text?: string
+  }
+  type?: 'allergy' | 'intolerance'
+  category?: Array<'food' | 'medication' | 'environment' | 'biologic'>
+  criticality?: 'low' | 'high' | 'unable-to-assess'
+  code?: {
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }
+  patient: {
+    reference: string
+    display?: string
+  }
+  encounter?: {
+    reference: string
+    display?: string
+  }
+  onsetDateTime?: string
+  onsetAge?: {
+    value: number
+    unit: string
+    system: string
+    code: string
+  }
+  onsetPeriod?: {
+    start?: string
+    end?: string
+  }
+  onsetRange?: {
+    low?: { value: number; unit: string }
+    high?: { value: number; unit: string }
+  }
+  onsetString?: string
+  recordedDate?: string
+  recorder?: {
+    reference: string
+    display?: string
+  }
+  asserter?: {
+    reference: string
+    display?: string
+  }
+  lastOccurrence?: string
+  note?: Array<{
+    authorString?: string
+    time?: string
+    text: string
+  }>
+  reaction?: Array<{
+    substance?: {
+      coding: Array<{
+        system: string
+        code: string
+        display?: string
+      }>
+      text?: string
+    }
+    manifestation: Array<{
+      coding: Array<{
+        system: string
+        code: string
+        display?: string
+      }>
+      text?: string
+    }>
+    description?: string
+    onset?: string
+    severity?: 'mild' | 'moderate' | 'severe'
+    exposureRoute?: {
+      coding: Array<{
+        system: string
+        code: string
+        display?: string
+      }>
+      text?: string
+    }
+    note?: Array<{
+      text: string
+    }>
+  }>
+}
 
 /**
  * FHIR R4 Bundle Resource
@@ -476,4 +659,283 @@ export interface Bundle<T = any> {
       score?: number
     }
   }>
+}
+
+/**
+ * FHIR R4 Procedure Resource
+ * @see http://hl7.org/fhir/R4/procedure.html
+ */
+export interface Procedure {
+  resourceType: 'Procedure'
+  id: string
+  meta: {
+    versionId: string
+    lastUpdated: string
+  }
+  identifier?: Array<{
+    use?: string
+    system?: string
+    value: string
+  }>
+  status: 'preparation' | 'in-progress' | 'not-done' | 'on-hold' | 'stopped' | 'completed' | 'entered-in-error' | 'unknown'
+  code?: {
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }
+  subject: {
+    reference: string
+    display?: string
+  }
+  encounter?: {
+    reference: string
+    display?: string
+  }
+  performedDateTime?: string
+  performedPeriod?: {
+    start?: string
+    end?: string
+  }
+  performedString?: string
+  performer?: Array<{
+    function?: {
+      coding: Array<{
+        system: string
+        code: string
+        display?: string
+      }>
+      text?: string
+    }
+    actor: {
+      reference: string
+      display?: string
+    }
+  }>
+  location?: {
+    reference: string
+    display?: string
+  }
+  reasonCode?: Array<{
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }>
+  bodySite?: Array<{
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }>
+  outcome?: {
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }
+  note?: Array<{
+    authorString?: string
+    time?: string
+    text: string
+  }>
+}
+
+/**
+ * FHIR R4 MedicationRequest Resource
+ * @see http://hl7.org/fhir/R4/medicationrequest.html
+ */
+export interface MedicationRequest {
+  resourceType: 'MedicationRequest'
+  id: string
+  meta: {
+    versionId: string
+    lastUpdated: string
+  }
+  identifier?: Array<{
+    use?: string
+    system?: string
+    value: string
+  }>
+  status: 'active' | 'on-hold' | 'cancelled' | 'completed' | 'entered-in-error' | 'stopped' | 'draft' | 'unknown'
+  intent: 'proposal' | 'plan' | 'order' | 'original-order' | 'reflex-order' | 'filler-order' | 'instance-order' | 'option'
+  priority?: 'routine' | 'urgent' | 'asap' | 'stat'
+  medicationCodeableConcept?: {
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }
+  medicationReference?: {
+    reference: string
+    display?: string
+  }
+  subject: {
+    reference: string
+    display?: string
+  }
+  encounter?: {
+    reference: string
+    display?: string
+  }
+  authoredOn?: string
+  requester?: {
+    reference: string
+    display?: string
+  }
+  reasonCode?: Array<{
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }>
+  reasonReference?: Array<{
+    reference: string
+    display?: string
+  }>
+  note?: Array<{
+    authorString?: string
+    time?: string
+    text: string
+  }>
+  dosageInstruction?: Array<{
+    sequence?: number
+    text?: string
+    timing?: {
+      repeat?: {
+        frequency?: number
+        period?: number
+        periodUnit?: 's' | 'min' | 'h' | 'd' | 'wk' | 'mo' | 'a'
+        boundsDuration?: {
+          value: number
+          unit: string
+          system: string
+          code: string
+        }
+      }
+      code?: {
+        coding: Array<{
+          system: string
+          code: string
+          display?: string
+        }>
+        text?: string
+      }
+    }
+    route?: {
+      coding: Array<{
+        system: string
+        code: string
+        display?: string
+      }>
+      text?: string
+    }
+    method?: {
+      coding: Array<{
+        system: string
+        code: string
+        display?: string
+      }>
+      text?: string
+    }
+    doseAndRate?: Array<{
+      type?: {
+        coding: Array<{
+          system: string
+          code: string
+          display?: string
+        }>
+      }
+      doseQuantity?: {
+        value: number
+        unit: string
+        system: string
+        code: string
+      }
+      rateQuantity?: {
+        value: number
+        unit: string
+        system: string
+        code: string
+      }
+    }>
+  }>
+  dispenseRequest?: {
+    initialFill?: {
+      quantity?: {
+        value: number
+        unit: string
+        system: string
+        code: string
+      }
+      duration?: {
+        value: number
+        unit: string
+        system: string
+        code: string
+      }
+    }
+    dispenseInterval?: {
+      value: number
+      unit: string
+      system: string
+      code: string
+    }
+    validityPeriod?: {
+      start?: string
+      end?: string
+    }
+    numberOfRepeatsAllowed?: number
+    quantity?: {
+      value: number
+      unit: string
+      system: string
+      code: string
+    }
+    expectedSupplyDuration?: {
+      value: number
+      unit: string
+      system: string
+      code: string
+    }
+    performer?: {
+      reference: string
+      display?: string
+    }
+  }
+  substitution?: {
+    allowedBoolean?: boolean
+    allowedCodeableConcept?: {
+      coding: Array<{
+        system: string
+        code: string
+        display?: string
+      }>
+      text?: string
+    }
+    reason?: {
+      coding: Array<{
+        system: string
+        code: string
+        display?: string
+      }>
+      text?: string
+    }
+  }
+  priorPrescription?: {
+    reference: string
+    display?: string
+  }
 }

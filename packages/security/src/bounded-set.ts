@@ -1,10 +1,4 @@
 // @dotdo/security - Bounded Set implementation for memory-safe branded type tracking
-//
-// RED PHASE STUB: This file contains type definitions and minimal stub implementations
-// that will cause tests to fail. The actual implementation will be done in GREEN phase.
-//
-// Issue: workers-z69c (RED phase)
-// Related: workers-21d2 (GREEN phase - implementation)
 
 /**
  * Eviction policy for bounded collections
@@ -62,6 +56,13 @@ export interface BoundedMapOptions<K = unknown, V = unknown> {
 }
 
 /**
+ * Internal metadata for tracking entry expiration
+ */
+interface EntryMetadata {
+  expiresAt?: number
+}
+
+/**
  * A Set implementation with bounded size to prevent memory leaks.
  *
  * Useful for tracking branded types like validated IDs, used tokens,
@@ -84,58 +85,180 @@ export interface BoundedMapOptions<K = unknown, V = unknown> {
  * ```
  */
 export class BoundedSet<T> implements Iterable<T> {
-  // TODO: Implement in GREEN phase (workers-21d2)
+  private readonly _maxSize: number
+  private readonly evictionPolicy: EvictionPolicy
+  private readonly ttlMs?: number
+  private readonly refreshTtlOnAccess: boolean
+  private readonly onEvict?: (value: T) => void
+  private readonly data: Map<T, EntryMetadata>
+  private cleanupTimer?: ReturnType<typeof setInterval>
 
-  constructor(_options?: BoundedSetOptions<T>) {
-    throw new Error('BoundedSet not implemented - RED phase stub')
+  // Stats
+  private _evictionCount = 0
+  private _hitCount = 0
+  private _missCount = 0
+
+  constructor(options?: BoundedSetOptions<T>) {
+    const {
+      maxSize = 10000,
+      evictionPolicy = 'fifo',
+      ttlMs,
+      refreshTtlOnAccess = false,
+      cleanupIntervalMs,
+      onEvict,
+    } = options ?? {}
+
+    // Validate maxSize
+    if (!Number.isFinite(maxSize) || maxSize <= 0) {
+      throw new Error('maxSize must be a positive number')
+    }
+
+    this._maxSize = maxSize
+    this.evictionPolicy = evictionPolicy
+    this.ttlMs = ttlMs
+    this.refreshTtlOnAccess = refreshTtlOnAccess
+    this.onEvict = onEvict
+    this.data = new Map()
+
+    // Setup automatic cleanup if configured
+    if (cleanupIntervalMs) {
+      this.cleanupTimer = setInterval(() => {
+        this.cleanup()
+      }, cleanupIntervalMs)
+    }
   }
 
   get maxSize(): number {
-    throw new Error('Not implemented')
+    return this._maxSize
   }
 
   get size(): number {
-    throw new Error('Not implemented')
+    return this.data.size
   }
 
   get stats(): BoundedSetStats {
-    throw new Error('Not implemented')
+    const total = this._hitCount + this._missCount
+    const hitRate = total === 0 ? 0 : this._hitCount / total
+    return {
+      evictionCount: this._evictionCount,
+      hitCount: this._hitCount,
+      missCount: this._missCount,
+      hitRate,
+    }
   }
 
-  add(_value: T): this {
-    throw new Error('Not implemented')
+  private isExpired(metadata: EntryMetadata): boolean {
+    if (!metadata.expiresAt) return false
+    return Date.now() >= metadata.expiresAt
   }
 
-  has(_value: T): boolean {
-    throw new Error('Not implemented')
+  private getExpiresAt(): number | undefined {
+    if (!this.ttlMs) return undefined
+    return Date.now() + this.ttlMs
   }
 
-  delete(_value: T): boolean {
-    throw new Error('Not implemented')
+  add(value: T): this {
+    // Check if already exists
+    const existing = this.data.get(value)
+
+    if (existing) {
+      // For LRU, update position (delete and re-insert)
+      if (this.evictionPolicy === 'lru') {
+        this.data.delete(value)
+        this.data.set(value, { expiresAt: this.getExpiresAt() })
+      } else if (this.refreshTtlOnAccess && this.ttlMs) {
+        // Update TTL for FIFO with refresh
+        existing.expiresAt = this.getExpiresAt()
+      }
+      return this
+    }
+
+    // Need to make room if at capacity
+    if (this.data.size >= this._maxSize) {
+      this.evictOne()
+    }
+
+    // Add new entry
+    this.data.set(value, { expiresAt: this.getExpiresAt() })
+    return this
+  }
+
+  private evictOne(): void {
+    // Get first entry (oldest for both FIFO and LRU)
+    const firstKey = this.data.keys().next().value
+    if (firstKey !== undefined) {
+      this.data.delete(firstKey)
+      this._evictionCount++
+      if (this.onEvict) {
+        this.onEvict(firstKey)
+      }
+    }
+  }
+
+  has(value: T): boolean {
+    const metadata = this.data.get(value)
+
+    if (!metadata) {
+      this._missCount++
+      return false
+    }
+
+    // Check if expired
+    if (this.isExpired(metadata)) {
+      this.data.delete(value)
+      this._missCount++
+      return false
+    }
+
+    // Hit!
+    this._hitCount++
+
+    // For LRU, update access order
+    if (this.evictionPolicy === 'lru') {
+      this.data.delete(value)
+      const expiresAt = this.refreshTtlOnAccess ? this.getExpiresAt() : metadata.expiresAt
+      this.data.set(value, { expiresAt })
+    } else if (this.refreshTtlOnAccess && this.ttlMs) {
+      metadata.expiresAt = this.getExpiresAt()
+    }
+
+    return true
+  }
+
+  delete(value: T): boolean {
+    return this.data.delete(value)
   }
 
   clear(): void {
-    throw new Error('Not implemented')
+    this.data.clear()
   }
 
-  forEach(_callback: (value: T, value2: T, set: BoundedSet<T>) => void): void {
-    throw new Error('Not implemented')
+  forEach(callback: (value: T, value2: T, set: BoundedSet<T>) => void): void {
+    // Need to collect values first to avoid issues with iteration during modification
+    const values = Array.from(this.data.keys())
+    for (const value of values) {
+      if (this.data.has(value)) {
+        callback(value, value, this)
+      }
+    }
   }
 
   values(): IterableIterator<T> {
-    throw new Error('Not implemented')
+    return this.data.keys()
   }
 
   keys(): IterableIterator<T> {
-    throw new Error('Not implemented')
+    return this.data.keys()
   }
 
-  entries(): IterableIterator<[T, T]> {
-    throw new Error('Not implemented')
+  *entries(): IterableIterator<[T, T]> {
+    for (const value of this.data.keys()) {
+      yield [value, value]
+    }
   }
 
   [Symbol.iterator](): Iterator<T> {
-    throw new Error('Not implemented')
+    return this.data.keys()
   }
 
   /**
@@ -143,21 +266,38 @@ export class BoundedSet<T> implements Iterable<T> {
    * @returns Number of entries removed
    */
   cleanup(): number {
-    throw new Error('Not implemented')
+    if (!this.ttlMs) return 0
+
+    let removed = 0
+    const now = Date.now()
+
+    for (const [value, metadata] of this.data.entries()) {
+      if (metadata.expiresAt && now >= metadata.expiresAt) {
+        this.data.delete(value)
+        removed++
+      }
+    }
+
+    return removed
   }
 
   /**
    * Reset statistics counters
    */
   resetStats(): void {
-    throw new Error('Not implemented')
+    this._evictionCount = 0
+    this._hitCount = 0
+    this._missCount = 0
   }
 
   /**
    * Destroy the set and cleanup resources (timers, etc.)
    */
   destroy(): void {
-    throw new Error('Not implemented')
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer)
+      this.cleanupTimer = undefined
+    }
   }
 }
 
@@ -177,62 +317,222 @@ export class BoundedSet<T> implements Iterable<T> {
  * ```
  */
 export class BoundedMap<K, V> implements Iterable<[K, V]> {
-  // TODO: Implement in GREEN phase (workers-21d2)
+  private readonly _maxSize: number
+  private readonly evictionPolicy: EvictionPolicy
+  private readonly ttlMs?: number
+  private readonly refreshTtlOnAccess: boolean
+  private readonly onEvict?: (key: K, value: V) => void
+  private readonly data: Map<K, { value: V; metadata: EntryMetadata }>
+  private cleanupTimer?: ReturnType<typeof setInterval>
 
-  constructor(_options?: BoundedMapOptions<K, V>) {
-    throw new Error('BoundedMap not implemented - RED phase stub')
+  // Stats
+  private _evictionCount = 0
+  private _hitCount = 0
+  private _missCount = 0
+
+  constructor(options?: BoundedMapOptions<K, V>) {
+    const {
+      maxSize = 10000,
+      evictionPolicy = 'fifo',
+      ttlMs,
+      refreshTtlOnAccess = false,
+      cleanupIntervalMs,
+      onEvict,
+    } = options ?? {}
+
+    // Validate maxSize
+    if (!Number.isFinite(maxSize) || maxSize <= 0) {
+      throw new Error('maxSize must be a positive number')
+    }
+
+    this._maxSize = maxSize
+    this.evictionPolicy = evictionPolicy
+    this.ttlMs = ttlMs
+    this.refreshTtlOnAccess = refreshTtlOnAccess
+    this.onEvict = onEvict
+    this.data = new Map()
+
+    // Setup automatic cleanup if configured
+    if (cleanupIntervalMs) {
+      this.cleanupTimer = setInterval(() => {
+        this.cleanup()
+      }, cleanupIntervalMs)
+    }
   }
 
   get maxSize(): number {
-    throw new Error('Not implemented')
+    return this._maxSize
   }
 
   get size(): number {
-    throw new Error('Not implemented')
+    return this.data.size
   }
 
   get stats(): BoundedSetStats {
-    throw new Error('Not implemented')
+    const total = this._hitCount + this._missCount
+    const hitRate = total === 0 ? 0 : this._hitCount / total
+    return {
+      evictionCount: this._evictionCount,
+      hitCount: this._hitCount,
+      missCount: this._missCount,
+      hitRate,
+    }
   }
 
-  set(_key: K, _value: V): this {
-    throw new Error('Not implemented')
+  private isExpired(metadata: EntryMetadata): boolean {
+    if (!metadata.expiresAt) return false
+    return Date.now() >= metadata.expiresAt
   }
 
-  get(_key: K): V | undefined {
-    throw new Error('Not implemented')
+  private getExpiresAt(): number | undefined {
+    if (!this.ttlMs) return undefined
+    return Date.now() + this.ttlMs
   }
 
-  has(_key: K): boolean {
-    throw new Error('Not implemented')
+  set(key: K, value: V): this {
+    // Check if already exists
+    const existing = this.data.get(key)
+
+    if (existing) {
+      // For LRU, update position (delete and re-insert)
+      if (this.evictionPolicy === 'lru') {
+        this.data.delete(key)
+        this.data.set(key, { value, metadata: { expiresAt: this.getExpiresAt() } })
+      } else {
+        // Update value and optionally refresh TTL
+        existing.value = value
+        if (this.refreshTtlOnAccess && this.ttlMs) {
+          existing.metadata.expiresAt = this.getExpiresAt()
+        }
+      }
+      return this
+    }
+
+    // Need to make room if at capacity
+    if (this.data.size >= this._maxSize) {
+      this.evictOne()
+    }
+
+    // Add new entry
+    this.data.set(key, { value, metadata: { expiresAt: this.getExpiresAt() } })
+    return this
   }
 
-  delete(_key: K): boolean {
-    throw new Error('Not implemented')
+  private evictOne(): void {
+    // Get first entry (oldest for both FIFO and LRU)
+    const firstEntry = this.data.entries().next().value
+    if (firstEntry) {
+      const [key, { value }] = firstEntry
+      this.data.delete(key)
+      this._evictionCount++
+      if (this.onEvict) {
+        this.onEvict(key, value)
+      }
+    }
+  }
+
+  get(key: K): V | undefined {
+    const entry = this.data.get(key)
+
+    if (!entry) {
+      this._missCount++
+      return undefined
+    }
+
+    // Check if expired
+    if (this.isExpired(entry.metadata)) {
+      this.data.delete(key)
+      this._missCount++
+      return undefined
+    }
+
+    // Hit!
+    this._hitCount++
+
+    // For LRU, update access order
+    if (this.evictionPolicy === 'lru') {
+      this.data.delete(key)
+      const expiresAt = this.refreshTtlOnAccess
+        ? this.getExpiresAt()
+        : entry.metadata.expiresAt
+      this.data.set(key, { value: entry.value, metadata: { expiresAt } })
+    } else if (this.refreshTtlOnAccess && this.ttlMs) {
+      entry.metadata.expiresAt = this.getExpiresAt()
+    }
+
+    return entry.value
+  }
+
+  has(key: K): boolean {
+    const entry = this.data.get(key)
+
+    if (!entry) {
+      this._missCount++
+      return false
+    }
+
+    // Check if expired
+    if (this.isExpired(entry.metadata)) {
+      this.data.delete(key)
+      this._missCount++
+      return false
+    }
+
+    // Hit!
+    this._hitCount++
+
+    // For LRU, update access order
+    if (this.evictionPolicy === 'lru') {
+      this.data.delete(key)
+      const expiresAt = this.refreshTtlOnAccess
+        ? this.getExpiresAt()
+        : entry.metadata.expiresAt
+      this.data.set(key, { value: entry.value, metadata: { expiresAt } })
+    } else if (this.refreshTtlOnAccess && this.ttlMs) {
+      entry.metadata.expiresAt = this.getExpiresAt()
+    }
+
+    return true
+  }
+
+  delete(key: K): boolean {
+    return this.data.delete(key)
   }
 
   clear(): void {
-    throw new Error('Not implemented')
+    this.data.clear()
   }
 
-  forEach(_callback: (value: V, key: K, map: BoundedMap<K, V>) => void): void {
-    throw new Error('Not implemented')
+  forEach(callback: (value: V, key: K, map: BoundedMap<K, V>) => void): void {
+    // Need to collect entries first to avoid issues with iteration during modification
+    const entries = Array.from(this.data.entries())
+    for (const [key, { value }] of entries) {
+      if (this.data.has(key)) {
+        callback(value, key, this)
+      }
+    }
   }
 
-  keys(): IterableIterator<K> {
-    throw new Error('Not implemented')
+  *keys(): IterableIterator<K> {
+    for (const key of this.data.keys()) {
+      yield key
+    }
   }
 
-  values(): IterableIterator<V> {
-    throw new Error('Not implemented')
+  *values(): IterableIterator<V> {
+    for (const { value } of this.data.values()) {
+      yield value
+    }
   }
 
-  entries(): IterableIterator<[K, V]> {
-    throw new Error('Not implemented')
+  *entries(): IterableIterator<[K, V]> {
+    for (const [key, { value }] of this.data.entries()) {
+      yield [key, value]
+    }
   }
 
   [Symbol.iterator](): Iterator<[K, V]> {
-    throw new Error('Not implemented')
+    return this.entries()
   }
 
   /**
@@ -240,21 +540,38 @@ export class BoundedMap<K, V> implements Iterable<[K, V]> {
    * @returns Number of entries removed
    */
   cleanup(): number {
-    throw new Error('Not implemented')
+    if (!this.ttlMs) return 0
+
+    let removed = 0
+    const now = Date.now()
+
+    for (const [key, { metadata }] of this.data.entries()) {
+      if (metadata.expiresAt && now >= metadata.expiresAt) {
+        this.data.delete(key)
+        removed++
+      }
+    }
+
+    return removed
   }
 
   /**
    * Reset statistics counters
    */
   resetStats(): void {
-    throw new Error('Not implemented')
+    this._evictionCount = 0
+    this._hitCount = 0
+    this._missCount = 0
   }
 
   /**
    * Destroy the map and cleanup resources (timers, etc.)
    */
   destroy(): void {
-    throw new Error('Not implemented')
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer)
+      this.cleanupTimer = undefined
+    }
   }
 }
 

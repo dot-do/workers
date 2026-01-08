@@ -252,25 +252,19 @@ await resources.update('room_123', {
 ## Configuration
 
 ```typescript
-// Workers - import env adapter to configure from environment
+// Workers - import env adapter for automatic env resolution
 import 'rpc.do/env'
+import { resources } from 'resources.do'
+
+// Or use factory with custom config
 import { Resources } from 'resources.do'
-
-const resources = Resources()
-```
-
-Or use a custom configuration:
-
-```typescript
-import { Resources } from 'resources.do'
-
-const resources = Resources({
-  apiKey: 'your-api-key',
-  baseURL: 'https://custom.resources.do'
+const customResources = Resources({
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from RESOURCES_API_KEY or DO_API_KEY
 ```
 
-Environment variables `RESOURCES_API_KEY` or `DO_API_KEY` are automatically configured when using `rpc.do/env`.
+Set `RESOURCES_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Stop Fighting Your Resources
 

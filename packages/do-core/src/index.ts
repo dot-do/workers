@@ -95,3 +95,58 @@ export {
 
 // Re-export ClusterManager (K-means cluster assignment for R2 partitioning)
 export * from './cluster-manager.js'
+
+// Re-export Schema Migration System (DO storage schema evolution)
+// Note: Full migrations API available via '@dotdo/do/migrations' for tree-shaking
+export {
+  // Core types
+  type Migration,
+  type MigrationContext,
+  type MigrationRecord,
+  type MigrationResult,
+  type MigrationRunResult,
+  type MigrationStatus,
+  type MigrationConfig,
+  type MigrationDefinition,
+  type RegisteredMigrations,
+  type SchemaDrift,
+  // Error types
+  MigrationError,
+  MigrationInProgressError,
+  InvalidMigrationVersionError,
+  SchemaDriftError,
+  MigrationSqlError,
+  MigrationTimeoutError,
+  DEFAULT_MIGRATION_CONFIG,
+  // Registry functions
+  registerMigrations,
+  getMigrations,
+  getRegisteredTypes,
+  hasMigrations,
+  getLatestVersion,
+  getPendingMigrations,
+  clearRegistry,
+  // Mixin and base classes
+  MigrationMixin,
+  MigratableDO,
+  defineMigrations,
+  isMigratableType,
+  RequiresMigration,
+  type MigrationProvider,
+  // Runner
+  MigrationRunner,
+  createMigrationRunner,
+  type MigrationRunnerOptions,
+  // Schema hash utilities
+  extractSchema,
+  computeSchemaHash,
+  computeSchemaHashFromStorage,
+  computeMigrationChecksum,
+  schemasMatch,
+  describeSchemaChanges,
+  type SchemaInfo,
+  type TableInfo,
+  type ColumnInfo,
+  type IndexInfo,
+  type TriggerInfo,
+} from './migrations/index.js'

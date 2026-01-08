@@ -654,6 +654,11 @@ export interface InMemoryRateLimiterConfig {
  *
  * For distributed rate limiting, use TokenBucketRateLimiter with a shared
  * storage backend (e.g., Durable Objects, KV).
+ *
+ * Memory Optimization Features:
+ * - Expiry index for O(1) expired entry detection
+ * - Batch-limited cleanup to prevent event loop blocking
+ * - Detailed memory metrics via getMetrics()
  */
 export class InMemoryRateLimiter {
   private storage: InMemoryRateLimitStorage
@@ -684,6 +689,13 @@ export class InMemoryRateLimiter {
    */
   get storageSize(): number {
     return this.storage.size
+  }
+
+  /**
+   * Get detailed memory usage metrics for monitoring and capacity planning
+   */
+  getMetrics(): MemoryMetrics {
+    return this.storage.getMetrics()
   }
 
   /**

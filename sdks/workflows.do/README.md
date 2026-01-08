@@ -194,16 +194,19 @@ for await (const event of workflows.stream(run.id)) {
 ## Configuration
 
 ```typescript
-import { Workflows } from 'workflows.do'
+// Workers - import env adapter for automatic env resolution
+import 'rpc.do/env'
+import { workflows } from 'workflows.do'
 
-const workflows = Workflows({
-  apiKey: 'your-api-key'
+// Or use factory with custom config
+import { Workflows } from 'workflows.do'
+const customWorkflows = Workflows({
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from WORKFLOWS_API_KEY or DO_API_KEY
 ```
 
-Or set `WORKFLOWS_API_KEY` or `DO_API_KEY` in your environment.
-
-For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based configuration.
+Set `WORKFLOWS_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Stop Fearing Your Own Code
 

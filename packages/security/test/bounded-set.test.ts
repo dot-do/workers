@@ -6,6 +6,8 @@ import {
   createBoundedMap,
   type BoundedSetOptions,
   type BoundedMapOptions,
+  type BoundedSetExtendedStats,
+  type BoundedMapExtendedStats,
   type EvictionPolicy,
 } from '../src/bounded-set.js'
 
@@ -566,5 +568,148 @@ describe('Statistics and Monitoring', () => {
     expect(set.stats.evictionCount).toBe(0)
     expect(set.stats.hitCount).toBe(0)
     expect(set.stats.missCount).toBe(0)
+  })
+})
+
+describe('Extended Statistics and Memory Monitoring', () => {
+  describe('BoundedSet Extended Stats', () => {
+    it('should provide extended stats with memory metrics', () => {
+      const set = new BoundedSet<string>({ maxSize: 100 })
+
+      set.add('item-1')
+      set.add('item-2')
+      set.add('item-3')
+
+      const stats = set.extendedStats
+
+      expect(stats.size).toBe(3)
+      expect(stats.maxSize).toBe(100)
+      expect(stats.fillRatio).toBeCloseTo(0.03, 2)
+      expect(stats.estimatedMemoryBytes).toBeGreaterThan(0)
+      // Should include base stats
+      expect(stats.evictionCount).toBe(0)
+      expect(stats.hitCount).toBe(0)
+      expect(stats.missCount).toBe(0)
+    })
+
+    it('should estimate memory based on value types', () => {
+      const stringSet = new BoundedSet<string>({ maxSize: 10 })
+      const shortString = 'a'
+      const longString = 'a'.repeat(1000)
+
+      stringSet.add(shortString)
+      const statsShort = stringSet.extendedStats
+
+      stringSet.clear()
+      stringSet.add(longString)
+      const statsLong = stringSet.extendedStats
+
+      // Longer strings should estimate more memory
+      expect(statsLong.estimatedMemoryBytes).toBeGreaterThan(statsShort.estimatedMemoryBytes)
+    })
+
+    it('should track fill ratio accurately', () => {
+      const set = new BoundedSet<string>({ maxSize: 10 })
+
+      expect(set.extendedStats.fillRatio).toBe(0)
+
+      for (let i = 0; i < 5; i++) {
+        set.add(`item-${i}`)
+      }
+      expect(set.extendedStats.fillRatio).toBeCloseTo(0.5, 2)
+
+      for (let i = 5; i < 10; i++) {
+        set.add(`item-${i}`)
+      }
+      expect(set.extendedStats.fillRatio).toBe(1)
+    })
+  })
+
+  describe('BoundedMap Extended Stats', () => {
+    it('should provide extended stats with memory metrics', () => {
+      const map = new BoundedMap<string, number>({ maxSize: 100 })
+
+      map.set('key-1', 1)
+      map.set('key-2', 2)
+      map.set('key-3', 3)
+
+      const stats = map.extendedStats
+
+      expect(stats.size).toBe(3)
+      expect(stats.maxSize).toBe(100)
+      expect(stats.fillRatio).toBeCloseTo(0.03, 2)
+      expect(stats.estimatedMemoryBytes).toBeGreaterThan(0)
+    })
+
+    it('should estimate memory for both keys and values', () => {
+      const map = new BoundedMap<string, string>({ maxSize: 10 })
+
+      map.set('short', 'short')
+      const statsSmall = map.extendedStats
+
+      map.clear()
+      map.set('a'.repeat(100), 'b'.repeat(100))
+      const statsLarge = map.extendedStats
+
+      // Larger keys and values should estimate more memory
+      expect(statsLarge.estimatedMemoryBytes).toBeGreaterThan(statsSmall.estimatedMemoryBytes)
+    })
+  })
+})
+
+describe('O(1) LRU Performance', () => {
+  it('should handle large LRU sets efficiently', () => {
+    const set = new BoundedSet<string>({
+      maxSize: 10000,
+      evictionPolicy: 'lru',
+    })
+
+    // Add initial entries
+    for (let i = 0; i < 10000; i++) {
+      set.add(`item-${i}`)
+    }
+
+    // Time a series of LRU operations
+    const start = performance.now()
+
+    // Perform 10000 accesses and additions (triggers LRU reordering)
+    for (let i = 0; i < 10000; i++) {
+      set.has(`item-${i % 10000}`)
+      set.add(`new-item-${i}`)
+    }
+
+    const elapsed = performance.now() - start
+
+    // With O(1) operations, 20000 operations should complete quickly
+    // This is more of a sanity check than a strict benchmark
+    expect(elapsed).toBeLessThan(1000) // Should complete in under 1 second
+    expect(set.size).toBe(10000)
+  })
+
+  it('should handle large LRU maps efficiently', () => {
+    const map = new BoundedMap<string, number>({
+      maxSize: 10000,
+      evictionPolicy: 'lru',
+    })
+
+    // Add initial entries
+    for (let i = 0; i < 10000; i++) {
+      map.set(`key-${i}`, i)
+    }
+
+    // Time a series of LRU operations
+    const start = performance.now()
+
+    // Perform 10000 gets and sets (triggers LRU reordering)
+    for (let i = 0; i < 10000; i++) {
+      map.get(`key-${i % 10000}`)
+      map.set(`new-key-${i}`, i)
+    }
+
+    const elapsed = performance.now() - start
+
+    // With O(1) operations, 20000 operations should complete quickly
+    expect(elapsed).toBeLessThan(1000)
+    expect(map.size).toBe(10000)
   })
 })

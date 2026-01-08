@@ -208,25 +208,19 @@ console.log(`At risk: ${analytics.atRisk.length} objectives`)
 ## Configuration
 
 ```typescript
-// Workers - import env adapter to configure from environment
+// Workers - import env adapter for automatic env resolution
 import 'rpc.do/env'
+import { okrs } from 'okrs.do'
+
+// Or use factory with custom config
 import { OKRs } from 'okrs.do'
-
-const okrs = OKRs()
-```
-
-Or use a custom configuration:
-
-```typescript
-import { OKRs } from 'okrs.do'
-
-const okrs = OKRs({
-  apiKey: 'your-api-key',
-  baseURL: 'https://custom.okrs.do'
+const customOkrs = OKRs({
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from OKRS_API_KEY or DO_API_KEY
 ```
 
-Environment variables `OKRS_API_KEY` or `DO_API_KEY` are automatically configured when using `rpc.do/env`.
+Set `OKRS_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Stop Setting Goals You Cannot Measure
 

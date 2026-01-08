@@ -81,6 +81,171 @@ export type Dispatch<A> = (action: A) => void
 export type SetStateAction<S> = S | ((prevState: S) => S)
 export type Reducer<S, A> = (prevState: S, action: A) => S
 
+// ============================================================================
+// Component and PureComponent Classes
+// ============================================================================
+
+/**
+ * Shallow equality comparison for objects
+ * Used by PureComponent to determine if props/state have changed
+ */
+function shallowEqual<T extends Record<string, unknown>>(objA: T, objB: T): boolean {
+  if (Object.is(objA, objB)) {
+    return true
+  }
+
+  if (typeof objA !== 'object' || objA === null ||
+      typeof objB !== 'object' || objB === null) {
+    return false
+  }
+
+  const keysA = Object.keys(objA)
+  const keysB = Object.keys(objB)
+
+  if (keysA.length !== keysB.length) {
+    return false
+  }
+
+  for (const key of keysA) {
+    if (!Object.prototype.hasOwnProperty.call(objB, key) ||
+        !Object.is(objA[key], objB[key])) {
+      return false
+    }
+  }
+
+  return true
+}
+
+/**
+ * React.Component compatible base class
+ *
+ * Provides a familiar class-based component API for legacy React code and libraries.
+ * Note: This is a compatibility shim - lifecycle methods are stubbed for API compatibility
+ * but may not trigger automatically in the hono/jsx rendering context.
+ *
+ * @example
+ * ```tsx
+ * class Counter extends Component<{}, { count: number }> {
+ *   state = { count: 0 }
+ *
+ *   increment = () => {
+ *     this.setState(prev => ({ count: prev.count + 1 }))
+ *   }
+ *
+ *   render() {
+ *     return (
+ *       <button onClick={this.increment}>
+ *         Count: {this.state.count}
+ *       </button>
+ *     )
+ *   }
+ * }
+ * ```
+ */
+export class Component<P = object, S = object> {
+  props: Readonly<P>
+  state: Readonly<S>
+  context: unknown
+  refs: { [key: string]: unknown }
+
+  constructor(props: P) {
+    this.props = props
+    this.state = {} as S
+    this.context = undefined
+    this.refs = {}
+  }
+
+  /**
+   * Sets the component state, triggering a re-render
+   * @param state - Partial state object or updater function
+   * @param callback - Optional callback called after state update
+   */
+  setState<K extends keyof S>(
+    state: ((prevState: Readonly<S>, props: Readonly<P>) => Pick<S, K> | S | null) | (Pick<S, K> | S | null),
+    callback?: () => void
+  ): void {
+    // Compute the new state
+    const newState = typeof state === 'function'
+      ? (state as (prevState: Readonly<S>, props: Readonly<P>) => Pick<S, K> | S | null)(this.state, this.props)
+      : state
+
+    // Merge with existing state if new state is not null
+    if (newState !== null) {
+      this.state = { ...this.state, ...newState } as Readonly<S>
+    }
+
+    // Call callback if provided (synchronously for simplicity)
+    if (callback) {
+      callback()
+    }
+  }
+
+  /**
+   * Forces a re-render of the component
+   * @param callback - Optional callback called after re-render
+   */
+  forceUpdate(callback?: () => void): void {
+    // In this compatibility layer, forceUpdate is a no-op
+    // but we call the callback to maintain API compatibility
+    if (callback) {
+      callback()
+    }
+  }
+
+  /**
+   * Renders the component. Override in subclasses.
+   * @returns JSX element or null
+   */
+  render(): unknown {
+    return null
+  }
+
+  // Lifecycle method stubs - can be overridden in subclasses
+  componentDidMount?(): void
+  componentDidUpdate?(prevProps: Readonly<P>, prevState: Readonly<S>, snapshot?: unknown): void
+  componentWillUnmount?(): void
+  shouldComponentUpdate?(nextProps: Readonly<P>, nextState: Readonly<S>): boolean
+  getSnapshotBeforeUpdate?(prevProps: Readonly<P>, prevState?: Readonly<S>): unknown
+  componentDidCatch?(error: Error, errorInfo: { componentStack: string }): void
+
+  // Static lifecycle methods - declare as class properties in subclasses
+  static getDerivedStateFromProps?: <P, S>(props: Readonly<P>, state: Readonly<S>) => Partial<S> | null
+  static getDerivedStateFromError?: (error: Error) => object
+}
+
+/**
+ * React.PureComponent compatible base class
+ *
+ * Extends Component with a default shouldComponentUpdate that performs
+ * a shallow comparison of props and state to prevent unnecessary re-renders.
+ *
+ * @example
+ * ```tsx
+ * class OptimizedItem extends PureComponent<{ item: Item }> {
+ *   render() {
+ *     return <div>{this.props.item.name}</div>
+ *   }
+ * }
+ * ```
+ */
+export class PureComponent<P = object, S = object> extends Component<P, S> {
+  /**
+   * Default implementation that performs shallow comparison
+   * @param nextProps - The next props
+   * @param nextState - The next state
+   * @returns true if component should update, false otherwise
+   */
+  shouldComponentUpdate(nextProps: Readonly<P>, nextState: Readonly<S>): boolean {
+    return !shallowEqual(
+      this.props as unknown as Record<string, unknown>,
+      nextProps as unknown as Record<string, unknown>
+    ) || !shallowEqual(
+      this.state as unknown as Record<string, unknown>,
+      nextState as unknown as Record<string, unknown>
+    )
+  }
+}
+
 // Import createElement for use in lazy
 import { createElement } from 'hono/jsx/dom'
 

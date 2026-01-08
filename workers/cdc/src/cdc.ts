@@ -900,36 +900,36 @@ export class CDCDO {
   }
 
   // ============================================================================
-  // CDC Batch Creation with Transaction Locking
+  // CDC Batch Creation with Date Range Validation
   // ============================================================================
 
   /**
-   * Create a CDC batch for events in the specified pipeline.
-   * Uses transaction locking to prevent race conditions when multiple
-   * concurrent callers attempt to create batches simultaneously.
+   * Create a CDC batch for events within a time range.
+   *
+   * @param options - Batch creation options including pipelineId, startTime, and endTime
+   * @throws ValidationError if startTime is greater than endTime (invalid date range)
+   * @throws Error if pipeline is not found
    *
    * Key guarantees:
+   * - Validates date range before processing
    * - No duplicate batches for the same events
    * - No events missed between concurrent batch creations
    * - No events duplicated across concurrent batches
    * - Sequence numbers remain monotonic and gapless
    */
-  async createCDCBatch(
-    pipelineId: string,
-    options?: {
-      fromTimestamp?: number
-      toTimestamp?: number
-      maxEvents?: number
+  async createCDCBatch(options: CreateCDCBatchOptions): Promise<CDCBatchResult> {
+    const { pipelineId, startTime, endTime, batchId: customBatchId, filters } = options
+
+    // Validate date range - startTime must not be after endTime
+    if (startTime > endTime) {
+      throw new ValidationError(
+        `Invalid date range: startTime (${startTime}) cannot be after endTime (${endTime}). ` +
+          `Please ensure startTime is less than or equal to endTime.`,
+        'startTime',
+        'INVALID_DATE_RANGE'
+      )
     }
-  ): Promise<{
-    batchId: string
-    pipelineId: string
-    eventCount: number
-    events: CDCEvent[]
-    fromSequence: number
-    toSequence: number
-    createdAt: number
-  }> {
+
     const pipeline = this.pipelines.get(pipelineId)
     if (!pipeline) {
       throw new Error(`Pipeline '${pipelineId}' not found`)
@@ -953,7 +953,7 @@ export class CDCDO {
     try {
       // Use storage transaction for atomic batch creation
       return await this.ctx.storage.transaction(async (txn) => {
-        return this.createCDCBatchInternal(pipelineId, options, txn)
+        return this.createCDCBatchInternal(pipelineId, startTime, endTime, customBatchId, filters, txn)
       })
     } finally {
       // Release the lock
@@ -970,36 +970,33 @@ export class CDCDO {
    */
   private async createCDCBatchInternal(
     pipelineId: string,
-    options: {
-      fromTimestamp?: number
-      toTimestamp?: number
-      maxEvents?: number
-    } | undefined,
+    startTime: number,
+    endTime: number,
+    customBatchId: string | undefined,
+    filters: { sources?: string[]; types?: string[] } | undefined,
     txn: DurableObjectState['storage']
-  ): Promise<{
-    batchId: string
-    pipelineId: string
-    eventCount: number
-    events: CDCEvent[]
-    fromSequence: number
-    toSequence: number
-    createdAt: number
-  }> {
-    const maxEvents = options?.maxEvents ?? Number.MAX_SAFE_INTEGER
-    const fromTimestamp = options?.fromTimestamp ?? 0
-    const toTimestamp = options?.toTimestamp ?? Number.MAX_SAFE_INTEGER
-
+  ): Promise<CDCBatchResult> {
     // Get all unbatched events for this pipeline
     const eventEntries = await txn.list<StoredEvent>({ prefix: `event:${pipelineId}:` })
 
     // Filter and sort events
     const eligibleEvents: StoredEvent[] = []
-    for (const [key, event] of eventEntries) {
+    for (const [, event] of eventEntries) {
       // Skip if already batched
       if (event._batchId) continue
 
-      // Filter by timestamp if specified
-      if (event.timestamp < fromTimestamp || event.timestamp > toTimestamp) continue
+      // Filter by timestamp range
+      if (event.timestamp < startTime || event.timestamp > endTime) continue
+
+      // Apply source filters if specified
+      if (filters?.sources && filters.sources.length > 0) {
+        if (!filters.sources.includes(event.source)) continue
+      }
+
+      // Apply type filters if specified
+      if (filters?.types && filters.types.length > 0) {
+        if (!filters.types.includes(event.type)) continue
+      }
 
       eligibleEvents.push(event)
     }
@@ -1007,38 +1004,37 @@ export class CDCDO {
     // Sort by sequence number for consistent ordering
     eligibleEvents.sort((a, b) => (a.sequenceNumber ?? 0) - (b.sequenceNumber ?? 0))
 
-    // Limit to maxEvents
-    const eventsToProcess = eligibleEvents.slice(0, maxEvents)
+    const createdAt = Date.now()
 
-    // Return empty batch if no events
-    if (eventsToProcess.length === 0) {
+    // Return empty batch if no events (valid for zero-width or no-match ranges)
+    if (eligibleEvents.length === 0) {
+      const emptyBatchId = customBatchId ?? `batch-${pipelineId}-${createdAt}-empty`
       return {
-        batchId: '',
+        batchId: emptyBatchId,
         pipelineId,
         eventCount: 0,
-        events: [],
-        fromSequence: 0,
-        toSequence: 0,
-        createdAt: Date.now(),
+        startTime,
+        endTime,
+        createdAt,
+        status: 'completed',
       }
     }
 
     // Generate batch ID
-    const batchId = `batch-${pipelineId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-    const createdAt = Date.now()
+    const batchId = customBatchId ?? `batch-${pipelineId}-${createdAt}-${Math.random().toString(36).slice(2, 8)}`
 
     // Calculate batch metrics
     let sizeBytes = 0
-    for (const event of eventsToProcess) {
+    for (const event of eligibleEvents) {
       sizeBytes += JSON.stringify(event).length
     }
 
-    const fromSequence = eventsToProcess[0]!.sequenceNumber ?? 0
-    const toSequence = eventsToProcess[eventsToProcess.length - 1]!.sequenceNumber ?? 0
+    const fromSequence = eligibleEvents[0]!.sequenceNumber ?? 0
+    const toSequence = eligibleEvents[eligibleEvents.length - 1]!.sequenceNumber ?? 0
 
     // Mark events as batched atomically
     const updates: Record<string, StoredEvent> = {}
-    for (const event of eventsToProcess) {
+    for (const event of eligibleEvents) {
       event._batchId = batchId
       updates[`event:${pipelineId}:${event.sequenceNumber}`] = event
     }
@@ -1048,7 +1044,7 @@ export class CDCDO {
     const batch: BatchStatus = {
       batchId,
       pipelineId,
-      eventCount: eventsToProcess.length,
+      eventCount: eligibleEvents.length,
       sizeBytes,
       createdAt,
       status: 'pending',
@@ -1058,7 +1054,7 @@ export class CDCDO {
 
     // Store batch metadata
     await txn.put(`batch:${batchId}`, batch)
-    await txn.put(`batchEvents:${batchId}`, eventsToProcess)
+    await txn.put(`batchEvents:${batchId}`, eligibleEvents)
 
     // Update in-memory state
     this.batches.set(batchId, batch)
@@ -1066,32 +1062,26 @@ export class CDCDO {
     // Remove from event buffer if present
     const buffer = this.eventBuffers.get(pipelineId)
     if (buffer) {
-      const batchedIds = new Set(eventsToProcess.map((e) => e.id))
+      const batchedIds = new Set(eligibleEvents.map((e) => e.id))
       const remaining = buffer.filter((e) => !batchedIds.has(e.id))
       this.eventBuffers.set(pipelineId, remaining)
     }
 
     // Update stats
     this.updateStats(pipelineId, {
-      eventsProcessed: eventsToProcess.length,
+      eventsProcessed: eligibleEvents.length,
       batchCreated: true,
       bytesWritten: sizeBytes,
-    })
-
-    // Return batch with events (strip internal fields)
-    const cleanEvents: CDCEvent[] = eventsToProcess.map((e) => {
-      const { _batchId, _ingestedAt, ...clean } = e
-      return clean
     })
 
     return {
       batchId,
       pipelineId,
-      eventCount: eventsToProcess.length,
-      events: cleanEvents,
-      fromSequence,
-      toSequence,
+      eventCount: eligibleEvents.length,
+      startTime,
+      endTime,
       createdAt,
+      status: 'pending',
     }
   }
 

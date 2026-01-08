@@ -30,6 +30,27 @@
  *   budget: 'medium',
  *   latency: 'low'
  * })
+ *
+ * // Compare by specific criteria
+ * const priceComparison = await models.compareByPrice(
+ *   ['gpt-4o', 'claude-3-5-sonnet'],
+ *   { monthlyTokens: { input: 10_000_000, output: 5_000_000 } }
+ * )
+ *
+ * const perfComparison = await models.compareByPerformance(
+ *   ['gpt-4o', 'claude-3-5-sonnet'],
+ *   { criteria: 'latency' }
+ * )
+ *
+ * const capComparison = await models.compareByCapability(
+ *   ['gpt-4o', 'claude-3-5-sonnet'],
+ *   { capabilities: ['function-calling', 'vision'] }
+ * )
+ *
+ * const benchComparison = await models.compareByBenchmark(
+ *   ['gpt-4o', 'claude-3-5-sonnet'],
+ *   { benchmarks: ['MMLU', 'HumanEval'] }
+ * )
  * ```
  */
 

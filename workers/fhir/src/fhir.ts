@@ -1165,6 +1165,30 @@ export class FHIRDO {
       if (path.match(/^\/fhir\/r4\/Condition\/[\w-]+$/) && method === 'DELETE') {
         return this.handleConditionDelete(request, path)
       }
+      // FHIR DiagnosticReport search endpoint
+      if (path === '/fhir/r4/DiagnosticReport' && method === 'GET') {
+        return this.handleDiagnosticReportSearch(request, url)
+      }
+
+      // FHIR DiagnosticReport create endpoint
+      if (path === '/fhir/r4/DiagnosticReport' && method === 'POST') {
+        return this.handleDiagnosticReportCreate(request)
+      }
+
+      // FHIR DiagnosticReport read endpoint
+      if (path.match(/^\/fhir\/r4\/DiagnosticReport\/[\w-]+$/) && method === 'GET') {
+        return this.handleDiagnosticReportRead(request, path)
+      }
+
+      // FHIR DiagnosticReport update endpoint
+      if (path.match(/^\/fhir\/r4\/DiagnosticReport\/[\w-]+$/) && method === 'PUT') {
+        return this.handleDiagnosticReportUpdate(request, path)
+      }
+
+      // FHIR DiagnosticReport delete endpoint
+      if (path.match(/^\/fhir\/r4\/DiagnosticReport\/[\w-]+$/) && method === 'DELETE') {
+        return this.handleDiagnosticReportDelete(request, path)
+      }
 
       // FHIR Procedure search endpoint
       if (path === '/fhir/r4/Procedure' && method === 'GET') {
@@ -1214,6 +1238,31 @@ export class FHIRDO {
       // FHIR MedicationRequest delete endpoint
       if (path.match(/^\/fhir\/r4\/MedicationRequest\/[\w-]+$/) && method === 'DELETE') {
         return this.handleMedicationRequestDelete(request, path)
+      }
+
+      // FHIR AllergyIntolerance search endpoint
+      if (path === '/fhir/r4/AllergyIntolerance' && method === 'GET') {
+        return this.handleAllergyIntoleranceSearch(request, url)
+      }
+
+      // FHIR AllergyIntolerance create endpoint
+      if (path === '/fhir/r4/AllergyIntolerance' && method === 'POST') {
+        return this.handleAllergyIntoleranceCreate(request)
+      }
+
+      // FHIR AllergyIntolerance read endpoint
+      if (path.match(/^\/fhir\/r4\/AllergyIntolerance\/[\w-]+$/) && method === 'GET') {
+        return this.handleAllergyIntoleranceRead(request, path)
+      }
+
+      // FHIR AllergyIntolerance update endpoint
+      if (path.match(/^\/fhir\/r4\/AllergyIntolerance\/[\w-]+$/) && method === 'PUT') {
+        return this.handleAllergyIntoleranceUpdate(request, path)
+      }
+
+      // FHIR AllergyIntolerance delete endpoint
+      if (path.match(/^\/fhir\/r4\/AllergyIntolerance\/[\w-]+$/) && method === 'DELETE') {
+        return this.handleAllergyIntoleranceDelete(request, path)
       }
 
       return new Response(JSON.stringify({ error: 'Not found' }), {
@@ -1616,6 +1665,178 @@ export class FHIRDO {
   }
 
   /**
+  /**
+   * Handle FHIR DiagnosticReport read
+   */
+  private async handleDiagnosticReportRead(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/DiagnosticReport\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const reportId = match[1]
+    const report = await this.readDiagnosticReport(reportId)
+
+    if (!report) {
+      return this.createOperationOutcome(
+        'error',
+        'not-found',
+        `DiagnosticReport resource with id ${reportId} not found`,
+        404
+      )
+    }
+
+    return new Response(JSON.stringify(report), {
+      status: 200,
+      headers: { 'Content-Type': 'application/fhir+json' },
+    })
+  }
+
+  /**
+   * Handle FHIR DiagnosticReport search
+   */
+  private async handleDiagnosticReportSearch(request: Request, url: URL): Promise<Response> {
+    const params = {
+      patient: url.searchParams.get('patient') || undefined,
+      category: url.searchParams.get('category') || undefined,
+      status: url.searchParams.get('status') || undefined,
+      code: url.searchParams.get('code') || undefined,
+      date: url.searchParams.get('date') || undefined,
+    }
+
+    const reports = await this.searchDiagnosticReports(params)
+
+    // Create Bundle response
+    const bundle: Bundle<DiagnosticReport> = {
+      resourceType: 'Bundle',
+      type: 'searchset',
+      total: reports.length,
+      entry: reports.map(resource => ({
+        fullUrl: `DiagnosticReport/${resource.id}`,
+        resource,
+        search: {
+          mode: 'match'
+        }
+      }))
+    }
+
+    return new Response(JSON.stringify(bundle), {
+      status: 200,
+      headers: { 'Content-Type': 'application/fhir+json' },
+    })
+  }
+
+  /**
+   * Handle FHIR DiagnosticReport create
+   */
+  private async handleDiagnosticReportCreate(request: Request): Promise<Response> {
+    try {
+      const body = await request.json() as Omit<DiagnosticReport, 'id' | 'meta'>
+
+      // Validate required fields
+      if (!body.code) {
+        return this.createOperationOutcome(
+          'error',
+          'invalid',
+          'DiagnosticReport must have a code',
+          400
+        )
+      }
+
+      if (!body.status) {
+        return this.createOperationOutcome(
+          'error',
+          'invalid',
+          'DiagnosticReport must have a status',
+          400
+        )
+      }
+
+      const report = await this.createDiagnosticReport(body)
+
+      return new Response(JSON.stringify(report), {
+        status: 201,
+        headers: {
+          'Content-Type': 'application/fhir+json',
+          'Location': `/fhir/r4/DiagnosticReport/${report.id}`
+        },
+      })
+    } catch (error) {
+      return this.createOperationOutcome(
+        'error',
+        'processing',
+        `Failed to create DiagnosticReport: ${(error as Error).message}`,
+        400
+      )
+    }
+  }
+
+  /**
+   * Handle FHIR DiagnosticReport update
+   */
+  private async handleDiagnosticReportUpdate(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/DiagnosticReport\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const reportId = match[1]
+
+    try {
+      const body = await request.json() as Partial<DiagnosticReport>
+
+      const updated = await this.updateDiagnosticReport(reportId, body)
+
+      if (!updated) {
+        return this.createOperationOutcome(
+          'error',
+          'not-found',
+          `DiagnosticReport resource with id ${reportId} not found`,
+          404
+        )
+      }
+
+      return new Response(JSON.stringify(updated), {
+        status: 200,
+        headers: { 'Content-Type': 'application/fhir+json' },
+      })
+    } catch (error) {
+      return this.createOperationOutcome(
+        'error',
+        'processing',
+        `Failed to update DiagnosticReport: ${(error as Error).message}`,
+        400
+      )
+    }
+  }
+
+  /**
+   * Handle FHIR DiagnosticReport delete
+   */
+  private async handleDiagnosticReportDelete(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/DiagnosticReport\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const reportId = match[1]
+    const deleted = await this.deleteDiagnosticReport(reportId)
+
+    if (!deleted) {
+      return this.createOperationOutcome(
+        'error',
+        'not-found',
+        `DiagnosticReport resource with id ${reportId} not found`,
+        404
+      )
+    }
+
+    return new Response(null, {
+      status: 204,
+    })
+  }
+
+  /**
    * Handle FHIR Procedure read
    */
   private async handleProcedureRead(request: Request, path: string): Promise<Response> {
@@ -1956,6 +2177,169 @@ export class FHIRDO {
         'error',
         'not-found',
         `MedicationRequest resource with id ${medicationRequestId} not found`,
+        404
+      )
+    }
+
+    return new Response(null, {
+      status: 204,
+    })
+  }
+
+  /**
+   * Handle FHIR AllergyIntolerance read
+   */
+  private async handleAllergyIntoleranceRead(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/AllergyIntolerance\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const allergyIntoleranceId = match[1]
+    const allergyIntolerance = await this.readAllergyIntolerance(allergyIntoleranceId)
+
+    if (!allergyIntolerance) {
+      return this.createOperationOutcome(
+        'error',
+        'not-found',
+        `AllergyIntolerance resource with id ${allergyIntoleranceId} not found`,
+        404
+      )
+    }
+
+    return new Response(JSON.stringify(allergyIntolerance), {
+      status: 200,
+      headers: { 'Content-Type': 'application/fhir+json' },
+    })
+  }
+
+  /**
+   * Handle FHIR AllergyIntolerance search
+   */
+  private async handleAllergyIntoleranceSearch(request: Request, url: URL): Promise<Response> {
+    const params = {
+      patient: url.searchParams.get('patient') || undefined,
+      category: url.searchParams.get('category') || undefined,
+      clinicalStatus: url.searchParams.get('clinical-status') || undefined,
+      verificationStatus: url.searchParams.get('verification-status') || undefined,
+      criticality: url.searchParams.get('criticality') || undefined,
+      type: url.searchParams.get('type') || undefined,
+    }
+
+    const allergyIntolerances = await this.searchAllergyIntolerances(params)
+
+    // Create Bundle response
+    const bundle: Bundle<AllergyIntolerance> = {
+      resourceType: 'Bundle',
+      type: 'searchset',
+      total: allergyIntolerances.length,
+      entry: allergyIntolerances.map(resource => ({
+        fullUrl: `AllergyIntolerance/${resource.id}`,
+        resource,
+        search: {
+          mode: 'match'
+        }
+      }))
+    }
+
+    return new Response(JSON.stringify(bundle), {
+      status: 200,
+      headers: { 'Content-Type': 'application/fhir+json' },
+    })
+  }
+
+  /**
+   * Handle FHIR AllergyIntolerance create
+   */
+  private async handleAllergyIntoleranceCreate(request: Request): Promise<Response> {
+    try {
+      const body = await request.json() as Omit<AllergyIntolerance, 'id' | 'meta'>
+
+      // Validate required fields
+      if (!body.patient?.reference) {
+        return this.createOperationOutcome(
+          'error',
+          'invalid',
+          'AllergyIntolerance must have a patient reference',
+          400
+        )
+      }
+
+      const allergyIntolerance = await this.createAllergyIntolerance(body)
+
+      return new Response(JSON.stringify(allergyIntolerance), {
+        status: 201,
+        headers: {
+          'Content-Type': 'application/fhir+json',
+          'Location': `/fhir/r4/AllergyIntolerance/${allergyIntolerance.id}`
+        },
+      })
+    } catch (error) {
+      return this.createOperationOutcome(
+        'error',
+        'processing',
+        `Failed to create AllergyIntolerance: ${(error as Error).message}`,
+        400
+      )
+    }
+  }
+
+  /**
+   * Handle FHIR AllergyIntolerance update
+   */
+  private async handleAllergyIntoleranceUpdate(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/AllergyIntolerance\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const allergyIntoleranceId = match[1]
+
+    try {
+      const body = await request.json() as Partial<AllergyIntolerance>
+
+      const updated = await this.updateAllergyIntolerance(allergyIntoleranceId, body)
+
+      if (!updated) {
+        return this.createOperationOutcome(
+          'error',
+          'not-found',
+          `AllergyIntolerance resource with id ${allergyIntoleranceId} not found`,
+          404
+        )
+      }
+
+      return new Response(JSON.stringify(updated), {
+        status: 200,
+        headers: { 'Content-Type': 'application/fhir+json' },
+      })
+    } catch (error) {
+      return this.createOperationOutcome(
+        'error',
+        'processing',
+        `Failed to update AllergyIntolerance: ${(error as Error).message}`,
+        400
+      )
+    }
+  }
+
+  /**
+   * Handle FHIR AllergyIntolerance delete
+   */
+  private async handleAllergyIntoleranceDelete(request: Request, path: string): Promise<Response> {
+    const match = path.match(/^\/fhir\/r4\/AllergyIntolerance\/([\w-]+)$/)
+    if (!match) {
+      return this.createOperationOutcome('error', 'invalid', 'Invalid path', 400)
+    }
+
+    const allergyIntoleranceId = match[1]
+    const deleted = await this.deleteAllergyIntolerance(allergyIntoleranceId)
+
+    if (!deleted) {
+      return this.createOperationOutcome(
+        'error',
+        'not-found',
+        `AllergyIntolerance resource with id ${allergyIntoleranceId} not found`,
         404
       )
     }

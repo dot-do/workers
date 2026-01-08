@@ -1,0 +1,19 @@
+{
+  "name": "@dotdo/worker-videos",
+  "version": "0.0.1",
+  "description": "Video hosting worker with Cloudflare Stream",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "dependencies": {
+    "@dotdo/rpc": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

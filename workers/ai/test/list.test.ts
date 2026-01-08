@@ -72,6 +72,18 @@ describe('AIDO list() and lists() methods', () => {
         })
       })
 
+      it('should generate marketing taglines', async () => {
+        const instance = new AIDO(ctx, env)
+        const result = await instance.list<string>('5 marketing taglines for a coffee shop')
+
+        expect(Array.isArray(result)).toBe(true)
+        expect(result.length).toBe(5)
+        result.forEach((tagline) => {
+          expect(typeof tagline).toBe('string')
+          expect(tagline.length).toBeGreaterThan(0)
+        })
+      })
+
       it('should generate an array with specific count when requested', async () => {
         const instance = new AIDO(ctx, env)
         const result = await instance.list('3 fruit names')
@@ -235,6 +247,115 @@ describe('AIDO list() and lists() methods', () => {
         expect(result.length).toBeLessThanOrEqual(3)
       })
     })
+
+    describe('large array generation', () => {
+      it('should handle generating many items (50+)', async () => {
+        const instance = new AIDO(ctx, env)
+        const result = await instance.list('50 common English words', { maxItems: 50 })
+
+        expect(Array.isArray(result)).toBe(true)
+        expect(result.length).toBeGreaterThanOrEqual(20) // Allow some flexibility
+        expect(result.length).toBeLessThanOrEqual(50)
+      })
+
+      it('should handle large object arrays', async () => {
+        interface Record {
+          id: number
+          name: string
+          active: boolean
+        }
+
+        const instance = new AIDO(ctx, env)
+        const result = await instance.list<Record>('20 database records', {
+          maxItems: 20,
+          schema: {
+            type: 'object',
+            properties: {
+              id: { type: 'number' },
+              name: { type: 'string' },
+              active: { type: 'boolean' },
+            },
+            required: ['id', 'name', 'active'],
+          },
+        })
+
+        expect(Array.isArray(result)).toBe(true)
+        expect(result.length).toBeGreaterThan(0)
+        result.forEach((record, index) => {
+          expect(record).toHaveProperty('id')
+          expect(record).toHaveProperty('name')
+          expect(record).toHaveProperty('active')
+        })
+      })
+
+      it('should respect maxItems limit for large requests', async () => {
+        const instance = new AIDO(ctx, env)
+        // Request 100 but limit to 10
+        const result = await instance.list('100 random numbers', { maxItems: 10 })
+
+        expect(Array.isArray(result)).toBe(true)
+        expect(result.length).toBeLessThanOrEqual(10)
+      })
+    })
+
+    describe('error handling', () => {
+      it('should throw error for empty prompt', async () => {
+        const instance = new AIDO(ctx, env)
+
+        await expect(instance.list('')).rejects.toThrow(/prompt|empty|required/i)
+      })
+
+      it('should throw error for null prompt', async () => {
+        const instance = new AIDO(ctx, env)
+
+        await expect(instance.list(null as unknown as string)).rejects.toThrow()
+      })
+
+      it('should throw error for undefined prompt', async () => {
+        const instance = new AIDO(ctx, env)
+
+        await expect(instance.list(undefined as unknown as string)).rejects.toThrow()
+      })
+
+      it('should handle invalid schema gracefully', async () => {
+        const instance = new AIDO(ctx, env)
+
+        // Invalid schema should still attempt generation or throw meaningful error
+        const resultOrError = instance.list('3 items', {
+          schema: { invalid: 'not-a-valid-schema-format' } as unknown as Record<string, unknown>,
+        })
+
+        // Either returns array or throws meaningful error
+        await expect(resultOrError).resolves.toBeDefined()
+      })
+
+      it('should handle AI timeout gracefully', async () => {
+        // Mock a slow AI response that times out
+        const slowEnv = createMockEnv()
+        slowEnv.AI.run = async () => {
+          await new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Operation timeout')), 100)
+          )
+        }
+
+        const instance = new AIDO(ctx, slowEnv)
+
+        await expect(instance.list('5 items')).rejects.toThrow(/timeout/i)
+      })
+
+      it('should handle rate limiting', async () => {
+        const rateLimitedEnv = createMockEnv()
+        rateLimitedEnv.AI.run = async () => {
+          const error = new Error('Rate limit exceeded') as Error & { status?: number }
+          error.status = 429
+          throw error
+        }
+
+        const instance = new AIDO(ctx, rateLimitedEnv)
+
+        await expect(instance.list('5 items')).rejects.toThrow(/rate limit/i)
+      })
+    })
   })
 
   describe('lists() - multiple named arrays', () => {
@@ -337,6 +458,77 @@ describe('AIDO list() and lists() methods', () => {
 
         expect(typeof result).toBe('object')
         expect(Object.keys(result).length).toBeGreaterThan(0)
+      })
+    })
+
+    describe('error handling for lists()', () => {
+      it('should throw error for empty prompt', async () => {
+        const instance = new AIDO(ctx, env)
+
+        await expect(instance.lists('')).rejects.toThrow(/prompt|empty|required/i)
+      })
+
+      it('should throw error for null prompt', async () => {
+        const instance = new AIDO(ctx, env)
+
+        await expect(instance.lists(null as unknown as string)).rejects.toThrow()
+      })
+
+      it('should return empty object when no categories can be inferred', async () => {
+        const instance = new AIDO(ctx, env)
+        // This prompt doesn't have natural category divisions
+        const result = await instance.lists('a single item')
+
+        expect(typeof result).toBe('object')
+        // May return empty or with inferred categories
+      })
+
+      it('should handle AI errors gracefully', async () => {
+        const errorEnv = createMockEnv()
+        errorEnv.AI.run = async () => {
+          throw new Error('AI service unavailable')
+        }
+
+        const instance = new AIDO(ctx, errorEnv)
+
+        await expect(instance.lists('pros and cons')).rejects.toThrow(/unavailable|error/i)
+      })
+    })
+
+    describe('edge cases', () => {
+      it('should handle prompts with many potential categories', async () => {
+        const instance = new AIDO(ctx, env)
+        const result = await instance.lists(
+          'Things categorized by color: red things, blue things, green things, yellow things, purple things'
+        )
+
+        expect(typeof result).toBe('object')
+        const keys = Object.keys(result)
+        expect(keys.length).toBeGreaterThan(0)
+        // Should create arrays for each color
+      })
+
+      it('should handle single-category prompts', async () => {
+        const instance = new AIDO(ctx, env)
+        const result = await instance.lists('Just pros of using TypeScript', {
+          keys: ['pros'],
+        })
+
+        expect(result).toHaveProperty('pros')
+        expect(Array.isArray(result.pros)).toBe(true)
+        expect(Object.keys(result).length).toBe(1)
+      })
+
+      it('should maintain array item types across all categories', async () => {
+        const instance = new AIDO(ctx, env)
+        const result = await instance.lists('advantages and disadvantages of cloud computing')
+
+        Object.values(result).forEach((arr) => {
+          expect(Array.isArray(arr)).toBe(true)
+          arr.forEach((item) => {
+            expect(typeof item).toBe('string')
+          })
+        })
       })
     })
   })

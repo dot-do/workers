@@ -285,3 +285,30 @@ export interface ExtractOptions {
   model?: string
   strict?: boolean // If true, throws on missing required fields
 }
+
+/**
+ * Options for generate() method
+ */
+export interface GenerateOptions {
+  model?: string
+  temperature?: number // 0-2 (default: 0.7)
+  maxTokens?: number // Max output tokens
+  stream?: boolean // Enable streaming
+  timeout?: number // Timeout in milliseconds
+  schema?: Record<string, unknown> | SimpleSchema // Schema for object generation
+}
+
+/**
+ * Result of generate() method
+ */
+export interface GenerateResult {
+  text: string
+  model?: string
+  usage?: {
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
+  }
+  finishReason?: 'stop' | 'length' | 'content_filter'
+  data?: Record<string, unknown> // Present when schema is provided
+}

@@ -473,7 +473,7 @@ describe('FunctionsDO Delegation', () => {
         })
 
         // Mock the timeout behavior
-        env.HUMANS.execute = vi.fn().mockRejectedValue(new Error('Human task timed out'))
+        env.HUMANS.execute = vi.fn().mockRejectedValue(new Error('Human task timeout'))
 
         await expect(instance.invoke('urgentApproval', {})).rejects.toThrow(/timeout/i)
       })
@@ -517,6 +517,57 @@ describe('FunctionsDO Delegation', () => {
         })
 
         await expect(instance.invoke('humanWithoutBackend', {})).rejects.toThrow(/HUMANS|binding|missing|not configured/i)
+      })
+    })
+
+    describe('Invalid function type', () => {
+      it('should throw error for unknown function type', async () => {
+        const instance = new FunctionsDO(ctx, env)
+
+        // Manually insert a function with invalid type directly into storage
+        // This simulates data corruption or manual tampering
+        await ctx.storage.put('function:invalidTypeFunc', {
+          name: 'invalidTypeFunc',
+          type: 'invalid-type', // Not a valid FunctionType
+          description: 'A function with invalid type',
+        })
+
+        // Attempting to invoke should throw an error about unknown type
+        await expect(instance.invoke('invalidTypeFunc', {})).rejects.toThrow(/unknown|invalid|unsupported.*type/i)
+      })
+
+      it('should throw error when function type is null', async () => {
+        const instance = new FunctionsDO(ctx, env)
+
+        // Insert function with null type - this represents corrupted data
+        // A function registered with registerTyped() would have a valid type
+        // but null could occur from data corruption or manual tampering
+        await ctx.storage.put('function:nullTypeFunc', {
+          name: 'nullTypeFunc',
+          type: null,
+          description: 'A function with null type',
+        })
+
+        // Current behavior: falls through to legacy path (returns result)
+        // Expected behavior: should either throw an error or handle gracefully
+        // This test documents the expected behavior: null type should throw
+        await expect(instance.invoke('nullTypeFunc', {})).rejects.toThrow(/unknown|invalid|null.*type/i)
+      })
+
+      it('should throw error when function type is undefined', async () => {
+        const instance = new FunctionsDO(ctx, env)
+
+        // Insert function without type field (undefined)
+        await ctx.storage.put('function:noTypeFunc', {
+          name: 'noTypeFunc',
+          description: 'A function without type field',
+        })
+
+        // Should either execute as legacy function or throw
+        // For typed delegation, undefined type should be handled gracefully
+        const result = await instance.invoke('noTypeFunc', { test: true })
+        // Legacy functions return a default result
+        expect(result).toHaveProperty('function', 'noTypeFunc')
       })
     })
   })
@@ -604,6 +655,216 @@ describe('FunctionsDO Delegation', () => {
 
       await instance.invoke('managerApproval', { requestId: '123' })
       expect(env.HUMANS.execute).toHaveBeenLastCalledWith('managerApproval', { requestId: '123' })
+    })
+  })
+
+  describe('Result passthrough', () => {
+    describe('Backend results are returned to caller', () => {
+      it('should return EVAL backend result to caller', async () => {
+        const instance = new FunctionsDO(ctx, env)
+
+        // Configure EVAL to return a specific result
+        const expectedResult = { computed: 42, type: 'fibonacci' }
+        env.EVAL.execute = vi.fn().mockResolvedValue(expectedResult)
+
+        await instance.registerTyped({
+          name: 'computeValue',
+          type: 'code',
+          code: 'export default () => 42',
+        })
+
+        const result = await instance.invoke('computeValue', {})
+
+        // The result should be exactly what EVAL returned
+        expect(result).toEqual(expectedResult)
+      })
+
+      it('should return AGENTS backend result to caller', async () => {
+        const instance = new FunctionsDO(ctx, env)
+
+        // Configure AGENTS to return a complex result
+        const expectedResult = {
+          report: 'Comprehensive analysis of quantum computing',
+          sources: ['arxiv.org', 'nature.com'],
+          confidence: 0.95,
+        }
+        env.AGENTS.execute = vi.fn().mockResolvedValue(expectedResult)
+
+        await instance.registerTyped({
+          name: 'analyzeData',
+          type: 'agentic',
+          goal: 'Analyze the topic',
+          tools: ['search', 'analyze'],
+        })
+
+        const result = await instance.invoke('analyzeData', { topic: 'quantum' })
+
+        expect(result).toEqual(expectedResult)
+      })
+
+      it('should return HUMANS backend result to caller', async () => {
+        const instance = new FunctionsDO(ctx, env)
+
+        // Configure HUMANS to return approval result
+        const expectedResult = {
+          approved: true,
+          approvedBy: 'manager@company.com',
+          approvedAt: '2024-01-15T10:30:00Z',
+          comments: 'Looks good, approved!',
+        }
+        env.HUMANS.execute = vi.fn().mockResolvedValue(expectedResult)
+
+        await instance.registerTyped({
+          name: 'getApproval',
+          type: 'human',
+          channel: 'email',
+          assignee: 'manager@company.com',
+        })
+
+        const result = await instance.invoke('getApproval', { requestId: 'REQ-001' })
+
+        expect(result).toEqual(expectedResult)
+      })
+
+      it('should return AI generate result for generative functions', async () => {
+        const instance = new FunctionsDO(ctx, env)
+
+        // Configure AI to return a specific response
+        const expectedAIResponse = { response: 'A beautifully crafted poem about spring' }
+        env.AI.run = vi.fn().mockResolvedValue(expectedAIResponse)
+
+        await instance.registerTyped({
+          name: 'generatePoem',
+          type: 'generative',
+          prompt: 'Write a poem about {{topic}}',
+        })
+
+        const result = await instance.invoke('generatePoem', { topic: 'spring' })
+
+        // Result should contain the AI response text
+        expect(result).toHaveProperty('text')
+        expect((result as { text: string }).text).toContain('poem')
+      })
+    })
+
+    describe('Complex result types are preserved', () => {
+      it('should preserve nested objects in results', async () => {
+        const instance = new FunctionsDO(ctx, env)
+
+        const expectedResult = {
+          data: {
+            nested: {
+              deeply: {
+                value: 'preserved',
+              },
+            },
+          },
+          metadata: {
+            timestamp: '2024-01-15T10:30:00Z',
+            version: 1,
+          },
+        }
+        env.EVAL.execute = vi.fn().mockResolvedValue(expectedResult)
+
+        await instance.registerTyped({
+          name: 'getNestedData',
+          type: 'code',
+          code: 'export default () => ({ nested: true })',
+        })
+
+        const result = await instance.invoke('getNestedData', {})
+
+        expect(result).toEqual(expectedResult)
+      })
+
+      it('should preserve arrays in results', async () => {
+        const instance = new FunctionsDO(ctx, env)
+
+        const expectedResult = {
+          items: [
+            { id: 1, name: 'First' },
+            { id: 2, name: 'Second' },
+            { id: 3, name: 'Third' },
+          ],
+          total: 3,
+        }
+        env.AGENTS.execute = vi.fn().mockResolvedValue(expectedResult)
+
+        await instance.registerTyped({
+          name: 'listItems',
+          type: 'agentic',
+          goal: 'List all items',
+        })
+
+        const result = await instance.invoke('listItems', {})
+
+        expect(result).toEqual(expectedResult)
+        expect((result as { items: unknown[] }).items).toHaveLength(3)
+      })
+
+      it('should preserve null and undefined values in results', async () => {
+        const instance = new FunctionsDO(ctx, env)
+
+        const expectedResult = {
+          value: null,
+          optionalField: undefined,
+          emptyString: '',
+          zero: 0,
+          falseValue: false,
+        }
+        env.EVAL.execute = vi.fn().mockResolvedValue(expectedResult)
+
+        await instance.registerTyped({
+          name: 'getEdgeCases',
+          type: 'code',
+          code: 'export default () => ({ value: null })',
+        })
+
+        const result = await instance.invoke('getEdgeCases', {})
+
+        expect(result).toEqual(expectedResult)
+      })
+    })
+
+    describe('Result transformation should not occur', () => {
+      it('should not wrap backend result in extra object', async () => {
+        const instance = new FunctionsDO(ctx, env)
+
+        // Backend returns a simple string
+        const expectedResult = 'Simple string result'
+        env.EVAL.execute = vi.fn().mockResolvedValue(expectedResult)
+
+        await instance.registerTyped({
+          name: 'getString',
+          type: 'code',
+          code: 'export default () => "hello"',
+        })
+
+        const result = await instance.invoke('getString', {})
+
+        // Should be the string directly, not wrapped
+        expect(result).toBe(expectedResult)
+        expect(typeof result).toBe('string')
+      })
+
+      it('should not add extra metadata to backend results', async () => {
+        const instance = new FunctionsDO(ctx, env)
+
+        const backendResult = { answer: 42 }
+        env.AGENTS.execute = vi.fn().mockResolvedValue(backendResult)
+
+        await instance.registerTyped({
+          name: 'getAnswer',
+          type: 'agentic',
+          goal: 'Find the answer',
+        })
+
+        const result = await instance.invoke('getAnswer', {})
+
+        // Should only have the properties from backend, no extras
+        expect(Object.keys(result as object)).toEqual(['answer'])
+        expect(result).toEqual(backendResult)
+      })
     })
   })
 })

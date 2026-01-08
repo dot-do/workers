@@ -144,6 +144,38 @@ console.log(`RTMP URL: ${stream.rtmpUrl}`)
 console.log(`Stream Key: ${stream.streamKey}`)
 ```
 
+## Configuration
+
+### Environment Variables
+
+```bash
+# Primary API key (used by default)
+export DO_API_KEY="your-api-key"
+
+# Alternative: Organization API key
+export ORG_AI_API_KEY="your-org-key"
+```
+
+### Cloudflare Workers
+
+```typescript
+import 'rpc.do/env'
+import { videos } from 'videos.as'
+
+// Environment is automatically configured
+await videos.upload({ file, title })
+```
+
+### Custom Configuration
+
+```typescript
+import { Videos } from 'videos.as'
+
+const client = Videos({
+  baseURL: 'https://custom.example.com'
+})
+```
+
 ## Your Content Deserves Great Video
 
 Video builds connection. Video builds trust. Video converts.

@@ -206,6 +206,38 @@ const doc = await mdx.fromTemplate(template.id, {
 })
 ```
 
+## Configuration
+
+### Environment Variables
+
+```bash
+# Primary API key (used by default)
+export DO_API_KEY="your-api-key"
+
+# Alternative: Organization API key
+export ORG_AI_API_KEY="your-org-key"
+```
+
+### Cloudflare Workers
+
+```typescript
+import 'rpc.do/env'
+import { mdx } from 'mdx.as'
+
+// Environment is automatically configured
+await mdx.compile(content, options)
+```
+
+### Custom Configuration
+
+```typescript
+import { MDX } from 'mdx.as'
+
+const client = MDX({
+  baseURL: 'https://custom.example.com'
+})
+```
+
 ## Your Content, Alive
 
 Static content gets skipped. Interactive content gets shared.

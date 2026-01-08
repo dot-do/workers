@@ -12,6 +12,33 @@ npm install @dotdo/edge-api
 pnpm add @dotdo/edge-api
 ```
 
+## Tree-Shakable Imports
+
+Every package should have multiple entry points for different use cases:
+
+| Entry Point | Description | Size |
+|-------------|-------------|------|
+| `@dotdo/edge-api` | Full featured | ~15kB |
+| `@dotdo/edge-api/tiny` | Minimal, no dependencies | ~5kB |
+| `@dotdo/edge-api/rpc` | Expects deps as RPC bindings | ~8kB |
+| `@dotdo/edge-api/auth` | With authentication | ~12kB |
+
+### Individual Imports
+
+```typescript
+// Full package
+import { EdgeAPI } from '@dotdo/edge-api'
+
+// Minimal version
+import { EdgeAPI } from '@dotdo/edge-api/tiny'
+
+// RPC mode (uses service bindings)
+import { EdgeAPI } from '@dotdo/edge-api/rpc'
+
+// With authentication
+import { EdgeAPI } from '@dotdo/edge-api/auth'
+```
+
 ## Quick Start
 
 ```typescript

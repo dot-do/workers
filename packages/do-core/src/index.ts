@@ -18,6 +18,19 @@
 // Re-export core types and DOCore class (no dependencies)
 export * from './core.js'
 
+// Import CDC mixin for side effects (augments DOCore prototype with CDC methods)
+// This MUST be imported before any DOCore usage to ensure prototype is augmented
+import './cdc-mixin.js'
+
+// Re-export CDC Pipeline (optimized change data capture)
+export * from './cdc-pipeline.js'
+
+// Re-export CDC Watermark Manager (checkpoint tracking)
+export * from './cdc-watermark-manager.js'
+
+// Re-export CDC Mixin (adds CDC methods to DOCore)
+export * from './cdc-mixin.js'
+
 // Re-export schema module (depends on core types)
 export * from './schema.js'
 
@@ -95,6 +108,9 @@ export {
 
 // Re-export ClusterManager (K-means cluster assignment for R2 partitioning)
 export * from './cluster-manager.js'
+
+// Re-export Saga Pattern (cross-DO transaction support)
+export * from './saga.js'
 
 // Re-export Schema Migration System (DO storage schema evolution)
 // Note: Full migrations API available via '@dotdo/do/migrations' for tree-shaking

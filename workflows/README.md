@@ -3,159 +3,216 @@
 You have a vision for your startup. You should be focused on strategy, customers, and growth - not babysitting every process.
 
 ```typescript
-import { on } from 'workflows.do'
+import { Workflow } from 'workflows.do'
+import { priya, ralph, tom, quinn } from 'agents.do'
 
-on.Feature.requested(async feature => {
-  await plan(feature)      // Priya specs it out
-  await implement(feature) // Ralph builds it
-  await review(feature)    // Tom & Quinn review
-  await ship(feature)      // Deployed
+// Define your workflow with phases
+export const dev = Workflow({
+  name: 'Development',
+  phases: {
+    plan: { assignee: priya, then: 'implement' },
+    implement: { assignee: ralph, then: 'review' },
+    review: { assignee: [tom, quinn], checkpoint: true, then: 'ship' },
+    ship: { assignee: ralph, then: null }
+  }
 })
+
+// Use it with natural language
+dev`add stripe integration`
 ```
 
 Define how your business runs. Then let it run.
 
 ## Your Business, Defined
 
-Every startup runs on repeatable processes. Workflows let you define them once:
+Every startup runs on repeatable processes. Workflows let you define them as phases:
 
 ```typescript
-on.Customer.signedUp(customer => {
-  welcome(customer)
-  setupAccount(customer)
-  scheduleOnboarding(customer)
+import { Workflow } from 'workflows.do'
+import { sally, rae, mark } from 'agents.do'
+
+// Customer onboarding workflow
+export const onboarding = Workflow({
+  name: 'Onboarding',
+  phases: {
+    welcome: { assignee: sally, then: 'setup' },
+    setup: { assignee: rae, then: 'schedule' },
+    schedule: { assignee: sally, then: null }
+  }
 })
 
-on.Deal.qualified(deal => {
-  demo(deal)
-  propose(deal)
-  negotiate(deal)
-  close(deal)
+// Sales workflow
+export const sales = Workflow({
+  name: 'Sales',
+  phases: {
+    demo: { assignee: sally, then: 'propose' },
+    propose: { assignee: sally, then: 'negotiate' },
+    negotiate: { assignee: sally, checkpoint: true, then: 'close' },
+    close: { assignee: sally, then: null }
+  }
 })
 
-on.Incident.detected(incident => {
-  alert(incident)
-  triage(incident)
-  fix(incident)
-  postmortem(incident)
+// Incident response workflow
+export const incident = Workflow({
+  name: 'Incident',
+  phases: {
+    alert: { assignee: tom, then: 'triage' },
+    triage: { assignee: tom, then: 'fix' },
+    fix: { assignee: ralph, then: 'postmortem' },
+    postmortem: { assignee: [tom, priya], then: null }
+  }
 })
 ```
 
-You define what happens. The system makes it happen.
+You define the phases. The system orchestrates them.
 
 ## The Pattern
 
 ```typescript
-on.Noun.verb(async (data) => {
-  // Your process here
+export const myworkflow = Workflow({
+  name: 'Workflow Name',
+  phases: {
+    start: { assignee: agent, then: 'next' },
+    next: { assignee: [agent1, agent2], checkpoint: true, then: null }
+  }
 })
 ```
 
-That's it. When something happens, your workflow runs.
+Each phase has an `assignee` (who does the work) and `then` (what happens next).
 
 ## Development Workflow
 
 Here's how features get built:
 
 ```typescript
-import { on, Workflow } from 'workflows.do'
+import { Workflow } from 'workflows.do'
 import { priya, ralph, tom, quinn } from 'agents.do'
 
 export const dev = Workflow({
-  on: 'Feature.requested',
-
-  plan: {
-    agent: priya,
-    output: 'spec + issues'
-  },
-
-  implement: {
-    agent: ralph,
-    output: 'PR ready for review'
-  },
-
-  review: {
-    agents: [priya, tom, quinn],
-    approval: 'any 2 of 3',
-    output: 'approved PR'
-  },
-
-  ship: {
-    agent: ralph,
-    output: 'deployed to production'
+  name: 'Development',
+  phases: {
+    plan: {
+      assignee: priya,
+      then: 'implement'
+    },
+    implement: {
+      assignee: ralph,
+      then: 'review'
+    },
+    review: {
+      assignee: [priya, tom, quinn],
+      checkpoint: true,  // Wait for human approval
+      then: 'ship'
+    },
+    ship: {
+      assignee: ralph,
+      then: null  // End of workflow
+    }
   }
 })
+
+// Use it with natural language
+dev`add authentication system`
 ```
 
-Ralph implements. Priya, Tom, and Quinn review. You approve when it matters.
+Priya plans. Ralph implements. Priya, Tom, and Quinn review. You approve when it matters.
 
 ## Human Checkpoints
 
 Stay in control of what matters:
 
 ```typescript
-on.Contract.drafted(async contract => {
-  await legalReview(contract)
-  await checkpoint('founder')  // You approve
-  await send(contract)
-})
-```
-
-The process pauses. You review. One click to continue.
-
-## Smart Routing
-
-Workflows adapt based on results:
-
-```typescript
-on.PR.opened(async pr => {
-  const review = await codeReview(pr)
-
-  if (review.approved) {
-    await merge(pr)
-  } else if (review.needsChanges) {
-    await requestChanges(pr)
-  } else {
-    await escalate(pr)
+export const contracts = Workflow({
+  name: 'Contracts',
+  phases: {
+    draft: { assignee: mark, then: 'legalReview' },
+    legalReview: { assignee: tom, then: 'approval' },
+    approval: { assignee: 'founder', checkpoint: true, then: 'send' },
+    send: { assignee: sally, then: null }
   }
 })
 ```
 
-## Parallel Work
+The process pauses at checkpoints. You review. One click to continue.
 
-Multiple agents work at once:
+## Smart Routing
+
+Workflows can adapt based on results using conditional `then`:
 
 ```typescript
-on.Launch.planned(async launch => {
-  await parallel(
-    writeAnnouncement(launch),
-    prepareDemo(launch),
-    notifyPress(launch),
-    updateDocs(launch)
-  )
-
-  await checkpoint('founder')
-  await publish(launch)
+export const review = Workflow({
+  name: 'Code Review',
+  phases: {
+    review: {
+      assignee: [tom, quinn],
+      then: (result) => {
+        // Dynamic routing based on review outcome
+        if (result.approved) return 'merge'
+        if (result.needsChanges) return 'revise'
+        return 'escalate'
+      }
+    },
+    merge: { assignee: ralph, then: null },
+    revise: { assignee: ralph, then: 'review' },
+    escalate: { assignee: 'cto', checkpoint: true, then: 'review' }
+  }
 })
 ```
+
+Phases can route dynamically based on outcomes.
+
+## Parallel Work
+
+Multiple agents can work in parallel on the same phase:
+
+```typescript
+export const launch = Workflow({
+  name: 'Launch',
+  phases: {
+    prepare: {
+      assignee: [mark, rae, sally, mark],  // All work in parallel
+      parallel: true,  // Wait for all to complete
+      then: 'approval'
+    },
+    approval: {
+      assignee: 'founder',
+      checkpoint: true,
+      then: 'publish'
+    },
+    publish: {
+      assignee: mark,
+      then: null
+    }
+  }
+})
+```
+
+Multiple agents execute in parallel, workflow continues when all complete.
 
 ## Schedules
 
-Some things happen on a cadence:
+Some workflows run on a schedule:
 
 ```typescript
-every.monday.at9am(async () => {
-  await weeklyDigest()
-})
+import { schedule, Workflow } from 'workflows.do'
 
-every.day.at6pm(async () => {
-  await checkStaleDeals()
-})
+// Run workflow on a schedule
+schedule('0 9 * * 1', digest)  // Every Monday at 9am
+schedule('0 18 * * *', dealCheck)  // Every day at 6pm
+schedule('0 * * * *', healthCheck)  // Every hour
 
-every.hour(async () => {
-  await monitorHealth()
+// Or define scheduled workflows
+export const digest = Workflow({
+  name: 'Weekly Digest',
+  schedule: '0 9 * * 1',  // Cron syntax
+  phases: {
+    gather: { assignee: priya, then: 'send' },
+    send: { assignee: mark, then: null }
+  }
 })
 ```
+
+Workflows can be triggered by time, events, or API calls.
 
 ## Built-in Workflows
 
@@ -181,25 +238,45 @@ marketing`write the launch announcement`
 
 ## Your Startup, Automated
 
-You define the process:
+You define workflows once, then use them everywhere:
 
 ```typescript
-// How features get built
-on.Feature.requested(feature => dev(feature))
+import { dev, sales, marketing, incident } from 'workflows.do'
 
-// How deals progress
-on.Lead.qualified(lead => sales(lead))
+// Use workflows with natural language
+dev`add stripe integration`
+sales`follow up with Acme Corp`
+marketing`write the launch announcement`
+incident`fix the login bug`
 
-// How content ships
-on.Content.drafted(content => marketing(content))
-
-// How incidents resolve
-on.Alert.fired(alert => incident(alert))
+// Or programmatically
+await dev.run({ feature: 'stripe integration' })
+await sales.run({ lead: 'Acme Corp' })
 ```
 
 Then focus on what only you can do: vision, strategy, and the decisions that matter.
 
 Your startup runs itself. You run your startup.
+
+## Alternative Patterns
+
+For simple, imperative workflows, you can also use event handlers:
+
+```typescript
+import { on } from 'workflows.do'
+
+// Event-driven pattern (use for simple cases)
+on.Customer.signedUp(async customer => {
+  await welcome(customer)
+  await setupAccount(customer)
+  await scheduleOnboarding(customer)
+})
+
+// For complex workflows with human checkpoints, use phases
+export const onboarding = Workflow({ ... })
+```
+
+Use event handlers for simple, linear processes. Use phases for complex workflows with branching, parallelism, and human checkpoints.
 
 ---
 

@@ -4,7 +4,11 @@ WorkOS SDK exposed as a multi-transport RPC worker.
 
 ## Overview
 
+**Platform Service:** [id.org.ai](https://id.org.ai) - Auth for AI and Humans
+
 This worker wraps the [WorkOS Node.js SDK](https://github.com/workos/workos-node), providing enterprise identity management including SSO, Directory Sync, Admin Portal, and User Management via Cloudflare Workers RPC.
+
+This is the platform identity service that powers authentication for both AI agents and human workers in the workers.do ecosystem.
 
 ## Installation
 
@@ -30,7 +34,7 @@ Configure in `wrangler.json`:
 {
   "services": [
     {
-      "binding": "WORKOS",
+      "binding": "ORG",
       "service": "worker-workos"
     }
   ]
@@ -40,14 +44,14 @@ Configure in `wrangler.json`:
 Access via:
 
 ```typescript
-this.env.WORKOS
+this.env.ORG
 ```
 
 ## Available Transports
 
 | Transport | Example |
 |-----------|---------|
-| Workers RPC | `await env.WORKOS.sso.getAuthorizationUrl(...)` |
+| Workers RPC | `await env.ORG.sso.getAuthorizationUrl(...)` |
 | REST | `POST /api/sso/getAuthorizationUrl` |
 | CapnWeb | WebSocket RPC protocol |
 | MCP | `{ jsonrpc: '2.0', method: 'sso.getAuthorizationUrl', params: [...] }` |
@@ -56,30 +60,30 @@ this.env.WORKOS
 
 ```typescript
 // SSO - Get authorization URL
-const authUrl = await env.WORKOS.sso.getAuthorizationUrl({
+const authUrl = await env.ORG.sso.getAuthorizationUrl({
   clientId: 'client_xxx',
   redirectUri: 'https://example.com/callback',
   organization: 'org_xxx'
 })
 
 // SSO - Get profile from code
-const profile = await env.WORKOS.sso.getProfileAndToken({
+const profile = await env.ORG.sso.getProfileAndToken({
   code: 'auth_code',
   clientId: 'client_xxx'
 })
 
 // User Management - Create user
-const user = await env.WORKOS.userManagement.createUser({
+const user = await env.ORG.userManagement.createUser({
   email: 'alice@example.com',
   firstName: 'Alice',
   lastName: 'Smith'
 })
 
 // Directory Sync - List directories
-const directories = await env.WORKOS.directorySync.listDirectories()
+const directories = await env.ORG.directorySync.listDirectories()
 
 // Organizations - Create organization
-const org = await env.WORKOS.organizations.createOrganization({
+const org = await env.ORG.organizations.createOrganization({
   name: 'Acme Corp',
   domains: ['acme.com']
 })

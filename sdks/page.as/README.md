@@ -153,6 +153,38 @@ const results = await page.testResults(testId)
 console.log(`Winner: ${results.winner}`)
 ```
 
+## Configuration
+
+### Environment Variables
+
+```bash
+# Primary API key (used by default)
+export DO_API_KEY="your-api-key"
+
+# Alternative: Organization API key
+export ORG_AI_API_KEY="your-org-key"
+```
+
+### Cloudflare Workers
+
+```typescript
+import 'rpc.do/env'
+import { page } from 'page.as'
+
+// Environment is automatically configured
+await page.create({ slug, title, sections })
+```
+
+### Custom Configuration
+
+```typescript
+import { Page } from 'page.as'
+
+const client = Page({
+  baseURL: 'https://custom.example.com'
+})
+```
+
 ## Your Launch Shouldn't Wait
 
 Ideas have expiration dates. Momentum matters. Every day without a landing page is a day of lost opportunity.

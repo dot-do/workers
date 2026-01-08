@@ -133,16 +133,8 @@ for await (const chunk of stream) {
   process.stdout.write(chunk)
 }
 
-// BYOK - Use your own API keys when you need to
-const response = await llm.complete({
-  model: 'gpt-4',
-  prompt: '...',
-  apiKey: customerOwnKey // Their key, their limits, your platform
-})
-
 // Custom configuration for enterprise needs
 const myLLM = LLM({
-  apiKey: 'your-api-key',
   timeout: 60000,
   retry: {
     attempts: 5,
@@ -150,6 +142,7 @@ const myLLM = LLM({
     backoff: 'exponential'
   }
 })
+// API key resolved automatically via rpc.do/env
 
 // See what models are available
 const models = await llm.models()

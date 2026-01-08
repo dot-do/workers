@@ -232,12 +232,13 @@ const nouns = Nouns()
 Or use a custom configuration:
 
 ```typescript
+import 'rpc.do/env'
 import { Nouns } from 'nouns.do'
 
 const nouns = Nouns({
-  apiKey: 'your-api-key',
   baseURL: 'https://custom.nouns.do'
 })
+// API key resolved automatically from NOUNS_API_KEY or DO_API_KEY
 ```
 
 Environment variables `NOUNS_API_KEY` or `DO_API_KEY` are automatically configured when using `rpc.do/env`.

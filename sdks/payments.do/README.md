@@ -186,14 +186,14 @@ Set your API key via environment variable:
 export PAYMENTS_API_KEY=your_api_key
 ```
 
-Or configure the client directly:
+The client resolves API keys automatically:
 
 ```typescript
+import 'rpc.do/env'
 import { Payments } from 'payments.do'
 
-const payments = Payments({
-  apiKey: 'your_api_key'
-})
+const payments = Payments()
+// API key resolved automatically from PAYMENTS_API_KEY or DO_API_KEY
 ```
 
 ## Full API Reference

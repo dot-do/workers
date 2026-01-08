@@ -5,7 +5,8 @@
   "type": "module",
   "main": "index.ts",
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.ts",
+    "./embed": "./embed.ts"
   },
   "author": ".do",
   "license": "MIT",

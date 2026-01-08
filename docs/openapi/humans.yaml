@@ -1,0 +1,816 @@
+openapi: 3.0.3
+info:
+  title: humans.do API
+  description: |
+    Human-in-the-Loop API for the workers.do platform.
+
+    Provides human oversight, approval gates, review queues, and escalation in AI workflows:
+    - Task creation and management
+    - Assignment and queue management
+    - Approval, rejection, and deferral flows
+    - Escalation handling
+    - Timeout management with automatic expiration
+  version: 1.0.0
+  contact:
+    name: workers.do Support
+    url: https://workers.do
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://humans.do
+    description: Production server
+  - url: http://localhost:8787
+    description: Local development
+
+tags:
+  - name: Discovery
+    description: API discovery
+  - name: Tasks
+    description: Task management
+  - name: Queue
+    description: Queue operations
+  - name: Responses
+    description: Task response handling
+  - name: Timeout
+    description: Timeout management
+  - name: RPC
+    description: JSON-RPC interface
+
+paths:
+  /:
+    get:
+      summary: API Discovery
+      description: Returns HATEOAS discovery information
+      operationId: discovery
+      tags:
+        - Discovery
+      responses:
+        '200':
+          description: Discovery information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryResponse'
+
+  /api/tasks:
+    get:
+      summary: List Tasks
+      description: List all tasks with optional filters
+      operationId: listTasks
+      tags:
+        - Tasks
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TaskStatus'
+        - name: assignee
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/TaskType'
+        - name: priority
+          in: query
+          schema:
+            $ref: '#/components/schemas/TaskPriority'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HITLTask'
+
+    post:
+      summary: Create Task
+      description: Create a new human-in-the-loop task
+      operationId: createTask
+      tags:
+        - Tasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskInput'
+            examples:
+              approval:
+                summary: Approval task
+                value:
+                  type: approval
+                  title: "Review deployment to production"
+                  description: "Please review and approve the deployment"
+                  priority: high
+                  assignee: admin@company.com
+                  timeoutMs: 3600000
+              review:
+                summary: Review task
+                value:
+                  type: review
+                  title: "Review generated content"
+                  description: "AI generated this content, please verify accuracy"
+                  context:
+                    content: "Generated marketing copy..."
+                    source: "marketing-ai"
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HITLTask'
+
+  /api/tasks/{taskId}:
+    get:
+      summary: Get Task
+      description: Get task details by ID
+      operationId: getTask
+      tags:
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HITLTask'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/tasks/{taskId}/respond:
+    post:
+      summary: Respond to Task
+      description: Submit a response to a task
+      operationId: respondToTask
+      tags:
+        - Responses
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HITLResponse'
+      responses:
+        '200':
+          description: Response recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HITLTask'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Task already completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/tasks/{taskId}/approve:
+    post:
+      summary: Approve Task
+      description: Approve a task
+      operationId: approveTask
+      tags:
+        - Responses
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+                respondedBy:
+                  type: string
+      responses:
+        '200':
+          description: Task approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HITLTask'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Task already completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/tasks/{taskId}/reject:
+    post:
+      summary: Reject Task
+      description: Reject a task with a reason
+      operationId: rejectTask
+      tags:
+        - Responses
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reason
+              properties:
+                reason:
+                  type: string
+                respondedBy:
+                  type: string
+      responses:
+        '200':
+          description: Task rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HITLTask'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/tasks/{taskId}/defer:
+    post:
+      summary: Defer Task
+      description: Defer a task for later review
+      operationId: deferTask
+      tags:
+        - Responses
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                respondedBy:
+                  type: string
+      responses:
+        '200':
+          description: Task deferred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HITLTask'
+
+  /api/tasks/{taskId}/input:
+    post:
+      summary: Submit Input
+      description: Submit input value for an input-type task
+      operationId: submitInput
+      tags:
+        - Responses
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - value
+                - respondedBy
+              properties:
+                value: {}
+                respondedBy:
+                  type: string
+      responses:
+        '200':
+          description: Input submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HITLTask'
+
+  /api/tasks/{taskId}/assign:
+    post:
+      summary: Assign Task
+      description: Assign task to a user
+      operationId: assignTask
+      tags:
+        - Queue
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - assignee
+              properties:
+                assignee:
+                  type: string
+      responses:
+        '200':
+          description: Task assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HITLTask'
+
+    delete:
+      summary: Unassign Task
+      description: Remove assignment from task
+      operationId: unassignTask
+      tags:
+        - Queue
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task unassigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HITLTask'
+
+  /api/tasks/{taskId}/escalate:
+    post:
+      summary: Escalate Task
+      description: Escalate task to another user
+      operationId: escalateTask
+      tags:
+        - Queue
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - to
+                - reason
+              properties:
+                to:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Task escalated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HITLTask'
+
+  /api/tasks/{taskId}/timeout:
+    post:
+      summary: Set Timeout
+      description: Set or update task timeout
+      operationId: setTaskTimeout
+      tags:
+        - Timeout
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - timeoutMs
+              properties:
+                timeoutMs:
+                  type: integer
+                  description: Timeout in milliseconds
+      responses:
+        '200':
+          description: Timeout set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HITLTask'
+
+    delete:
+      summary: Clear Timeout
+      description: Remove timeout from task
+      operationId: clearTaskTimeout
+      tags:
+        - Timeout
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Timeout cleared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HITLTask'
+
+  /api/tasks/{taskId}/timeout/extend:
+    put:
+      summary: Extend Timeout
+      description: Extend task timeout by additional time
+      operationId: extendTimeout
+      tags:
+        - Timeout
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - additionalMs
+              properties:
+                additionalMs:
+                  type: integer
+      responses:
+        '200':
+          description: Timeout extended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HITLTask'
+
+  /api/tasks/expired:
+    get:
+      summary: Get Expired Tasks
+      description: Get all expired tasks
+      operationId: getExpiredTasks
+      tags:
+        - Timeout
+      responses:
+        '200':
+          description: List of expired tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HITLTask'
+
+  /api/tasks/expiring:
+    get:
+      summary: Get Expiring Tasks
+      description: Get tasks expiring within a time window
+      operationId: getExpiringTasks
+      tags:
+        - Timeout
+      parameters:
+        - name: withinMs
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Time window in milliseconds
+      responses:
+        '200':
+          description: List of expiring tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HITLTask'
+
+  /api/queue:
+    get:
+      summary: Get Queue
+      description: Get task queue with priority sorting
+      operationId: getQueue
+      tags:
+        - Queue
+      parameters:
+        - name: assignee
+          in: query
+          schema:
+            type: string
+          description: Filter by assignee
+      responses:
+        '200':
+          description: Task queue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HITLTask'
+
+  /rpc:
+    post:
+      summary: RPC Endpoint
+      description: Execute RPC method calls
+      operationId: rpc
+      tags:
+        - RPC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RPCRequest'
+      responses:
+        '200':
+          description: RPC result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RPCResponse'
+
+components:
+  schemas:
+    TaskStatus:
+      type: string
+      enum:
+        - pending
+        - assigned
+        - in_progress
+        - completed
+        - rejected
+        - expired
+
+    TaskPriority:
+      type: string
+      enum:
+        - low
+        - normal
+        - high
+        - urgent
+
+    TaskType:
+      type: string
+      enum:
+        - approval
+        - review
+        - decision
+        - input
+        - escalation
+
+    HITLTask:
+      type: object
+      required:
+        - _id
+        - type
+        - title
+        - status
+        - priority
+        - createdAt
+        - updatedAt
+      properties:
+        _id:
+          type: string
+        type:
+          $ref: '#/components/schemas/TaskType'
+        title:
+          type: string
+        description:
+          type: string
+        context:
+          type: object
+          additionalProperties: true
+        requiredBy:
+          type: string
+        assignee:
+          type: string
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        timeoutMs:
+          type: integer
+        response:
+          $ref: '#/components/schemas/HITLResponse'
+        metadata:
+          type: object
+          additionalProperties: true
+
+    CreateTaskInput:
+      type: object
+      required:
+        - type
+        - title
+      properties:
+        type:
+          $ref: '#/components/schemas/TaskType'
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        context:
+          type: object
+          additionalProperties: true
+        requiredBy:
+          type: string
+        assignee:
+          type: string
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+          default: normal
+        timeoutMs:
+          type: integer
+          description: Auto-expire timeout in milliseconds
+        metadata:
+          type: object
+          additionalProperties: true
+
+    HITLResponse:
+      type: object
+      required:
+        - respondedBy
+        - respondedAt
+      properties:
+        decision:
+          type: string
+          enum: [approve, reject, defer]
+        value: {}
+        comment:
+          type: string
+        respondedBy:
+          type: string
+        respondedAt:
+          type: string
+          format: date-time
+
+    RPCRequest:
+      type: object
+      required:
+        - method
+      properties:
+        method:
+          type: string
+          enum:
+            - createTask
+            - getTask
+            - listTasks
+            - assignTask
+            - unassignTask
+            - reassignTask
+            - respondToTask
+            - approve
+            - reject
+            - defer
+            - submitInput
+            - decide
+            - getQueue
+            - getPendingCount
+            - getMyTasks
+            - assignMultiple
+            - escalate
+            - setTaskTimeout
+            - clearTaskTimeout
+            - extendTimeout
+            - getExpiredTasks
+            - getExpiringTasks
+        params:
+          type: array
+          items: {}
+
+    RPCResponse:
+      type: object
+      properties:
+        result: {}
+        error:
+          type: string
+
+    DiscoveryResponse:
+      type: object
+      properties:
+        api:
+          type: string
+        version:
+          type: string
+        links:
+          type: object
+          properties:
+            tasks:
+              type: string
+            queue:
+              type: string
+            rpc:
+              type: string
+        discover:
+          type: object
+          properties:
+            methods:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: Authorization
+
+security:
+  - ApiKey: []

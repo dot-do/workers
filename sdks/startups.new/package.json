@@ -1,0 +1,53 @@
+{
+  "name": "startups.new",
+  "version": "0.0.1",
+  "description": "Launch Autonomous Startups Instantly - AI-powered startup creation from templates or natural language",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://startups.new",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "dotdo": "workspace:*",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "startups",
+    "launch",
+    "autonomous",
+    "business-as-code",
+    "services-as-software",
+    "sdk",
+    "workers.do",
+    "cloudflare",
+    "workers",
+    "ai",
+    "agents",
+    "saas",
+    "marketplace",
+    "api",
+    "templates",
+    "domains",
+    "deployment"
+  ]
+}

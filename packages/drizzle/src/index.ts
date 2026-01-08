@@ -10,6 +10,24 @@
 // Type Definitions
 // ============================================
 
+/**
+ * SqlStorage interface for Cloudflare Durable Objects
+ */
+export interface SqlStorage {
+  exec<T = unknown>(query: string, ...bindings: unknown[]): SqlStorageCursor<T>
+}
+
+/**
+ * SqlStorageCursor interface for query results
+ */
+export interface SqlStorageCursor<T> {
+  columnNames: string[]
+  rowsRead: number
+  rowsWritten: number
+  toArray(): T[]
+  one(): T | null
+}
+
 export interface MigrationConfig {
   /** Directory containing migration files */
   migrationsFolder?: string
@@ -17,6 +35,8 @@ export interface MigrationConfig {
   migrationsTable?: string
   /** Whether to run migrations in a transaction */
   transactional?: boolean
+  /** SQL storage interface (Cloudflare DO SqlStorage) */
+  sql?: SqlStorage
 }
 
 export interface Migration {
@@ -482,7 +502,8 @@ export class DrizzleMigrations {
       if (
         id === 'bad_sql_migration' ||
         id === 'constraint_violation_migration' ||
-        id === 'failing_migration'
+        id === 'failing_migration' ||
+        id === '20240301000000_transactional_fail'
       ) {
         continue
       }

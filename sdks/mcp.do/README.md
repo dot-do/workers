@@ -6,6 +6,18 @@
 npm install mcp.do
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { mcp } from 'mcp.do'
+
+// Or use the factory for custom config
+import { MCP } from 'mcp.do'
+const mcp = MCP({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Your SDK Doesn't Speak AI

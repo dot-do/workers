@@ -6,11 +6,12 @@
  * 2. Supports TTL (Time-To-Live) with automatic expiration
  * 3. Uses LRU eviction when cache limits are reached
  * 4. Cleans up properly when DO instances are destroyed
+ * 5. Provides metrics for cache performance observability
  *
  * Unlike the previous module-level Map approach, this implementation uses
  * a factory pattern where each DO instance gets its own isolated cache.
  *
- * Issue: workers-28tp
+ * Issues: workers-28tp (isolation), workers-9bpz (metrics optimization)
  */
 
 /**
@@ -20,6 +21,38 @@ export interface JWKSCacheEntry {
   keys: JsonWebKey[]
   fetchedAt: number
   expiresAt: number
+}
+
+/**
+ * Cache metrics for observability
+ */
+export interface JWKSCacheMetrics {
+  /** Total cache hits */
+  hits: number
+  /** Total cache misses */
+  misses: number
+  /** Total entries evicted due to LRU */
+  evictions: number
+  /** Total entries expired and cleaned up */
+  expirations: number
+  /** Total number of set operations */
+  sets: number
+  /** Total number of delete operations */
+  deletes: number
+  /** Cache hit rate (0-1) - hits / (hits + misses) */
+  hitRate: number
+}
+
+/**
+ * Aggregated metrics across all cache instances
+ */
+export interface JWKSCacheAggregateMetrics extends JWKSCacheMetrics {
+  /** Number of active cache instances */
+  instanceCount: number
+  /** Total entries across all instances */
+  totalEntries: number
+  /** Metrics breakdown by instance ID */
+  byInstance: Map<string, JWKSCacheMetrics>
 }
 
 /**
@@ -38,6 +71,10 @@ export interface JWKSCache {
   size(): number
   /** Clean up expired entries */
   cleanup(): void
+  /** Get cache performance metrics */
+  getMetrics(): JWKSCacheMetrics
+  /** Reset metrics counters (useful for testing or periodic reporting) */
+  resetMetrics(): void
 }
 
 /**
@@ -54,6 +91,10 @@ export interface JWKSCacheFactory {
   getAllInstanceIds(): string[]
   /** Get total cache size across all instances */
   getTotalCacheSize(): number
+  /** Get aggregated metrics across all cache instances */
+  getAggregateMetrics(): JWKSCacheAggregateMetrics
+  /** Reset metrics for all instances */
+  resetAllMetrics(): void
 }
 
 /**

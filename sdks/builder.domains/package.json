@@ -1,0 +1,47 @@
+{
+  "name": "builder.domains",
+  "version": "0.0.1",
+  "description": "Free Domains SDK - Claim, route, and manage free domains for builders",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://builder.domains",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "capnweb": "^0.2.0",
+    "cli.do": "workspace:*",
+    "mcp.do": "workspace:*",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "dotdo": "workspace:*",
+    "typescript": "^5.0.0",
+    "vitest": "^3.0.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "domains",
+    "free-domains",
+    "cloudflare",
+    "workers",
+    "routing",
+    "sdk",
+    "workers.do",
+    "cloudflare-workers"
+  ]
+}

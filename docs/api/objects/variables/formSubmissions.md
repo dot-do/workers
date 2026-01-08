@@ -1,0 +1,13 @@
+[**@dotdo/workers API Documentation v0.0.1**](../../README.md)
+
+***
+
+[@dotdo/workers API Documentation](../../modules.md) / [objects](../README.md) / formSubmissions
+
+# Variable: formSubmissions
+
+> `const` **formSubmissions**: `SQLiteTableWithColumns`\<\{ \}\>
+
+Defined in: [objects/site/schema.ts:171](https://github.com/dot-do/workers/blob/c252c2d9415957e5ce9f5f849672bf290b40136f/objects/site/schema.ts#L171)
+
+Form submissions

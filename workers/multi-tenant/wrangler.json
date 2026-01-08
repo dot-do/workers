@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/schemas/config/config.schema.json",
+  "name": "multi-tenant",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-12-18",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./sites",
+    "binding": "ASSETS"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MULTI_TENANT",
+        "class_name": "MultiTenantDO"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["MultiTenantDO"]
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "SITE_CONFIG",
+      "id": "placeholder-replace-with-kv-id"
+    }
+  ]
+}

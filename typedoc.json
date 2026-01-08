@@ -1,0 +1,67 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "objects/index.ts",
+    "objects/do/index.ts",
+    "objects/agent/index.ts",
+    "objects/workflow/index.ts",
+    "objects/human/index.ts",
+    "objects/function/index.ts",
+    "objects/startup/index.ts",
+    "objects/business/index.ts",
+    "objects/org/index.ts",
+    "objects/app/index.ts",
+    "objects/site/index.ts",
+    "packages/do-core/src/index.ts",
+    "packages/auth/src/index.ts",
+    "packages/health/src/index.ts",
+    "packages/sessions/src/index.ts",
+    "packages/rate-limiting/src/index.ts",
+    "packages/circuit-breaker/src/index.ts",
+    "packages/observability/src/index.ts",
+    "packages/security/src/index.ts",
+    "packages/drizzle/src/index.ts"
+  ],
+  "entryPointStrategy": "expand",
+  "out": "docs/api",
+  "plugin": ["typedoc-plugin-markdown"],
+  "readme": "README.md",
+  "name": "@dotdo/workers API Documentation",
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "includeVersion": true,
+  "categorizeByGroup": true,
+  "categoryOrder": [
+    "Core",
+    "Durable Objects",
+    "Packages",
+    "Utilities",
+    "*"
+  ],
+  "sort": ["source-order", "alphabetical"],
+  "kindSortOrder": [
+    "Class",
+    "Interface",
+    "TypeAlias",
+    "Function",
+    "Variable",
+    "Enum"
+  ],
+  "visibilityFilters": {
+    "protected": true,
+    "@alpha": false,
+    "@beta": true
+  },
+  "navigationLinks": {
+    "Website": "https://workers.do",
+    "GitHub": "https://github.com/dot-do/workers"
+  },
+  "skipErrorChecking": true,
+  "validation": {
+    "notExported": false,
+    "invalidLink": false,
+    "notDocumented": false
+  }
+}

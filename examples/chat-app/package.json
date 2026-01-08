@@ -1,0 +1,20 @@
+{
+  "name": "@dotdo/example-chat-app",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Chat application example demonstrating WebSocket messaging with Durable Objects",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@dotdo/do": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.99.0"
+  }
+}

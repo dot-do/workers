@@ -2,7 +2,7 @@
  * @dotdo/worker-workos - WorkOS SDK as RPC worker
  *
  * Exposes WorkOS via multi-transport RPC:
- * - Workers RPC: env.WORKOS.sso.getAuthorizationUrl(options)
+ * - Workers RPC: env.ORG.sso.getAuthorizationUrl(options)
  * - REST: POST /api/sso.getAuthorizationUrl
  * - CapnWeb: WebSocket RPC
  * - MCP: JSON-RPC 2.0

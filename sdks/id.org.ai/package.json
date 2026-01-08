@@ -1,0 +1,57 @@
+{
+  "name": "id.org.ai",
+  "version": "0.0.1",
+  "description": "Auth for AI and Humans SDK - SSO, Vault, Users, Organizations",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "files": [
+    "index.ts",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://id.org.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.5.2",
+    "vitest": "^2.1.8"
+  },
+  "keywords": [
+    "auth",
+    "authentication",
+    "identity",
+    "sso",
+    "single-sign-on",
+    "oauth",
+    "oidc",
+    "saml",
+    "vault",
+    "secrets",
+    "users",
+    "organizations",
+    "enterprise",
+    "workos",
+    "sdk",
+    "workers.do",
+    "cloudflare-workers",
+    "ai",
+    "agents"
+  ]
+}

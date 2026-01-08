@@ -1,0 +1,781 @@
+openapi: 3.0.3
+info:
+  title: agents.do API
+  description: |
+    Autonomous Agents API for the workers.do platform.
+
+    Provides agent lifecycle management, task delegation, and orchestration:
+    - Agent CRUD operations
+    - Agent execution and lifecycle management
+    - Run tracking and management
+    - Pre-defined agent types (researcher, writer, monitor, assistant, analyst)
+    - Multi-agent orchestration
+  version: 0.0.1
+  contact:
+    name: workers.do Support
+    url: https://workers.do
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://agents.do
+    description: Production server
+  - url: http://localhost:8787
+    description: Local development
+
+tags:
+  - name: Discovery
+    description: API discovery
+  - name: Agents
+    description: Agent management
+  - name: Runs
+    description: Agent run management
+  - name: Types
+    description: Pre-defined agent types
+  - name: Orchestration
+    description: Multi-agent orchestration
+  - name: RPC
+    description: JSON-RPC interface
+
+paths:
+  /:
+    get:
+      summary: API Discovery
+      description: Returns HATEOAS discovery information
+      operationId: discovery
+      tags:
+        - Discovery
+      responses:
+        '200':
+          description: Discovery information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryResponse'
+              example:
+                api: agents.do
+                version: 0.0.1
+                description: Autonomous Agents API
+                links:
+                  self: /
+                  agents: /api/agents
+                  types: /api/types
+                  rpc: /rpc
+                discover:
+                  methods:
+                    - name: create
+                      description: Create a new agent
+                    - name: get
+                      description: Get an agent by ID
+                    - name: list
+                      description: List all agents
+
+  /api/agents:
+    get:
+      summary: List Agents
+      description: List all agents with optional filters
+      operationId: listAgents
+      tags:
+        - Agents
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/AgentStatus'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Agent'
+
+    post:
+      summary: Create Agent
+      description: Create a new autonomous agent
+      operationId: createAgent
+      tags:
+        - Agents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentConfig'
+            examples:
+              basic:
+                summary: Basic agent
+                value:
+                  task: "Monitor competitor pricing and alert on changes"
+              full:
+                summary: Full configuration
+                value:
+                  name: "Price Monitor"
+                  task: "Monitor competitor pricing and alert on changes"
+                  capabilities: [web-scraping, data-analysis]
+                  tools: [browser, spreadsheet]
+                  schedule: "0 */6 * * *"
+                  webhook: "https://example.com/webhook"
+                  timeout: 300000
+                  memory: true
+      responses:
+        '201':
+          description: Agent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+
+  /api/agents/{agentId}:
+    get:
+      summary: Get Agent
+      description: Get agent details by ID
+      operationId: getAgent
+      tags:
+        - Agents
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '404':
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update Agent
+      description: Update an agent's configuration
+      operationId: updateAgent
+      tags:
+        - Agents
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentConfig'
+      responses:
+        '200':
+          description: Agent updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+
+    delete:
+      summary: Delete Agent
+      description: Delete an agent and its run history
+      operationId: deleteAgent
+      tags:
+        - Agents
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '404':
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/agents/{agentId}/run:
+    post:
+      summary: Run Agent
+      description: Start an agent execution
+      operationId: runAgent
+      tags:
+        - Runs
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: object
+                  additionalProperties: true
+                  description: Input data for the agent run
+            example:
+              input:
+                competitor: "competitor-a.com"
+                products: ["product-1", "product-2"]
+      responses:
+        '200':
+          description: Agent run started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRun'
+        '404':
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/agents/{agentId}/pause:
+    post:
+      summary: Pause Agent
+      description: Pause a running agent
+      operationId: pauseAgent
+      tags:
+        - Agents
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent paused
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+
+  /api/agents/{agentId}/resume:
+    post:
+      summary: Resume Agent
+      description: Resume a paused agent
+      operationId: resumeAgent
+      tags:
+        - Agents
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent resumed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+
+  /api/agents/{agentId}/runs:
+    get:
+      summary: List Agent Runs
+      description: List run history for an agent
+      operationId: listAgentRuns
+      tags:
+        - Runs
+      parameters:
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/RunStatus'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of runs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentRun'
+
+  /api/runs/{runId}:
+    get:
+      summary: Get Run
+      description: Get run details by ID
+      operationId: getRun
+      tags:
+        - Runs
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Run details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRun'
+        '404':
+          description: Run not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/runs/{runId}/cancel:
+    post:
+      summary: Cancel Run
+      description: Cancel a running agent execution
+      operationId: cancelRun
+      tags:
+        - Runs
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Run cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/types:
+    get:
+      summary: List Agent Types
+      description: List available pre-defined agent types
+      operationId: listAgentTypes
+      tags:
+        - Types
+      responses:
+        '200':
+          description: List of agent types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentType'
+              example:
+                - type: researcher
+                  description: Research and analysis agent
+                  capabilities: [web-search, summarization, analysis, report-generation]
+                - type: writer
+                  description: Content creation agent
+                  capabilities: [content-creation, editing, formatting, tone-adjustment]
+                - type: monitor
+                  description: Monitoring agent
+                  capabilities: [observation, alerting, pattern-detection, reporting]
+
+  /api/spawn:
+    post:
+      summary: Spawn Agent from Type
+      description: Create an agent from a pre-defined type
+      operationId: spawnAgent
+      tags:
+        - Types
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+              properties:
+                type:
+                  type: string
+                  enum: [researcher, writer, monitor, assistant, analyst]
+                config:
+                  $ref: '#/components/schemas/AgentConfig'
+            example:
+              type: researcher
+              config:
+                task: "Research market trends in AI"
+                tools: [browser, search]
+      responses:
+        '201':
+          description: Agent spawned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+
+  /api/orchestrate:
+    post:
+      summary: Orchestrate Agents
+      description: Orchestrate multiple agents to complete a task
+      operationId: orchestrate
+      tags:
+        - Orchestration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompt
+              properties:
+                prompt:
+                  type: string
+                  description: Task description for orchestration
+                context:
+                  oneOf:
+                    - type: string
+                    - type: object
+                      additionalProperties: true
+                tools:
+                  type: array
+                  items:
+                    type: string
+                immediate:
+                  type: boolean
+                  default: false
+            example:
+              prompt: "Research competitor pricing and write a summary report"
+              context:
+                competitors: ["competitor-a.com", "competitor-b.com"]
+              tools: [browser, spreadsheet]
+      responses:
+        '200':
+          description: Orchestration started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrchestrationResult'
+
+  /rpc:
+    post:
+      summary: RPC Endpoint
+      description: Execute RPC method calls
+      operationId: rpc
+      tags:
+        - RPC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RPCRequest'
+      responses:
+        '200':
+          description: RPC result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RPCResponse'
+
+components:
+  schemas:
+    AgentStatus:
+      type: string
+      enum:
+        - idle
+        - running
+        - paused
+        - completed
+        - failed
+
+    RunStatus:
+      type: string
+      enum:
+        - queued
+        - running
+        - completed
+        - failed
+
+    LogLevel:
+      type: string
+      enum:
+        - debug
+        - info
+        - warn
+        - error
+
+    AgentConfig:
+      type: object
+      required:
+        - task
+      properties:
+        name:
+          type: string
+        task:
+          type: string
+          description: Task description for the agent
+        capabilities:
+          type: array
+          items:
+            type: string
+        tools:
+          type: array
+          items:
+            type: string
+        schedule:
+          type: string
+          description: Cron schedule for automatic runs
+        webhook:
+          type: string
+          format: uri
+          description: Webhook URL for notifications
+        timeout:
+          type: integer
+          description: Execution timeout in milliseconds
+        memory:
+          type: boolean
+          description: Enable persistent memory across runs
+
+    Agent:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        task:
+          type: string
+        status:
+          $ref: '#/components/schemas/AgentStatus'
+        capabilities:
+          type: array
+          items:
+            type: string
+        tools:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        lastRunAt:
+          type: string
+          format: date-time
+        nextRunAt:
+          type: string
+          format: date-time
+        runs:
+          type: integer
+        memory:
+          type: boolean
+        schedule:
+          type: string
+        webhook:
+          type: string
+        timeout:
+          type: integer
+
+    AgentRun:
+      type: object
+      properties:
+        id:
+          type: string
+        agentId:
+          type: string
+        status:
+          $ref: '#/components/schemas/RunStatus'
+        input:
+          type: object
+          additionalProperties: true
+        output:
+          type: object
+          additionalProperties: true
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentLog'
+        usage:
+          type: object
+          properties:
+            tokens:
+              type: integer
+            cost:
+              type: number
+            duration:
+              type: integer
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    AgentLog:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        level:
+          $ref: '#/components/schemas/LogLevel'
+        message:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+
+    AgentType:
+      type: object
+      properties:
+        type:
+          type: string
+        description:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+
+    OrchestrationResult:
+      type: object
+      properties:
+        id:
+          type: string
+        agents:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              status:
+                type: string
+        result:
+          type: object
+          additionalProperties: true
+        usage:
+          type: object
+          properties:
+            tokens:
+              type: integer
+            cost:
+              type: number
+            duration:
+              type: integer
+
+    RPCRequest:
+      type: object
+      required:
+        - method
+      properties:
+        method:
+          type: string
+          enum:
+            - create
+            - get
+            - list
+            - update
+            - delete
+            - run
+            - pause
+            - resume
+            - getRun
+            - runs
+            - cancelRun
+            - spawn
+            - types
+            - orchestrate
+        params:
+          type: array
+          items: {}
+
+    RPCResponse:
+      type: object
+      properties:
+        result: {}
+        error:
+          type: string
+
+    DiscoveryResponse:
+      type: object
+      properties:
+        api:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        links:
+          type: object
+          additionalProperties:
+            type: string
+        discover:
+          type: object
+          properties:
+            methods:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  description:
+                    type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: Authorization
+
+security:
+  - ApiKey: []

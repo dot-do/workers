@@ -103,7 +103,7 @@ this.env.JOSE        // JWT operations
 this.env.ESBUILD     // Build/transform
 this.env.MDX         // MDX compilation
 this.env.STRIPE      // Stripe operations
-this.env.WORKOS      // WorkOS/OAuth
+this.env.ORG         // Auth for AI and Humans (id.org.ai)
 this.env.CLOUDFLARE  // Cloudflare API
 ```
 

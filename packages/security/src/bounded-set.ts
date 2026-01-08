@@ -4,6 +4,7 @@
 // when tracking branded types like validated IDs, used tokens, or nonces.
 //
 // Issue: workers-dgfm (Memory leak fix)
+// Issue: workers-igay (Memory optimization - O(1) LRU, reduced overhead)
 
 /**
  * Eviction policy for bounded collections
@@ -22,6 +23,20 @@ export interface BoundedSetStats {
   missCount: number
   /** Hit rate (hitCount / (hitCount + missCount)) */
   hitRate: number
+}
+
+/**
+ * Extended statistics including memory metrics
+ */
+export interface BoundedSetExtendedStats extends BoundedSetStats {
+  /** Current number of entries */
+  size: number
+  /** Maximum allowed entries */
+  maxSize: number
+  /** Estimated memory usage in bytes (approximate) */
+  estimatedMemoryBytes: number
+  /** Fill ratio (size / maxSize) */
+  fillRatio: number
 }
 
 /**
@@ -61,18 +76,45 @@ export interface BoundedMapOptions<K = unknown, V = unknown> {
 }
 
 /**
- * Internal entry with timestamp for TTL and ordering
+ * Doubly-linked list node for O(1) LRU operations
+ * Using a linked list instead of array + indexOf/splice reduces:
+ * - Access update: O(n) -> O(1)
+ * - Eviction: O(n) -> O(1)
+ * - Memory: No array resizing/copying overhead
  */
-interface TimestampedEntry<T> {
+interface LinkedNode<T> {
   value: T
   addedAt: number
-  accessedAt: number
+  prev: LinkedNode<T> | null
+  next: LinkedNode<T> | null
 }
 
 const DEFAULT_MAX_SIZE = 10000
 
 /**
+ * Estimate memory usage of a value (rough approximation)
+ * This helps users understand memory consumption patterns
+ */
+function estimateValueMemory(value: unknown): number {
+  if (value === null || value === undefined) return 8
+  if (typeof value === 'boolean') return 4
+  if (typeof value === 'number') return 8
+  if (typeof value === 'string') return 2 * (value as string).length + 40 // UTF-16 + object overhead
+  if (typeof value === 'bigint') return 8 + Math.ceil(value.toString(16).length / 2)
+  if (typeof value === 'symbol') return 40
+  if (typeof value === 'function') return 64
+  // Objects/arrays - rough estimate
+  return 64
+}
+
+/**
  * A Set implementation with bounded size to prevent memory leaks.
+ *
+ * Memory Optimization (workers-igay):
+ * - Uses doubly-linked list for O(1) LRU operations (vs O(n) with array)
+ * - Single Map lookup for all operations
+ * - No array resizing/copying overhead during eviction
+ * - Provides memory estimation for monitoring
  *
  * Useful for tracking branded types like validated IDs, used tokens,
  * or nonces without risking unbounded memory growth.
@@ -91,6 +133,10 @@ const DEFAULT_MAX_SIZE = 10000
  * if (validatedUsers.has(userId)) {
  *   // User was recently validated
  * }
+ *
+ * // Monitor memory usage
+ * const stats = validatedUsers.extendedStats
+ * console.log(`Memory: ${stats.estimatedMemoryBytes} bytes, Fill: ${stats.fillRatio}`)
  * ```
  */
 export class BoundedSet<T> implements Iterable<T> {
@@ -99,8 +145,15 @@ export class BoundedSet<T> implements Iterable<T> {
   private readonly _ttlMs?: number
   private readonly _refreshTtlOnAccess: boolean
   private readonly _onEvict?: (value: T) => void
-  private readonly _entries: Map<T, TimestampedEntry<T>>
-  private readonly _insertionOrder: T[] // For FIFO eviction
+
+  // O(1) lookup: value -> linked list node
+  private readonly _nodeMap: Map<T, LinkedNode<T>>
+
+  // Doubly-linked list head/tail for O(1) eviction and reordering
+  private _head: LinkedNode<T> | null = null
+  private _tail: LinkedNode<T> | null = null
+
+  // Statistics
   private _evictionCount = 0
   private _hitCount = 0
   private _missCount = 0
@@ -119,8 +172,7 @@ export class BoundedSet<T> implements Iterable<T> {
     this._ttlMs = options?.ttlMs
     this._refreshTtlOnAccess = options?.refreshTtlOnAccess ?? false
     this._onEvict = options?.onEvict
-    this._entries = new Map()
-    this._insertionOrder = []
+    this._nodeMap = new Map()
 
     // Setup automatic cleanup if configured
     if (options?.cleanupIntervalMs && options.cleanupIntervalMs > 0) {
@@ -135,7 +187,7 @@ export class BoundedSet<T> implements Iterable<T> {
   }
 
   get size(): number {
-    return this._entries.size
+    return this._nodeMap.size
   }
 
   get stats(): BoundedSetStats {
@@ -148,72 +200,89 @@ export class BoundedSet<T> implements Iterable<T> {
     }
   }
 
+  /**
+   * Extended statistics including memory metrics for monitoring
+   */
+  get extendedStats(): BoundedSetExtendedStats {
+    const baseStats = this.stats
+    const size = this._nodeMap.size
+
+    // Estimate memory: Map overhead + node overhead per entry + value size
+    // LinkedNode overhead: ~56 bytes (value ref, addedAt, prev, next pointers)
+    // Map entry overhead: ~48 bytes per entry
+    let estimatedMemoryBytes = 64 // Base object overhead
+
+    for (const [value] of this._nodeMap) {
+      estimatedMemoryBytes += 48 + 56 + estimateValueMemory(value)
+    }
+
+    return {
+      ...baseStats,
+      size,
+      maxSize: this._maxSize,
+      estimatedMemoryBytes,
+      fillRatio: this._maxSize > 0 ? size / this._maxSize : 0,
+    }
+  }
+
   add(value: T): this {
     const now = Date.now()
 
-    // Check if already exists
-    const existing = this._entries.get(value)
-    if (existing) {
-      // Update access time for LRU and optionally refresh TTL
-      existing.accessedAt = now
+    // Check if already exists - O(1) lookup
+    const existingNode = this._nodeMap.get(value)
+    if (existingNode) {
+      // Update addedAt if refreshing TTL on access
       if (this._refreshTtlOnAccess) {
-        existing.addedAt = now
+        existingNode.addedAt = now
       }
-      // For LRU: move to end of insertion order
+      // For LRU: move to tail (most recently used) - O(1)
       if (this._evictionPolicy === 'lru') {
-        const idx = this._insertionOrder.indexOf(value)
-        if (idx !== -1) {
-          this._insertionOrder.splice(idx, 1)
-          this._insertionOrder.push(value)
-        }
+        this._moveToTail(existingNode)
       }
       return this
     }
 
-    // Evict if at capacity
-    while (this._entries.size >= this._maxSize) {
+    // Evict if at capacity - O(1) per eviction
+    while (this._nodeMap.size >= this._maxSize) {
       this._evictOne()
     }
 
-    // Add new entry
-    this._entries.set(value, {
+    // Create and add new node - O(1)
+    const node: LinkedNode<T> = {
       value,
       addedAt: now,
-      accessedAt: now,
-    })
-    this._insertionOrder.push(value)
+      prev: null,
+      next: null,
+    }
+    this._nodeMap.set(value, node)
+    this._appendToTail(node)
 
     return this
   }
 
   has(value: T): boolean {
-    // First check if entry exists
-    const entry = this._entries.get(value)
-    if (!entry) {
+    // O(1) lookup
+    const node = this._nodeMap.get(value)
+    if (!node) {
       this._missCount++
       return false
     }
 
     // Check TTL if configured
     if (this._ttlMs !== undefined) {
-      const age = Date.now() - entry.addedAt
+      const age = Date.now() - node.addedAt
       if (age > this._ttlMs) {
-        // Entry expired - remove it
-        this._removeEntry(value)
+        // Entry expired - remove it - O(1)
+        this._removeNode(node)
+        this._nodeMap.delete(value)
         this._missCount++
         return false
       }
     }
 
-    // Update access time for LRU
-    entry.accessedAt = Date.now()
+    // For LRU: move to tail (most recently used) - O(1)
     if (this._evictionPolicy === 'lru') {
-      // Move to end for LRU tracking
-      const idx = this._insertionOrder.indexOf(value)
-      if (idx !== -1) {
-        this._insertionOrder.splice(idx, 1)
-        this._insertionOrder.push(value)
-      }
+      this._moveToTail(node)
     }
 
     this._hitCount++
@@ -221,22 +290,29 @@ export class BoundedSet<T> implements Iterable<T> {
   }
 
   delete(value: T): boolean {
-    return this._removeEntry(value)
+    const node = this._nodeMap.get(value)
+    if (!node) {
+      return false
+    }
+    this._removeNode(node)
+    this._nodeMap.delete(value)
+    return true
   }
 
   clear(): void {
-    this._entries.clear()
-    this._insertionOrder.length = 0
+    this._nodeMap.clear()
+    this._head = null
+    this._tail = null
   }
 
   forEach(callback: (value: T, value2: T, set: BoundedSet<T>) => void): void {
-    for (const [value] of this._entries) {
+    for (const [value] of this._nodeMap) {
       callback(value, value, this)
     }
   }
 
   *values(): IterableIterator<T> {
-    for (const [value] of this._entries) {
+    for (const [value] of this._nodeMap) {
       yield value
     }
   }
@@ -246,7 +322,7 @@ export class BoundedSet<T> implements Iterable<T> {
   }
 
   *entries(): IterableIterator<[T, T]> {
-    for (const [value] of this._entries) {
+    for (const [value] of this._nodeMap) {
       yield [value, value]
     }
   }
@@ -267,12 +343,17 @@ export class BoundedSet<T> implements Iterable<T> {
     const now = Date.now()
     let removed = 0
 
-    for (const [value, entry] of this._entries) {
-      const age = now - entry.addedAt
+    // Iterate from head (oldest) for efficient TTL cleanup
+    let current = this._head
+    while (current) {
+      const next = current.next
+      const age = now - current.addedAt
       if (age > this._ttlMs) {
-        this._removeEntry(value)
+        this._removeNode(current)
+        this._nodeMap.delete(current.value)
         removed++
       }
+      current = next
     }
 
     return removed
@@ -298,37 +379,59 @@ export class BoundedSet<T> implements Iterable<T> {
     this.clear()
   }
 
-  private _evictOne(): void {
-    if (this._insertionOrder.length === 0) return
+  // === Linked List Operations (all O(1)) ===
 
-    let valueToEvict: T
-
-    if (this._evictionPolicy === 'fifo') {
-      // FIFO: remove first inserted
-      valueToEvict = this._insertionOrder[0]
+  private _appendToTail(node: LinkedNode<T>): void {
+    if (!this._tail) {
+      // Empty list
+      this._head = node
+      this._tail = node
     } else {
-      // LRU: remove least recently accessed (first in our reordered list)
-      valueToEvict = this._insertionOrder[0]
+      // Append to end
+      node.prev = this._tail
+      this._tail.next = node
+      this._tail = node
     }
-
-    const entry = this._entries.get(valueToEvict)
-    if (entry) {
-      this._onEvict?.(entry.value)
-    }
-
-    this._removeEntry(valueToEvict)
-    this._evictionCount++
   }
 
-  private _removeEntry(value: T): boolean {
-    const existed = this._entries.delete(value)
-    if (existed) {
-      const idx = this._insertionOrder.indexOf(value)
-      if (idx !== -1) {
-        this._insertionOrder.splice(idx, 1)
-      }
+  private _removeNode(node: LinkedNode<T>): void {
+    if (node.prev) {
+      node.prev.next = node.next
+    } else {
+      // Node was head
+      this._head = node.next
     }
-    return existed
+
+    if (node.next) {
+      node.next.prev = node.prev
+    } else {
+      // Node was tail
+      this._tail = node.prev
+    }
+
+    // Clear references for GC
+    node.prev = null
+    node.next = null
+  }
+
+  private _moveToTail(node: LinkedNode<T>): void {
+    if (node === this._tail) {
+      // Already at tail
+      return
+    }
+    this._removeNode(node)
+    this._appendToTail(node)
+  }
+
+  private _evictOne(): void {
+    if (!this._head) return
+
+    // Always evict from head (oldest for FIFO, least recently used for LRU)
+    const nodeToEvict = this._head
+    this._onEvict?.(nodeToEvict.value)
+    this._removeNode(nodeToEvict)
+    this._nodeMap.delete(nodeToEvict.value)
+    this._evictionCount++
   }
 }
 

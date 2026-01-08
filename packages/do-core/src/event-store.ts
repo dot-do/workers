@@ -196,10 +196,18 @@ export interface EventSerializer {
  * Default JSON serializer implementation.
  *
  * Uses standard JSON.stringify/parse for serialization.
+ * The deserialize method includes error handling for corrupted data.
  */
 export const jsonSerializer: EventSerializer = {
   serialize: (data) => JSON.stringify(data),
-  deserialize: (str) => JSON.parse(str),
+  deserialize: (str) => {
+    try {
+      return JSON.parse(str)
+    } catch (error) {
+      console.error('Failed to deserialize JSON:', error)
+      return null
+    }
+  },
 }
 
 // ============================================================================

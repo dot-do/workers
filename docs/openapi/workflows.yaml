@@ -1,0 +1,799 @@
+openapi: 3.0.3
+info:
+  title: workflows.do API
+  description: |
+    Workflow Orchestration API for the workers.do platform.
+
+    Provides workflow management with:
+    - Workflow definition CRUD
+    - Workflow execution management
+    - Step execution with dependencies
+    - Trigger management (event, schedule, webhook)
+    - State management and recovery
+  version: 1.0.0
+  contact:
+    name: workers.do Support
+    url: https://workers.do
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://workflows.do
+    description: Production server
+  - url: http://localhost:8787
+    description: Local development
+
+tags:
+  - name: Discovery
+    description: API discovery
+  - name: Workflows
+    description: Workflow definition management
+  - name: Executions
+    description: Workflow execution management
+  - name: Triggers
+    description: Trigger management
+  - name: RPC
+    description: JSON-RPC interface
+
+paths:
+  /:
+    get:
+      summary: API Discovery
+      description: Returns HATEOAS discovery information
+      operationId: discovery
+      tags:
+        - Discovery
+      responses:
+        '200':
+          description: Discovery information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryResponse'
+
+  /api/workflows:
+    get:
+      summary: List Workflows
+      description: List all workflow definitions
+      operationId: listWorkflows
+      tags:
+        - Workflows
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of workflows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkflowDefinition'
+
+    post:
+      summary: Create Workflow
+      description: Create a new workflow definition
+      operationId: createWorkflow
+      tags:
+        - Workflows
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowDefinition'
+            examples:
+              simple:
+                summary: Simple sequential workflow
+                value:
+                  id: process-order
+                  name: Process Order
+                  steps:
+                    - id: validate
+                      action: validate-order
+                    - id: charge
+                      action: charge-payment
+                      dependsOn: [validate]
+                    - id: fulfill
+                      action: fulfill-order
+                      dependsOn: [charge]
+              parallel:
+                summary: Workflow with parallel steps
+                value:
+                  id: review-content
+                  name: Content Review
+                  steps:
+                    - id: ai-review
+                      action: ai-analyze
+                    - id: human-review
+                      action: human-review
+                    - id: final
+                      action: finalize
+                      dependsOn: [ai-review, human-review]
+      responses:
+        '201':
+          description: Workflow created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowDefinition'
+        '400':
+          description: Invalid workflow definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/workflows/{workflowId}:
+    get:
+      summary: Get Workflow
+      description: Get workflow definition by ID
+      operationId: getWorkflow
+      tags:
+        - Workflows
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Workflow definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowDefinition'
+        '404':
+          description: Workflow not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update Workflow
+      description: Update a workflow definition
+      operationId: updateWorkflow
+      tags:
+        - Workflows
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowDefinition'
+      responses:
+        '200':
+          description: Workflow updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowDefinition'
+
+    delete:
+      summary: Delete Workflow
+      description: Delete a workflow definition
+      operationId: deleteWorkflow
+      tags:
+        - Workflows
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Workflow deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/workflows/{workflowId}/start:
+    post:
+      summary: Start Workflow
+      description: Start a new execution of a workflow
+      operationId: startWorkflow
+      tags:
+        - Executions
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: object
+                  additionalProperties: true
+                  description: Input data for the workflow
+            example:
+              input:
+                orderId: "order-123"
+                customerId: "cust-456"
+      responses:
+        '200':
+          description: Workflow execution started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowExecution'
+        '404':
+          description: Workflow not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/workflows/{workflowId}/trigger:
+    post:
+      summary: Register Trigger
+      description: Register a trigger for automatic workflow execution
+      operationId: registerTrigger
+      tags:
+        - Triggers
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowTrigger'
+            examples:
+              event:
+                summary: Event trigger
+                value:
+                  type: event
+                  pattern: "$.on.order.created"
+              schedule:
+                summary: Schedule trigger
+                value:
+                  type: schedule
+                  pattern: "$.every.5.minutes"
+              webhook:
+                summary: Webhook trigger
+                value:
+                  type: webhook
+                  path: "/webhooks/order"
+                  methods: [POST]
+                  auth:
+                    type: bearer
+                    secret: "webhook-secret"
+      responses:
+        '200':
+          description: Trigger registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisteredTrigger'
+
+    delete:
+      summary: Unregister Trigger
+      description: Remove trigger from workflow
+      operationId: unregisterTrigger
+      tags:
+        - Triggers
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Trigger removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/executions:
+    get:
+      summary: List Executions
+      description: List workflow executions
+      operationId: listExecutions
+      tags:
+        - Executions
+      parameters:
+        - name: workflowId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/WorkflowStatus'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        '200':
+          description: List of executions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkflowExecution'
+
+  /api/executions/{executionId}:
+    get:
+      summary: Get Execution
+      description: Get execution details
+      operationId: getExecution
+      tags:
+        - Executions
+      parameters:
+        - name: executionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Execution details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowExecution'
+
+  /api/executions/{executionId}/cancel:
+    post:
+      summary: Cancel Execution
+      description: Cancel a running execution
+      operationId: cancelExecution
+      tags:
+        - Executions
+      parameters:
+        - name: executionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Execution cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/executions/{executionId}/pause:
+    post:
+      summary: Pause Execution
+      description: Pause a running execution
+      operationId: pauseExecution
+      tags:
+        - Executions
+      parameters:
+        - name: executionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Execution paused
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/executions/{executionId}/resume:
+    post:
+      summary: Resume Execution
+      description: Resume a paused execution
+      operationId: resumeExecution
+      tags:
+        - Executions
+      parameters:
+        - name: executionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Execution resumed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/executions/{executionId}/retry:
+    post:
+      summary: Retry Execution
+      description: Retry a failed execution
+      operationId: retryExecution
+      tags:
+        - Executions
+      parameters:
+        - name: executionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: New execution started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowExecution'
+
+  /api/executions/{executionId}/steps/{stepId}:
+    get:
+      summary: Get Step Result
+      description: Get result of a specific step
+      operationId: getStepResult
+      tags:
+        - Executions
+      parameters:
+        - name: executionId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: stepId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Step result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StepResult'
+
+  /api/triggers:
+    get:
+      summary: List Triggers
+      description: List all registered triggers
+      operationId: listTriggers
+      tags:
+        - Triggers
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [event, schedule, webhook]
+        - name: enabled
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of triggers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RegisteredTrigger'
+
+  /rpc:
+    post:
+      summary: RPC Endpoint
+      description: Execute RPC method calls
+      operationId: rpc
+      tags:
+        - RPC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RPCRequest'
+      responses:
+        '200':
+          description: RPC result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RPCResponse'
+
+components:
+  schemas:
+    WorkflowStatus:
+      type: string
+      enum:
+        - pending
+        - running
+        - completed
+        - failed
+        - cancelled
+        - paused
+
+    StepStatus:
+      type: string
+      enum:
+        - pending
+        - running
+        - completed
+        - failed
+        - skipped
+
+    WorkflowStep:
+      type: object
+      required:
+        - id
+        - action
+      properties:
+        id:
+          type: string
+        action:
+          type: string
+        params:
+          type: object
+          additionalProperties: true
+        condition:
+          type: string
+        dependsOn:
+          type: array
+          items:
+            type: string
+        onError:
+          type: string
+          enum: [fail, continue, retry]
+          default: fail
+        maxRetries:
+          type: integer
+          default: 3
+        timeout:
+          type: integer
+          description: Step timeout in milliseconds
+
+    WorkflowTrigger:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [manual, event, schedule, webhook]
+        event:
+          type: string
+        pattern:
+          type: string
+          description: "Event pattern ($.on.event.type) or schedule ($.every.N.unit)"
+        schedule:
+          type: string
+        webhookPath:
+          type: string
+        path:
+          type: string
+        methods:
+          type: array
+          items:
+            type: string
+            enum: [GET, POST, PUT, DELETE]
+        filter:
+          type: object
+          additionalProperties: true
+        timezone:
+          type: string
+        auth:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [bearer, basic, api-key]
+            secret:
+              type: string
+
+    WorkflowDefinition:
+      type: object
+      required:
+        - steps
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowStep'
+          minItems: 1
+        timeout:
+          type: integer
+          description: Workflow timeout in milliseconds
+        context:
+          type: object
+          additionalProperties: true
+        trigger:
+          $ref: '#/components/schemas/WorkflowTrigger'
+
+    StepResult:
+      type: object
+      properties:
+        stepId:
+          type: string
+        status:
+          $ref: '#/components/schemas/StepStatus'
+        startedAt:
+          type: integer
+        completedAt:
+          type: integer
+        output: {}
+        error:
+          type: string
+        retries:
+          type: integer
+
+    WorkflowExecution:
+      type: object
+      properties:
+        executionId:
+          type: string
+        workflowId:
+          type: string
+        status:
+          $ref: '#/components/schemas/WorkflowStatus'
+        startedAt:
+          type: integer
+        completedAt:
+          type: integer
+        currentStep:
+          type: string
+        stepResults:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/StepResult'
+        result: {}
+        error:
+          type: string
+        input:
+          type: object
+          additionalProperties: true
+
+    RegisteredTrigger:
+      type: object
+      properties:
+        workflowId:
+          type: string
+        trigger:
+          $ref: '#/components/schemas/WorkflowTrigger'
+        registeredAt:
+          type: integer
+        lastTriggeredAt:
+          type: integer
+        triggerCount:
+          type: integer
+        enabled:
+          type: boolean
+
+    RPCRequest:
+      type: object
+      required:
+        - method
+      properties:
+        method:
+          type: string
+          enum:
+            - createWorkflow
+            - getWorkflow
+            - updateWorkflow
+            - deleteWorkflow
+            - listWorkflows
+            - startWorkflow
+            - getExecution
+            - listExecutions
+            - cancelExecution
+            - pauseExecution
+            - resumeExecution
+            - retryExecution
+            - getStepResult
+            - registerTrigger
+            - unregisterTrigger
+            - listTriggers
+            - getTrigger
+            - enableTrigger
+            - disableTrigger
+            - handleEvent
+            - matchEventPattern
+            - getNextScheduledRun
+            - checkScheduledWorkflows
+            - handleWebhook
+        params:
+          type: array
+          items: {}
+
+    RPCResponse:
+      type: object
+      properties:
+        result: {}
+        error:
+          type: string
+
+    DiscoveryResponse:
+      type: object
+      properties:
+        api:
+          type: string
+        version:
+          type: string
+        links:
+          type: object
+          properties:
+            workflows:
+              type: string
+            executions:
+              type: string
+            rpc:
+              type: string
+        discover:
+          type: object
+          properties:
+            methods:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: Authorization
+
+security:
+  - ApiKey: []

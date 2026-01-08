@@ -6,6 +6,18 @@
 npm install wiki.as
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { wiki } from 'wiki.as'
+
+// Or use the factory for custom config
+import { Wiki } from 'wiki.as'
+const wiki = Wiki({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Your Team's Knowledge Is Trapped

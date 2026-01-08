@@ -632,7 +632,21 @@ function serializeThing(thing: Thing): Uint8Array {
  */
 function deserializeThing(bytes: Uint8Array): Thing {
   const json = bytesToString(bytes)
-  return JSON.parse(json) as Thing
+  try {
+    return JSON.parse(json) as Thing
+  } catch (error) {
+    console.error('Failed to deserialize Thing from JSON bytes:', error)
+    // Return a minimal valid Thing structure with empty data
+    return {
+      rowid: 0,
+      ns: 'default',
+      type: 'unknown',
+      id: 'unknown',
+      data: {},
+      createdAt: 0,
+      updatedAt: 0,
+    }
+  }
 }
 
 /**
@@ -850,7 +864,12 @@ export class ParquetSerializer implements IParquetSerializer {
     // Read metadata
     const metadataBytes = view.slice(8, 8 + metadataLength)
     const metadataJson = bytesToString(metadataBytes)
-    const metadata: InternalMetadata = JSON.parse(metadataJson)
+    let metadata: InternalMetadata
+    try {
+      metadata = JSON.parse(metadataJson)
+    } catch (error) {
+      throw new Error(`Failed to parse Parquet metadata: ${error instanceof Error ? error.message : String(error)}`)
+    }
 
     // Validate version
     if (metadata.version !== VERSION) {

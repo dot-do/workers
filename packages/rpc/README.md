@@ -316,7 +316,7 @@ When using RPC workers as service bindings, follow these naming conventions:
 | `CLOUDFLARE` | cloudflare-worker | cloudflare |
 | `ESBUILD` | esbuild-worker | esbuild-wasm |
 | `MDX` | mdx-worker | @mdx-js/mdx |
-| `WORKOS` | workos-worker | @workos-inc/node |
+| `ORG` | workos-worker | @workos-inc/node |
 
 ## Configuration
 

@@ -1,0 +1,51 @@
+{
+  "name": "startups.studio",
+  "version": "0.0.1",
+  "description": "Startup Portfolio Management SDK - Build and manage Autonomous Startups",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://startups.studio",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "dotdo": "workspace:*",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "startups",
+    "portfolio",
+    "autonomous",
+    "business-as-code",
+    "services-as-software",
+    "sdk",
+    "workers.do",
+    "cloudflare",
+    "workers",
+    "ai",
+    "agents",
+    "deployment",
+    "health",
+    "analytics",
+    "team"
+  ]
+}

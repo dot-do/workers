@@ -1,0 +1,46 @@
+{
+  "name": "looker.do",
+  "version": "0.0.1",
+  "description": "Looker Business Intelligence SDK - Access dashboards, queries, and data exploration",
+  "type": "module",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "author": ".do",
+  "license": "MIT",
+  "homepage": "https://looker.do",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dot-do/workers"
+  },
+  "bugs": {
+    "url": "https://github.com/dot-do/workers/issues"
+  },
+  "dependencies": {
+    "capnweb": "^0.2.0",
+    "cli.do": "workspace:*",
+    "mcp.do": "workspace:*",
+    "org.ai": "workspace:*",
+    "rpc.do": "workspace:*"
+  },
+  "devDependencies": {
+    "@dotdo/types": "workspace:*",
+    "dotdo": "workspace:*",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  },
+  "keywords": [
+    "looker",
+    "business-intelligence",
+    "bi",
+    "analytics",
+    "dashboards",
+    "data-visualization",
+    "queries",
+    "lookml",
+    "sdk",
+    "workers.do",
+    "cloudflare-workers"
+  ]
+}

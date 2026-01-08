@@ -63,7 +63,7 @@ When using `dotdo/rpc`, use these conventional binding names:
 - `this.env.ESBUILD` - Build/transform
 - `this.env.MDX` - MDX compilation
 - `this.env.STRIPE` - Stripe operations
-- `this.env.WORKOS` - WorkOS/OAuth
+- `this.env.ORG` - Auth for AI and Humans (id.org.ai / WorkOS)
 - `this.env.CLOUDFLARE` - Cloudflare API
 
 ## Folder Structure

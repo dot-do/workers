@@ -163,23 +163,20 @@ const usage = await services.usage('svc_123', {
 
 ## Configuration
 
-Set your API key via environment variable:
-
-```bash
-export SERVICES_API_KEY=your_api_key
-```
-
-Or configure explicitly:
-
 ```typescript
-import { Services } from 'services.do'
+// Workers - import env adapter for automatic env resolution
+import 'rpc.do/env'
+import { services } from 'services.do'
 
-const services = Services({
-  apiKey: 'your-api-key'
+// Or use factory with custom config
+import { Services } from 'services.do'
+const customServices = Services({
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from SERVICES_API_KEY or DO_API_KEY
 ```
 
-For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based configuration.
+Set `SERVICES_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Pricing Models
 

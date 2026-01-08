@@ -191,7 +191,7 @@ export class MyDatabase extends DO {
 |---------|---------|--------|
 | `JOSE` | JWT operations (sign, verify, decode) | `workers/jose` |
 | `STRIPE` | Payment processing | `workers/stripe` |
-| `WORKOS` | OAuth and SSO | `workers/workos` |
+| `ORG` | Auth for AI and Humans (id.org.ai) | `workers/workos` |
 | `ESBUILD` | Code bundling and transformation | `workers/esbuild` |
 | `MDX` | MDX compilation | `workers/mdx` |
 | `CLOUDFLARE` | Cloudflare API operations | `workers/cloudflare` |

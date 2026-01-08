@@ -198,25 +198,19 @@ const recentFailures = await verbs.history({
 ## Configuration
 
 ```typescript
-// Workers - import env adapter to configure from environment
+// Workers - import env adapter for automatic env resolution
 import 'rpc.do/env'
+import { verbs } from 'verbs.do'
+
+// Or use factory with custom config
 import { Verbs } from 'verbs.do'
-
-const verbs = Verbs()
-```
-
-Or use a custom configuration:
-
-```typescript
-import { Verbs } from 'verbs.do'
-
-const verbs = Verbs({
-  apiKey: 'your-api-key',
-  baseURL: 'https://custom.verbs.do'
+const customVerbs = Verbs({
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from VERBS_API_KEY or DO_API_KEY
 ```
 
-Environment variables `VERBS_API_KEY` or `DO_API_KEY` are automatically configured when using `rpc.do/env`.
+Set `VERBS_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Stop Holding AI Back
 

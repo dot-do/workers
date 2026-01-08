@@ -1,0 +1,34 @@
+{
+  "name": "@dotdo/multi-tenant",
+  "version": "0.0.1",
+  "description": "Multi-tenant hosting with Cloudflare Static Assets - 100k+ sites from single deployment",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.0",
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.0"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "multi-tenant",
+    "static-assets",
+    "snippets"
+  ]
+}

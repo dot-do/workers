@@ -234,25 +234,19 @@ await kpis.refresh({ kpiIds: ['mrr'] })
 ## Configuration
 
 ```typescript
-// Workers - import env adapter to configure from environment
+// Workers - import env adapter for automatic env resolution
 import 'rpc.do/env'
+import { kpis } from 'kpis.do'
+
+// Or use factory with custom config
 import { KPIs } from 'kpis.do'
-
-const kpis = KPIs()
-```
-
-Or use a custom configuration:
-
-```typescript
-import { KPIs } from 'kpis.do'
-
-const kpis = KPIs({
-  apiKey: 'your-api-key',
-  baseURL: 'https://custom.kpis.do'
+const customKpis = KPIs({
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from KPIS_API_KEY or DO_API_KEY
 ```
 
-Environment variables `KPIS_API_KEY` or `DO_API_KEY` are automatically configured when using `rpc.do/env`.
+Set `KPIS_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Stop Flying Blind
 

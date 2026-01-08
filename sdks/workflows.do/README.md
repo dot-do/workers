@@ -191,19 +191,123 @@ for await (const event of workflows.stream(run.id)) {
 | `completed` | All steps completed successfully |
 | `failed` | Workflow failed due to an error |
 
+## Error Handling
+
+Handle workflow errors gracefully with typed exceptions:
+
+```typescript
+import { workflows } from 'workflows.do'
+import { RPCError } from 'rpc.do'
+
+try {
+  await workflows.start('order-fulfillment', { orderId: '12345' })
+} catch (error) {
+  if (error instanceof RPCError) {
+    switch (error.code) {
+      case 404:
+        console.error('Workflow definition not found')
+        break
+      case 409:
+        console.error('Workflow already running for this input')
+        break
+      case 422:
+        console.error('Invalid workflow input:', error.data)
+        break
+      default:
+        console.error(`Workflow error ${error.code}: ${error.message}`)
+    }
+  }
+  throw error
+}
+```
+
+### Common Error Codes
+
+| Code | Meaning | What to Do |
+|------|---------|------------|
+| 400 | Invalid request | Check workflow name and input format |
+| 401 | Authentication failed | Verify your API key |
+| 404 | Workflow not found | Verify workflow is deployed |
+| 409 | Conflict | Workflow already running - check idempotency |
+| 422 | Validation failed | Input doesn't match workflow schema |
+| 429 | Rate limited | Wait and retry with backoff |
+| 500 | Execution error | Check workflow logs for details |
+
+### Workflow Monitoring Pattern
+
+```typescript
+import { workflows } from 'workflows.do'
+import { RPCError } from 'rpc.do'
+
+async function runWithMonitoring(name: string, input: unknown) {
+  const run = await workflows.start(name, input)
+
+  // Poll for completion with error handling
+  while (true) {
+    try {
+      const status = await workflows.status(run.id)
+
+      if (status.status === 'completed') {
+        return status.result
+      }
+
+      if (status.status === 'failed') {
+        console.error('Workflow failed at step:', status.failedStep)
+        throw new Error(`Workflow failed: ${status.error}`)
+      }
+
+      await new Promise(r => setTimeout(r, 1000))
+    } catch (error) {
+      if (error instanceof RPCError && error.code === 404) {
+        console.error('Workflow run disappeared - may have expired')
+        throw error
+      }
+      throw error
+    }
+  }
+}
+```
+
+### Graceful Step Recovery
+
+```typescript
+import { workflows } from 'workflows.do'
+import { RPCError } from 'rpc.do'
+
+async function retryFailedWorkflow(runId: string, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await workflows.retry(runId)
+      return await workflows.status(runId)
+    } catch (error) {
+      if (error instanceof RPCError && error.code === 409) {
+        // Already running, just wait
+        await new Promise(r => setTimeout(r, 2000))
+        continue
+      }
+      throw error
+    }
+  }
+  throw new Error('Max retries exceeded')
+}
+```
+
 ## Configuration
 
 ```typescript
-import { Workflows } from 'workflows.do'
+// Workers - import env adapter for automatic env resolution
+import 'rpc.do/env'
+import { workflows } from 'workflows.do'
 
-const workflows = Workflows({
-  apiKey: 'your-api-key'
+// Or use factory with custom config
+import { Workflows } from 'workflows.do'
+const customWorkflows = Workflows({
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from WORKFLOWS_API_KEY or DO_API_KEY
 ```
 
-Or set `WORKFLOWS_API_KEY` or `DO_API_KEY` in your environment.
-
-For Cloudflare Workers, use `import 'rpc.do/env'` to enable env-based configuration.
+Set `WORKFLOWS_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Stop Fearing Your Own Code
 

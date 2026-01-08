@@ -46,3 +46,6 @@
 [submodule "rewrites/fsx"]
 	path = rewrites/fsx
 	url = https://github.com/dot-do/fsx.git
+[submodule "rewrites/bashx"]
+	path = rewrites/bashx
+	url = https://github.com/dot-do/bashx.git

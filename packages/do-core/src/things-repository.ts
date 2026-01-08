@@ -99,13 +99,21 @@ export class ThingsRepository extends BaseSQLRepository<Thing> {
   }
 
   protected rowToEntity(row: Record<string, unknown>): Thing {
+    let data: Record<string, unknown>
+    try {
+      data = JSON.parse(row.data as string)
+    } catch (error) {
+      console.error(`Failed to parse data for thing ${row.id}:`, error)
+      data = {}
+    }
+
     return {
       rowid: row.rowid as number,
       ns: row.ns as string,
       type: row.type as string,
       id: row.id as string,
       url: row.url as string | undefined,
-      data: JSON.parse(row.data as string),
+      data,
       context: row.context as string | undefined,
       createdAt: row.created_at as number,
       updatedAt: row.updated_at as number,

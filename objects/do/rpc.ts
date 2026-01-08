@@ -7,7 +7,7 @@
  * - env.ESBUILD
  * - env.MDX
  * - env.STRIPE
- * - env.WORKOS
+ * - env.ORG
  * - env.CLOUDFLARE
  */
 

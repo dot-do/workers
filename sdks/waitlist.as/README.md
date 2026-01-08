@@ -6,6 +6,18 @@
 npm install waitlist.as
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { waitlist } from 'waitlist.as'
+
+// Or use the factory for custom config
+import { Waitlist } from 'waitlist.as'
+const waitlist = Waitlist({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## You're Not Ready to Launch. But You Need to Start Now.

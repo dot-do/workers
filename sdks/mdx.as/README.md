@@ -6,6 +6,18 @@
 npm install mdx.as
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { mdx } from 'mdx.as'
+
+// Or use the factory for custom config
+import { MDX } from 'mdx.as'
+const mdx = MDX({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Static Content Is Dead

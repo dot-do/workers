@@ -132,6 +132,76 @@ export interface ProviderConfig {
   models?: string[]
 }
 
+/**
+ * Function types for auto-classification.
+ * - code: Pure computation, data transformation, no AI needed
+ * - generative: Needs AI to generate content, but single-step
+ * - agentic: Needs multiple steps, tools, web access, or memory
+ * - human: Needs human approval, review, or decision
+ */
+export type FunctionType = 'code' | 'generative' | 'agentic' | 'human'
+
+/**
+ * Simplified typed function definition for registerTyped().
+ * Fields are at top level instead of nested in config.
+ */
+export interface SimplifiedTypedFunctionDefinition {
+  name: string
+  type: FunctionType
+  description?: string
+  parameters?: Record<string, unknown>
+  // Code function fields
+  code?: string
+  runtime?: 'v8' | 'wasm'
+  // Generative function fields
+  prompt?: string
+  model?: string
+  output?: string | Record<string, unknown>
+  // Agentic function fields
+  goal?: string
+  tools?: string[]
+  memory?: boolean
+  maxSteps?: number
+  // Human function fields
+  channel?: string
+  assignee?: string
+  timeout?: string
+  escalation?: string
+}
+
+/**
+ * Typed function definition stored in the database.
+ */
+export interface TypedFunctionDefinition extends FunctionDefinition {
+  type: FunctionType
+  // Config stored for delegation
+  code?: string
+  prompt?: string
+  goal?: string
+  tools?: string[]
+  channel?: string
+  assignee?: string
+}
+
+/**
+ * Backend worker binding interface for delegation.
+ */
+export interface BackendWorker {
+  execute: (name: string, params: unknown) => Promise<unknown>
+}
+
+/**
+ * Extended environment with backend worker bindings for delegation.
+ */
+export interface DelegationEnv {
+  AI: {
+    run: <T>(model: string, input: unknown) => Promise<T>
+  }
+  EVAL?: BackendWorker
+  AGENTS?: BackendWorker
+  HUMANS?: BackendWorker
+}
+
 // ============================================================================
 // AIPromise Implementation
 // ============================================================================
@@ -689,12 +759,68 @@ export class FunctionsDO {
     }
   }
 
+  /**
+   * Register a typed function using a simplified format.
+   * This is an alternative that accepts all fields at the top level.
+   */
+  async registerTyped(definition: SimplifiedTypedFunctionDefinition): Promise<void> {
+    // Validate name
+    if (!definition.name || definition.name.length === 0) {
+      throw new Error('Invalid name: name is required')
+    }
+
+    // Check for duplicates
+    const existing = await this.getFunction(definition.name)
+    if (existing) {
+      throw new Error(`Function already exists: ${definition.name}`)
+    }
+
+    // Build the typed definition with relevant fields
+    const typedDefinition: TypedFunctionDefinition = {
+      name: definition.name,
+      description: definition.description,
+      parameters: definition.parameters,
+      type: definition.type,
+      // Store type-specific config fields
+      code: definition.code,
+      prompt: definition.prompt,
+      goal: definition.goal,
+      tools: definition.tools,
+      channel: definition.channel,
+      assignee: definition.assignee,
+    }
+
+    // Persist to storage
+    await this.ctx.storage.put(`function:${definition.name}`, typedDefinition)
+    this.functions.set(definition.name, typedDefinition)
+  }
+
+  /**
+   * Get a function by name with type information
+   */
+  async getFunction(name: string): Promise<TypedFunctionDefinition | null> {
+    // Check in-memory cache first
+    const cached = this.functions.get(name)
+    if (cached) {
+      return cached as TypedFunctionDefinition
+    }
+
+    // Try to load from storage
+    const stored = await this.ctx.storage.get<TypedFunctionDefinition>(`function:${name}`)
+    if (stored) {
+      this.functions.set(name, stored)
+      return stored
+    }
+
+    return null
+  }
+
   async invoke(name: string, params: unknown): Promise<unknown> {
     // Try to load from storage
     try {
-      let fn = this.functions.get(name)
+      let fn = this.functions.get(name) as TypedFunctionDefinition | FunctionDefinition | undefined
       if (!fn) {
-        const stored = await this.ctx.storage.get<FunctionDefinition>(`function:${name}`)
+        const stored = await this.ctx.storage.get<TypedFunctionDefinition | FunctionDefinition>(`function:${name}`)
         if (stored) {
           this.functions.set(name, stored)
           fn = stored
@@ -718,13 +844,78 @@ export class FunctionsDO {
         }
       }
 
-      // Execute function (mock for now)
+      // Check if this is a typed function that needs delegation
+      const typedFn = fn as TypedFunctionDefinition
+
+      // Explicit null type indicates corrupted data - reject it
+      if ('type' in typedFn && typedFn.type === null) {
+        throw new Error(`Invalid function type: null type for function '${name}' indicates corrupted data`)
+      }
+
+      if (typedFn.type) {
+        return this.delegateToBackend(name, params, typedFn)
+      }
+
+      // Legacy untyped function - execute directly (mock for now)
       return { result: params, function: name }
     } catch (err) {
       if ((err as Error).message.includes('Storage read failed')) {
         throw new Error(`Storage read failed: ${(err as Error).message}`)
       }
       throw err
+    }
+  }
+
+  /**
+   * Delegate function invocation to the appropriate backend based on type.
+   */
+  private async delegateToBackend(name: string, params: unknown, fn: TypedFunctionDefinition): Promise<unknown> {
+    const delegationEnv = this.env as unknown as DelegationEnv
+
+    switch (fn.type) {
+      case 'code': {
+        // Delegate to EVAL backend
+        if (!delegationEnv.EVAL) {
+          throw new Error('EVAL binding not configured: code functions require the EVAL worker binding')
+        }
+        return delegationEnv.EVAL.execute(name, params)
+      }
+
+      case 'generative': {
+        // Delegate to AI backend
+        const model = DEFAULT_MODEL
+
+        // Build prompt with parameter substitution
+        let prompt = fn.prompt ?? ''
+        if (params && typeof params === 'object') {
+          const paramsObj = params as Record<string, unknown>
+          for (const [key, value] of Object.entries(paramsObj)) {
+            prompt = prompt.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), String(value))
+          }
+        }
+
+        const response = await this.runAIWithTimeout(model, { prompt }) as { response?: string }
+        return { text: response.response ?? '' }
+      }
+
+      case 'agentic': {
+        // Delegate to AGENTS backend
+        if (!delegationEnv.AGENTS) {
+          throw new Error('AGENTS binding not configured: agentic functions require the AGENTS worker binding')
+        }
+        return delegationEnv.AGENTS.execute(name, params)
+      }
+
+      case 'human': {
+        // Delegate to HUMANS backend
+        if (!delegationEnv.HUMANS) {
+          throw new Error('HUMANS binding not configured: human functions require the HUMANS worker binding')
+        }
+        return delegationEnv.HUMANS.execute(name, params)
+      }
+
+      default:
+        throw new Error(`Unknown function type: ${fn.type}`)
     }
   }
 
@@ -871,6 +1062,85 @@ export class FunctionsDO {
 
   async getProvider(name: string): Promise<Provider | null> {
     return this.providers.get(name) ?? null
+  }
+
+  // ==========================================================================
+  // Auto-Classification
+  // ==========================================================================
+
+  /**
+   * Classify a function based on its name and example args using AI.
+   *
+   * Uses env.AI to analyze the function name and arguments to determine
+   * the appropriate function type:
+   * - code: Pure computation, data transformation, no AI needed
+   * - generative: Needs AI to generate content, but single-step
+   * - agentic: Needs multiple steps, tools, web access, or memory
+   * - human: Needs human approval, review, or decision
+   *
+   * @param name - The function name
+   * @param args - Example arguments for the function
+   * @returns The classified function type
+   */
+  async classifyFunction(name: string, args: unknown): Promise<FunctionType> {
+    // Validate function name
+    if (!name || name.length === 0) {
+      throw new Error('Invalid function name: empty or required')
+    }
+
+    // Build the classification prompt
+    const prompt = `Classify this function into one of four types.
+
+Function name: ${name}
+Example args: ${JSON.stringify(args ?? {})}
+
+Types:
+- code: Pure computation, data transformation, no AI needed (e.g., fibonacci, parseCSV, calculateTax)
+- generative: Needs AI to generate content, but single-step (e.g., summarize, writePoem, generateDescription)
+- agentic: Needs multiple steps, tools, web access, or memory (e.g., researchCompetitor, planTrip, scrapeWebsite)
+- human: Needs human approval, review, or decision (e.g., approveBudget, reviewContract, makeHiringDecision)
+
+Return ONLY one of: code, generative, agentic, human`
+
+    try {
+      const response = await this.runAIWithTimeout(DEFAULT_MODEL, {
+        prompt,
+      }) as { response?: string }
+
+      // Parse and validate the response
+      const rawResult = response.response ?? ''
+      return this.parseClassificationResult(rawResult)
+    } catch (err) {
+      // Re-throw AI errors
+      this.handleAIError(err)
+      throw err
+    }
+  }
+
+  /**
+   * Parse the AI classification response and extract a valid FunctionType.
+   * Handles various AI response formats including verbose responses.
+   */
+  private parseClassificationResult(rawResult: string): FunctionType {
+    // Normalize: trim and lowercase
+    const normalized = rawResult.trim().toLowerCase()
+
+    // Direct match
+    if (normalized === 'code' || normalized === 'generative' ||
+        normalized === 'agentic' || normalized === 'human') {
+      return normalized
+    }
+
+    // Extract type from verbose response (e.g., "I think this is a generative function because...")
+    const types: FunctionType[] = ['generative', 'agentic', 'human', 'code']
+    for (const type of types) {
+      if (normalized.includes(type)) {
+        return type
+      }
+    }
+
+    // Default to 'code' for unrecognized responses
+    return 'code'
   }
 
   // ==========================================================================

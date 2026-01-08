@@ -1,0 +1,904 @@
+openapi: 3.0.3
+info:
+  title: functions.do API
+  description: |
+    AI Functions API for the workers.do platform.
+
+    Provides AI primitives with multi-transport support:
+    - Core AI primitives (generate, list, extract, classify, summarize, translate, embed)
+    - Function registration and invocation
+    - Batch processing and AIPromise
+    - Provider management (Workers AI, OpenAI, Anthropic)
+    - HTTP REST, RPC, and streaming endpoints
+  version: 1.0.0
+  contact:
+    name: workers.do Support
+    url: https://workers.do
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://functions.do
+    description: Production server
+  - url: http://localhost:8787
+    description: Local development
+
+tags:
+  - name: Discovery
+    description: API discovery and HATEOAS
+  - name: Generation
+    description: Text generation operations
+  - name: Extraction
+    description: Data extraction operations
+  - name: Classification
+    description: Text classification operations
+  - name: Embeddings
+    description: Vector embeddings operations
+  - name: Functions
+    description: Custom function registration and invocation
+  - name: Providers
+    description: AI provider management
+  - name: Batch
+    description: Batch operations
+  - name: RPC
+    description: JSON-RPC interface
+
+paths:
+  /:
+    get:
+      summary: API Discovery
+      description: Returns HATEOAS discovery information
+      operationId: discovery
+      tags:
+        - Discovery
+      responses:
+        '200':
+          description: Discovery information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryResponse'
+
+  /api/generate:
+    post:
+      summary: Generate Text
+      description: Generate text from a prompt using AI
+      operationId: generate
+      tags:
+        - Generation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateRequest'
+            examples:
+              simple:
+                summary: Simple text generation
+                value:
+                  prompt: "Write a haiku about programming"
+              withOptions:
+                summary: With model options
+                value:
+                  prompt: "Explain quantum computing"
+                  model: "@cf/meta/llama-3.1-8b-instruct"
+                  maxTokens: 500
+                  temperature: 0.7
+              streaming:
+                summary: Streaming response
+                value:
+                  prompt: "Tell me a story"
+                  stream: true
+              json:
+                summary: JSON output
+                value:
+                  prompt: "Generate a user profile"
+                  format: json
+                  schema:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      age:
+                        type: integer
+      responses:
+        '200':
+          description: Generated text
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateResult'
+            text/plain:
+              schema:
+                type: string
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-sent events for streaming
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/extract:
+    post:
+      summary: Extract Structured Data
+      description: Extract structured data from text according to a schema
+      operationId: extract
+      tags:
+        - Extraction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExtractRequest'
+            example:
+              text: "John Doe is 30 years old and lives in New York. Contact: john@example.com"
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  age:
+                    type: integer
+                  city:
+                    type: string
+                  email:
+                    type: string
+                required: [name, email]
+              options:
+                strict: true
+      responses:
+        '200':
+          description: Extracted data
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+              example:
+                name: John Doe
+                age: 30
+                city: New York
+                email: john@example.com
+        '400':
+          description: Invalid request or extraction failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/classify:
+    post:
+      summary: Classify Text
+      description: Classify text into predefined categories
+      operationId: classify
+      tags:
+        - Classification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassifyRequest'
+            example:
+              text: "I absolutely love this product! Best purchase ever!"
+              categories: [positive, negative, neutral]
+      responses:
+        '200':
+          description: Classification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassifyResult'
+              example:
+                category: positive
+                confidence: 0.95
+                allScores:
+                  positive: 0.95
+                  negative: 0.02
+                  neutral: 0.03
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/embed:
+    post:
+      summary: Generate Embeddings
+      description: Generate vector embeddings for text
+      operationId: embed
+      tags:
+        - Embeddings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmbedRequest'
+            examples:
+              single:
+                summary: Single text
+                value:
+                  text: "The quick brown fox jumps over the lazy dog"
+              batch:
+                summary: Multiple texts
+                value:
+                  text:
+                    - "First sentence for embedding"
+                    - "Second sentence for embedding"
+      responses:
+        '200':
+          description: Embedding vectors
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      type: number
+                    description: Single embedding vector
+                  - type: array
+                    items:
+                      type: array
+                      items:
+                        type: number
+                    description: Multiple embedding vectors
+
+  /api/functions:
+    get:
+      summary: List Functions
+      description: List all registered custom functions
+      operationId: listFunctions
+      tags:
+        - Functions
+      responses:
+        '200':
+          description: List of functions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FunctionDefinition'
+
+    post:
+      summary: Register Function
+      description: Register a new custom function
+      operationId: registerFunction
+      tags:
+        - Functions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FunctionDefinition'
+            example:
+              name: format-email
+              description: Format an email from template
+              parameters:
+                type: object
+                properties:
+                  template:
+                    type: string
+                  data:
+                    type: object
+                required: [template, data]
+      responses:
+        '200':
+          description: Function registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '400':
+          description: Invalid function definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/functions/{name}/invoke:
+    post:
+      summary: Invoke Function
+      description: Invoke a registered custom function
+      operationId: invokeFunction
+      tags:
+        - Functions
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Function result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '404':
+          description: Function not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/providers:
+    get:
+      summary: List Providers
+      description: List all configured AI providers
+      operationId: listProviders
+      tags:
+        - Providers
+      responses:
+        '200':
+          description: List of providers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Provider'
+
+  /api/providers/{name}:
+    get:
+      summary: Get Provider
+      description: Get details of a specific provider
+      operationId: getProvider
+      tags:
+        - Providers
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Provider details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Provider'
+        '404':
+          description: Provider not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Configure Provider
+      description: Configure or update an AI provider
+      operationId: setProvider
+      tags:
+        - Providers
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderConfig'
+      responses:
+        '200':
+          description: Provider configured
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /api/batch:
+    post:
+      summary: Batch Operations
+      description: Execute multiple AI operations in a batch
+      operationId: batch
+      tags:
+        - Batch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - operations
+              properties:
+                operations:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/BatchOperation'
+            example:
+              operations:
+                - method: generate
+                  params: ["Write a poem"]
+                  id: op1
+                - method: classify
+                  params: ["Great product!", ["positive", "negative"]]
+                  id: op2
+      responses:
+        '200':
+          description: Batch results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BatchResult'
+
+  /api/generate/batch:
+    post:
+      summary: Batch Generate
+      description: Generate text for multiple prompts
+      operationId: generateBatch
+      tags:
+        - Batch
+        - Generation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prompts
+              properties:
+                prompts:
+                  type: array
+                  items:
+                    type: string
+                options:
+                  $ref: '#/components/schemas/BatchOptions'
+            example:
+              prompts:
+                - "Write a haiku about summer"
+                - "Write a haiku about winter"
+              options:
+                concurrency: 2
+      responses:
+        '200':
+          description: Generated texts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GenerateResult'
+
+  /api/embed/batch:
+    post:
+      summary: Batch Embed
+      description: Generate embeddings for multiple texts
+      operationId: embedBatch
+      tags:
+        - Batch
+        - Embeddings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - texts
+              properties:
+                texts:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Embedding vectors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+
+  /rpc:
+    post:
+      summary: RPC Endpoint
+      description: Execute a single RPC method call
+      operationId: rpc
+      tags:
+        - RPC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RPCRequest'
+      responses:
+        '200':
+          description: RPC result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RPCResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /rpc/batch:
+    post:
+      summary: Batch RPC
+      description: Execute multiple RPC calls
+      operationId: rpcBatch
+      tags:
+        - RPC
+        - Batch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/RPCRequest'
+      responses:
+        '200':
+          description: Batch results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RPCResponse'
+
+components:
+  schemas:
+    GenerateRequest:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+          description: The text prompt for generation
+          maxLength: 51200
+        model:
+          type: string
+          description: Model to use for generation
+          default: "@cf/meta/llama-3.1-8b-instruct"
+        maxTokens:
+          type: integer
+          description: Maximum tokens to generate
+        temperature:
+          type: number
+          description: Sampling temperature (0-2)
+          minimum: 0
+          maximum: 2
+        stream:
+          type: boolean
+          description: Enable streaming response
+          default: false
+        format:
+          type: string
+          enum: [text, json]
+          default: text
+        schema:
+          type: object
+          description: JSON schema for structured output
+
+    GenerateResult:
+      type: object
+      properties:
+        text:
+          type: string
+          description: Generated text
+        model:
+          type: string
+          description: Model used
+        usage:
+          type: object
+          properties:
+            promptTokens:
+              type: integer
+            completionTokens:
+              type: integer
+            totalTokens:
+              type: integer
+        finishReason:
+          type: string
+          enum: [stop, length, content_filter]
+
+    ExtractRequest:
+      type: object
+      required:
+        - text
+        - schema
+      properties:
+        text:
+          type: string
+          description: Text to extract data from
+          maxLength: 524288
+        schema:
+          $ref: '#/components/schemas/ExtractSchema'
+        options:
+          type: object
+          properties:
+            model:
+              type: string
+            strict:
+              type: boolean
+              description: Require all fields in schema
+
+    ExtractSchema:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+        properties:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              type:
+                type: string
+              description:
+                type: string
+        required:
+          type: array
+          items:
+            type: string
+
+    ClassifyRequest:
+      type: object
+      required:
+        - text
+        - categories
+      properties:
+        text:
+          type: string
+          description: Text to classify
+        categories:
+          type: array
+          items:
+            type: string
+          minItems: 2
+          description: List of possible categories
+
+    ClassifyResult:
+      type: object
+      properties:
+        category:
+          type: string
+          description: Predicted category
+        confidence:
+          type: number
+          description: Confidence score (0-1)
+        allScores:
+          type: object
+          additionalProperties:
+            type: number
+          description: Scores for all categories
+
+    EmbedRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+              maxItems: 100
+        model:
+          type: string
+          default: "@cf/baai/bge-small-en-v1.5"
+        dimensions:
+          type: integer
+
+    FunctionDefinition:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          pattern: "^[a-zA-Z][a-zA-Z0-9-]*$"
+        description:
+          type: string
+        parameters:
+          type: object
+        returns:
+          type: object
+
+    Provider:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [workers-ai, openai, anthropic, custom]
+        models:
+          type: array
+          items:
+            type: string
+        isDefault:
+          type: boolean
+
+    ProviderConfig:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [workers-ai, openai, anthropic, custom]
+        apiKey:
+          type: string
+        baseUrl:
+          type: string
+        models:
+          type: array
+          items:
+            type: string
+
+    BatchOperation:
+      type: object
+      required:
+        - method
+        - params
+      properties:
+        method:
+          type: string
+          enum: [generate, extract, classify, summarize, translate, embed]
+        params:
+          type: array
+          items: {}
+        id:
+          type: string
+
+    BatchResult:
+      type: object
+      properties:
+        id:
+          type: string
+        result: {}
+        error:
+          type: string
+
+    BatchOptions:
+      type: object
+      properties:
+        model:
+          type: string
+        concurrency:
+          type: integer
+          default: 5
+        continueOnError:
+          type: boolean
+          default: false
+
+    RPCRequest:
+      type: object
+      required:
+        - method
+        - params
+      properties:
+        method:
+          type: string
+          enum:
+            - generate
+            - list
+            - extract
+            - classify
+            - summarize
+            - translate
+            - embed
+            - invoke
+            - register
+            - listFunctions
+            - batch
+            - generateBatch
+            - embedBatch
+            - promise
+            - listProviders
+            - setProvider
+            - getProvider
+        params:
+          type: array
+          items: {}
+
+    RPCResponse:
+      type: object
+      properties:
+        result: {}
+        error:
+          type: string
+
+    DiscoveryResponse:
+      type: object
+      properties:
+        api:
+          type: string
+        version:
+          type: string
+        links:
+          type: object
+          additionalProperties:
+            type: string
+        discover:
+          type: object
+          properties:
+            methods:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  description:
+                    type: string
+            functions:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  description:
+                    type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: Authorization
+
+security:
+  - ApiKey: []

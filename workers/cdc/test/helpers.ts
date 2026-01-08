@@ -420,16 +420,20 @@ export interface CDCEvent {
   partitionKey?: string
 }
 
+// Global counter for unique event IDs across concurrent calls
+let eventIdCounter = 0
+
 /**
  * Create multiple sample events
  */
 export function createSampleEvents(count: number, source?: string): CDCEvent[] {
-  return Array.from({ length: count }, (_, i) =>
-    createSampleEvent({
-      id: `evt-${Date.now()}-${i}`,
+  return Array.from({ length: count }, (_, i) => {
+    const uniqueId = eventIdCounter++
+    return createSampleEvent({
+      id: `evt-${Date.now()}-${uniqueId}`,
       sequenceNumber: i + 1,
       source: source ?? 'test-source',
       type: i % 2 === 0 ? 'user.created' : 'user.updated',
     })
-  )
+  })
 }

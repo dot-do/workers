@@ -1,0 +1,78 @@
+{
+  "name": "cerner.do",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "100% Cerner Millennium FHIR API compatible package running on Cloudflare Workers with Durable Objects",
+  "license": "MIT",
+  "author": "cerner.do",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drivly/cerner.do.git"
+  },
+  "homepage": "https://github.com/drivly/cerner.do#readme",
+  "bugs": {
+    "url": "https://github.com/drivly/cerner.do/issues"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./fhir": {
+      "types": "./dist/fhir/index.d.ts",
+      "import": "./dist/fhir/index.js"
+    },
+    "./immunization": {
+      "types": "./dist/fhir/immunization/index.d.ts",
+      "import": "./dist/fhir/immunization/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest --max-workers=4",
+    "test:coverage": "vitest run --max-workers=4 --coverage",
+    "test:watch": "vitest watch --max-workers=4",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write src",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241205.0",
+    "@types/node": "^22.10.2",
+    "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.99.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "cerner",
+    "fhir",
+    "healthcare",
+    "cloudflare",
+    "workers",
+    "durable-objects",
+    "ehr",
+    "emr",
+    "immunization",
+    "typescript"
+  ]
+}

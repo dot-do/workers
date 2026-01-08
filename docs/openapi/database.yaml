@@ -1,0 +1,558 @@
+openapi: 3.0.3
+info:
+  title: database.do API
+  description: |
+    Database API for the workers.do platform.
+
+    Provides document-oriented database operations with:
+    - CRUD operations (get, list, create, update, delete)
+    - Search and query operations
+    - Transaction support with WAL
+    - Batch operations
+    - REST API and RPC endpoints
+    - HATEOAS discovery
+  version: 1.0.0
+  contact:
+    name: workers.do Support
+    url: https://workers.do
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://database.do
+    description: Production server
+  - url: http://localhost:8787
+    description: Local development
+
+tags:
+  - name: Discovery
+    description: API discovery and HATEOAS
+  - name: Documents
+    description: Document CRUD operations
+  - name: Query
+    description: Search and query operations
+  - name: Collections
+    description: Collection management
+  - name: Batch
+    description: Batch operations
+  - name: RPC
+    description: JSON-RPC interface
+
+paths:
+  /:
+    get:
+      summary: API Discovery
+      description: Returns HATEOAS discovery information including available methods and collections
+      operationId: discovery
+      tags:
+        - Discovery
+      responses:
+        '200':
+          description: Discovery information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryResponse'
+              example:
+                api: database.do
+                version: 1.0.0
+                links:
+                  self: /
+                  rpc: /rpc
+                  batch: /rpc/batch
+                  collections: /api
+                discover:
+                  collections:
+                    - name: users
+                      href: /api/users
+                  methods:
+                    - name: get
+                      description: Get a document by ID
+                    - name: list
+                      description: List documents in a collection
+
+  /do:
+    get:
+      summary: Natural Language Query
+      description: Execute queries using natural language
+      operationId: naturalLanguageQuery
+      tags:
+        - Query
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Natural language query string
+          schema:
+            type: string
+          example: "show me all users"
+      responses:
+        '200':
+          description: Query results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NaturalLanguageResponse'
+        '400':
+          description: Invalid query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /rpc:
+    post:
+      summary: RPC Endpoint
+      description: Execute a single RPC method call
+      operationId: rpc
+      tags:
+        - RPC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RPCRequest'
+            examples:
+              get:
+                summary: Get a document
+                value:
+                  method: get
+                  params: [users, user-123]
+              list:
+                summary: List documents
+                value:
+                  method: list
+                  params: [users, { limit: 10 }]
+              create:
+                summary: Create a document
+                value:
+                  method: create
+                  params: [users, { name: "John Doe", email: "john@example.com" }]
+      responses:
+        '200':
+          description: RPC result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RPCResponse'
+        '400':
+          description: Invalid request or method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /rpc/batch:
+    post:
+      summary: Batch RPC Endpoint
+      description: Execute multiple RPC method calls in a single request
+      operationId: rpcBatch
+      tags:
+        - RPC
+        - Batch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/RPCRequest'
+            example:
+              - method: get
+                params: [users, user-1]
+              - method: get
+                params: [users, user-2]
+      responses:
+        '200':
+          description: Batch results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RPCResponse'
+
+  /api/{collection}:
+    get:
+      summary: List Documents
+      description: List all documents in a collection
+      operationId: listDocuments
+      tags:
+        - Documents
+      parameters:
+        - name: collection
+          in: path
+          required: true
+          description: Collection name
+          schema:
+            type: string
+          example: users
+      responses:
+        '200':
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+        '400':
+          description: Invalid collection name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create Document
+      description: Create a new document in a collection
+      operationId: createDocument
+      tags:
+        - Documents
+      parameters:
+        - name: collection
+          in: path
+          required: true
+          description: Collection name
+          schema:
+            type: string
+          example: users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentInput'
+            example:
+              name: John Doe
+              email: john@example.com
+              age: 30
+      responses:
+        '201':
+          description: Document created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/{collection}/{id}:
+    get:
+      summary: Get Document
+      description: Get a document by its ID
+      operationId: getDocument
+      tags:
+        - Documents
+      parameters:
+        - name: collection
+          in: path
+          required: true
+          description: Collection name
+          schema:
+            type: string
+          example: users
+        - name: id
+          in: path
+          required: true
+          description: Document ID
+          schema:
+            type: string
+          example: user-123
+      responses:
+        '200':
+          description: Document found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update Document
+      description: Update an existing document
+      operationId: updateDocument
+      tags:
+        - Documents
+      parameters:
+        - name: collection
+          in: path
+          required: true
+          description: Collection name
+          schema:
+            type: string
+          example: users
+        - name: id
+          in: path
+          required: true
+          description: Document ID
+          schema:
+            type: string
+          example: user-123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentInput'
+            example:
+              name: John Updated
+              age: 31
+      responses:
+        '200':
+          description: Document updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete Document
+      description: Delete a document
+      operationId: deleteDocument
+      tags:
+        - Documents
+      parameters:
+        - name: collection
+          in: path
+          required: true
+          description: Collection name
+          schema:
+            type: string
+          example: users
+        - name: id
+          in: path
+          required: true
+          description: Document ID
+          schema:
+            type: string
+          example: user-123
+      responses:
+        '200':
+          description: Document deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Document:
+      type: object
+      required:
+        - _id
+      properties:
+        _id:
+          type: string
+          description: Unique document identifier
+          example: user-123
+      additionalProperties: true
+      example:
+        _id: user-123
+        name: John Doe
+        email: john@example.com
+        age: 30
+
+    DocumentInput:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Optional document ID (auto-generated if not provided)
+      additionalProperties: true
+
+    ListOptions:
+      type: object
+      properties:
+        limit:
+          type: integer
+          description: Maximum number of documents to return
+          default: 100
+          maximum: 1000
+        offset:
+          type: integer
+          description: Number of documents to skip
+          default: 0
+        where:
+          type: object
+          description: Filter conditions
+          additionalProperties: true
+        orderBy:
+          type: string
+          description: Field to sort by
+        order:
+          type: string
+          enum: [asc, desc]
+          default: asc
+
+    SearchOptions:
+      type: object
+      properties:
+        collection:
+          type: string
+          description: Limit search to a specific collection
+        limit:
+          type: integer
+          default: 100
+
+    SearchResult:
+      type: object
+      properties:
+        collection:
+          type: string
+        id:
+          type: string
+        data:
+          type: object
+        score:
+          type: number
+
+    DiscoveryResponse:
+      type: object
+      properties:
+        api:
+          type: string
+          example: database.do
+        version:
+          type: string
+          example: 1.0.0
+        links:
+          type: object
+          properties:
+            self:
+              type: string
+            rpc:
+              type: string
+            batch:
+              type: string
+            collections:
+              type: string
+        discover:
+          type: object
+          properties:
+            collections:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  href:
+                    type: string
+            methods:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  description:
+                    type: string
+
+    NaturalLanguageResponse:
+      type: object
+      properties:
+        query:
+          type: string
+          description: Original query string
+        interpreted:
+          type: object
+          properties:
+            method:
+              type: string
+            params:
+              type: array
+              items: {}
+        result:
+          description: Query results
+          oneOf:
+            - type: array
+              items:
+                $ref: '#/components/schemas/Document'
+            - type: integer
+
+    RPCRequest:
+      type: object
+      required:
+        - method
+        - params
+      properties:
+        method:
+          type: string
+          description: RPC method name
+          enum:
+            - get
+            - list
+            - create
+            - update
+            - delete
+            - search
+            - query
+            - count
+            - listCollections
+            - createIndex
+            - listIndexes
+            - createMany
+            - updateMany
+            - deleteMany
+            - transaction
+            - do
+            - getActionStatus
+        params:
+          type: array
+          description: Method parameters
+          items: {}
+
+    RPCResponse:
+      type: object
+      properties:
+        result:
+          description: Method result
+        error:
+          type: string
+          description: Error message if the call failed
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: API key for authentication (format: Bearer <token>)
+
+security:
+  - ApiKey: []

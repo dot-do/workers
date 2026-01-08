@@ -1,13 +1,28 @@
 {
   "name": "@dotdo/middleware-auth",
   "version": "0.0.1",
-  "description": "Authentication middleware for Hono with Better Auth integration",
+  "description": "Hono authentication middleware wrapping @dotdo/auth primitives",
   "type": "module",
   "exports": {
-    ".": "./index.ts"
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "hono": "^4.0.0"
   },
   "dependencies": {
-    "hono": "^4.0.0",
     "@dotdo/auth": "workspace:*"
+  },
+  "devDependencies": {
+    "hono": "^4.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.4"
   }
 }

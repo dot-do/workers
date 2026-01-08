@@ -149,6 +149,38 @@ const type = await brands.typography('launchfast')
 // type.headings.fontFamily, type.headings.weights, type.headings.sizes
 ```
 
+## Configuration
+
+### Environment Variables
+
+```bash
+# Primary API key (used by default)
+export DO_API_KEY="your-api-key"
+
+# Alternative: Organization API key
+export ORG_AI_API_KEY="your-org-key"
+```
+
+### Cloudflare Workers
+
+```typescript
+import 'rpc.do/env'
+import { brands } from 'brands.as'
+
+// Environment is automatically configured
+await brands.create({ name, displayName, industry })
+```
+
+### Custom Configuration
+
+```typescript
+import { Brands } from 'brands.as'
+
+const client = Brands({
+  baseURL: 'https://custom.example.com'
+})
+```
+
 ## Your Brand Is Your First Impression
 
 Customers judge in milliseconds. Investors pattern-match. Partners evaluate.

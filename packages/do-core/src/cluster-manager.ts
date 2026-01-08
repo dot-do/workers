@@ -18,7 +18,7 @@
  * @module cluster-manager
  */
 
-import { euclideanDistance, cosineSimilarity, dotProduct, type VectorInput } from './vector-distance.js'
+import { euclideanDistance, cosineSimilarity, dotProduct } from './vector-distance.js'
 
 // ============================================================================
 // Type Definitions
@@ -108,7 +108,7 @@ export interface NearestClusterResult {
 /**
  * Input for batch vector assignment
  */
-export interface VectorInput {
+export interface VectorBatchInput {
   /** Vector identifier */
   id: string
   /** The vector data */
@@ -295,7 +295,7 @@ export class ClusterManager {
     for (const [clusterId, centroid] of this.centroids) {
       const distance = this.calculateDistance(vector, centroid.vector)
       // For ties, prefer lower cluster ID for deterministic behavior
-      if (distance < nearestDistance || (distance === nearestDistance && clusterId < nearestClusterId!)) {
+      if (distance < nearestDistance || (distance === nearestDistance && nearestClusterId !== null && clusterId < nearestClusterId)) {
         nearestDistance = distance
         nearestClusterId = clusterId
       }
@@ -312,7 +312,7 @@ export class ClusterManager {
   /**
    * Assign multiple vectors to clusters efficiently.
    */
-  async assignVectorBatch(vectors: VectorInput[]): Promise<ClusterAssignment[]> {
+  async assignVectorBatch(vectors: VectorBatchInput[]): Promise<ClusterAssignment[]> {
     if (vectors.length === 0) {
       return []
     }
@@ -498,7 +498,13 @@ export class ClusterManager {
    * Deserialize centroids from JSON string.
    */
   async deserializeCentroids(json: string): Promise<void> {
-    const centroids: Centroid[] = JSON.parse(json)
+    let centroids: Centroid[]
+    try {
+      centroids = JSON.parse(json)
+    } catch (error) {
+      console.error('Failed to deserialize centroids from JSON:', error)
+      throw new Error(`Failed to deserialize centroids: ${error instanceof Error ? error.message : String(error)}`)
+    }
     await this.setCentroids(centroids)
   }
 

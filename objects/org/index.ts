@@ -38,7 +38,7 @@ export * from './schema'
 // Types
 export interface OrgEnv extends DOEnv {
   // Optional service bindings for integrations
-  WORKOS?: unknown
+  ORG?: unknown
   STRIPE?: unknown
 }
 

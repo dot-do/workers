@@ -6,6 +6,18 @@
 npm install videos.as
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { videos } from 'videos.as'
+
+// Or use the factory for custom config
+import { Videos } from 'videos.as'
+const videos = Videos({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Video Is the Future. Video Infrastructure Is a Nightmare.

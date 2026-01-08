@@ -212,9 +212,9 @@ import { datasets } from 'datasets.do'
 // Or use factory with custom config
 import { Datasets } from 'datasets.do'
 const customDatasets = Datasets({
-  baseURL: 'https://custom.example.com',
-  apiKey: 'your-api-key'
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from DATASETS_API_KEY or DO_API_KEY
 ```
 
 Set `DATASETS_API_KEY` or `DO_API_KEY` in your environment.

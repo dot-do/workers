@@ -6,6 +6,18 @@
 npm install page.as
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { page } from 'page.as'
+
+// Or use the factory for custom config
+import { Page } from 'page.as'
+const page = Page({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## Your Launch Is Waiting on a Landing Page

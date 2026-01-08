@@ -359,6 +359,22 @@ export const myworkflow = Workflow({
 - `wrangler` - Cloudflare CLI
 - `typescript` - Type checking
 
+## Secrets Management
+
+For local development, copy `.dev.vars.example` to `.dev.vars` and fill in your values:
+
+```bash
+cp .dev.vars.example .dev.vars
+```
+
+For production, use `wrangler secret put`:
+
+```bash
+wrangler secret put STRIPE_SECRET_KEY --env production
+```
+
+CI/CD uses GitHub Secrets with the `cloudflare/wrangler-action`. See `docs/SECRETS-MANAGEMENT.md` for full documentation.
+
 ## Beads Issue Tracking
 
 This project uses Beads for issue tracking:
@@ -380,6 +396,7 @@ bd sync --from-main   # Sync with main branch
 - `teams/README.md` - Teams documentation
 - `workflows/README.md` - Workflows documentation
 - `ARCHITECTURE.md` - Technical deep-dive
+- `docs/SECRETS-MANAGEMENT.md` - Secrets and environment variables
 
 ## The Hero
 

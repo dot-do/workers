@@ -153,6 +153,38 @@ await forms.addIntegration('job-applications', { type: 'airtable', config: {...}
 await forms.addIntegration('job-applications', { type: 'zapier', config: {...} })
 ```
 
+## Configuration
+
+### Environment Variables
+
+```bash
+# Primary API key (used by default)
+export DO_API_KEY="your-api-key"
+
+# Alternative: Organization API key
+export ORG_AI_API_KEY="your-org-key"
+```
+
+### Cloudflare Workers
+
+```typescript
+import 'rpc.do/env'
+import { forms } from 'forms.as'
+
+// Environment is automatically configured
+await forms.create({ name, title, fields })
+```
+
+### Custom Configuration
+
+```typescript
+import { Forms } from 'forms.as'
+
+const client = Forms({
+  baseURL: 'https://custom.example.com'
+})
+```
+
 ## Your Data Is Waiting
 
 Every form you haven't built is feedback you're not collecting. Customers you're not hearing. Insights you're missing.

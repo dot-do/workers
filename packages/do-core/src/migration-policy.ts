@@ -213,11 +213,20 @@ export class MigrationPolicyEngine {
    * Validate policy configuration
    */
   private validatePolicy(policy: MigrationPolicyConfig): void {
+    // Validate hotToWarm settings
     if (policy.hotToWarm.maxAge <= 0) {
       throw new Error('maxAge must be positive')
     }
     if (policy.hotToWarm.maxHotSizePercent < 0 || policy.hotToWarm.maxHotSizePercent > 100) {
       throw new Error('maxHotSizePercent must be between 0 and 100')
+    }
+
+    // Validate warmToCold settings
+    if (policy.warmToCold.maxAge <= 0) {
+      throw new Error('warmToCold.maxAge must be positive')
+    }
+    if (policy.warmToCold.minPartitionSize <= 0) {
+      throw new Error('warmToCold.minPartitionSize must be positive')
     }
   }
 

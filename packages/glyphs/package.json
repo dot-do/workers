@@ -1,0 +1,49 @@
+{
+  "name": "@dotdo/glyphs",
+  "version": "0.0.1",
+  "description": "A visual programming language embedded in TypeScript using CJK glyphs",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./invoke": {
+      "types": "./dist/invoke.d.ts",
+      "import": "./dist/invoke.js"
+    },
+    "./queue": {
+      "types": "./dist/queue.d.ts",
+      "import": "./dist/queue.js"
+    },
+    "./worker": {
+      "types": "./dist/worker.d.ts",
+      "import": "./dist/worker.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/invoke.ts src/queue.ts src/worker.ts --format esm --dts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.4"
+  },
+  "keywords": [
+    "glyphs",
+    "dsl",
+    "visual-programming",
+    "typescript",
+    "cjk"
+  ],
+  "license": "MIT",
+  "private": true
+}

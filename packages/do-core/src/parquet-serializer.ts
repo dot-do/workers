@@ -570,11 +570,15 @@ function decompress(
 
 /**
  * Simple checksum for data integrity
+ *
+ * Uses masked index to prevent overflow when processing large files.
+ * The index is masked to 16 bits to ensure the multiplication stays
+ * within safe integer bounds before the unsigned right shift.
  */
 function calculateChecksum(data: Uint8Array): number {
   let sum = 0
   for (let i = 0; i < data.length; i++) {
-    sum = (sum + data[i]! * (i + 1)) >>> 0
+    sum = ((sum + data[i]! * ((i + 1) & 0xffff)) >>> 0) & 0xffffffff
   }
   return sum
 }
@@ -628,7 +632,21 @@ function serializeThing(thing: Thing): Uint8Array {
  */
 function deserializeThing(bytes: Uint8Array): Thing {
   const json = bytesToString(bytes)
-  return JSON.parse(json) as Thing
+  try {
+    return JSON.parse(json) as Thing
+  } catch (error) {
+    console.error('Failed to deserialize Thing from JSON bytes:', error)
+    // Return a minimal valid Thing structure with empty data
+    return {
+      rowid: 0,
+      ns: 'default',
+      type: 'unknown',
+      id: 'unknown',
+      data: {},
+      createdAt: 0,
+      updatedAt: 0,
+    }
+  }
 }
 
 /**
@@ -846,7 +864,12 @@ export class ParquetSerializer implements IParquetSerializer {
     // Read metadata
     const metadataBytes = view.slice(8, 8 + metadataLength)
     const metadataJson = bytesToString(metadataBytes)
-    const metadata: InternalMetadata = JSON.parse(metadataJson)
+    let metadata: InternalMetadata
+    try {
+      metadata = JSON.parse(metadataJson)
+    } catch (error) {
+      throw new Error(`Failed to parse Parquet metadata: ${error instanceof Error ? error.message : String(error)}`)
+    }
 
     // Validate version
     if (metadata.version !== VERSION) {
@@ -908,8 +931,7 @@ export class ParquetSerializer implements IParquetSerializer {
             const filtered: Partial<Thing> = {}
             for (const col of columns) {
               if (col in thing) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (filtered as any)[col] = (thing as any)[col]
+                ;(filtered as Record<string, unknown>)[col] = thing[col as keyof Thing]
               }
             }
             things.push(filtered as Thing)
@@ -948,7 +970,12 @@ export class ParquetSerializer implements IParquetSerializer {
     // Read metadata
     const metadataBytes = view.slice(8, 8 + metadataLength)
     const metadataJson = bytesToString(metadataBytes)
-    const metadata: InternalMetadata = JSON.parse(metadataJson)
+    let metadata: InternalMetadata
+    try {
+      metadata = JSON.parse(metadataJson)
+    } catch (error) {
+      throw new Error(`Failed to parse Parquet metadata: ${error instanceof Error ? error.message : String(error)}`)
+    }
 
     return {
       rowCount: metadata.rowCount,

@@ -6,6 +6,18 @@
 npm install marketplace.as
 ```
 
+## Quick Start
+
+```typescript
+// Workers - import env adapter first
+import 'rpc.do/env'
+import { marketplace } from 'marketplace.as'
+
+// Or use the factory for custom config
+import { Marketplace } from 'marketplace.as'
+const marketplace = Marketplace({ baseURL: 'https://custom.example.com' })
+```
+
 ---
 
 ## You See the Marketplace Opportunity

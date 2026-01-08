@@ -1,254 +1,384 @@
 # fsx.do
 
-Filesystem on Cloudflare Durable Objects - A virtual filesystem for the edge.
+> Filesystem at the Edge. Natural Language. Tiered Storage. AI-Native.
 
-## Features
+Cloud storage vendors charge for egress, lock you into their APIs, and treat AI integration as an afterthought. Managing files across regions means complexity. Simple operations require SDKs, credentials, and configuration.
 
-- **POSIX-like API** - Familiar fs operations (read, write, mkdir, readdir, stat, etc.)
-- **Durable Object Storage** - SQLite-backed metadata with R2 blob storage
-- **MCP Tools** - Model Context Protocol integration for AI-assisted file operations
-- **Tiered Storage** - Hot/warm/cold storage tiers with automatic promotion
-  - Hot: Durable Object SQLite (low latency, small files)
-  - Warm: R2 object storage (large files, blobs)
-  - Cold: Archive storage (infrequent access)
-- **Streaming** - ReadableStream/WritableStream support for large files
-- **Permissions** - Unix-like permission model (rwx)
-- **Symbolic Links** - Symlink and hardlink support
-- **Watch** - File/directory change notifications
+**fsx.do** is the edge-native alternative. POSIX-like semantics. Durable Object storage. Talk to your filesystem like a colleague.
 
-## Installation
+## AI-Native API
 
-```bash
-npm install fsx.do
+```typescript
+import { fsx } from 'fsx.do'           // Full SDK
+import { fsx } from 'fsx.do/tiny'      // Minimal client
+import { fsx } from 'fsx.do/stream'    // Streaming-only operations
 ```
 
-## Quick Start
+Natural language for file operations:
 
-### Basic Operations
+```typescript
+import { fsx } from 'fsx.do'
+
+// Talk to it like a colleague
+const files = await fsx`typescript files in src modified today`
+const large = await fsx`files over 1MB in /uploads`
+const logs = await fsx`error logs from last hour`
+
+// Chain like sentences
+await fsx`watch /config.json`
+  .on('change', file => fsx`reload ${file}`)
+
+// Streaming that describes itself
+await fsx`stream /var/log/app.log`
+  .pipe(fsx`compress to /backups/app.log.gz`)
+```
+
+## The Problem
+
+Cloud storage is fragmented and complex:
+
+| What Cloud Vendors Charge | The Reality |
+|---------------------------|-------------|
+| **Egress Fees** | $0.09/GB (adds up fast) |
+| **API Calls** | $0.004 per 10,000 requests |
+| **Regional Complexity** | Multi-region = multi-config |
+| **AI Integration** | DIY with external services |
+| **Hot/Cold Management** | Manual lifecycle policies |
+
+### The Egress Tax
+
+Every time data leaves the cloud:
+- File downloads cost money
+- API responses cost money
+- Backups cost money
+- Analytics cost money
+
+Edge-native means data stays close to users. No egress.
+
+### The Complexity Tax
+
+Simple file operations require:
+- SDK installation and configuration
+- Credential management
+- Region selection
+- Error handling boilerplate
+- Retry logic
+
+A `readFile` shouldn't require 50 lines of setup.
+
+## The Solution
+
+**fsx.do** reimagines filesystems for the edge:
+
+```
+Cloud Storage                   fsx.do
+-----------------------------------------------------------------
+Egress fees                     Edge-native (no egress)
+Multi-region complexity         Global by default
+Manual lifecycle policies       Automatic tiered storage
+SDK boilerplate                 Natural language
+External AI integration         AI-native from day one
+Vendor lock-in                  POSIX-like, portable
+```
+
+## One-Click Deploy
+
+```bash
+npx create-dotdo fsx
+```
+
+A virtual filesystem. Running at the edge. Tiered storage automatic from day one.
 
 ```typescript
 import { FSx } from 'fsx.do'
 
-const fs = new FSx(env.FSX)
+export default FSx({
+  name: 'my-filesystem',
+  domain: 'files.myapp.com',
+  tiers: {
+    hot: 'sqlite',    // Fast access
+    warm: 'r2',       // Large files
+    cold: 'archive',  // Long-term retention
+  },
+})
+```
 
-// Write a file
-await fs.writeFile('/hello.txt', 'Hello, World!')
+## Features
 
-// Read a file
-const content = await fs.readFile('/hello.txt', 'utf-8')
+### File Operations
 
-// Create directory
-await fs.mkdir('/my-folder', { recursive: true })
+```typescript
+// Just say what you need
+const content = await fsx`read /hello.txt`
+const readme = await fsx`show me the readme`
+const config = await fsx`what's in config.json`
 
-// List directory
-const entries = await fs.readdir('/my-folder')
+// Write naturally
+await fsx`write "Hello, World!" to /hello.txt`
+await fsx`save ${data} as /output.json`
 
-// Get file stats
-const stats = await fs.stat('/hello.txt')
-console.log(`Size: ${stats.size}, Modified: ${stats.mtime}`)
+// Copy, move, delete
+await fsx`copy /src/file.ts to /backup/`
+await fsx`move /old to /archive`
+await fsx`delete /tmp/cache`
+```
 
-// Delete file
-await fs.unlink('/hello.txt')
+### Directory Operations
+
+```typescript
+// List and explore
+const entries = await fsx`list /my-folder`
+const tree = await fsx`show /src tree structure`
+const nested = await fsx`everything in /project recursively`
+
+// Create and remove
+await fsx`create directory /my-folder`
+await fsx`make /a/b/c/d recursively`
+await fsx`remove /old-folder and all contents`
+```
+
+### Finding Files
+
+```typescript
+// Natural queries
+const ts = await fsx`typescript files in /src`
+const recent = await fsx`files modified in the last hour`
+const large = await fsx`files larger than 10MB`
+const logs = await fsx`log files containing "error"`
+
+// Combine naturally
+const criticalLogs = await fsx`error logs from today over 1KB`
 ```
 
 ### Streaming Large Files
 
 ```typescript
-import { FSx } from 'fsx.do'
-
-const fs = new FSx(env.FSX)
-
-// Write stream
-const writable = await fs.createWriteStream('/large-file.bin')
-await someReadableStream.pipeTo(writable)
-
-// Read stream
-const readable = await fs.createReadStream('/large-file.bin')
-for await (const chunk of readable) {
-  process.stdout.write(chunk)
-}
+// Stream naturally
+await fsx`stream /large-file.bin`
+  .pipe(response)
 
 // Partial reads
-const partial = await fs.createReadStream('/large-file.bin', {
-  start: 1000,
-  end: 2000
-})
+const chunk = await fsx`bytes 1000-2000 of /large-file.bin`
+
+// Upload with streaming
+await fsx`stream upload to /large-file.bin`
+  .from(request.body)
 ```
 
 ### File Watching
 
 ```typescript
-import { FSx } from 'fsx.do'
+// Watch like you'd ask someone to
+await fsx`watch /config.json`
+  .on('change', () => fsx`reload config`)
 
-const fs = new FSx(env.FSX)
+// Watch directories
+await fsx`watch /src for changes`
+  .on('change', file => fsx`rebuild ${file}`)
 
-// Watch a file
-const watcher = fs.watch('/config.json', (eventType, filename) => {
-  console.log(`${eventType}: ${filename}`)
-})
-
-// Watch a directory recursively
-const dirWatcher = fs.watch('/src', { recursive: true }, (eventType, filename) => {
-  console.log(`${eventType}: ${filename}`)
-})
-
-// Stop watching
-watcher.close()
-```
-
-### MCP Tools
-
-```typescript
-import { fsTools, invokeTool } from 'fsx.do/mcp'
-
-// List available fs tools
-console.log(fsTools.map(t => t.name))
-// ['fs_read', 'fs_write', 'fs_list', 'fs_mkdir', 'fs_delete', 'fs_move', 'fs_copy', ...]
-
-// Invoke a tool
-const result = await invokeTool('fs_list', { path: '/src', recursive: true })
-
-// Read file tool
-const content = await invokeTool('fs_read', { path: '/README.md' })
-
-// Search files
-const matches = await invokeTool('fs_search', {
-  path: '/src',
-  pattern: '*.ts',
-  content: 'export function'
-})
-```
-
-### Durable Object
-
-```typescript
-import { FileSystemDO } from 'fsx.do/do'
-
-// In your worker
-export { FileSystemDO }
-
-export default {
-  async fetch(request, env) {
-    const id = env.FSX.idFromName('user-123')
-    const stub = env.FSX.get(id)
-    return stub.fetch(request)
-  }
-}
+// Recursive watching
+await fsx`watch /project recursively`
+  .on('add', file => console.log(`New: ${file}`))
+  .on('remove', file => console.log(`Gone: ${file}`))
 ```
 
 ### Tiered Storage
 
 ```typescript
-import { TieredFS } from 'fsx.do/storage'
+// Storage tier is automatic based on:
+// - File size (small = hot, large = warm)
+// - Access frequency (frequent = promote, rare = demote)
+// - Age (old = cold)
 
-const fs = new TieredFS({
-  hot: env.FSX,           // Durable Object (fast, small files)
-  warm: env.R2_BUCKET,    // R2 (large files)
-  cold: env.ARCHIVE,      // Archive (infrequent)
-  thresholds: {
-    hotMaxSize: 1024 * 1024,      // 1MB
-    warmMaxSize: 100 * 1024 * 1024 // 100MB
-  }
-})
+await fsx`write ${smallConfig} to /config.json`     // -> hot tier (SQLite)
+await fsx`upload ${hugeVideo} to /videos/raw.mp4`   // -> warm tier (R2)
 
-// Automatic tier selection based on file size
-await fs.writeFile('/small.txt', 'small content')      // -> hot tier
-await fs.writeFile('/large.bin', hugeBuffer)           // -> warm tier
+// Query by tier
+const archived = await fsx`files in cold storage`
+const active = await fsx`hot tier files accessed today`
+
+// Manual tier control when needed
+await fsx`move /old-logs to cold storage`
+await fsx`promote /important.db to hot tier`
 ```
 
-## API Overview
+### Permissions
 
-### Core Module (`fsx.do/core`)
+```typescript
+// Unix-like permissions, natural language
+await fsx`make /script.sh executable`
+await fsx`set /private read-only`
+await fsx`allow group write on /shared`
 
-**File Operations**
-- `readFile(path, encoding?)` - Read file contents
-- `writeFile(path, data, options?)` - Write file contents
-- `appendFile(path, data)` - Append to file
-- `unlink(path)` - Delete file
-- `rename(oldPath, newPath)` - Rename/move file
-- `copyFile(src, dest)` - Copy file
+// Check access
+const canWrite = await fsx`can I write to /protected?`
+```
 
-**Directory Operations**
-- `mkdir(path, options?)` - Create directory
-- `rmdir(path, options?)` - Remove directory
-- `readdir(path, options?)` - List directory contents
+### Links
 
-**Metadata**
-- `stat(path)` - Get file/directory stats
-- `lstat(path)` - Get stats (don't follow symlinks)
-- `access(path, mode?)` - Check file access
-- `chmod(path, mode)` - Change permissions
-- `chown(path, uid, gid)` - Change ownership
+```typescript
+// Symlinks and hardlinks
+await fsx`link /current to /releases/v2.0`
+await fsx`symlink /latest to /versions/newest`
 
-**Links**
-- `symlink(target, path)` - Create symbolic link
-- `link(existingPath, newPath)` - Create hard link
-- `readlink(path)` - Read symbolic link target
-- `realpath(path)` - Resolve path (follow symlinks)
+// Resolve links
+const target = await fsx`where does /current point?`
+const real = await fsx`real path of /symlinked/file.txt`
+```
 
-**Streams**
-- `createReadStream(path, options?)` - Get readable stream
-- `createWriteStream(path, options?)` - Get writable stream
+## MCP Tools
 
-**Watching**
-- `watch(path, options?, listener?)` - Watch for changes
-- `watchFile(path, options?, listener?)` - Watch specific file
+AI assistants can work with your filesystem:
 
-### MCP Tools (`fsx.do/mcp`)
+```typescript
+import { fsx } from 'fsx.do/mcp'
 
-- `fsTools` - Array of available filesystem tool definitions
-- `invokeTool(name, params)` - Execute a tool by name
-- `registerTool(tool)` - Add a custom tool
+// Available as MCP tools
+// fs_read, fs_write, fs_list, fs_search, fs_move, fs_copy, fs_delete...
 
-### Durable Object (`fsx.do/do`)
+// AI can use these naturally
+await fsx`find all TODO comments in typescript files`
+await fsx`search for "deprecated" in /src`
+await fsx`what files changed since yesterday?`
+```
 
-- `FileSystemDO` - Main Durable Object class
-- Handles all filesystem operations via fetch API
+## Architecture
 
-### Storage (`fsx.do/storage`)
+### Durable Object per Filesystem
 
-- `TieredFS` - Multi-tier filesystem with automatic placement
-- `R2Storage` - R2-backed blob storage
-- `SQLiteMetadata` - SQLite-backed metadata store
+```
+FileSystemDO (config, metadata index)
+  |
+  +-- HotTier: SQLite
+  |     |-- Small files (<1MB)
+  |     +-- Frequently accessed
+  |
+  +-- WarmTier: R2
+  |     |-- Large files (1MB-100MB)
+  |     +-- Standard access patterns
+  |
+  +-- ColdTier: R2 Archive
+        |-- Rarely accessed
+        +-- Long-term retention
+```
+
+### Storage Tiers
+
+| Tier | Storage | Use Case | Latency |
+|------|---------|----------|---------|
+| **Hot** | SQLite | Small files, config, metadata | <10ms |
+| **Warm** | R2 | Large files, media, logs | <100ms |
+| **Cold** | R2 Archive | Backups, compliance, historical | <1s |
+
+### Automatic Tier Management
+
+```typescript
+// fsx.do automatically manages tiers:
+// - New small files -> hot
+// - Large files -> warm
+// - Untouched for 30 days -> cold
+// - Accessed from cold -> promote to warm
+
+// Override defaults per-filesystem
+export default FSx({
+  tiers: {
+    hotMaxSize: '2MB',        // Larger hot tier
+    warmToClodAge: '90 days', // Slower cold transition
+    autoPromote: true,        // Promote on access
+  },
+})
+```
 
 ## File System Structure
 
 ```
 /
 ├── .fsx/                 # System directory
-│   ├── metadata.db       # SQLite metadata
+│   ├── metadata.db       # SQLite index
 │   └── config.json       # FS configuration
 ├── home/
 │   └── user/
 │       ├── documents/
 │       └── .config/
-└── tmp/                  # Temporary files (auto-cleanup)
+└── tmp/                  # Temporary (auto-cleanup)
 ```
 
-## Configuration
+## vs Cloud Storage
+
+| Feature | S3/GCS/Azure | fsx.do |
+|---------|--------------|--------|
+| **Egress** | $0.09/GB | $0 (edge-native) |
+| **Latency** | Region-bound | Global edge |
+| **API** | SDK required | Natural language |
+| **Tiering** | Manual policies | Automatic |
+| **AI Integration** | External | MCP native |
+| **File Operations** | Object-based | POSIX-like |
+| **Streaming** | Multipart complexity | Native streams |
+
+## Use Cases
+
+### Config Management
 
 ```typescript
-const fs = new FSx(env.FSX, {
-  // Storage tiers
-  tiers: {
-    hotMaxSize: 1024 * 1024,        // 1MB
-    warmEnabled: true,
-    coldEnabled: false,
-  },
+// Watch and reload
+await fsx`watch /config.json`
+  .on('change', () => fsx`reload config and restart workers`)
+```
 
-  // Permissions
-  defaultMode: 0o644,               // rw-r--r--
-  defaultDirMode: 0o755,            // rwxr-xr-x
+### Log Aggregation
 
-  // Cleanup
-  tmpMaxAge: 24 * 60 * 60 * 1000,   // 24 hours
+```typescript
+// Tail logs across services
+await fsx`tail /var/log/*.log`
+  .pipe(fsx`stream to /aggregated/all.log`)
 
-  // Limits
-  maxFileSize: 100 * 1024 * 1024,   // 100MB
-  maxPathLength: 4096,
-})
+// Archive old logs
+await fsx`logs older than 7 days`
+  .each(log => fsx`compress ${log} to cold storage`)
+```
+
+### Asset Pipeline
+
+```typescript
+// Process uploads
+await fsx`watch /uploads for new images`
+  .on('add', img => fsx`resize ${img} to /thumbnails`)
+```
+
+### Backup and Sync
+
+```typescript
+// Sync directories
+await fsx`sync /local to /backup`
+
+// Incremental backup
+await fsx`files changed since last backup`
+  .each(file => fsx`copy ${file} to /backup`)
+```
+
+## SDK Entry Points
+
+```typescript
+import { fsx } from 'fsx.do'            // Full featured
+import { fsx } from 'fsx.do/tiny'       // Minimal, no deps
+import { fsx } from 'fsx.do/stream'     // Streaming only
+import { fsx } from 'fsx.do/mcp'        // MCP tools
+import { fsx } from 'fsx.do/do'         // Durable Object class
 ```
 
 ## License
 
 MIT
+
+---
+
+<p align="center">
+  <strong>Files at the edge. Natural as speech.</strong>
+  <br />
+  POSIX-like. Tiered storage. AI-native.
+  <br /><br />
+  <a href="https://fsx.do">Website</a> |
+  <a href="https://docs.fsx.do">Docs</a> |
+  <a href="https://discord.gg/dotdo">Discord</a> |
+  <a href="https://github.com/dotdo/fsx.do">GitHub</a>
+</p>

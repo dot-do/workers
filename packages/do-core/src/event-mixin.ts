@@ -361,15 +361,36 @@ export function applyEventMixin<TBase extends Constructor<EventMixinBase>>(
         metadata: string | null
       }>(query, ...params)
 
-      let events = result.toArray().map((row) => ({
-        id: row.id,
-        streamId: row.stream_id,
-        type: row.type,
-        data: JSON.parse(row.data) as T,
-        version: row.version,
-        timestamp: row.timestamp,
-        metadata: row.metadata ? JSON.parse(row.metadata) : undefined,
-      }))
+      let events = result.toArray().map((row) => {
+        let data: T
+        let metadata: Record<string, unknown> | undefined
+
+        try {
+          data = JSON.parse(row.data) as T
+        } catch (error) {
+          console.error(`Failed to parse event data for event ${row.id}:`, error)
+          data = {} as T
+        }
+
+        if (row.metadata) {
+          try {
+            metadata = JSON.parse(row.metadata)
+          } catch (error) {
+            console.error(`Failed to parse event metadata for event ${row.id}:`, error)
+            metadata = undefined
+          }
+        }
+
+        return {
+          id: row.id,
+          streamId: row.stream_id,
+          type: row.type,
+          data,
+          version: row.version,
+          timestamp: row.timestamp,
+          metadata,
+        }
+      })
 
       // Apply limit in JavaScript as well (for mock compatibility)
       // Real SQL already applies LIMIT, so this is a no-op in production

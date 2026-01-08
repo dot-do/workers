@@ -1,5 +1,5 @@
 /**
- * RED Phase Tests: JWKS Cache Memory Isolation
+ * GREEN Phase Tests: JWKS Cache Memory Isolation
  *
  * These tests verify that the JWKS (JSON Web Key Set) cache:
  * 1. Has proper TTL (Time-To-Live) for cache entries
@@ -7,39 +7,22 @@
  * 3. Maintains memory isolation between different tenants/DO instances
  * 4. Does not grow unbounded across multiple DO instances
  *
- * Issue: workers-vfkb
- * Status: RED - Tests should fail until implementation is complete
+ * Issue: workers-28tp (fix), workers-vfkb (original)
+ * Status: GREEN - Implementation complete
  *
- * The current JWKS cache uses a module-level Map which persists across
- * Durable Object instances, causing memory leaks and potential security
- * issues (cache entries from one tenant being accessible to another).
+ * The JWKS cache now uses a factory pattern with instance-isolated caches
+ * to prevent memory leaks and security issues between Durable Object instances.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-
-// Types for the JWKS cache module (to be implemented)
-interface JWKSCacheEntry {
-  keys: JsonWebKey[]
-  fetchedAt: number
-  expiresAt: number
-}
-
-interface JWKSCache {
-  get(uri: string): JWKSCacheEntry | undefined
-  set(uri: string, entry: JWKSCacheEntry): void
-  delete(uri: string): boolean
-  clear(): void
-  size(): number
-  cleanup(): void
-}
-
-interface JWKSCacheFactory {
-  createCache(instanceId: string): JWKSCache
-  getInstanceCache(instanceId: string): JWKSCache | undefined
-  destroyInstanceCache(instanceId: string): void
-  getAllInstanceIds(): string[]
-  getTotalCacheSize(): number
-}
+import {
+  createJWKSCacheFactory,
+  type JWKSCache,
+  type JWKSCacheFactory,
+  type JWKSCacheEntry,
+  type JWKSCacheMetrics,
+  type JWKSCacheAggregateMetrics,
+} from '../src/jwks-cache'
 
 // Mock JWKS response for testing
 const createMockJWKS = (keyId: string): JsonWebKey[] => [
@@ -54,16 +37,11 @@ const createMockJWKS = (keyId: string): JsonWebKey[] => [
 ]
 
 describe('JWKS Cache Memory Isolation', () => {
-  // These will be imported from the actual implementation once available
-  // For now, we're defining the expected interface
   let cacheFactory: JWKSCacheFactory
 
   beforeEach(() => {
     vi.useFakeTimers()
-    // In the GREEN phase, this will import from the actual implementation:
-    // cacheFactory = createJWKSCacheFactory()
-    // For RED phase, we expect this to be undefined/throw
-    cacheFactory = undefined as unknown as JWKSCacheFactory
+    cacheFactory = createJWKSCacheFactory()
   })
 
   afterEach(() => {
@@ -221,8 +199,13 @@ describe('JWKS Cache Memory Isolation', () => {
     })
 
     it('should not leak memory with many expired entries', () => {
+      // Create a factory with large enough limits for this test
+      const largeFactory = createJWKSCacheFactory({
+        maxEntriesPerInstance: 2000,
+        maxTotalEntries: 5000,
+      })
       const SHORT_TTL_MS = 60000 // 1 minute
-      const cache = cacheFactory.createCache('instance-memory')
+      const cache = largeFactory.createCache('instance-memory')
 
       const now = Date.now()
 
@@ -388,7 +371,12 @@ describe('JWKS Cache Memory Isolation', () => {
 
     it('should use LRU eviction when cache is full', () => {
       const MAX_ENTRIES = 5
-      const cache = cacheFactory.createCache('lru-test')
+      // Create a factory with a small cache limit for this test
+      const smallFactory = createJWKSCacheFactory({
+        maxEntriesPerInstance: MAX_ENTRIES,
+        maxTotalEntries: 1000,
+      })
+      const cache = smallFactory.createCache('lru-test')
 
       const now = Date.now()
 
@@ -514,6 +502,309 @@ describe('JWKS Cache Memory Isolation', () => {
       // The last write should win
       const entry = cache.get('https://concurrent.example.com/jwks.json')
       expect(entry).toBeDefined()
+    })
+  })
+
+  describe('Cache Metrics (REFACTOR: workers-9bpz)', () => {
+    it('should track cache hits and misses', () => {
+      const cache = cacheFactory.createCache('metrics-hit-miss')
+      const now = Date.now()
+
+      // Initial metrics should be zero
+      let metrics = cache.getMetrics()
+      expect(metrics.hits).toBe(0)
+      expect(metrics.misses).toBe(0)
+      expect(metrics.hitRate).toBe(0)
+
+      // Miss: entry doesn't exist
+      cache.get('https://nonexistent.example.com/jwks.json')
+      metrics = cache.getMetrics()
+      expect(metrics.misses).toBe(1)
+      expect(metrics.hits).toBe(0)
+
+      // Add an entry
+      cache.set('https://auth.example.com/jwks.json', {
+        keys: createMockJWKS('key-1'),
+        fetchedAt: now,
+        expiresAt: now + 3600000,
+      })
+
+      // Hit: entry exists
+      cache.get('https://auth.example.com/jwks.json')
+      metrics = cache.getMetrics()
+      expect(metrics.hits).toBe(1)
+      expect(metrics.misses).toBe(1)
+      expect(metrics.hitRate).toBe(0.5) // 1 hit / 2 total lookups
+
+      // Another hit
+      cache.get('https://auth.example.com/jwks.json')
+      metrics = cache.getMetrics()
+      expect(metrics.hits).toBe(2)
+      expect(metrics.hitRate).toBeCloseTo(0.667, 2) // 2 hits / 3 total lookups
+    })
+
+    it('should track set and delete operations', () => {
+      const cache = cacheFactory.createCache('metrics-set-delete')
+      const now = Date.now()
+
+      cache.set('https://uri1.example.com/jwks.json', {
+        keys: createMockJWKS('key-1'),
+        fetchedAt: now,
+        expiresAt: now + 3600000,
+      })
+
+      cache.set('https://uri2.example.com/jwks.json', {
+        keys: createMockJWKS('key-2'),
+        fetchedAt: now,
+        expiresAt: now + 3600000,
+      })
+
+      let metrics = cache.getMetrics()
+      expect(metrics.sets).toBe(2)
+      expect(metrics.deletes).toBe(0)
+
+      cache.delete('https://uri1.example.com/jwks.json')
+      metrics = cache.getMetrics()
+      expect(metrics.deletes).toBe(1)
+
+      // Updating existing entry still counts as a set
+      cache.set('https://uri2.example.com/jwks.json', {
+        keys: createMockJWKS('key-2-updated'),
+        fetchedAt: now,
+        expiresAt: now + 3600000,
+      })
+      metrics = cache.getMetrics()
+      expect(metrics.sets).toBe(3)
+    })
+
+    it('should track expirations', () => {
+      const cache = cacheFactory.createCache('metrics-expirations')
+      const SHORT_TTL = 1000
+      const now = Date.now()
+
+      cache.set('https://short-lived.example.com/jwks.json', {
+        keys: createMockJWKS('key-short'),
+        fetchedAt: now,
+        expiresAt: now + SHORT_TTL,
+      })
+
+      let metrics = cache.getMetrics()
+      expect(metrics.expirations).toBe(0)
+
+      // Advance time past expiration
+      vi.advanceTimersByTime(SHORT_TTL + 1)
+
+      // Access the entry - should trigger expiration
+      const entry = cache.get('https://short-lived.example.com/jwks.json')
+      expect(entry).toBeUndefined()
+
+      metrics = cache.getMetrics()
+      expect(metrics.expirations).toBe(1)
+      expect(metrics.misses).toBe(1) // Expired entries count as misses
+    })
+
+    it('should track expirations during cleanup()', () => {
+      const cache = cacheFactory.createCache('metrics-cleanup-expirations')
+      const now = Date.now()
+
+      // Add multiple entries with short TTL
+      for (let i = 0; i < 5; i++) {
+        cache.set(`https://auth${i}.example.com/jwks.json`, {
+          keys: createMockJWKS(`key-${i}`),
+          fetchedAt: now,
+          expiresAt: now + 1000,
+        })
+      }
+
+      // Advance time past expiration
+      vi.advanceTimersByTime(1001)
+
+      // Cleanup should expire all entries
+      cache.cleanup()
+
+      const metrics = cache.getMetrics()
+      expect(metrics.expirations).toBe(5)
+    })
+
+    it('should track evictions when cache limit is reached', () => {
+      const smallFactory = createJWKSCacheFactory({
+        maxEntriesPerInstance: 3,
+        maxTotalEntries: 1000,
+      })
+      const cache = smallFactory.createCache('metrics-evictions')
+      const now = Date.now()
+
+      // Fill cache to limit
+      for (let i = 0; i < 3; i++) {
+        cache.set(`https://auth${i}.example.com/jwks.json`, {
+          keys: createMockJWKS(`key-${i}`),
+          fetchedAt: now,
+          expiresAt: now + 3600000,
+        })
+        vi.advanceTimersByTime(100)
+      }
+
+      let metrics = cache.getMetrics()
+      expect(metrics.evictions).toBe(0)
+
+      // Add one more - should trigger eviction
+      cache.set('https://auth-new.example.com/jwks.json', {
+        keys: createMockJWKS('key-new'),
+        fetchedAt: Date.now(),
+        expiresAt: Date.now() + 3600000,
+      })
+
+      metrics = cache.getMetrics()
+      expect(metrics.evictions).toBe(1)
+      expect(cache.size()).toBe(3) // Still at limit
+    })
+
+    it('should reset metrics', () => {
+      const cache = cacheFactory.createCache('metrics-reset')
+      const now = Date.now()
+
+      cache.set('https://auth.example.com/jwks.json', {
+        keys: createMockJWKS('key-1'),
+        fetchedAt: now,
+        expiresAt: now + 3600000,
+      })
+      cache.get('https://auth.example.com/jwks.json')
+      cache.get('https://nonexistent.example.com/jwks.json')
+
+      let metrics = cache.getMetrics()
+      expect(metrics.sets).toBe(1)
+      expect(metrics.hits).toBe(1)
+      expect(metrics.misses).toBe(1)
+
+      cache.resetMetrics()
+
+      metrics = cache.getMetrics()
+      expect(metrics.sets).toBe(0)
+      expect(metrics.hits).toBe(0)
+      expect(metrics.misses).toBe(0)
+      expect(metrics.evictions).toBe(0)
+      expect(metrics.expirations).toBe(0)
+      expect(metrics.deletes).toBe(0)
+      expect(metrics.hitRate).toBe(0)
+    })
+
+    it('should provide aggregate metrics across all instances', () => {
+      const cache1 = cacheFactory.createCache('metrics-aggregate-1')
+      const cache2 = cacheFactory.createCache('metrics-aggregate-2')
+      const now = Date.now()
+
+      // Add entries and access them
+      cache1.set('https://auth1.example.com/jwks.json', {
+        keys: createMockJWKS('key-1'),
+        fetchedAt: now,
+        expiresAt: now + 3600000,
+      })
+      cache1.get('https://auth1.example.com/jwks.json') // Hit
+      cache1.get('https://nonexistent.example.com/jwks.json') // Miss
+
+      cache2.set('https://auth2a.example.com/jwks.json', {
+        keys: createMockJWKS('key-2a'),
+        fetchedAt: now,
+        expiresAt: now + 3600000,
+      })
+      cache2.set('https://auth2b.example.com/jwks.json', {
+        keys: createMockJWKS('key-2b'),
+        fetchedAt: now,
+        expiresAt: now + 3600000,
+      })
+      cache2.get('https://auth2a.example.com/jwks.json') // Hit
+      cache2.get('https://auth2b.example.com/jwks.json') // Hit
+
+      const aggregateMetrics = cacheFactory.getAggregateMetrics()
+
+      expect(aggregateMetrics.instanceCount).toBe(2)
+      expect(aggregateMetrics.totalEntries).toBe(3)
+      expect(aggregateMetrics.sets).toBe(3)
+      expect(aggregateMetrics.hits).toBe(3) // 1 from cache1 + 2 from cache2
+      expect(aggregateMetrics.misses).toBe(1) // 1 from cache1
+      expect(aggregateMetrics.hitRate).toBe(0.75) // 3 hits / 4 total lookups
+
+      // Check per-instance breakdown
+      expect(aggregateMetrics.byInstance.size).toBe(2)
+
+      const cache1Metrics = aggregateMetrics.byInstance.get('metrics-aggregate-1')
+      expect(cache1Metrics?.hits).toBe(1)
+      expect(cache1Metrics?.misses).toBe(1)
+      expect(cache1Metrics?.sets).toBe(1)
+
+      const cache2Metrics = aggregateMetrics.byInstance.get('metrics-aggregate-2')
+      expect(cache2Metrics?.hits).toBe(2)
+      expect(cache2Metrics?.misses).toBe(0)
+      expect(cache2Metrics?.sets).toBe(2)
+    })
+
+    it('should reset all metrics across instances', () => {
+      const cache1 = cacheFactory.createCache('metrics-reset-all-1')
+      const cache2 = cacheFactory.createCache('metrics-reset-all-2')
+      const now = Date.now()
+
+      cache1.set('https://auth1.example.com/jwks.json', {
+        keys: createMockJWKS('key-1'),
+        fetchedAt: now,
+        expiresAt: now + 3600000,
+      })
+      cache2.set('https://auth2.example.com/jwks.json', {
+        keys: createMockJWKS('key-2'),
+        fetchedAt: now,
+        expiresAt: now + 3600000,
+      })
+
+      cache1.get('https://auth1.example.com/jwks.json')
+      cache2.get('https://auth2.example.com/jwks.json')
+
+      let aggregateMetrics = cacheFactory.getAggregateMetrics()
+      expect(aggregateMetrics.hits).toBe(2)
+      expect(aggregateMetrics.sets).toBe(2)
+
+      cacheFactory.resetAllMetrics()
+
+      aggregateMetrics = cacheFactory.getAggregateMetrics()
+      expect(aggregateMetrics.hits).toBe(0)
+      expect(aggregateMetrics.misses).toBe(0)
+      expect(aggregateMetrics.sets).toBe(0)
+      expect(aggregateMetrics.evictions).toBe(0)
+      expect(aggregateMetrics.expirations).toBe(0)
+      expect(aggregateMetrics.deletes).toBe(0)
+      expect(aggregateMetrics.hitRate).toBe(0)
+
+      // Entries should still exist (only metrics are reset)
+      expect(cache1.size()).toBe(1)
+      expect(cache2.size()).toBe(1)
+    })
+
+    it('should calculate correct hit rate with edge cases', () => {
+      const cache = cacheFactory.createCache('metrics-hitrate-edge')
+
+      // No lookups - hitRate should be 0 (not NaN)
+      let metrics = cache.getMetrics()
+      expect(metrics.hitRate).toBe(0)
+      expect(Number.isNaN(metrics.hitRate)).toBe(false)
+
+      // All misses - hitRate should be 0
+      cache.get('https://miss1.example.com/jwks.json')
+      cache.get('https://miss2.example.com/jwks.json')
+      metrics = cache.getMetrics()
+      expect(metrics.hitRate).toBe(0)
+
+      // Add entry and hit it
+      const now = Date.now()
+      cache.set('https://hit.example.com/jwks.json', {
+        keys: createMockJWKS('key-hit'),
+        fetchedAt: now,
+        expiresAt: now + 3600000,
+      })
+      cache.get('https://hit.example.com/jwks.json')
+      cache.get('https://hit.example.com/jwks.json')
+      cache.get('https://hit.example.com/jwks.json')
+
+      // 3 hits, 2 misses = 60% hit rate
+      metrics = cache.getMetrics()
+      expect(metrics.hitRate).toBe(0.6)
     })
   })
 })

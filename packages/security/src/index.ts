@@ -7,6 +7,9 @@ export * from './xss'
 // Re-export Prototype Pollution prevention utilities
 export * from './prototype-pollution'
 
+// Re-export Bounded collections for memory-safe branded type tracking
+export * from './bounded-set'
+
 /**
  * Result of SQL injection detection
  */

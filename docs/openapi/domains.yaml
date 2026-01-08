@@ -1,0 +1,547 @@
+openapi: 3.0.3
+info:
+  title: builder.domains API
+  description: |
+    Free Domains API for the workers.do platform.
+
+    Provides free domain management for builders:
+    - Domain claiming for free TLDs (hq.com.ai, app.net.ai, api.net.ai, hq.sb, io.sb, llc.st)
+    - Domain routing to workers
+    - Domain listing per organization
+    - Validation of domain formats
+  version: 1.0.0
+  contact:
+    name: workers.do Support
+    url: https://workers.do
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://builder.domains
+    description: Production server
+  - url: http://localhost:8787
+    description: Local development
+
+tags:
+  - name: Discovery
+    description: API discovery
+  - name: Domains
+    description: Domain management
+  - name: Routing
+    description: Domain routing
+  - name: Validation
+    description: Domain validation
+  - name: RPC
+    description: JSON-RPC interface
+
+paths:
+  /:
+    get:
+      summary: API Discovery
+      description: Returns HATEOAS discovery information including available free TLDs
+      operationId: discovery
+      tags:
+        - Discovery
+      responses:
+        '200':
+          description: Discovery information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryResponse'
+              example:
+                api: builder.domains
+                version: 1.0.0
+                links:
+                  self: /
+                  rpc: /rpc
+                  batch: /rpc/batch
+                  domains: /api/domains
+                discover:
+                  tlds:
+                    - hq.com.ai
+                    - app.net.ai
+                    - api.net.ai
+                    - hq.sb
+                    - io.sb
+                    - llc.st
+                  methods:
+                    - name: claim
+                      description: Claim a domain for an organization
+
+  /api/domains:
+    get:
+      summary: List Domains
+      description: List domains for an organization
+      operationId: listDomains
+      tags:
+        - Domains
+      parameters:
+        - name: orgId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Organization ID
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/DomainStatus'
+        - name: tld
+          in: query
+          schema:
+            type: string
+          description: Filter by TLD
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of domains
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DomainRecord'
+        '400':
+          description: Missing orgId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Claim Domain
+      description: Claim a free domain for an organization
+      operationId: claimDomain
+      tags:
+        - Domains
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - domain
+                - orgId
+              properties:
+                domain:
+                  type: string
+                  description: Full domain name (e.g., my-startup.hq.com.ai)
+                  example: my-startup.hq.com.ai
+                orgId:
+                  type: string
+                  description: Organization ID
+            examples:
+              hq:
+                summary: HQ domain
+                value:
+                  domain: my-startup.hq.com.ai
+                  orgId: org-123
+              app:
+                summary: App domain
+                value:
+                  domain: myapp.app.net.ai
+                  orgId: org-123
+              api:
+                summary: API domain
+                value:
+                  domain: api.api.net.ai
+                  orgId: org-123
+      responses:
+        '201':
+          description: Domain claimed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainRecord'
+        '400':
+          description: Invalid domain or already claimed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid:
+                  summary: Invalid domain format
+                  value:
+                    error: Invalid domain format
+                claimed:
+                  summary: Already claimed
+                  value:
+                    error: Domain already claimed
+                premium:
+                  summary: Premium TLD
+                  value:
+                    error: Premium domain - upgrade required to use custom or premium TLDs
+
+  /api/domains/{domain}:
+    get:
+      summary: Get Domain
+      description: Get domain details
+      operationId: getDomain
+      tags:
+        - Domains
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Full domain name
+      responses:
+        '200':
+          description: Domain details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainRecord'
+        '404':
+          description: Domain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Release Domain
+      description: Release a claimed domain
+      operationId: releaseDomain
+      tags:
+        - Domains
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Org-ID
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Organization ID for authorization
+      responses:
+        '200':
+          description: Domain released
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '403':
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Domain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/domains/{domain}/route:
+    put:
+      summary: Route Domain
+      description: Route a domain to a worker
+      operationId: routeDomain
+      tags:
+        - Routing
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Org-ID
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteConfig'
+            example:
+              worker: my-api-worker
+      responses:
+        '200':
+          description: Domain routed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainRecord'
+        '400':
+          description: Invalid worker configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Domain not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Unroute Domain
+      description: Remove routing from a domain
+      operationId: unrouteDomain
+      tags:
+        - Routing
+      parameters:
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: X-Org-ID
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Routing removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainRecord'
+
+  /rpc:
+    post:
+      summary: RPC Endpoint
+      description: Execute RPC method calls
+      operationId: rpc
+      tags:
+        - RPC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RPCRequest'
+            examples:
+              claim:
+                summary: Claim a domain
+                value:
+                  method: claim
+                  params: ["my-startup.hq.com.ai", "org-123"]
+              validate:
+                summary: Validate domain
+                value:
+                  method: isValidDomain
+                  params: ["my-startup.hq.com.ai"]
+              extractTLD:
+                summary: Extract TLD
+                value:
+                  method: extractTLD
+                  params: ["my-startup.hq.com.ai"]
+      responses:
+        '200':
+          description: RPC result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RPCResponse'
+
+  /rpc/batch:
+    post:
+      summary: Batch RPC
+      description: Execute multiple RPC calls
+      operationId: rpcBatch
+      tags:
+        - RPC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/RPCRequest'
+      responses:
+        '200':
+          description: Batch results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RPCResponse'
+
+components:
+  schemas:
+    DomainStatus:
+      type: string
+      enum:
+        - pending
+        - active
+        - error
+
+    FreeTLD:
+      type: string
+      enum:
+        - hq.com.ai
+        - app.net.ai
+        - api.net.ai
+        - hq.sb
+        - io.sb
+        - llc.st
+      description: Available free TLDs
+
+    DomainRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          description: Full domain name
+          example: my-startup.hq.com.ai
+        orgId:
+          type: string
+        tld:
+          $ref: '#/components/schemas/FreeTLD'
+        zoneId:
+          type: string
+        workerId:
+          type: string
+          description: Routed worker name
+        routeId:
+          type: string
+        status:
+          $ref: '#/components/schemas/DomainStatus'
+        createdAt:
+          type: integer
+          description: Unix timestamp in milliseconds
+        updatedAt:
+          type: integer
+          description: Unix timestamp in milliseconds
+
+    RouteConfig:
+      type: object
+      required:
+        - worker
+      properties:
+        worker:
+          type: string
+          description: Worker name to route to
+        workerScript:
+          type: string
+          description: Worker script content (alternative to worker name)
+        customOrigin:
+          type: string
+          description: Custom origin URL
+
+    RPCRequest:
+      type: object
+      required:
+        - method
+        - params
+      properties:
+        method:
+          type: string
+          enum:
+            - claim
+            - release
+            - route
+            - unroute
+            - get
+            - getRoute
+            - list
+            - listAll
+            - count
+            - countAll
+            - isValidDomain
+            - isFreeTLD
+            - extractTLD
+            - extractSubdomain
+        params:
+          type: array
+          items: {}
+
+    RPCResponse:
+      type: object
+      properties:
+        result: {}
+        error:
+          type: string
+
+    DiscoveryResponse:
+      type: object
+      properties:
+        api:
+          type: string
+        version:
+          type: string
+        links:
+          type: object
+          properties:
+            self:
+              type: string
+            rpc:
+              type: string
+            batch:
+              type: string
+            domains:
+              type: string
+        discover:
+          type: object
+          properties:
+            tlds:
+              type: array
+              items:
+                $ref: '#/components/schemas/FreeTLD'
+            methods:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  description:
+                    type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: Authorization
+    OrgId:
+      type: apiKey
+      in: header
+      name: X-Org-ID
+      description: Organization ID for authorization
+
+security:
+  - ApiKey: []

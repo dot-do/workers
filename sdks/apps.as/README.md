@@ -96,6 +96,38 @@ for await (const log of apps.logs('my-startup', { follow: true })) {
 }
 ```
 
+## Configuration
+
+### Environment Variables
+
+```bash
+# Primary API key (used by default)
+export DO_API_KEY="your-api-key"
+
+# Alternative: Organization API key
+export ORG_AI_API_KEY="your-org-key"
+```
+
+### Cloudflare Workers
+
+```typescript
+import 'rpc.do/env'
+import { apps } from 'apps.as'
+
+// Environment is automatically configured
+await apps.deploy({ name, source })
+```
+
+### Custom Configuration
+
+```typescript
+import { Apps } from 'apps.as'
+
+const client = Apps({
+  baseURL: 'https://custom.example.com'
+})
+```
+
 ## Your Launch Day, Simplified
 
 You have customers waiting. Investors watching. A vision to realize.

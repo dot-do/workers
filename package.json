@@ -40,7 +40,10 @@
     "check-domains": "tsx scripts/check-domains.ts",
     "test:e2e": "vitest run --config tests/vitest.config.ts",
     "prerelease": "pnpm check-domains && pnpm check-versions",
-    "lint:packages": "tsx scripts/lint-package-json.ts"
+    "lint:packages": "tsx scripts/lint-package-json.ts",
+    "docs": "typedoc",
+    "docs:html": "typedoc --plugin typedoc-plugin-markdown --out docs/api",
+    "docs:watch": "typedoc --watch"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0",
@@ -53,6 +56,8 @@
     "eslint": "^9.39.2",
     "tsup": "^8.5.1",
     "tsx": "^4.19.0",
+    "typedoc": "^0.28.15",
+    "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.6.0",
     "typescript-eslint": "^8.52.0",
     "vitest": "^3.2.4",

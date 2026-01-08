@@ -1,0 +1,50 @@
+{
+  "name": "@dotdo/mdx-worker",
+  "version": "0.0.1",
+  "description": "MDX-as-Worker build pipeline: compile MDX files to Cloudflare Workers",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./cli": {
+      "types": "./dist/cli.d.ts",
+      "import": "./dist/cli.js"
+    }
+  },
+  "bin": {
+    "mdx-worker": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/cli.ts --format esm --dts --clean",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mdx-js/mdx": "^3.0.0",
+    "yaml": "^2.3.0"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4",
+    "typescript": "^5.6.0",
+    "tsup": "^8.5.1",
+    "@cloudflare/workers-types": "^4.20240925.0"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "mdx",
+    "build",
+    "pipeline",
+    "wrangler"
+  ],
+  "author": "Nathan Clevenger",
+  "license": "MIT"
+}

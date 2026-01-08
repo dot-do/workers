@@ -99,6 +99,42 @@ export interface Transfer {
   created: number
 }
 
+export type RecurringInterval = 'daily' | 'weekly' | 'monthly'
+
+export interface ScheduledTransferParams {
+  amount: number
+  currency: string
+  destination: string
+  scheduledAt: number // Unix timestamp
+  description?: string
+  metadata?: Record<string, string>
+  recurring?: {
+    interval: RecurringInterval
+    count?: number // Number of occurrences, undefined means infinite
+  }
+}
+
+export interface ScheduledTransfer {
+  id: string
+  object: 'scheduled_transfer'
+  amount: number
+  currency: string
+  destination: string
+  scheduledAt: number
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'canceled'
+  description?: string | null
+  metadata?: Record<string, string>
+  recurring?: {
+    interval: RecurringInterval
+    count?: number
+    executedCount: number
+  }
+  created: number
+  lastExecutedAt?: number
+  nextExecutionAt?: number
+  transferIds: string[] // IDs of transfers created
+}
+
 export interface WebhookEvent {
   id: string
   object: 'event'
@@ -210,6 +246,23 @@ function validateQuantity(quantity: number): void {
   }
 }
 
+function validateScheduledAt(scheduledAt: number): void {
+  if (typeof scheduledAt !== 'number' || scheduledAt <= 0) {
+    throw new Error('scheduledAt must be a valid Unix timestamp')
+  }
+  const now = Math.floor(Date.now() / 1000)
+  if (scheduledAt < now) {
+    throw new Error('scheduledAt must be in the future')
+  }
+}
+
+function validateRecurringInterval(interval: string): void {
+  const validIntervals: RecurringInterval[] = ['daily', 'weekly', 'monthly']
+  if (!validIntervals.includes(interval as RecurringInterval)) {
+    throw new Error(`Invalid recurring interval. Must be one of: ${validIntervals.join(', ')}`)
+  }
+}
+
 function sanitizeError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error)
   // Remove any potential secrets or internal paths
@@ -256,6 +309,7 @@ export class StripeDO {
     'createSubscription', 'getSubscription', 'cancelSubscription', 'listSubscriptions',
     'recordUsage', 'recordUsageForCustomer',
     'createTransfer', 'getTransfer', 'listTransfers',
+    'createScheduledTransfer', 'getScheduledTransfer', 'listScheduledTransfers', 'cancelScheduledTransfer',
     'handleWebhook'
   ])
 
@@ -268,10 +322,43 @@ export class StripeDO {
   // Customer to subscription cache (for recordUsageForCustomer)
   private customerSubscriptions: Map<string, string> = new Map()
 
+  // Scheduled transfer counter for ID generation
+  private scheduledTransferCounter: number = 0
+
   constructor(ctx: DOState, env: StripeEnv) {
     this.ctx = ctx
     this.env = env
     this.registerDefaultWebhookHandlers()
+    this.initScheduledTransferCounter()
+  }
+
+  private async initScheduledTransferCounter(): Promise<void> {
+    const counter = await this.ctx.storage.get<number>('scheduled_transfer_counter')
+    this.scheduledTransferCounter = counter ?? 0
+  }
+
+  private async getNextScheduledTransferId(): Promise<string> {
+    this.scheduledTransferCounter++
+    await this.ctx.storage.put('scheduled_transfer_counter', this.scheduledTransferCounter)
+    return `sched_tr_${this.scheduledTransferCounter.toString().padStart(10, '0')}`
+  }
+
+  private calculateNextExecutionTime(lastExecution: number, interval: RecurringInterval): number {
+    const date = new Date(lastExecution * 1000)
+
+    switch (interval) {
+      case 'daily':
+        date.setDate(date.getDate() + 1)
+        break
+      case 'weekly':
+        date.setDate(date.getDate() + 7)
+        break
+      case 'monthly':
+        date.setMonth(date.getMonth() + 1)
+        break
+    }
+
+    return Math.floor(date.getTime() / 1000)
   }
 
   // ============================================================================
@@ -523,6 +610,202 @@ export class StripeDO {
   }
 
   // ============================================================================
+  // Scheduled Transfer Operations
+  // ============================================================================
+
+  async createScheduledTransfer(params: ScheduledTransferParams): Promise<ScheduledTransfer> {
+    validateAmount(params.amount)
+    validateCurrency(params.currency)
+    validateId(params.destination, 'destination')
+    validateScheduledAt(params.scheduledAt)
+
+    if (params.recurring) {
+      validateRecurringInterval(params.recurring.interval)
+      if (params.recurring.count !== undefined && params.recurring.count <= 0) {
+        throw new Error('Recurring count must be a positive number')
+      }
+    }
+
+    const id = await this.getNextScheduledTransferId()
+    const now = Math.floor(Date.now() / 1000)
+
+    const scheduledTransfer: ScheduledTransfer = {
+      id,
+      object: 'scheduled_transfer',
+      amount: params.amount,
+      currency: params.currency,
+      destination: params.destination,
+      scheduledAt: params.scheduledAt,
+      status: 'pending',
+      description: params.description || null,
+      metadata: params.metadata,
+      recurring: params.recurring ? {
+        interval: params.recurring.interval,
+        count: params.recurring.count,
+        executedCount: 0,
+      } : undefined,
+      created: now,
+      nextExecutionAt: params.scheduledAt,
+      transferIds: [],
+    }
+
+    // Store scheduled transfer
+    await this.ctx.storage.put(`scheduled_transfers:${id}`, scheduledTransfer)
+
+    // Set alarm for next execution (Durable Objects support alarms)
+    // Note: In a real implementation, you'd use ctx.storage.setAlarm
+    // For now, we'll track this for testing purposes
+    await this.ctx.storage.put(`scheduled_transfers:next_execution:${params.scheduledAt}:${id}`, id)
+
+    return scheduledTransfer
+  }
+
+  async getScheduledTransfer(scheduledTransferId: string): Promise<ScheduledTransfer | null> {
+    validateId(scheduledTransferId, 'scheduledTransferId')
+
+    const scheduledTransfer = await this.ctx.storage.get<ScheduledTransfer>(
+      `scheduled_transfers:${scheduledTransferId}`
+    )
+
+    return scheduledTransfer ?? null
+  }
+
+  async listScheduledTransfers(params?: {
+    destination?: string
+    status?: ScheduledTransfer['status']
+    limit?: number
+  }): Promise<ScheduledTransfer[]> {
+    const allScheduled = await this.ctx.storage.list<ScheduledTransfer>({
+      prefix: 'scheduled_transfers:',
+    })
+
+    let results: ScheduledTransfer[] = []
+    for (const [key, value] of allScheduled) {
+      // Skip index keys
+      if (key.startsWith('scheduled_transfers:next_execution:')) continue
+      if (key === 'scheduled_transfer_counter') continue
+
+      if (typeof value === 'object' && value !== null && 'object' in value) {
+        results.push(value as ScheduledTransfer)
+      }
+    }
+
+    // Filter by destination if specified
+    if (params?.destination) {
+      results = results.filter(st => st.destination === params.destination)
+    }
+
+    // Filter by status if specified
+    if (params?.status) {
+      results = results.filter(st => st.status === params.status)
+    }
+
+    // Apply limit if specified
+    if (params?.limit && params.limit > 0) {
+      results = results.slice(0, params.limit)
+    }
+
+    return results
+  }
+
+  async cancelScheduledTransfer(scheduledTransferId: string): Promise<ScheduledTransfer> {
+    validateId(scheduledTransferId, 'scheduledTransferId')
+
+    const scheduledTransfer = await this.getScheduledTransfer(scheduledTransferId)
+    if (!scheduledTransfer) {
+      throw new Error(`Scheduled transfer not found: ${scheduledTransferId}`)
+    }
+
+    if (scheduledTransfer.status === 'completed' || scheduledTransfer.status === 'canceled') {
+      throw new Error(`Cannot cancel scheduled transfer with status: ${scheduledTransfer.status}`)
+    }
+
+    scheduledTransfer.status = 'canceled'
+
+    // Update stored scheduled transfer
+    await this.ctx.storage.put(`scheduled_transfers:${scheduledTransferId}`, scheduledTransfer)
+
+    // Remove from execution queue
+    if (scheduledTransfer.nextExecutionAt) {
+      await this.ctx.storage.delete(
+        `scheduled_transfers:next_execution:${scheduledTransfer.nextExecutionAt}:${scheduledTransferId}`
+      )
+    }
+
+    return scheduledTransfer
+  }
+
+  // Execute a scheduled transfer (would be called by alarm or cron)
+  async executeScheduledTransfer(scheduledTransferId: string): Promise<Transfer> {
+    const scheduledTransfer = await this.getScheduledTransfer(scheduledTransferId)
+    if (!scheduledTransfer) {
+      throw new Error(`Scheduled transfer not found: ${scheduledTransferId}`)
+    }
+
+    if (scheduledTransfer.status === 'canceled') {
+      throw new Error('Cannot execute canceled scheduled transfer')
+    }
+
+    scheduledTransfer.status = 'processing'
+    await this.ctx.storage.put(`scheduled_transfers:${scheduledTransferId}`, scheduledTransfer)
+
+    try {
+      // Create the actual transfer
+      const transfer = await this.createTransfer({
+        amount: scheduledTransfer.amount,
+        currency: scheduledTransfer.currency,
+        destination: scheduledTransfer.destination,
+        description: scheduledTransfer.description ?? undefined,
+        metadata: {
+          ...scheduledTransfer.metadata,
+          scheduled_transfer_id: scheduledTransferId,
+        },
+      })
+
+      // Update scheduled transfer
+      const now = Math.floor(Date.now() / 1000)
+      scheduledTransfer.transferIds.push(transfer.id)
+      scheduledTransfer.lastExecutedAt = now
+
+      if (scheduledTransfer.recurring) {
+        scheduledTransfer.recurring.executedCount++
+
+        // Check if we should schedule next execution
+        const shouldContinue = scheduledTransfer.recurring.count === undefined ||
+          scheduledTransfer.recurring.executedCount < scheduledTransfer.recurring.count
+
+        if (shouldContinue) {
+          scheduledTransfer.status = 'pending'
+          scheduledTransfer.nextExecutionAt = this.calculateNextExecutionTime(
+            now,
+            scheduledTransfer.recurring.interval
+          )
+
+          // Schedule next execution
+          await this.ctx.storage.put(
+            `scheduled_transfers:next_execution:${scheduledTransfer.nextExecutionAt}:${scheduledTransferId}`,
+            scheduledTransferId
+          )
+        } else {
+          scheduledTransfer.status = 'completed'
+          scheduledTransfer.nextExecutionAt = undefined
+        }
+      } else {
+        scheduledTransfer.status = 'completed'
+        scheduledTransfer.nextExecutionAt = undefined
+      }
+
+      await this.ctx.storage.put(`scheduled_transfers:${scheduledTransferId}`, scheduledTransfer)
+
+      return transfer
+    } catch (error) {
+      scheduledTransfer.status = 'failed'
+      await this.ctx.storage.put(`scheduled_transfers:${scheduledTransferId}`, scheduledTransfer)
+      throw error
+    }
+  }
+
+  // ============================================================================
   // Webhook Handling
   // ============================================================================
 
@@ -679,6 +962,14 @@ export class StripeDO {
         return this.getTransfer(params[0] as string)
       case 'listTransfers':
         return this.listTransfers(params[0] as { destination?: string; limit?: number } | undefined)
+      case 'createScheduledTransfer':
+        return this.createScheduledTransfer(params[0] as ScheduledTransferParams)
+      case 'getScheduledTransfer':
+        return this.getScheduledTransfer(params[0] as string)
+      case 'listScheduledTransfers':
+        return this.listScheduledTransfers(params[0] as { destination?: string; status?: ScheduledTransfer['status']; limit?: number } | undefined)
+      case 'cancelScheduledTransfer':
+        return this.cancelScheduledTransfer(params[0] as string)
       default:
         throw new Error(`Method not implemented: ${method}`)
     }
@@ -746,6 +1037,7 @@ export class StripeDO {
         subscriptions: '/api/subscriptions',
         usage: '/api/usage',
         transfers: '/api/transfers',
+        scheduled_transfers: '/api/scheduled_transfers',
       },
       discover: {
         resources: [
@@ -753,6 +1045,7 @@ export class StripeDO {
           { name: 'subscriptions', href: '/api/subscriptions', methods: ['GET', 'POST', 'DELETE'] },
           { name: 'usage', href: '/api/usage', methods: ['POST'] },
           { name: 'transfers', href: '/api/transfers', methods: ['GET', 'POST'] },
+          { name: 'scheduled_transfers', href: '/api/scheduled_transfers', methods: ['GET', 'POST', 'DELETE'] },
         ],
         methods: [
           { name: 'createCharge', description: 'Create a new charge' },
@@ -762,6 +1055,8 @@ export class StripeDO {
           { name: 'cancelSubscription', description: 'Cancel a subscription' },
           { name: 'recordUsage', description: 'Record metered usage' },
           { name: 'createTransfer', description: 'Create a marketplace transfer' },
+          { name: 'createScheduledTransfer', description: 'Create a scheduled transfer' },
+          { name: 'cancelScheduledTransfer', description: 'Cancel a scheduled transfer' },
         ],
       },
     })
@@ -806,6 +1101,8 @@ export class StripeDO {
           return this.handleUsageApi(request)
         case 'transfers':
           return this.handleTransfersApi(request, id)
+        case 'scheduled_transfers':
+          return this.handleScheduledTransfersApi(request, id)
         default:
           return Response.json({ error: 'Resource not found' }, { status: 404 })
       }
@@ -959,6 +1256,53 @@ export class StripeDO {
     }
   }
 
+  private async handleScheduledTransfersApi(request: Request, id?: string): Promise<Response> {
+    switch (request.method) {
+      case 'GET':
+        if (id) {
+          const scheduledTransfer = await this.getScheduledTransfer(id)
+          if (!scheduledTransfer) {
+            return Response.json({ error: 'Scheduled transfer not found' }, { status: 404 })
+          }
+          return Response.json(scheduledTransfer)
+        } else {
+          const scheduledTransfers = await this.listScheduledTransfers()
+          return Response.json({ data: scheduledTransfers })
+        }
+
+      case 'POST':
+        if (id) {
+          return Response.json({ error: 'POST to collection, not item' }, { status: 400 })
+        }
+        try {
+          const body = await request.json() as ScheduledTransferParams
+          const scheduledTransfer = await this.createScheduledTransfer(body)
+          return Response.json(scheduledTransfer, { status: 201 })
+        } catch (error) {
+          if (error instanceof SyntaxError) {
+            return Response.json({ error: 'Invalid JSON' }, { status: 400 })
+          }
+          const status = this.getErrorStatus(error)
+          return Response.json({ error: sanitizeError(error) }, { status })
+        }
+
+      case 'DELETE':
+        if (!id) {
+          return Response.json({ error: 'Scheduled transfer ID required' }, { status: 400 })
+        }
+        try {
+          const canceled = await this.cancelScheduledTransfer(id)
+          return Response.json(canceled)
+        } catch (error) {
+          const status = this.getErrorStatus(error)
+          return Response.json({ error: sanitizeError(error) }, { status })
+        }
+
+      default:
+        return Response.json({ error: 'Method not allowed' }, { status: 405 })
+    }
+  }
+
   // ============================================================================
   // Helper Methods
   // ============================================================================
@@ -990,7 +1334,7 @@ export class StripeDO {
     }
 
     const message = error instanceof Error ? error.message.toLowerCase() : ''
-    if (message.includes('required') || message.includes('invalid')) return 400
+    if (message.includes('required') || message.includes('invalid') || message.includes('future')) return 400
     if (message.includes('not found')) return 404
 
     return 500

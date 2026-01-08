@@ -1,0 +1,17 @@
+{
+  "name": "@dotdo/odata-filter",
+  "version": "0.1.0",
+  "description": "OData $filter expression parser with AST generation and SQL conversion",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "vitest": "^2.0.0"
+  }
+}

@@ -155,7 +155,7 @@ describe('Durable Object Mock Helpers', () => {
       expect(await storage.getAlarm()).toBeNull()
     })
 
-    it('should support initial data seeding', () => {
+    it('should support initial data seeding', async () => {
       const storage = createMockDurableObjectStorage({
         initialData: {
           existingKey: 'existingValue',
@@ -163,8 +163,8 @@ describe('Durable Object Mock Helpers', () => {
         },
       })
       // Async check happens in the test
-      expect(storage.get('existingKey')).resolves.toBe('existingValue')
-      expect(storage.get('count')).resolves.toBe(42)
+      await expect(storage.get('existingKey')).resolves.toBe('existingValue')
+      await expect(storage.get('count')).resolves.toBe(42)
     })
   })
 
@@ -182,12 +182,12 @@ describe('Durable Object Mock Helpers', () => {
       expect(state.id.name).toBe('test-object')
     })
 
-    it('should use provided storage', () => {
+    it('should use provided storage', async () => {
       const storage = createMockDurableObjectStorage({
         initialData: { foo: 'bar' },
       })
       const state = createMockDurableObjectState({ storage })
-      expect(state.storage.get('foo')).resolves.toBe('bar')
+      await expect(state.storage.get('foo')).resolves.toBe('bar')
     })
 
     it('should support waitUntil()', () => {

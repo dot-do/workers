@@ -7,6 +7,9 @@ export * from './xss'
 // Re-export Prototype Pollution prevention utilities
 export * from './prototype-pollution'
 
+// Re-export Security Audit/Event Logging utilities
+export * from './audit'
+
 /**
  * Result of SQL injection detection
  */

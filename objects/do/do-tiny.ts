@@ -34,6 +34,13 @@ import type {
   Document,
   StorageProvider,
 } from './types'
+import {
+  DOError,
+  RouteNotFoundError,
+  errorToResponse,
+  errorToWebSocketMessage,
+  type WebSocketErrorMessage,
+} from './errors'
 
 // ============================================================================
 // DOTiny Class
@@ -108,7 +115,7 @@ export class DO<Env extends DOEnv = DOEnv> implements StorageProvider {
       return this.jsonResponse({ status: 'ok', id: this.id })
     }
 
-    return new Response('Not Found', { status: 404 })
+    return new RouteNotFoundError(url.pathname, request.method).toResponse()
   }
 
   /**

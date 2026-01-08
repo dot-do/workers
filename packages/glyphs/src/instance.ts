@@ -169,10 +169,10 @@ function deepClone<T>(obj: T): T {
     return obj.map(item => deepClone(item)) as T
   }
 
-  // Handle plain objects
-  const cloned: Record<string, unknown> = {}
-  for (const key of Object.keys(obj as object)) {
-    cloned[key] = deepClone((obj as Record<string, unknown>)[key])
+  // Handle plain objects - use Reflect.ownKeys to include symbol keys
+  const cloned: Record<string | symbol, unknown> = {}
+  for (const key of Reflect.ownKeys(obj as object)) {
+    cloned[key] = deepClone((obj as Record<string | symbol, unknown>)[key])
   }
   return cloned as T
 }

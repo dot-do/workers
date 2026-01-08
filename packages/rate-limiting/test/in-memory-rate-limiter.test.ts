@@ -311,5 +311,177 @@ describe('InMemoryRateLimiter Expired Entry Cleanup', () => {
     it('should expose storage metrics', () => {
       expect(typeof limiter.storageSize).toBe('number')
     })
+
+    it('should expose detailed memory metrics via getMetrics()', async () => {
+      // Create some rate limit entries
+      for (let i = 0; i < 10; i++) {
+        await limiter.check(`user:${i}`)
+      }
+
+      const metrics = limiter.getMetrics()
+
+      expect(metrics.totalEntries).toBe(10)
+      expect(metrics.entriesWithTTL).toBe(10) // All rate limit entries have TTL
+      expect(metrics.permanentEntries).toBe(0)
+      expect(metrics.estimatedBytes).toBeGreaterThan(0)
+      expect(metrics.expiryIndexSize).toBe(10) // All entries should be in expiry index
+      expect(typeof metrics.totalCleaned).toBe('number')
+      expect(typeof metrics.lastCleanupCount).toBe('number')
+    })
+  })
+
+  describe('Memory Optimization Features', () => {
+    let storage: InMemoryRateLimitStorage
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] })
+      storage = new InMemoryRateLimitStorage({
+        cleanupIntervalMs: 100,
+      })
+    })
+
+    afterEach(() => {
+      storage.dispose?.()
+      vi.useRealTimers()
+    })
+
+    describe('Expiry Index Optimization', () => {
+      it('should use expiry index for efficient cleanup', async () => {
+        // Add entries with varying TTLs
+        for (let i = 0; i < 100; i++) {
+          await storage.set(`key${i}`, { index: i }, (i + 1) * 10)
+        }
+
+        const metricsBefore = storage.getMetrics()
+        expect(metricsBefore.expiryIndexSize).toBe(100)
+
+        // Advance time to expire first 50 entries (TTL 10-500ms)
+        await vi.advanceTimersByTimeAsync(550)
+
+        // Cleanup should have run and removed expired entries
+        expect(storage.size).toBe(50)
+
+        // Check metrics after cleanup
+        const metricsAfter = storage.getMetrics()
+        expect(metricsAfter.totalCleaned).toBeGreaterThanOrEqual(50)
+        expect(metricsAfter.lastCleanupCount).toBeGreaterThanOrEqual(0)
+      })
+
+      it('should handle entry updates correctly with expiry index', async () => {
+        // Set initial entry
+        await storage.set('key1', { value: 'v1' }, 100)
+
+        // Update with longer TTL
+        await storage.set('key1', { value: 'v2' }, 500)
+
+        // Advance past original TTL but before new TTL
+        vi.advanceTimersByTime(200)
+
+        // Entry should still exist with updated value
+        const result = await storage.get('key1')
+        expect(result).toEqual({ value: 'v2' })
+      })
+    })
+
+    describe('Batch-Limited Cleanup', () => {
+      it('should respect maxCleanupBatchSize to prevent blocking', async () => {
+        const batchLimitedStorage = new InMemoryRateLimitStorage({
+          cleanupIntervalMs: 100,
+          maxCleanupBatchSize: 10, // Only clean 10 entries per cycle
+        })
+
+        try {
+          // Add 100 entries with very short TTL
+          for (let i = 0; i < 100; i++) {
+            await batchLimitedStorage.set(`key${i}`, { index: i }, 10)
+          }
+
+          expect(batchLimitedStorage.size).toBe(100)
+
+          // Advance time to expire all entries and trigger cleanup
+          await vi.advanceTimersByTimeAsync(150)
+
+          // With batch limit of 10, not all entries will be cleaned in one cycle
+          // But after multiple cleanup cycles, all should be cleaned
+          // Note: The cleanup runs at 100ms intervals
+
+          // Wait for multiple cleanup cycles
+          await vi.advanceTimersByTimeAsync(1000)
+
+          // All entries should eventually be cleaned
+          expect(batchLimitedStorage.size).toBe(0)
+        } finally {
+          batchLimitedStorage.dispose()
+        }
+      })
+    })
+
+    describe('Memory Metrics Accuracy', () => {
+      it('should provide accurate memory estimates', async () => {
+        // Add entries of different types
+        await storage.set('string', 'hello world', 1000)
+        await storage.set('number', 42, 1000)
+        await storage.set('object', { a: 1, b: 'test' }, 1000)
+        await storage.set('array', [1, 2, 3], 1000)
+        await storage.set('permanent', 'no ttl') // No TTL
+
+        const metrics = storage.getMetrics()
+
+        expect(metrics.totalEntries).toBe(5)
+        expect(metrics.entriesWithTTL).toBe(4)
+        expect(metrics.permanentEntries).toBe(1)
+        expect(metrics.estimatedBytes).toBeGreaterThan(100) // Should have meaningful size
+        expect(metrics.expiryIndexSize).toBe(4) // Only entries with TTL
+      })
+
+      it('should track cleanup statistics correctly', async () => {
+        // Add entries with short TTL
+        for (let i = 0; i < 50; i++) {
+          await storage.set(`key${i}`, { index: i }, 50)
+        }
+
+        const metricsBefore = storage.getMetrics()
+        expect(metricsBefore.totalCleaned).toBe(0)
+        expect(metricsBefore.lastCleanupCount).toBe(0)
+
+        // Trigger cleanup
+        await vi.advanceTimersByTimeAsync(150)
+
+        const metricsAfter = storage.getMetrics()
+        expect(metricsAfter.totalCleaned).toBe(50)
+        expect(metricsAfter.lastCleanupCount).toBe(50)
+
+        // Add more entries and cleanup again
+        for (let i = 0; i < 25; i++) {
+          await storage.set(`newkey${i}`, { index: i }, 50)
+        }
+
+        await vi.advanceTimersByTimeAsync(150)
+
+        const metricsFinal = storage.getMetrics()
+        expect(metricsFinal.totalCleaned).toBe(75) // 50 + 25
+        expect(metricsFinal.lastCleanupCount).toBe(25) // Only the new batch
+      })
+    })
+
+    describe('forceCleanup Method', () => {
+      it('should immediately clean all expired entries', async () => {
+        // Add entries with short TTL
+        for (let i = 0; i < 100; i++) {
+          await storage.set(`key${i}`, { index: i }, 10)
+        }
+
+        expect(storage.size).toBe(100)
+
+        // Advance time to expire entries but don't wait for cleanup interval
+        vi.advanceTimersByTime(20)
+
+        // Force immediate cleanup
+        storage.forceCleanup()
+
+        // All entries should be cleaned immediately
+        expect(storage.size).toBe(0)
+      })
+    })
   })
 })

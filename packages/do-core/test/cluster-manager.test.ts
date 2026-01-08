@@ -55,10 +55,20 @@ function createNormalizedVector(dimension: number, seed: number = 0): number[] {
 }
 
 /**
- * Create a vector near a given centroid (with small perturbation)
+ * Create a vector near a given centroid (with small deterministic perturbation)
  */
-function createVectorNearCentroid(centroid: number[], perturbation: number = 0.1): number[] {
-  return centroid.map((v) => v + (Math.random() - 0.5) * perturbation * 2)
+function createVectorNearCentroid(centroid: number[], perturbation: number = 0.1, seed: number = 0): number[] {
+  // Create a deterministic perturbation by scaling the vector slightly
+  // and adding a small orthogonal component based on seed
+  // This keeps the vector close to the original direction
+  const scale = 1.0 + perturbation * Math.sin(seed)
+  const perturbed = centroid.map((v, i) => {
+    // Scale the vector and add a tiny orthogonal perturbation
+    const ortho = Math.cos(seed + i * 0.01) * perturbation * 0.1
+    return v * scale + ortho
+  })
+  // Normalize to keep the vector on the unit sphere (if the centroid was normalized)
+  return normalize(perturbed)
 }
 
 /**
@@ -159,7 +169,7 @@ describe('ClusterManager', () => {
         await manager.setCentroids(centroids)
 
         // Create a vector near cluster-1
-        const vector = createVectorNearCentroid(centroids[1].vector, 0.05)
+        const vector = createVectorNearCentroid(centroids[1].vector, 0.05, 1)
 
         const assignment = await manager.assignVector('vec-123', vector)
 
@@ -222,10 +232,10 @@ describe('ClusterManager', () => {
         await manager.setCentroids(centroids)
 
         const vectors = [
-          { id: 'vec-1', vector: createVectorNearCentroid(centroids[0].vector, 0.05) },
-          { id: 'vec-2', vector: createVectorNearCentroid(centroids[1].vector, 0.05) },
-          { id: 'vec-3', vector: createVectorNearCentroid(centroids[2].vector, 0.05) },
-          { id: 'vec-4', vector: createVectorNearCentroid(centroids[3].vector, 0.05) },
+          { id: 'vec-1', vector: createVectorNearCentroid(centroids[0].vector, 0.05, 0) },
+          { id: 'vec-2', vector: createVectorNearCentroid(centroids[1].vector, 0.05, 1) },
+          { id: 'vec-3', vector: createVectorNearCentroid(centroids[2].vector, 0.05, 2) },
+          { id: 'vec-4', vector: createVectorNearCentroid(centroids[3].vector, 0.05, 3) },
         ]
 
         const assignments = await manager.assignVectorBatch(vectors)
@@ -368,7 +378,7 @@ describe('ClusterManager', () => {
         await manager.setCentroids(centroids)
 
         // Query vector near cluster-2
-        const queryVector = createVectorNearCentroid(centroids[2].vector, 0.05)
+        const queryVector = createVectorNearCentroid(centroids[2].vector, 0.05, 2)
 
         const nearestClusters = await manager.findNearestClusters(queryVector, 3)
 
@@ -664,7 +674,7 @@ describe('ClusterManager', () => {
         await manager.setCentroids(centroids)
 
         // New vector arrives, assign and update counts
-        const vector = createVectorNearCentroid(centroids[0].vector, 0.05)
+        const vector = createVectorNearCentroid(centroids[0].vector, 0.05, 0)
         const assignment = await manager.assignVectorIncremental('vec-new', vector)
 
         expect(assignment.clusterId).toBe('cluster-0')
@@ -711,7 +721,7 @@ describe('ClusterManager', () => {
         await manager.setCentroids(centroids)
 
         // Vector was in cluster-0, now should be in cluster-1
-        const newPosition = createVectorNearCentroid(centroids[1].vector, 0.05)
+        const newPosition = createVectorNearCentroid(centroids[1].vector, 0.05, 1)
         const assignment = await manager.reassignVector('vec-moved', newPosition, 'cluster-0')
 
         expect(assignment.clusterId).toBe('cluster-1')
@@ -734,7 +744,7 @@ describe('ClusterManager', () => {
         await manager.setCentroids(centroids)
 
         // Vector stays near cluster-0
-        const samePosition = createVectorNearCentroid(centroids[0].vector, 0.05)
+        const samePosition = createVectorNearCentroid(centroids[0].vector, 0.05, 0)
         const assignment = await manager.reassignVector('vec-stay', samePosition, 'cluster-0')
 
         expect(assignment.clusterId).toBe('cluster-0')

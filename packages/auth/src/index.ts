@@ -1,6 +1,9 @@
 // RBAC Permission Checking - Types and Implementations
 // @dotdo/auth - Role-Based Access Control for Cloudflare Workers
 
+// Export JWKS cache functionality
+export * from './jwks-cache'
+
 /**
  * Permission string type - can be simple ('read') or namespaced ('documents:read')
  * Supports wildcards: '*' for all permissions, 'namespace:*' for all in namespace

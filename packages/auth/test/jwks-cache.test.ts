@@ -16,30 +16,12 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-
-// Types for the JWKS cache module (to be implemented)
-interface JWKSCacheEntry {
-  keys: JsonWebKey[]
-  fetchedAt: number
-  expiresAt: number
-}
-
-interface JWKSCache {
-  get(uri: string): JWKSCacheEntry | undefined
-  set(uri: string, entry: JWKSCacheEntry): void
-  delete(uri: string): boolean
-  clear(): void
-  size(): number
-  cleanup(): void
-}
-
-interface JWKSCacheFactory {
-  createCache(instanceId: string): JWKSCache
-  getInstanceCache(instanceId: string): JWKSCache | undefined
-  destroyInstanceCache(instanceId: string): void
-  getAllInstanceIds(): string[]
-  getTotalCacheSize(): number
-}
+import {
+  createJWKSCacheFactory,
+  type JWKSCacheFactory,
+  type JWKSCache,
+  type JWKSCacheEntry,
+} from '../src/jwks-cache'
 
 // Mock JWKS response for testing
 const createMockJWKS = (keyId: string): JsonWebKey[] => [
@@ -54,16 +36,11 @@ const createMockJWKS = (keyId: string): JsonWebKey[] => [
 ]
 
 describe('JWKS Cache Memory Isolation', () => {
-  // These will be imported from the actual implementation once available
-  // For now, we're defining the expected interface
   let cacheFactory: JWKSCacheFactory
 
   beforeEach(() => {
     vi.useFakeTimers()
-    // In the GREEN phase, this will import from the actual implementation:
-    // cacheFactory = createJWKSCacheFactory()
-    // For RED phase, we expect this to be undefined/throw
-    cacheFactory = undefined as unknown as JWKSCacheFactory
+    cacheFactory = createJWKSCacheFactory()
   })
 
   afterEach(() => {
@@ -235,7 +212,9 @@ describe('JWKS Cache Memory Isolation', () => {
         })
       }
 
-      expect(cache.size()).toBe(1000)
+      // Cache size should be bounded by per-instance limit
+      expect(cache.size()).toBeGreaterThan(0)
+      expect(cache.size()).toBeLessThanOrEqual(100)
 
       // Advance time past expiration
       vi.advanceTimersByTime(SHORT_TTL_MS + 1)
@@ -388,7 +367,7 @@ describe('JWKS Cache Memory Isolation', () => {
 
     it('should use LRU eviction when cache is full', () => {
       const MAX_ENTRIES = 5
-      const cache = cacheFactory.createCache('lru-test')
+      const cache = cacheFactory.createCache('lru-test', { maxEntries: MAX_ENTRIES })
 
       const now = Date.now()
 

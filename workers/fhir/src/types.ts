@@ -939,3 +939,289 @@ export interface MedicationRequest {
     display?: string
   }
 }
+
+/**
+ * FHIR R4 Immunization Resource
+ * @see http://hl7.org/fhir/R4/immunization.html
+ */
+export interface Immunization {
+  resourceType: 'Immunization'
+  id: string
+  meta: {
+    versionId: string
+    lastUpdated: string
+  }
+  identifier?: Array<{
+    use?: string
+    system?: string
+    value: string
+  }>
+  status: 'completed' | 'entered-in-error' | 'not-done'
+  statusReason?: {
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }
+  vaccineCode: {
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }
+  patient: {
+    reference: string
+    display?: string
+  }
+  encounter?: {
+    reference: string
+    display?: string
+  }
+  occurrenceDateTime?: string
+  occurrenceString?: string
+  recorded?: string
+  primarySource?: boolean
+  reportOrigin?: {
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }
+  location?: {
+    reference: string
+    display?: string
+  }
+  manufacturer?: {
+    reference: string
+    display?: string
+  }
+  lotNumber?: string
+  expirationDate?: string
+  site?: {
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }
+  route?: {
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }
+  doseQuantity?: {
+    value: number
+    unit: string
+    system: string
+    code: string
+  }
+  performer?: Array<{
+    function?: {
+      coding: Array<{
+        system: string
+        code: string
+        display?: string
+      }>
+      text?: string
+    }
+    actor: {
+      reference: string
+      display?: string
+    }
+  }>
+  note?: Array<{
+    authorString?: string
+    time?: string
+    text: string
+  }>
+  reasonCode?: Array<{
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }>
+  isSubpotent?: boolean
+  subpotentReason?: Array<{
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }>
+  education?: Array<{
+    documentType?: string
+    reference?: string
+    publicationDate?: string
+    presentationDate?: string
+  }>
+  programEligibility?: Array<{
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }>
+  fundingSource?: {
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }
+  reaction?: Array<{
+    date?: string
+    detail?: {
+      reference: string
+      display?: string
+    }
+    reported?: boolean
+  }>
+  protocolApplied?: Array<{
+    series?: string
+    authority?: {
+      reference: string
+      display?: string
+    }
+    targetDisease?: Array<{
+      coding: Array<{
+        system: string
+        code: string
+        display?: string
+      }>
+      text?: string
+    }>
+    doseNumberPositiveInt?: number
+    doseNumberString?: string
+    seriesDosesPositiveInt?: number
+    seriesDosesString?: string
+  }>
+}
+
+/**
+ * FHIR R4 DocumentReference Resource
+ * @see http://hl7.org/fhir/R4/documentreference.html
+ */
+export interface DocumentReference {
+  resourceType: 'DocumentReference'
+  id: string
+  meta: {
+    versionId: string
+    lastUpdated: string
+  }
+  identifier?: Array<{
+    use?: string
+    system?: string
+    value: string
+  }>
+  status: 'current' | 'superseded' | 'entered-in-error'
+  docStatus?: 'preliminary' | 'final' | 'amended' | 'entered-in-error'
+  type?: {
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }
+  category?: Array<{
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+    text?: string
+  }>
+  subject?: {
+    reference: string
+    display?: string
+  }
+  date?: string
+  author?: Array<{
+    reference: string
+    display?: string
+  }>
+  authenticator?: {
+    reference: string
+    display?: string
+  }
+  custodian?: {
+    reference: string
+    display?: string
+  }
+  description?: string
+  securityLabel?: Array<{
+    coding: Array<{
+      system: string
+      code: string
+      display?: string
+    }>
+  }>
+  content: Array<{
+    attachment: {
+      contentType: string
+      language?: string
+      data?: string
+      url?: string
+      size?: number
+      hash?: string
+      title?: string
+      creation?: string
+    }
+    format?: {
+      system: string
+      code: string
+      display?: string
+    }
+  }>
+  context?: {
+    encounter?: Array<{
+      reference: string
+    }>
+    event?: Array<{
+      coding: Array<{
+        system: string
+        code: string
+        display?: string
+      }>
+    }>
+    period?: {
+      start?: string
+      end?: string
+    }
+    facilityType?: {
+      coding: Array<{
+        system: string
+        code: string
+        display?: string
+      }>
+    }
+    practiceSetting?: {
+      coding: Array<{
+        system: string
+        code: string
+        display?: string
+      }>
+    }
+    sourcePatientInfo?: {
+      reference: string
+    }
+    related?: Array<{
+      reference: string
+    }>
+  }
+}

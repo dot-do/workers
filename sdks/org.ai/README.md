@@ -201,21 +201,20 @@ const enterprises = await org.organizations.list()
 
 ## Configuration
 
-Set your API key via environment variable:
-
-```bash
-export ORG_API_KEY=your_api_key
-```
-
-Or configure directly:
-
 ```typescript
-import { Org } from 'org.ai'
+// Workers - import env adapter for automatic env resolution
+import 'rpc.do/env'
+import { org } from 'org.ai'
 
-const org = Org({
-  apiKey: 'your_api_key'
+// Or use factory with custom config
+import { Org } from 'org.ai'
+const customOrg = Org({
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from ORG_API_KEY or DO_API_KEY
 ```
+
+Set `ORG_API_KEY` or `DO_API_KEY` in your environment.
 
 ## TypeScript First
 

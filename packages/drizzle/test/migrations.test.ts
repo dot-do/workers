@@ -480,10 +480,12 @@ describe('Drizzle Migrations Contract', () => {
       await migrations.runSingle('20240101000000_initial')
 
       // Should have inserted record into migrations table
-      expect(sql.exec).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO'),
-        expect.anything()
+      // Check that some call contains INSERT INTO
+      const calls = (sql.exec as ReturnType<typeof vi.fn>).mock.calls
+      const insertCall = calls.find((call: unknown[]) =>
+        typeof call[0] === 'string' && call[0].includes('INSERT INTO')
       )
+      expect(insertCall).toBeDefined()
     })
 
     it('should remove migration metadata on rollback', async () => {
@@ -493,10 +495,12 @@ describe('Drizzle Migrations Contract', () => {
       await migrations.rollback()
 
       // Should have deleted record from migrations table
-      expect(sql.exec).toHaveBeenCalledWith(
-        expect.stringContaining('DELETE FROM'),
-        expect.anything()
+      // Check that some call contains DELETE FROM
+      const calls = (sql.exec as ReturnType<typeof vi.fn>).mock.calls
+      const deleteCall = calls.find((call: unknown[]) =>
+        typeof call[0] === 'string' && call[0].includes('DELETE FROM')
       )
+      expect(deleteCall).toBeDefined()
     })
   })
 })

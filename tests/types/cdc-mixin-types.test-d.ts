@@ -201,6 +201,8 @@ declare const withCDCMock: WithCDC
 
 // Mock a class that extends DO
 declare class MockDO implements DOBase {
+  constructor(ctx: DOState, env: DOEnv)
+
   readonly id: string
   readonly ctx: DOState
   readonly env: DOEnv
@@ -315,6 +317,8 @@ interface CustomEnv extends DOEnv {
 }
 
 declare class CustomDO implements DOBase<CustomEnv> {
+  constructor(ctx: DOState, env: CustomEnv)
+
   readonly id: string
   readonly ctx: DOState
   readonly env: CustomEnv

@@ -316,7 +316,12 @@ export function lazy<T extends ComponentType<any>>(
 
   /**
    * Start loading the component if not already loading
-   * Returns a promise that REJECTS on error (for proper error propagation)
+   *
+   * For "no default export" errors, the promise RESOLVES (doesn't reject)
+   * so that Suspense knows loading is done and can re-render the component.
+   * The stored error will be thrown on the next render.
+   *
+   * For import failures, the promise REJECTS so `await` will throw.
    */
   const startLoading = (): Promise<void> => {
     if (!promise) {
@@ -324,22 +329,23 @@ export function lazy<T extends ComponentType<any>>(
       promise = factory()
         .then(mod => {
           if (!mod.default) {
-            const noDefaultError = new Error('lazy: Module does not have a default export')
-            error = noDefaultError
+            // No default export - store error but don't reject promise
+            error = new Error('lazy: Module does not have a default export')
             payload._status = 2 // rejected
-            payload._result = noDefaultError as unknown as typeof factory
-            throw noDefaultError
+            payload._result = error as unknown as typeof factory
+            // Don't throw - let promise resolve so subsequent render can throw the error
+            return
           }
           Component = mod.default
           payload._status = 1 // resolved
           payload._result = mod.default as unknown as typeof factory
         })
         .catch(e => {
-          // Store the error for subsequent renders
+          // Import failed - store error and reject promise
           error = e instanceof Error ? e : new Error(String(e))
           payload._status = 2 // rejected
           payload._result = error as unknown as typeof factory
-          // Re-throw to reject the promise
+          // Re-throw to reject the promise (so await throws)
           throw error
         })
     }

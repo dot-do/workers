@@ -236,9 +236,9 @@ import { evals } from 'evals.do'
 // Or use factory with custom config
 import { Evals } from 'evals.do'
 const customEvals = Evals({
-  baseURL: 'https://custom.example.com',
-  apiKey: 'your-api-key'
+  baseURL: 'https://custom.example.com'
 })
+// API key resolved automatically from EVALS_API_KEY or DO_API_KEY
 ```
 
 Set `EVALS_API_KEY` or `DO_API_KEY` in your environment.

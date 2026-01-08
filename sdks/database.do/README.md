@@ -161,19 +161,20 @@ await db.Lead.forEach(async lead => {
 
 ## Configuration
 
-Set your API key:
-
-```bash
-export DO_API_KEY=your-api-key
-```
-
-Or configure directly:
-
 ```typescript
-import { Database } from 'database.do'
+// Workers - import env adapter for automatic env resolution
+import 'rpc.do/env'
+import { db } from 'database.do'
 
-const db = Database({ apiKey: 'your-api-key' })
+// Or use factory with custom config
+import { Database } from 'database.do'
+const customDb = Database({
+  baseURL: 'https://custom.example.com'
+})
+// API key resolved automatically from DATABASE_API_KEY or DO_API_KEY
 ```
+
+Set `DATABASE_API_KEY` or `DO_API_KEY` in your environment.
 
 ## Links
 

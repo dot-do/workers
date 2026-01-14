@@ -1,13 +1,14 @@
 /**
- * Deployments Store Tests - TDD RED Phase
+ * Deployments Store Tests - TDD GREEN Phase
  *
  * These tests define the API contract for DO-based deployment storage.
- * They MUST fail initially since DeploymentsService doesn't exist yet.
- *
- * The DeploymentsService will be added to WorkersRegistryDO and provide:
+ * The DeploymentsService is added to WorkersRegistryDO and provides:
  * - CRUD operations for deployments
  * - O(1) lookup by name via secondary index
  * - Paginated listing with cursor support
+ *
+ * NOTE: Uses JSON-RPC via fetch() for DO access (same pattern as existing tests).
+ * Direct RPC (stub.deployments.create()) has known issues with vitest-pool-workers.
  *
  * Run with: npx vitest run tests/deployments-store.test.ts
  *
@@ -69,24 +70,19 @@ interface UpdateDeploymentOptions {
 }
 
 /**
- * DeploymentsService interface - the API we're defining
+ * JSON-RPC response format
  */
-interface DeploymentsService {
-  create(options: CreateDeploymentOptions): Promise<Deployment>
-  get(workerId: string): Promise<Deployment | null>
-  getByName(name: string): Promise<Deployment | null>
-  list(options?: ListDeploymentsOptions): Promise<ListDeploymentsResult>
-  delete(workerId: string): Promise<boolean>
-  update(workerId: string, options: UpdateDeploymentOptions): Promise<Deployment | null>
+interface RpcResponse<T = unknown> {
+  result?: T
+  error?: { code: number; message: string }
+  id?: string | number
 }
 
 /**
  * Environment type with DO binding
  */
 interface TestEnv {
-  WORKERS_REGISTRY: DurableObjectNamespace<{
-    deployments: DeploymentsService
-  }>
+  WORKERS_REGISTRY: DurableObjectNamespace
 }
 
 // ============================================================================
@@ -100,6 +96,24 @@ function getDeploymentsStub(userId: string = 'test-user') {
   const testEnv = env as unknown as TestEnv
   const id = testEnv.WORKERS_REGISTRY.idFromName(userId)
   return testEnv.WORKERS_REGISTRY.get(id)
+}
+
+/**
+ * Send RPC request to DO via fetch
+ * Uses JSON-RPC format: { method: "deployments.methodName", params: [...], id }
+ */
+async function rpc<T = unknown>(
+  stub: DurableObjectStub,
+  method: string,
+  params: unknown[] = [],
+  id: string | number = 1
+): Promise<RpcResponse<T>> {
+  const response = await stub.fetch('https://test.workers.do/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ method, params, id }),
+  })
+  return response.json() as Promise<RpcResponse<T>>
 }
 
 /**
@@ -122,13 +136,18 @@ describe('DeploymentsService', () => {
       const stub = getDeploymentsStub()
       const workerId = uniqueWorkerId()
 
-      const deployment = await stub.deployments.create({
-        workerId,
-        name: 'my-api',
-        code: 'export default { fetch() { return new Response("ok") } }',
-        url: 'https://my-api.workers.do',
-      })
+      const res = await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId,
+          name: 'my-api',
+          code: 'export default { fetch() { return new Response("ok") } }',
+          url: 'https://my-api.workers.do',
+        },
+      ])
 
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBeDefined()
+      const deployment = res.result!
       expect(deployment.workerId).toBe(workerId)
       expect(deployment.name).toBe('my-api')
       expect(deployment.code).toBe('export default { fetch() { return new Response("ok") } }')
@@ -143,21 +162,28 @@ describe('DeploymentsService', () => {
     it('throws error when name already exists', async () => {
       const stub = getDeploymentsStub()
 
-      await stub.deployments.create({
-        workerId: uniqueWorkerId(),
-        name: 'duplicate-name',
-        code: 'console.log("first")',
-        url: 'https://first.workers.do',
-      })
+      // Create first deployment
+      const res1 = await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId: uniqueWorkerId(),
+          name: 'duplicate-name',
+          code: 'console.log("first")',
+          url: 'https://first.workers.do',
+        },
+      ])
+      expect(res1.error).toBeUndefined()
 
-      await expect(
-        stub.deployments.create({
+      // Try to create second with same name
+      const res2 = await rpc<Deployment>(stub, 'deployments.create', [
+        {
           workerId: uniqueWorkerId(),
           name: 'duplicate-name',
           code: 'console.log("second")',
           url: 'https://second.workers.do',
-        })
-      ).rejects.toThrow(/already exists|duplicate/i)
+        },
+      ])
+      expect(res2.error).toBeDefined()
+      expect(res2.error!.message).toMatch(/already exists|duplicate/i)
     })
 
     /**
@@ -167,21 +193,28 @@ describe('DeploymentsService', () => {
       const stub = getDeploymentsStub()
       const workerId = uniqueWorkerId()
 
-      await stub.deployments.create({
-        workerId,
-        name: 'first-deployment',
-        code: 'console.log("first")',
-        url: 'https://first.workers.do',
-      })
+      // Create first deployment
+      const res1 = await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId,
+          name: 'first-deployment',
+          code: 'console.log("first")',
+          url: 'https://first.workers.do',
+        },
+      ])
+      expect(res1.error).toBeUndefined()
 
-      await expect(
-        stub.deployments.create({
+      // Try to create second with same workerId
+      const res2 = await rpc<Deployment>(stub, 'deployments.create', [
+        {
           workerId, // Same workerId
           name: 'second-deployment',
           code: 'console.log("second")',
           url: 'https://second.workers.do',
-        })
-      ).rejects.toThrow(/already exists|duplicate/i)
+        },
+      ])
+      expect(res2.error).toBeDefined()
+      expect(res2.error!.message).toMatch(/already exists|duplicate/i)
     })
   })
 
@@ -193,18 +226,23 @@ describe('DeploymentsService', () => {
       const stub = getDeploymentsStub()
       const workerId = uniqueWorkerId()
 
-      await stub.deployments.create({
-        workerId,
-        name: 'get-test-api',
-        code: 'export default {}',
-        url: 'https://get-test.workers.do',
-      })
+      // Create deployment
+      await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId,
+          name: 'get-test-api',
+          code: 'export default {}',
+          url: 'https://get-test.workers.do',
+        },
+      ])
 
-      const deployment = await stub.deployments.get(workerId)
+      // Get it back
+      const res = await rpc<Deployment | null>(stub, 'deployments.get', [workerId])
 
-      expect(deployment).not.toBeNull()
-      expect(deployment!.workerId).toBe(workerId)
-      expect(deployment!.name).toBe('get-test-api')
+      expect(res.error).toBeUndefined()
+      expect(res.result).not.toBeNull()
+      expect(res.result!.workerId).toBe(workerId)
+      expect(res.result!.name).toBe('get-test-api')
     })
 
     /**
@@ -213,9 +251,10 @@ describe('DeploymentsService', () => {
     it('returns null for non-existent workerId', async () => {
       const stub = getDeploymentsStub()
 
-      const deployment = await stub.deployments.get('non-existent-worker-id')
+      const res = await rpc<Deployment | null>(stub, 'deployments.get', ['non-existent-worker-id'])
 
-      expect(deployment).toBeNull()
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBeNull()
     })
   })
 
@@ -228,18 +267,23 @@ describe('DeploymentsService', () => {
       const stub = getDeploymentsStub()
       const workerId = uniqueWorkerId()
 
-      await stub.deployments.create({
-        workerId,
-        name: 'indexed-api',
-        code: 'export default {}',
-        url: 'https://indexed.workers.do',
-      })
+      // Create deployment
+      await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId,
+          name: 'indexed-api',
+          code: 'export default {}',
+          url: 'https://indexed.workers.do',
+        },
+      ])
 
-      const deployment = await stub.deployments.getByName('indexed-api')
+      // Get by name
+      const res = await rpc<Deployment | null>(stub, 'deployments.getByName', ['indexed-api'])
 
-      expect(deployment).not.toBeNull()
-      expect(deployment!.workerId).toBe(workerId)
-      expect(deployment!.name).toBe('indexed-api')
+      expect(res.error).toBeUndefined()
+      expect(res.result).not.toBeNull()
+      expect(res.result!.workerId).toBe(workerId)
+      expect(res.result!.name).toBe('indexed-api')
     })
 
     /**
@@ -248,9 +292,10 @@ describe('DeploymentsService', () => {
     it('returns null for non-existent name', async () => {
       const stub = getDeploymentsStub()
 
-      const deployment = await stub.deployments.getByName('non-existent-name')
+      const res = await rpc<Deployment | null>(stub, 'deployments.getByName', ['non-existent-name'])
 
-      expect(deployment).toBeNull()
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBeNull()
     })
 
     /**
@@ -259,20 +304,23 @@ describe('DeploymentsService', () => {
     it('is case-sensitive', async () => {
       const stub = getDeploymentsStub()
 
-      await stub.deployments.create({
-        workerId: uniqueWorkerId(),
-        name: 'CaseSensitive',
-        code: 'export default {}',
-        url: 'https://case.workers.do',
-      })
+      // Create deployment
+      await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId: uniqueWorkerId(),
+          name: 'CaseSensitive',
+          code: 'export default {}',
+          url: 'https://case.workers.do',
+        },
+      ])
 
-      const lowercase = await stub.deployments.getByName('casesensitive')
-      const uppercase = await stub.deployments.getByName('CASESENSITIVE')
-      const correct = await stub.deployments.getByName('CaseSensitive')
+      const lowercase = await rpc<Deployment | null>(stub, 'deployments.getByName', ['casesensitive'])
+      const uppercase = await rpc<Deployment | null>(stub, 'deployments.getByName', ['CASESENSITIVE'])
+      const correct = await rpc<Deployment | null>(stub, 'deployments.getByName', ['CaseSensitive'])
 
-      expect(lowercase).toBeNull()
-      expect(uppercase).toBeNull()
-      expect(correct).not.toBeNull()
+      expect(lowercase.result).toBeNull()
+      expect(uppercase.result).toBeNull()
+      expect(correct.result).not.toBeNull()
     })
   })
 
@@ -285,19 +333,22 @@ describe('DeploymentsService', () => {
 
       // Create a few deployments
       for (let i = 0; i < 3; i++) {
-        await stub.deployments.create({
-          workerId: uniqueWorkerId(),
-          name: `list-api-${i}`,
-          code: `// deployment ${i}`,
-          url: `https://list-${i}.workers.do`,
-        })
+        await rpc<Deployment>(stub, 'deployments.create', [
+          {
+            workerId: uniqueWorkerId(),
+            name: `list-api-${i}`,
+            code: `// deployment ${i}`,
+            url: `https://list-${i}.workers.do`,
+          },
+        ])
       }
 
-      const result = await stub.deployments.list()
+      const res = await rpc<ListDeploymentsResult>(stub, 'deployments.list', [{}])
 
-      expect(result.deployments).toHaveLength(3)
-      expect(result.hasMore).toBe(false)
-      expect(result.cursor).toBeUndefined()
+      expect(res.error).toBeUndefined()
+      expect(res.result!.deployments).toHaveLength(3)
+      expect(res.result!.hasMore).toBe(false)
+      expect(res.result!.cursor).toBeUndefined()
     })
 
     /**
@@ -308,19 +359,22 @@ describe('DeploymentsService', () => {
 
       // Create 5 deployments
       for (let i = 0; i < 5; i++) {
-        await stub.deployments.create({
-          workerId: uniqueWorkerId(),
-          name: `limit-api-${i}`,
-          code: `// deployment ${i}`,
-          url: `https://limit-${i}.workers.do`,
-        })
+        await rpc<Deployment>(stub, 'deployments.create', [
+          {
+            workerId: uniqueWorkerId(),
+            name: `limit-api-${i}`,
+            code: `// deployment ${i}`,
+            url: `https://limit-${i}.workers.do`,
+          },
+        ])
       }
 
-      const result = await stub.deployments.list({ limit: 2 })
+      const res = await rpc<ListDeploymentsResult>(stub, 'deployments.list', [{ limit: 2 }])
 
-      expect(result.deployments).toHaveLength(2)
-      expect(result.hasMore).toBe(true)
-      expect(result.cursor).toBeDefined()
+      expect(res.error).toBeUndefined()
+      expect(res.result!.deployments).toHaveLength(2)
+      expect(res.result!.hasMore).toBe(true)
+      expect(res.result!.cursor).toBeDefined()
     })
 
     /**
@@ -334,34 +388,40 @@ describe('DeploymentsService', () => {
       for (let i = 0; i < 5; i++) {
         const workerId = uniqueWorkerId()
         createdWorkerIds.push(workerId)
-        await stub.deployments.create({
-          workerId,
-          name: `paginate-api-${i}`,
-          code: `// deployment ${i}`,
-          url: `https://paginate-${i}.workers.do`,
-        })
+        await rpc<Deployment>(stub, 'deployments.create', [
+          {
+            workerId,
+            name: `paginate-api-${i}`,
+            code: `// deployment ${i}`,
+            url: `https://paginate-${i}.workers.do`,
+          },
+        ])
       }
 
       // First page
-      const page1 = await stub.deployments.list({ limit: 2 })
-      expect(page1.deployments).toHaveLength(2)
-      expect(page1.hasMore).toBe(true)
+      const page1 = await rpc<ListDeploymentsResult>(stub, 'deployments.list', [{ limit: 2 }])
+      expect(page1.result!.deployments).toHaveLength(2)
+      expect(page1.result!.hasMore).toBe(true)
 
       // Second page
-      const page2 = await stub.deployments.list({ limit: 2, cursor: page1.cursor })
-      expect(page2.deployments).toHaveLength(2)
-      expect(page2.hasMore).toBe(true)
+      const page2 = await rpc<ListDeploymentsResult>(stub, 'deployments.list', [
+        { limit: 2, cursor: page1.result!.cursor },
+      ])
+      expect(page2.result!.deployments).toHaveLength(2)
+      expect(page2.result!.hasMore).toBe(true)
 
       // Third page (last)
-      const page3 = await stub.deployments.list({ limit: 2, cursor: page2.cursor })
-      expect(page3.deployments).toHaveLength(1)
-      expect(page3.hasMore).toBe(false)
+      const page3 = await rpc<ListDeploymentsResult>(stub, 'deployments.list', [
+        { limit: 2, cursor: page2.result!.cursor },
+      ])
+      expect(page3.result!.deployments).toHaveLength(1)
+      expect(page3.result!.hasMore).toBe(false)
 
       // Verify no duplicates across pages
       const allWorkerIds = [
-        ...page1.deployments.map((d) => d.workerId),
-        ...page2.deployments.map((d) => d.workerId),
-        ...page3.deployments.map((d) => d.workerId),
+        ...page1.result!.deployments.map((d) => d.workerId),
+        ...page2.result!.deployments.map((d) => d.workerId),
+        ...page3.result!.deployments.map((d) => d.workerId),
       ]
       expect(new Set(allWorkerIds).size).toBe(5)
     })
@@ -372,10 +432,11 @@ describe('DeploymentsService', () => {
     it('returns empty array when no deployments', async () => {
       const stub = getDeploymentsStub('empty-user')
 
-      const result = await stub.deployments.list()
+      const res = await rpc<ListDeploymentsResult>(stub, 'deployments.list', [{}])
 
-      expect(result.deployments).toHaveLength(0)
-      expect(result.hasMore).toBe(false)
+      expect(res.error).toBeUndefined()
+      expect(res.result!.deployments).toHaveLength(0)
+      expect(res.result!.hasMore).toBe(false)
     })
   })
 
@@ -387,20 +448,25 @@ describe('DeploymentsService', () => {
       const stub = getDeploymentsStub()
       const workerId = uniqueWorkerId()
 
-      await stub.deployments.create({
-        workerId,
-        name: 'to-delete-api',
-        code: 'export default {}',
-        url: 'https://delete.workers.do',
-      })
+      // Create deployment
+      await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId,
+          name: 'to-delete-api',
+          code: 'export default {}',
+          url: 'https://delete.workers.do',
+        },
+      ])
 
-      const result = await stub.deployments.delete(workerId)
+      // Delete it
+      const deleteRes = await rpc<boolean>(stub, 'deployments.delete', [workerId])
 
-      expect(result).toBe(true)
+      expect(deleteRes.error).toBeUndefined()
+      expect(deleteRes.result).toBe(true)
 
       // Verify it's gone
-      const deployment = await stub.deployments.get(workerId)
-      expect(deployment).toBeNull()
+      const getRes = await rpc<Deployment | null>(stub, 'deployments.get', [workerId])
+      expect(getRes.result).toBeNull()
     })
 
     /**
@@ -410,18 +476,22 @@ describe('DeploymentsService', () => {
       const stub = getDeploymentsStub()
       const workerId = uniqueWorkerId()
 
-      await stub.deployments.create({
-        workerId,
-        name: 'indexed-delete-api',
-        code: 'export default {}',
-        url: 'https://indexed-delete.workers.do',
-      })
+      // Create deployment
+      await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId,
+          name: 'indexed-delete-api',
+          code: 'export default {}',
+          url: 'https://indexed-delete.workers.do',
+        },
+      ])
 
-      await stub.deployments.delete(workerId)
+      // Delete it
+      await rpc<boolean>(stub, 'deployments.delete', [workerId])
 
       // Name lookup should also return null
-      const byName = await stub.deployments.getByName('indexed-delete-api')
-      expect(byName).toBeNull()
+      const res = await rpc<Deployment | null>(stub, 'deployments.getByName', ['indexed-delete-api'])
+      expect(res.result).toBeNull()
     })
 
     /**
@@ -430,9 +500,10 @@ describe('DeploymentsService', () => {
     it('returns false for non-existent workerId', async () => {
       const stub = getDeploymentsStub()
 
-      const result = await stub.deployments.delete('non-existent-worker-id')
+      const res = await rpc<boolean>(stub, 'deployments.delete', ['non-existent-worker-id'])
 
-      expect(result).toBe(false)
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBe(false)
     })
 
     /**
@@ -443,25 +514,32 @@ describe('DeploymentsService', () => {
       const workerId1 = uniqueWorkerId()
       const workerId2 = uniqueWorkerId()
 
-      await stub.deployments.create({
-        workerId: workerId1,
-        name: 'reusable-name',
-        code: 'console.log("first")',
-        url: 'https://first.workers.do',
-      })
+      // Create first deployment
+      await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId: workerId1,
+          name: 'reusable-name',
+          code: 'console.log("first")',
+          url: 'https://first.workers.do',
+        },
+      ])
 
-      await stub.deployments.delete(workerId1)
+      // Delete it
+      await rpc<boolean>(stub, 'deployments.delete', [workerId1])
 
       // Should be able to create with same name
-      const deployment = await stub.deployments.create({
-        workerId: workerId2,
-        name: 'reusable-name',
-        code: 'console.log("second")',
-        url: 'https://second.workers.do',
-      })
+      const res = await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId: workerId2,
+          name: 'reusable-name',
+          code: 'console.log("second")',
+          url: 'https://second.workers.do',
+        },
+      ])
 
-      expect(deployment.workerId).toBe(workerId2)
-      expect(deployment.name).toBe('reusable-name')
+      expect(res.error).toBeUndefined()
+      expect(res.result!.workerId).toBe(workerId2)
+      expect(res.result!.name).toBe('reusable-name')
     })
   })
 
@@ -473,28 +551,34 @@ describe('DeploymentsService', () => {
       const stub = getDeploymentsStub()
       const workerId = uniqueWorkerId()
 
-      const original = await stub.deployments.create({
-        workerId,
-        name: 'update-url-api',
-        code: 'export default {}',
-        url: 'https://original.workers.do',
-      })
+      // Create deployment
+      const createRes = await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId,
+          name: 'update-url-api',
+          code: 'export default {}',
+          url: 'https://original.workers.do',
+        },
+      ])
+      const original = createRes.result!
 
       // Small delay to ensure updatedAt differs
       await new Promise((r) => setTimeout(r, 10))
 
-      const updated = await stub.deployments.update(workerId, {
-        url: 'https://updated.workers.do',
-      })
+      // Update it
+      const updateRes = await rpc<Deployment | null>(stub, 'deployments.update', [
+        workerId,
+        { url: 'https://updated.workers.do' },
+      ])
 
-      expect(updated).not.toBeNull()
-      expect(updated!.url).toBe('https://updated.workers.do')
-      expect(updated!.code).toBe(original.code) // Unchanged
-      expect(updated!.name).toBe(original.name) // Unchanged
-      expect(updated!.updatedAt).toBeDefined()
-      expect(new Date(updated!.updatedAt!).getTime()).toBeGreaterThan(
-        new Date(original.createdAt).getTime()
-      )
+      expect(updateRes.error).toBeUndefined()
+      expect(updateRes.result).not.toBeNull()
+      const updated = updateRes.result!
+      expect(updated.url).toBe('https://updated.workers.do')
+      expect(updated.code).toBe(original.code) // Unchanged
+      expect(updated.name).toBe(original.name) // Unchanged
+      expect(updated.updatedAt).toBeDefined()
+      expect(new Date(updated.updatedAt!).getTime()).toBeGreaterThan(new Date(original.createdAt).getTime())
     })
 
     /**
@@ -504,19 +588,25 @@ describe('DeploymentsService', () => {
       const stub = getDeploymentsStub()
       const workerId = uniqueWorkerId()
 
-      await stub.deployments.create({
+      // Create deployment
+      await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId,
+          name: 'update-code-api',
+          code: 'console.log("original")',
+          url: 'https://update-code.workers.do',
+        },
+      ])
+
+      // Update code
+      const res = await rpc<Deployment | null>(stub, 'deployments.update', [
         workerId,
-        name: 'update-code-api',
-        code: 'console.log("original")',
-        url: 'https://update-code.workers.do',
-      })
+        { code: 'console.log("updated")' },
+      ])
 
-      const updated = await stub.deployments.update(workerId, {
-        code: 'console.log("updated")',
-      })
-
-      expect(updated).not.toBeNull()
-      expect(updated!.code).toBe('console.log("updated")')
+      expect(res.error).toBeUndefined()
+      expect(res.result).not.toBeNull()
+      expect(res.result!.code).toBe('console.log("updated")')
     })
 
     /**
@@ -526,21 +616,26 @@ describe('DeploymentsService', () => {
       const stub = getDeploymentsStub()
       const workerId = uniqueWorkerId()
 
-      await stub.deployments.create({
+      // Create deployment
+      await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId,
+          name: 'update-multi-api',
+          code: 'console.log("original")',
+          url: 'https://original.workers.do',
+        },
+      ])
+
+      // Update both
+      const res = await rpc<Deployment | null>(stub, 'deployments.update', [
         workerId,
-        name: 'update-multi-api',
-        code: 'console.log("original")',
-        url: 'https://original.workers.do',
-      })
+        { url: 'https://new-url.workers.do', code: 'console.log("new code")' },
+      ])
 
-      const updated = await stub.deployments.update(workerId, {
-        url: 'https://new-url.workers.do',
-        code: 'console.log("new code")',
-      })
-
-      expect(updated).not.toBeNull()
-      expect(updated!.url).toBe('https://new-url.workers.do')
-      expect(updated!.code).toBe('console.log("new code")')
+      expect(res.error).toBeUndefined()
+      expect(res.result).not.toBeNull()
+      expect(res.result!.url).toBe('https://new-url.workers.do')
+      expect(res.result!.code).toBe('console.log("new code")')
     })
 
     /**
@@ -549,11 +644,13 @@ describe('DeploymentsService', () => {
     it('returns null for non-existent workerId', async () => {
       const stub = getDeploymentsStub()
 
-      const result = await stub.deployments.update('non-existent-worker-id', {
-        url: 'https://new.workers.do',
-      })
+      const res = await rpc<Deployment | null>(stub, 'deployments.update', [
+        'non-existent-worker-id',
+        { url: 'https://new.workers.do' },
+      ])
 
-      expect(result).toBeNull()
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBeNull()
     })
 
     /**
@@ -563,18 +660,24 @@ describe('DeploymentsService', () => {
       const stub = getDeploymentsStub()
       const workerId = uniqueWorkerId()
 
-      const original = await stub.deployments.create({
+      // Create deployment
+      const createRes = await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId,
+          name: 'preserve-created-api',
+          code: 'export default {}',
+          url: 'https://preserve.workers.do',
+        },
+      ])
+      const original = createRes.result!
+
+      // Update it
+      const updateRes = await rpc<Deployment | null>(stub, 'deployments.update', [
         workerId,
-        name: 'preserve-created-api',
-        code: 'export default {}',
-        url: 'https://preserve.workers.do',
-      })
+        { url: 'https://new.workers.do' },
+      ])
 
-      const updated = await stub.deployments.update(workerId, {
-        url: 'https://new.workers.do',
-      })
-
-      expect(updated!.createdAt).toBe(original.createdAt)
+      expect(updateRes.result!.createdAt).toBe(original.createdAt)
     })
   })
 
@@ -586,36 +689,41 @@ describe('DeploymentsService', () => {
       const stub1 = getDeploymentsStub('user-alice')
       const stub2 = getDeploymentsStub('user-bob')
 
-      await stub1.deployments.create({
-        workerId: 'alice-worker',
-        name: 'alice-api',
-        code: 'console.log("alice")',
-        url: 'https://alice.workers.do',
-      })
+      // Create deployments for each user
+      await rpc<Deployment>(stub1, 'deployments.create', [
+        {
+          workerId: 'alice-worker',
+          name: 'alice-api',
+          code: 'console.log("alice")',
+          url: 'https://alice.workers.do',
+        },
+      ])
 
-      await stub2.deployments.create({
-        workerId: 'bob-worker',
-        name: 'bob-api',
-        code: 'console.log("bob")',
-        url: 'https://bob.workers.do',
-      })
+      await rpc<Deployment>(stub2, 'deployments.create', [
+        {
+          workerId: 'bob-worker',
+          name: 'bob-api',
+          code: 'console.log("bob")',
+          url: 'https://bob.workers.do',
+        },
+      ])
 
       // Alice can't see Bob's deployment
-      const aliceSeeBob = await stub1.deployments.get('bob-worker')
-      expect(aliceSeeBob).toBeNull()
+      const aliceSeeBob = await rpc<Deployment | null>(stub1, 'deployments.get', ['bob-worker'])
+      expect(aliceSeeBob.result).toBeNull()
 
       // Bob can't see Alice's deployment
-      const bobSeeAlice = await stub2.deployments.get('alice-worker')
-      expect(bobSeeAlice).toBeNull()
+      const bobSeeAlice = await rpc<Deployment | null>(stub2, 'deployments.get', ['alice-worker'])
+      expect(bobSeeAlice.result).toBeNull()
 
       // Each sees only their own in list
-      const aliceList = await stub1.deployments.list()
-      const bobList = await stub2.deployments.list()
+      const aliceList = await rpc<ListDeploymentsResult>(stub1, 'deployments.list', [{}])
+      const bobList = await rpc<ListDeploymentsResult>(stub2, 'deployments.list', [{}])
 
-      expect(aliceList.deployments).toHaveLength(1)
-      expect(bobList.deployments).toHaveLength(1)
-      expect(aliceList.deployments[0].name).toBe('alice-api')
-      expect(bobList.deployments[0].name).toBe('bob-api')
+      expect(aliceList.result!.deployments).toHaveLength(1)
+      expect(bobList.result!.deployments).toHaveLength(1)
+      expect(aliceList.result!.deployments[0].name).toBe('alice-api')
+      expect(bobList.result!.deployments[0].name).toBe('bob-api')
     })
 
     /**
@@ -625,22 +733,28 @@ describe('DeploymentsService', () => {
       const stub1 = getDeploymentsStub('user-charlie')
       const stub2 = getDeploymentsStub('user-diana')
 
-      await stub1.deployments.create({
-        workerId: 'charlie-worker',
-        name: 'shared-name',
-        code: 'console.log("charlie")',
-        url: 'https://charlie.workers.do',
-      })
+      // Create deployment for Charlie
+      await rpc<Deployment>(stub1, 'deployments.create', [
+        {
+          workerId: 'charlie-worker',
+          name: 'shared-name',
+          code: 'console.log("charlie")',
+          url: 'https://charlie.workers.do',
+        },
+      ])
 
-      // Should not throw - different DO instance
-      const dianaDeployment = await stub2.deployments.create({
-        workerId: 'diana-worker',
-        name: 'shared-name',
-        code: 'console.log("diana")',
-        url: 'https://diana.workers.do',
-      })
+      // Should not fail - different DO instance
+      const res = await rpc<Deployment>(stub2, 'deployments.create', [
+        {
+          workerId: 'diana-worker',
+          name: 'shared-name',
+          code: 'console.log("diana")',
+          url: 'https://diana.workers.do',
+        },
+      ])
 
-      expect(dianaDeployment.name).toBe('shared-name')
+      expect(res.error).toBeUndefined()
+      expect(res.result!.name).toBe('shared-name')
     })
   })
 })

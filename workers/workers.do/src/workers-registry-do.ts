@@ -260,7 +260,8 @@ class DeploymentsService extends RpcTarget {
     }
 
     if (cursor) {
-      listOptions.start = cursor
+      // startAfter excludes the cursor key itself
+      listOptions.startAfter = cursor
     }
 
     const map = await this.storage.list<Deployment>(listOptions)
@@ -352,10 +353,10 @@ interface RpcResponse {
  * - Capnweb protocol (for CLI/HTTP clients)
  */
 export class WorkersRegistryDO extends DurableObject<Record<string, unknown>> {
-  // RPC service exposed as "workers"
-  workers: WorkersService
-  // RPC service exposed as "deployments"
-  deployments: DeploymentsService
+  // RPC services - must be public instance fields for RPC exposure
+  // The Cloudflare runtime detects these via reflection
+  readonly workers: WorkersService
+  readonly deployments: DeploymentsService
 
   constructor(state: DurableObjectState, env: Record<string, unknown>) {
     super(state, env)
@@ -453,6 +454,11 @@ export class WorkersRegistryDO extends DurableObject<Record<string, unknown>> {
         return { result, id }
       }
 
+      if (service === 'deployments') {
+        const result = await this.callDeploymentsMethod(methodName, params)
+        return { result, id }
+      }
+
       // Unknown service
       return {
         error: { code: -32601, message: `Unknown service: ${service}` },
@@ -492,6 +498,34 @@ export class WorkersRegistryDO extends DurableObject<Record<string, unknown>> {
 
       default:
         throw new Error(`Unknown method: workers.${method}`)
+    }
+  }
+
+  /**
+   * Call a method on the deployments service
+   */
+  private async callDeploymentsMethod(method: string, params: any[]): Promise<any> {
+    switch (method) {
+      case 'create':
+        return this.deployments.create(params[0])
+
+      case 'get':
+        return this.deployments.get(params[0])
+
+      case 'getByName':
+        return this.deployments.getByName(params[0])
+
+      case 'list':
+        return this.deployments.list(params[0] || {})
+
+      case 'delete':
+        return this.deployments.delete(params[0])
+
+      case 'update':
+        return this.deployments.update(params[0], params[1])
+
+      default:
+        throw new Error(`Unknown method: deployments.${method}`)
     }
   }
 }

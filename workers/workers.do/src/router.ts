@@ -1,11 +1,16 @@
 /**
  * Request Router for Workers for Platforms
  * Routes incoming requests to appropriate deployed workers
+ *
+ * Key optimization: O(1) lookup via DeploymentsStore
  */
+
+import type { DeploymentsStore, DeploymentRecord } from './dispatch'
 
 export interface Env {
   apps: DispatchNamespace
   deployments: KVNamespace
+  deploymentsStore?: DeploymentsStore
 }
 
 export interface RouteMatch {
@@ -168,6 +173,9 @@ export async function routeRequest(request: Request, env: Env): Promise<Response
 /**
  * Resolve app ID to worker ID
  *
+ * Uses O(1) lookup via DeploymentsStore when available,
+ * falls back to KV scan for backwards compatibility.
+ *
  * @param appId - Application identifier
  * @param env - Worker environment bindings
  * @param context - Optional Thing context for context-based routing
@@ -179,6 +187,17 @@ async function resolveAppIdToWorkerId(
   context?: { ns: string; type: string; id: string }
 ): Promise<string | null> {
   try {
+    // Use O(1) lookup via DeploymentsStore if available
+    if (env.deploymentsStore) {
+      const deployment = await env.deploymentsStore.getByName(appId)
+      if (deployment) {
+        return deployment.workerId
+      }
+      // If not found by name, the app doesn't exist
+      return null
+    }
+
+    // Fallback to KV-based lookup for backwards compatibility
     // If context is provided, try context-based lookup first
     if (context) {
       const { keys } = await env.deployments.list({ prefix: 'deploy:' })

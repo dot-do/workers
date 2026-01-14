@@ -1,0 +1,7 @@
+Error: Multiple database files found in /Users/nathanclevenger/projects/workers/.beads:
+  - beads.db
+  - issues.db
+
+Beads requires a single canonical database: beads.db
+Run 'bd init' to migrate legacy databases or manually remove old databases
+Or run 'bd doctor' for more diagnostics

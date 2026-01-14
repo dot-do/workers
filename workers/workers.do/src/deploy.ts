@@ -1,66 +1,240 @@
 /**
- * Workers for Platforms Deployment Logic
+ * Workers for Platforms (WfP) Deployment Module
  *
- * Supports two modes:
- * 1. Simulated mode (local testing): Uses in-memory worker execution
- * 2. Production mode: Uses Cloudflare API for real WfP deployment
+ * This module provides deployment functionality for Cloudflare Workers for Platforms.
+ * It supports two operational modes:
  *
+ * 1. **Simulated mode** (local testing): Uses an in-memory dispatch namespace simulator
+ *    that evaluates worker code locally. Used in tests and development.
+ *
+ * 2. **Production mode**: Uses the Cloudflare API to deploy workers to a real
+ *    WfP dispatch namespace. Requires CF_API_TOKEN, CF_ACCOUNT_ID, and WFP_NAMESPACE.
+ *
+ * @module src/deploy
  * @see https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/
  */
 
 import type { DeployRequest, DeployResponse } from './types'
 import {
   SimulatedDispatchNamespace,
-  getSimulatedDispatchNamespace,
   type WorkerBindings,
 } from './wfp-simulator'
+import { sanitizeForErrorMessage } from './middleware/security'
+
+// ============================================================================
+// Type Definitions
+// ============================================================================
 
 /**
- * Extended deploy request with bindings and env vars
+ * KV namespace binding configuration for WfP deployment
+ */
+export interface KVBindingConfig {
+  /** Binding name accessible in worker code as env.{name} */
+  name: string
+  /** Cloudflare KV namespace ID */
+  namespace_id: string
+}
+
+/**
+ * Durable Object binding configuration for WfP deployment
+ */
+export interface DurableObjectBindingConfig {
+  /** Binding name accessible in worker code as env.{name} */
+  name: string
+  /** DO class name to bind */
+  class_name: string
+  /** Script containing the DO class (optional, defaults to same script) */
+  script_name?: string
+}
+
+/**
+ * Service binding configuration for WfP deployment
+ */
+export interface ServiceBindingConfig {
+  /** Binding name accessible in worker code as env.{name} */
+  name: string
+  /** Target service worker name */
+  service: string
+}
+
+/**
+ * Worker bindings configuration for WfP deployment
+ */
+export interface DeploymentBindings {
+  /** KV namespace bindings */
+  kv?: KVBindingConfig[]
+  /** Durable Object bindings */
+  do?: DurableObjectBindingConfig[]
+  /** Plain text variable bindings */
+  vars?: Record<string, string>
+  /** Service bindings to other workers */
+  services?: ServiceBindingConfig[]
+}
+
+/**
+ * Extended deploy request with bindings, environment variables, and compatibility settings.
+ * Extends the base DeployRequest with production deployment configuration.
  */
 export interface ExtendedDeployRequest extends DeployRequest {
-  /** KV namespace bindings */
-  bindings?: {
-    kv?: { name: string; namespace_id: string }[]
-    do?: { name: string; class_name: string; script_name?: string }[]
-    vars?: Record<string, string>
-    services?: { name: string; service: string }[]
-  }
-  /** Environment variables */
+  /** Worker bindings (KV, DO, services, vars) */
+  bindings?: DeploymentBindings
+  /** Environment variables passed to the worker */
   env?: Record<string, string>
-  /** Compatibility settings */
+  /**
+   * Compatibility date for the worker runtime.
+   * @see https://developers.cloudflare.com/workers/configuration/compatibility-dates/
+   * @default '2024-01-01'
+   */
   compatibility_date?: string
+  /**
+   * Compatibility flags for the worker runtime.
+   * @example ['nodejs_compat']
+   * @see https://developers.cloudflare.com/workers/configuration/compatibility-flags/
+   */
   compatibility_flags?: string[]
 }
 
 /**
- * Extended environment with simulated dispatch namespace support
+ * Worker environment bindings for the deployment service.
+ * Supports both simulated (testing) and production dispatch namespaces.
  */
 export interface Env {
+  /**
+   * Dispatch namespace for deployed user workers.
+   * In tests: SimulatedDispatchNamespace (supports put/delete methods)
+   * In production: Cloudflare DispatchNamespace (get only, deploy via API)
+   */
   apps: DispatchNamespace | SimulatedDispatchNamespace
+
+  /**
+   * Optional esbuild service binding for TypeScript compilation.
+   * When available, provides production-grade TS → JS compilation.
+   * Falls back to basic type stripping when unavailable.
+   */
   esbuild?: Fetcher
+
+  /**
+   * KV namespace for storing deployment metadata.
+   * Stores worker info, timestamps, and configuration.
+   */
   deployments: KVNamespace
+
+  /**
+   * Optional D1 database for structured deployment tracking.
+   * Used for queries and analytics when available.
+   */
   db?: D1Database
-  /** Cloudflare API token for real WfP deployment */
+
+  /**
+   * Cloudflare API token for production WfP deployment.
+   * Required for production mode. Must have Workers Scripts Write permission.
+   * @see https://developers.cloudflare.com/api/tokens/create/
+   */
   CF_API_TOKEN?: string
-  /** Cloudflare account ID */
+
+  /**
+   * Cloudflare account ID for API calls.
+   * Required for production mode. Found in the Cloudflare dashboard URL.
+   */
   CF_ACCOUNT_ID?: string
-  /** Dispatch namespace name for real WfP */
+
+  /**
+   * Dispatch namespace name for WfP deployment.
+   * Required for production mode. Must be pre-created in Cloudflare dashboard.
+   */
   WFP_NAMESPACE?: string
 }
 
+// ============================================================================
+// Internal Types
+// ============================================================================
+
 /**
- * Check if the dispatch namespace is simulated
+ * Build result from esbuild service
+ */
+interface EsbuildResult {
+  success: boolean
+  output?: string
+  error?: string
+}
+
+/**
+ * Cloudflare API response structure
+ */
+interface CloudflareAPIResponse {
+  success: boolean
+  errors?: Array<{ code: number; message: string }>
+  messages?: string[]
+  result?: unknown
+}
+
+/**
+ * Deployment metadata stored in KV
+ */
+interface DeploymentMetadata {
+  workerId: string
+  name: string
+  language: string
+  createdAt: string
+  updatedAt: string
+  url: string
+}
+
+/**
+ * Worker metadata for the Cloudflare API
+ */
+interface WorkerMetadata {
+  main_module: string
+  compatibility_date: string
+  compatibility_flags: string[]
+  bindings?: Array<{
+    type: string
+    name: string
+    [key: string]: unknown
+  }>
+}
+
+// ============================================================================
+// Type Guards
+// ============================================================================
+
+/**
+ * Type guard to check if the dispatch namespace is a simulated namespace.
+ * Simulated namespaces have a `put` method for deploying workers directly,
+ * while production namespaces require API deployment.
+ *
+ * @param apps - The dispatch namespace to check
+ * @returns True if the namespace is simulated (has put method)
  */
 function isSimulatedNamespace(
   apps: DispatchNamespace | SimulatedDispatchNamespace
 ): apps is SimulatedDispatchNamespace {
-  return 'put' in apps && typeof (apps as any).put === 'function'
+  return 'put' in apps && typeof (apps as SimulatedDispatchNamespace).put === 'function'
 }
 
+// ============================================================================
+// Code Processing
+// ============================================================================
+
 /**
- * Strip TypeScript syntax from code for execution
- * This is a basic implementation - production would use esbuild
+ * Strip TypeScript type annotations from code to produce valid JavaScript.
+ *
+ * This is a basic fallback implementation used when the esbuild service
+ * is unavailable. It handles common type annotation patterns but may not
+ * handle all TypeScript syntax correctly.
+ *
+ * For production deployments with complex TypeScript code, ensure the
+ * esbuild service binding is configured.
+ *
+ * @param code - TypeScript code to strip
+ * @returns JavaScript code with type annotations removed
+ *
+ * @example
+ * ```ts
+ * const input = 'function greet(name: string): string { return name }'
+ * const output = stripTypeScript(input)
+ * // output: 'function greet(name) { return name }'
+ * ```
  */
 function stripTypeScript(code: string): string {
   return code
@@ -77,37 +251,69 @@ function stripTypeScript(code: string): string {
     .replace(/<[A-Za-z][^>]*>/g, '') // Generic type parameters
 }
 
+// ============================================================================
+// Core Deployment Functions
+// ============================================================================
+
 /**
- * Deploy worker to Workers for Platforms namespace
+ * Deploy a worker to Workers for Platforms namespace.
  *
- * In test mode: Deploys to simulated dispatch namespace
- * In production: Uses Cloudflare API to deploy to real WfP
+ * This function handles both simulated (testing) and production deployments:
  *
- * @param request - Deployment request with code and metadata
- * @param env - Worker environment bindings
- * @returns Deployment response with worker ID and URL
+ * - **Simulated mode**: When `env.apps` is a SimulatedDispatchNamespace, deploys
+ *   directly to the in-memory simulator. Used for local testing.
+ *
+ * - **Production mode**: When Cloudflare API credentials are configured
+ *   (CF_API_TOKEN, CF_ACCOUNT_ID, WFP_NAMESPACE), deploys via the Cloudflare API.
+ *
+ * The worker ID is derived from the name, ensuring redeployments update the
+ * existing worker rather than creating duplicates.
+ *
+ * @param request - Deployment request containing worker code and configuration
+ * @param env - Worker environment with dispatch namespace and storage bindings
+ * @returns Deployment response with worker ID, URL, or error details
+ *
+ * @example
+ * ```ts
+ * const result = await deployWorker({
+ *   name: 'my-worker',
+ *   code: 'export default { fetch: () => new Response("Hello!") }',
+ *   language: 'js',
+ * }, env)
+ *
+ * if (result.success) {
+ *   console.log(`Deployed to ${result.url}`)
+ * }
+ * ```
  */
 export async function deployWorker(
   request: DeployRequest | ExtendedDeployRequest,
   env: Env
 ): Promise<DeployResponse> {
   try {
-    // Validate inputs
-    if (!request.name || !request.code) {
+    // Validate required fields
+    if (!request.name) {
       return {
         success: false,
-        error: 'Missing required fields: name and code',
+        error: 'Missing required field: name. Provide a unique identifier for the worker.',
+      }
+    }
+
+    if (!request.code) {
+      return {
+        success: false,
+        error: 'Missing required field: code. Provide the worker source code to deploy.',
       }
     }
 
     // Generate worker ID - use name for consistency in redeploys
     const workerId = request.name
 
-    // Process the code
+    // Process the code (compile TypeScript if needed)
     let processedCode = request.code
 
-    // If we have esbuild, compile the code
     if (env.esbuild) {
+      // Use esbuild service for production-grade compilation
       try {
         const buildResponse = await env.esbuild.fetch('https://esbuild/build', {
           method: 'POST',
@@ -121,52 +327,49 @@ export async function deployWorker(
           }),
         })
 
-        const buildResult = (await buildResponse.json()) as any
+        const buildResult = (await buildResponse.json()) as EsbuildResult
 
         if (!buildResult.success) {
           return {
             success: false,
-            error: `Build failed: ${buildResult.error}`,
+            error: `TypeScript compilation failed: ${buildResult.error}. Check your code for syntax errors.`,
           }
         }
 
         processedCode = buildResult.output || request.code
-      } catch {
-        // If esbuild fails, fall back to basic TypeScript stripping
+      } catch (buildError) {
+        // Esbuild service unavailable - fall back to basic stripping
         if (request.language === 'ts') {
           processedCode = stripTypeScript(request.code)
         }
       }
     } else if (request.language === 'ts') {
-      // Basic TypeScript stripping if no esbuild
+      // Basic TypeScript stripping when esbuild unavailable
       processedCode = stripTypeScript(request.code)
     }
 
     const workerUrl = `https://${workerId}.workers.dev`
 
-    // Check if we're using simulated namespace (for testing)
+    // Deploy to appropriate target
     if (isSimulatedNamespace(env.apps)) {
-      // Deploy to simulated namespace
+      // Simulated mode: Deploy directly to in-memory namespace
       const extRequest = request as ExtendedDeployRequest
       const bindings: WorkerBindings = {}
 
-      // Handle env vars
+      // Merge env vars and binding vars
       if (extRequest.env) {
         bindings.vars = { ...bindings.vars, ...extRequest.env }
       }
-
-      // Handle bindings
       if (extRequest.bindings?.vars) {
         bindings.vars = { ...bindings.vars, ...extRequest.bindings.vars }
       }
 
-      // Deploy to simulated dispatch namespace
       await env.apps.put(workerId, processedCode, {
         bindings,
         env: extRequest.env,
       })
     } else if (env.CF_API_TOKEN && env.CF_ACCOUNT_ID && env.WFP_NAMESPACE) {
-      // Production: Deploy via Cloudflare API
+      // Production mode: Deploy via Cloudflare API
       const deployResult = await deployToCloudflareAPI(
         workerId,
         processedCode,
@@ -180,12 +383,13 @@ export async function deployWorker(
         return deployResult
       }
     }
-    // If no apps binding and no API credentials, just store metadata
+    // Note: If no apps binding and no API credentials, we only store metadata.
+    // This allows testing the metadata layer in isolation.
 
     // Store deployment metadata in KV
     if (env.deployments) {
       const now = new Date().toISOString()
-      const existingData = await env.deployments.get(`deploy:${workerId}`, 'json') as any
+      const existingData = await env.deployments.get(`deploy:${workerId}`, 'json') as DeploymentMetadata | null
 
       await env.deployments.put(
         `deploy:${workerId}`,
@@ -196,17 +400,16 @@ export async function deployWorker(
           createdAt: existingData?.createdAt || now,
           updatedAt: now,
           url: workerUrl,
-        }),
+        } satisfies DeploymentMetadata),
         {
           expirationTtl: 60 * 60 * 24 * 90, // 90 days
         }
       )
     }
 
-    // Store in D1 if available
+    // Store in D1 if available (for queries and analytics)
     if (env.db) {
       try {
-        // Use REPLACE to handle redeploys
         await env.db
           .prepare(
             `INSERT OR REPLACE INTO deployments (worker_id, name, url, created_at) VALUES (?, ?, ?, ?)`
@@ -214,7 +417,7 @@ export async function deployWorker(
           .bind(workerId, request.name, workerUrl, new Date().toISOString())
           .run()
       } catch {
-        // D1 might not have the table - ignore for now
+        // D1 table may not exist - silently skip (KV is the primary store)
       }
     }
 
@@ -227,15 +430,46 @@ export async function deployWorker(
     const errorMessage = error instanceof Error ? error.message : String(error)
     return {
       success: false,
-      error: `Deployment failed: ${errorMessage}`,
+      error: `Deployment failed unexpectedly: ${errorMessage}. Please try again or check the worker code.`,
     }
   }
 }
 
+// ============================================================================
+// Cloudflare API Integration
+// ============================================================================
+
 /**
- * Deploy to Cloudflare API for real WfP
+ * Format Cloudflare API errors into a readable message.
  *
- * Uses PUT /accounts/{account_id}/workers/dispatch/namespaces/{namespace}/scripts/{name}
+ * @param errors - Array of Cloudflare API error objects
+ * @returns Formatted error message string
+ */
+function formatCloudflareErrors(errors: Array<{ code: number; message: string }>): string {
+  if (!errors || errors.length === 0) {
+    return 'Unknown Cloudflare API error'
+  }
+  return errors.map((e) => `[${e.code}] ${e.message}`).join('; ')
+}
+
+/**
+ * Deploy a worker to Cloudflare Workers for Platforms via the API.
+ *
+ * Uses the WfP script upload endpoint:
+ * `PUT /accounts/{account_id}/workers/dispatch/namespaces/{namespace}/scripts/{name}`
+ *
+ * This function is called internally when production credentials are configured.
+ * It handles multipart form data construction with the worker script and metadata.
+ *
+ * @param scriptName - Unique name for the worker script
+ * @param code - Compiled JavaScript code to deploy
+ * @param apiToken - Cloudflare API token with Workers Scripts Write permission
+ * @param accountId - Cloudflare account ID
+ * @param namespace - WfP dispatch namespace name
+ * @param request - Extended request with bindings and compatibility settings
+ * @returns Deployment result with success status and worker URL or error
+ *
+ * @internal
  */
 async function deployToCloudflareAPI(
   scriptName: string,
@@ -249,12 +483,12 @@ async function deployToCloudflareAPI(
     // Build multipart form data for the script upload
     const formData = new FormData()
 
-    // Add the worker script
+    // Add the worker script as the main module
     const scriptBlob = new Blob([code], { type: 'application/javascript' })
     formData.append('worker.js', scriptBlob, 'worker.js')
 
     // Build metadata with bindings
-    const metadata: any = {
+    const metadata: WorkerMetadata = {
       main_module: 'worker.js',
       compatibility_date: request.compatibility_date || '2024-01-01',
       compatibility_flags: request.compatibility_flags || [],
@@ -264,7 +498,7 @@ async function deployToCloudflareAPI(
     if (request.bindings || request.env) {
       metadata.bindings = []
 
-      // Add KV bindings
+      // Add KV namespace bindings
       if (request.bindings?.kv) {
         for (const kv of request.bindings.kv) {
           metadata.bindings.push({
@@ -275,7 +509,7 @@ async function deployToCloudflareAPI(
         }
       }
 
-      // Add DO bindings
+      // Add Durable Object bindings
       if (request.bindings?.do) {
         for (const doBinding of request.bindings.do) {
           metadata.bindings.push({
@@ -298,7 +532,7 @@ async function deployToCloudflareAPI(
         }
       }
 
-      // Add env vars as plain text bindings
+      // Add environment variables as plain text bindings
       const envVars = { ...request.bindings?.vars, ...request.env }
       for (const [name, value] of Object.entries(envVars)) {
         metadata.bindings.push({
@@ -314,7 +548,7 @@ async function deployToCloudflareAPI(
       new Blob([JSON.stringify(metadata)], { type: 'application/json' })
     )
 
-    // Make the API request
+    // Make the API request to Cloudflare
     const response = await fetch(
       `https://api.cloudflare.com/client/v4/accounts/${accountId}/workers/dispatch/namespaces/${namespace}/scripts/${scriptName}`,
       {
@@ -326,12 +560,13 @@ async function deployToCloudflareAPI(
       }
     )
 
-    const result = (await response.json()) as any
+    const result = (await response.json()) as CloudflareAPIResponse
 
     if (!result.success) {
+      const errorDetail = formatCloudflareErrors(result.errors || [])
       return {
         success: false,
-        error: `Cloudflare API error: ${JSON.stringify(result.errors)}`,
+        error: `Cloudflare API rejected the deployment: ${errorDetail}. Verify your API token has Workers Scripts Write permission and the namespace "${namespace}" exists.`,
       }
     }
 
@@ -342,29 +577,80 @@ async function deployToCloudflareAPI(
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
+
+    // Provide actionable error messages for common failures
+    if (errorMessage.includes('fetch')) {
+      return {
+        success: false,
+        error: `Failed to connect to Cloudflare API: ${errorMessage}. Check your network connection and try again.`,
+      }
+    }
+
     return {
       success: false,
-      error: `Cloudflare API deployment failed: ${errorMessage}`,
+      error: `Cloudflare API deployment failed: ${errorMessage}. Check your credentials and try again.`,
     }
   }
 }
 
+// ============================================================================
+// Deployment Query Functions
+// ============================================================================
+
 /**
- * Get deployment information
- *
- * @param workerId - Worker identifier
- * @param env - Worker environment bindings
- * @returns Deployment metadata
+ * Result type for getDeployment function
  */
-export async function getDeployment(workerId: string, env: Env) {
+export interface GetDeploymentResult {
+  success: boolean
+  data?: DeploymentMetadata
+  error?: string
+}
+
+/**
+ * Result type for listDeployments function
+ */
+export interface ListDeploymentsResult {
+  success: boolean
+  deployments?: DeploymentMetadata[]
+  error?: string
+}
+
+/**
+ * Result type for deleteDeployment function
+ */
+export interface DeleteDeploymentResult {
+  success: boolean
+  workerId?: string
+  error?: string
+}
+
+/**
+ * Retrieve deployment metadata for a specific worker.
+ *
+ * Looks up the worker by ID in the KV metadata store.
+ *
+ * @param workerId - Unique worker identifier (same as the name used during deployment)
+ * @param env - Worker environment with KV binding
+ * @returns Deployment metadata or error if not found
+ *
+ * @example
+ * ```ts
+ * const result = await getDeployment('my-worker', env)
+ * if (result.success) {
+ *   console.log(`Created at: ${result.data.createdAt}`)
+ * }
+ * ```
+ */
+export async function getDeployment(workerId: string, env: Env): Promise<GetDeploymentResult> {
   try {
-    // Get from KV
-    const data = await env.deployments.get(`deploy:${workerId}`, 'json')
+    const data = await env.deployments.get(`deploy:${workerId}`, 'json') as DeploymentMetadata | null
 
     if (!data) {
+      // Sanitize workerId to prevent XSS in error messages
+      const safeWorkerId = sanitizeForErrorMessage(workerId)
       return {
         success: false,
-        error: 'Deployment not found',
+        error: `Deployment not found: No worker with ID "${safeWorkerId}" exists. Check the worker name and try again.`,
       }
     }
 
@@ -376,39 +662,62 @@ export async function getDeployment(workerId: string, env: Env) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     return {
       success: false,
-      error: errorMessage,
+      error: `Failed to retrieve deployment: ${errorMessage}`,
     }
   }
 }
 
 /**
- * List all deployments
+ * List all deployed workers with their metadata.
  *
- * @param env - Worker environment bindings
- * @returns List of deployments
+ * Queries deployments from either D1 (preferred, for better query support)
+ * or KV (fallback). Results are ordered by creation date, newest first.
+ *
+ * @param env - Worker environment with storage bindings
+ * @returns List of deployment metadata records
+ *
+ * @example
+ * ```ts
+ * const result = await listDeployments(env)
+ * if (result.success) {
+ *   for (const deployment of result.deployments) {
+ *     console.log(`${deployment.name}: ${deployment.url}`)
+ *   }
+ * }
+ * ```
  */
-export async function listDeployments(env: Env) {
+export async function listDeployments(env: Env): Promise<ListDeploymentsResult> {
   try {
-    // Try D1 first if available
+    // Prefer D1 for structured queries
     if (env.db) {
       const { results } = await env.db
         .prepare(
           `SELECT worker_id, name, url, created_at FROM deployments ORDER BY created_at DESC LIMIT 100`
         )
-        .all()
+        .all<{ worker_id: string; name: string; url: string; created_at: string }>()
+
+      // Transform D1 results to match DeploymentMetadata structure
+      const deployments: DeploymentMetadata[] = (results || []).map((row) => ({
+        workerId: row.worker_id,
+        name: row.name,
+        url: row.url,
+        language: 'js', // D1 schema doesn't store language
+        createdAt: row.created_at,
+        updatedAt: row.created_at,
+      }))
 
       return {
         success: true,
-        deployments: results || [],
+        deployments,
       }
     }
 
-    // Fall back to KV list
+    // Fall back to KV list (less efficient for large numbers of deployments)
     const { keys } = await env.deployments.list({ prefix: 'deploy:' })
-    const deployments = []
+    const deployments: DeploymentMetadata[] = []
 
     for (const key of keys) {
-      const data = await env.deployments.get(key.name, 'json')
+      const data = await env.deployments.get(key.name, 'json') as DeploymentMetadata | null
       if (data) {
         deployments.push(data)
       }
@@ -422,25 +731,40 @@ export async function listDeployments(env: Env) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     return {
       success: false,
-      error: errorMessage,
+      error: `Failed to list deployments: ${errorMessage}`,
     }
   }
 }
 
 /**
- * Delete a deployment
+ * Delete a deployed worker and its metadata.
  *
- * @param workerId - Worker identifier
- * @param env - Worker environment bindings
- * @returns Success status
+ * This operation is idempotent - deleting a non-existent worker returns success.
+ * Removes the worker from:
+ * 1. The dispatch namespace (simulated or production)
+ * 2. KV metadata store
+ * 3. D1 database (if available)
+ *
+ * @param workerId - Unique worker identifier to delete
+ * @param env - Worker environment with dispatch namespace and storage bindings
+ * @returns Success status with the deleted worker ID
+ *
+ * @example
+ * ```ts
+ * const result = await deleteDeployment('my-worker', env)
+ * if (result.success) {
+ *   console.log(`Deleted worker: ${result.workerId}`)
+ * }
+ * ```
  */
-export async function deleteDeployment(workerId: string, env: Env) {
+export async function deleteDeployment(workerId: string, env: Env): Promise<DeleteDeploymentResult> {
   try {
-    // Delete from simulated namespace if applicable
+    // Delete from dispatch namespace
     if (isSimulatedNamespace(env.apps)) {
+      // Simulated mode: Delete from in-memory store
       await env.apps.delete(workerId)
     } else if (env.CF_API_TOKEN && env.CF_ACCOUNT_ID && env.WFP_NAMESPACE) {
-      // Delete from Cloudflare API
+      // Production mode: Delete via Cloudflare API
       const response = await fetch(
         `https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/workers/dispatch/namespaces/${env.WFP_NAMESPACE}/scripts/${workerId}`,
         {
@@ -451,22 +775,21 @@ export async function deleteDeployment(workerId: string, env: Env) {
         }
       )
 
-      if (!response.ok) {
-        const result = (await response.json()) as any
-        // Don't fail on 404 - worker might already be deleted
-        if (response.status !== 404) {
-          return {
-            success: false,
-            error: `Cloudflare API error: ${JSON.stringify(result.errors)}`,
-          }
+      // 404 is acceptable - worker may already be deleted (idempotent)
+      if (!response.ok && response.status !== 404) {
+        const result = (await response.json()) as CloudflareAPIResponse
+        const errorDetail = formatCloudflareErrors(result.errors || [])
+        return {
+          success: false,
+          error: `Failed to delete from Cloudflare: ${errorDetail}`,
         }
       }
     }
 
-    // Delete from KV
+    // Delete metadata from KV
     await env.deployments.delete(`deploy:${workerId}`)
 
-    // Delete from D1 if available
+    // Delete from D1 if available (best-effort, KV is primary)
     if (env.db) {
       try {
         await env.db
@@ -474,7 +797,7 @@ export async function deleteDeployment(workerId: string, env: Env) {
           .bind(workerId)
           .run()
       } catch {
-        // Ignore D1 errors
+        // D1 table may not exist - silently skip
       }
     }
 
@@ -486,46 +809,115 @@ export async function deleteDeployment(workerId: string, env: Env) {
     const errorMessage = error instanceof Error ? error.message : String(error)
     return {
       success: false,
-      error: errorMessage,
+      error: `Failed to delete deployment: ${errorMessage}`,
     }
   }
 }
 
+// ============================================================================
+// Static Site Deployment
+// ============================================================================
+
 /**
- * Deploy static site to Workers for Platforms
+ * Context identifying the Thing that owns this deployment
+ */
+export interface ThingContext {
+  /** Namespace the Thing belongs to */
+  ns: string
+  /** Type of the Thing */
+  type: string
+  /** Unique ID of the Thing */
+  id: string
+}
+
+/**
+ * Static site deployment options
+ */
+export interface StaticSiteOptions {
+  /** Route patterns for the site (default: ['/*']) */
+  routes?: string[]
+  /** Deployment environment name (default: 'production') */
+  environment?: string
+}
+
+/**
+ * Static site deployment request
+ */
+export interface StaticSiteDeployRequest {
+  /** Display name for the deployment */
+  name: string
+  /** Worker code that serves the static site */
+  code: string
+  /** Thing context that owns this deployment */
+  context: ThingContext
+  /** Optional deployment configuration */
+  options?: StaticSiteOptions
+}
+
+/**
+ * Static site deployment result
+ */
+export interface StaticSiteDeployResult {
+  success: boolean
+  workerId?: string
+  url?: string
+  context?: ThingContext
+  environment?: string
+  error?: string
+}
+
+/**
+ * Deploy a static site to Workers for Platforms.
  *
- * @param request - Static site deployment request with Worker code
- * @param env - Worker environment bindings
- * @returns Deployment response with worker ID and URL
+ * Creates a worker that serves static content, associated with a Thing context.
+ * The worker ID includes a timestamp to ensure unique deployments per deploy action.
+ *
+ * @param request - Static site deployment configuration
+ * @param env - Worker environment with dispatch namespace and storage
+ * @returns Deployment result with worker ID, URL, and context
+ *
+ * @example
+ * ```ts
+ * const result = await deployStaticSite({
+ *   name: 'my-landing-page',
+ *   code: staticSiteWorkerCode,
+ *   context: { ns: 'default', type: 'Site', id: 'landing' },
+ *   options: { environment: 'staging' },
+ * }, env)
+ * ```
  */
 export async function deployStaticSite(
-  request: {
-    name: string
-    code: string
-    context: { ns: string; type: string; id: string }
-    options?: {
-      routes?: string[]
-      environment?: string
-    }
-  },
+  request: StaticSiteDeployRequest,
   env: Env
-) {
+): Promise<StaticSiteDeployResult> {
   try {
-    // Validate inputs
-    if (!request.name || !request.code || !request.context) {
+    // Validate required fields
+    if (!request.name) {
       return {
         success: false,
-        error: 'Missing required fields: name, code, and context',
+        error: 'Missing required field: name. Provide a display name for the site.',
+      }
+    }
+    if (!request.code) {
+      return {
+        success: false,
+        error: 'Missing required field: code. Provide the worker code that serves the static site.',
+      }
+    }
+    if (!request.context) {
+      return {
+        success: false,
+        error: 'Missing required field: context. Provide the Thing context (ns, type, id) that owns this deployment.',
       }
     }
 
     const { name, code, context, options } = request
 
-    // Generate worker ID based on Thing context
+    // Generate unique worker ID based on Thing context and timestamp
     const workerId = `${context.id}-${context.type}-${context.ns}-${Date.now()}`
     const workerUrl = `https://${workerId}.workers.dev`
 
-    // Deploy using the main deploy function
+    // Deploy using the core deployment function
     const deployResult = await deployWorker(
       {
         name: workerId,
@@ -536,10 +928,13 @@ export async function deployStaticSite(
     )
 
     if (!deployResult.success) {
-      return deployResult
+      return {
+        success: false,
+        error: deployResult.error,
+      }
     }
 
-    // Store additional metadata
+    // Store extended metadata for static sites
     if (env.deployments) {
       await env.deployments.put(
         `deploy:${workerId}`,
@@ -570,7 +965,7 @@ export async function deployStaticSite(
     const errorMessage = error instanceof Error ? error.message : String(error)
     return {
       success: false,
-      error: `Static site deployment failed: ${errorMessage}`,
+      error: `Static site deployment failed: ${errorMessage}. Check the worker code and try again.`,
     }
   }
 }

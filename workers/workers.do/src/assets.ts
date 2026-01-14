@@ -1,11 +1,16 @@
 /**
  * Static Asset Serving for Workers for Platforms
  * Serves static assets from WfP workers with caching
+ *
+ * @module assets
  */
 
 import { getCacheHeaders, isStaticAsset } from './router'
 
-export interface Env {
+/**
+ * Environment bindings for asset serving
+ */
+interface AssetEnv {
   apps: DispatchNamespace
 }
 
@@ -17,7 +22,7 @@ export interface Env {
  * @param env - Worker environment bindings
  * @returns Response with asset content and cache headers
  */
-export async function serveAsset(request: Request, workerId: string, env: Env): Promise<Response> {
+export async function serveAsset(request: Request, workerId: string, env: AssetEnv): Promise<Response> {
   try {
     // Forward request to worker (which has ASSETS binding)
     const response = await env.apps.get(workerId).fetch(request)
@@ -75,7 +80,7 @@ export async function serveAsset(request: Request, workerId: string, env: Env): 
 export async function serveRangeRequest(
   request: Request,
   workerId: string,
-  env: Env
+  env: AssetEnv
 ): Promise<Response> {
   try {
     // Forward range request to worker

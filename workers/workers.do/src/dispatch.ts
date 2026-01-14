@@ -3,45 +3,24 @@
  * Route requests to deployed workers in WfP namespace
  *
  * Key optimization: O(1) lookup via secondary index
+ *
+ * @module dispatch
  */
 
-import type { DispatchRequest, DispatchResponse } from './types'
+import type {
+  DispatchRequest,
+  DispatchResponse,
+  DispatchEnv,
+  DeploymentRecord,
+  DeploymentsStore,
+  RateLimitStatus,
+} from './types'
 
-/**
- * Deployment record from secondary index
- */
-export interface DeploymentRecord {
-  workerId: string
-  name: string
-  url: string
-  createdAt: string
-  context?: { ns: string; type: string; id: string }
-}
+// Re-export types for backwards compatibility
+export type { DeploymentRecord, DeploymentsStore, RateLimitStatus }
 
-/**
- * Rate limit status for a worker
- */
-export interface RateLimitStatus {
-  allowed: boolean
-  remaining: number
-  resetAt: number
-}
-
-/**
- * DeploymentsStore interface for O(1) lookup
- * Uses secondary index for name-based lookups
- */
-export interface DeploymentsStore {
-  getById(workerId: string): Promise<DeploymentRecord | null>
-  getByName(name: string): Promise<DeploymentRecord | null>
-  getRateLimitStatus(workerId: string): Promise<RateLimitStatus>
-}
-
-export interface Env {
-  apps: DispatchNamespace
-  deployments: KVNamespace
-  deploymentsStore?: DeploymentsStore
-}
+// Use DispatchEnv as Env for this module
+type Env = DispatchEnv
 
 /**
  * Dispatch request to a worker in Workers for Platforms namespace

@@ -3,21 +3,23 @@
  * Routes incoming requests to appropriate deployed workers
  *
  * Key optimization: O(1) lookup via DeploymentsStore
+ *
+ * @module router
  */
 
-import type { DeploymentsStore, DeploymentRecord } from './dispatch'
+import type {
+  DispatchEnv,
+  DeploymentsStore,
+  ThingContext,
+  AppIdMatch,
+  RouteMatch,
+} from './types'
 
-export interface Env {
-  apps: DispatchNamespace
-  deployments: KVNamespace
-  deploymentsStore?: DeploymentsStore
-}
+// Re-export types for backwards compatibility
+export type { RouteMatch }
 
-export interface RouteMatch {
-  workerId: string
-  path: string
-  matched: boolean
-}
+// Use DispatchEnv as Env for this module
+type Env = DispatchEnv
 
 /**
  * Extract app ID from URL
@@ -33,7 +35,7 @@ export interface RouteMatch {
  * @param url - Request URL
  * @returns App ID and remaining path, or null if not matched
  */
-export function extractAppId(url: URL): { appId: string; path: string; context?: { ns: string; type: string; id: string } } | null {
+export function extractAppId(url: URL): AppIdMatch | null {
   const hostname = url.hostname
   const pathname = url.pathname
 
@@ -184,7 +186,7 @@ export async function routeRequest(request: Request, env: Env): Promise<Response
 async function resolveAppIdToWorkerId(
   appId: string,
   env: Env,
-  context?: { ns: string; type: string; id: string }
+  context?: ThingContext
 ): Promise<string | null> {
   try {
     // Use O(1) lookup via DeploymentsStore if available

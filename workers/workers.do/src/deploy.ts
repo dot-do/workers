@@ -970,54 +970,132 @@ export async function deployStaticSite(
   }
 }
 
+// ============================================================================
+// OpenNext Deployment (Next.js on Workers)
+// ============================================================================
+
 /**
- * Deploy OpenNext site to Workers for Platforms
+ * Asset file for OpenNext deployment
+ */
+export interface OpenNextAsset {
+  /** Path where the asset should be served */
+  path: string
+  /** Base64-encoded asset content */
+  content: string
+}
+
+/**
+ * OpenNext deployment request
+ */
+export interface OpenNextDeployRequest {
+  /** Display name for the deployment */
+  name: string
+  /** Compiled OpenNext worker code */
+  code: string
+  /** Thing context that owns this deployment */
+  context: ThingContext
+  /** Static assets (images, CSS, JS bundles, etc.) */
+  assets?: OpenNextAsset[]
+  /** Optional deployment configuration */
+  options?: StaticSiteOptions
+}
+
+/**
+ * Deployment statistics
+ */
+export interface DeploymentStats {
+  /** Size of worker code in bytes */
+  codeSize: number
+  /** Number of static assets */
+  assetCount: number
+  /** Total size of all assets in bytes */
+  totalAssetSize: number
+}
+
+/**
+ * OpenNext deployment result
+ */
+export interface OpenNextDeployResult {
+  success: boolean
+  workerId?: string
+  url?: string
+  context?: ThingContext
+  environment?: string
+  stats?: DeploymentStats
+  error?: string
+}
+
+/**
+ * Deploy a Next.js application built with OpenNext to Workers for Platforms.
  *
- * Deploys a Next.js application built with OpenNext to Workers for Platforms.
- * Handles both the worker code and static assets.
+ * OpenNext is a build adapter that transforms Next.js applications for deployment
+ * on serverless platforms like Cloudflare Workers. This function handles:
  *
- * @param request - Deployment request with worker code and assets
- * @param env - Worker environment bindings
- * @returns Deployment result with worker ID and URL
+ * 1. Worker code deployment with `nodejs_compat` flag (required for Next.js)
+ * 2. Metadata storage including asset statistics
+ *
+ * Note: Asset upload is tracked in metadata but assets are expected to be
+ * bundled into the worker code or served from a separate asset store.
+ *
+ * @param request - OpenNext deployment configuration with code and assets
+ * @param env - Worker environment with dispatch namespace and storage
+ * @returns Deployment result with worker ID, URL, context, and statistics
+ *
+ * @example
+ * ```ts
+ * const result = await deployOpenNext({
+ *   name: 'my-nextjs-app',
+ *   code: openNextWorkerCode,
+ *   context: { ns: 'default', type: 'App', id: 'nextjs-1' },
+ *   assets: [
+ *     { path: '/_next/static/chunks/main.js', content: base64EncodedContent },
+ *   ],
+ * }, env)
+ *
+ * if (result.success) {
+ *   console.log(`Deployed with ${result.stats.assetCount} assets`)
+ * }
+ * ```
+ *
+ * @see https://open-next.js.org/
  */
 export async function deployOpenNext(
-  request: {
-    name: string
-    code: string
-    context: { ns: string; type: string; id: string }
-    assets?: Array<{
-      path: string
-      content: string // base64 encoded
-    }>
-    options?: {
-      routes?: string[]
-      environment?: string
-    }
-  },
+  request: OpenNextDeployRequest,
   env: Env
-) {
+): Promise<OpenNextDeployResult> {
   try {
-    // Validate inputs
-    if (!request.name || !request.code || !request.context) {
+    // Validate required fields
+    if (!request.name) {
       return {
         success: false,
-        error: 'Missing required fields: name, code, and context',
+        error: 'Missing required field: name. Provide a display name for the Next.js app.',
+      }
+    }
+    if (!request.code) {
+      return {
+        success: false,
+        error: 'Missing required field: code. Provide the compiled OpenNext worker code.',
+      }
+    }
+    if (!request.context) {
+      return {
+        success: false,
+        error: 'Missing required field: context. Provide the Thing context (ns, type, id) that owns this deployment.',
       }
     }
 
     const { name, code, context, assets = [], options } = request
 
-    // Generate worker ID based on Thing context
+    // Generate unique worker ID based on Thing context and timestamp
     const workerId = `${context.id}-${context.type}-${context.ns}-${Date.now()}`
     const workerUrl = `https://${workerId}.workers.dev`
 
-    // Calculate total asset size (estimate from base64)
+    // Calculate total asset size (base64 -> binary ratio is ~4:3)
     const totalAssetSize = assets.reduce((sum, asset) => {
-      // Base64 decodes to roughly 3/4 of its length
       return sum + Math.floor((asset.content.length * 3) / 4)
     }, 0)
 
-    // Deploy using the main deploy function with nodejs_compat flag
+    // Deploy with nodejs_compat flag required for Next.js server-side features
     const deployResult = await deployWorker(
       {
         name: workerId,
@@ -1029,10 +1107,13 @@ export async function deployOpenNext(
     )
 
     if (!deployResult.success) {
-      return deployResult
+      return {
+        success: false,
+        error: deployResult.error,
+      }
     }
 
-    // Store additional metadata
+    // Store extended metadata for OpenNext deployments
     if (env.deployments) {
       await env.deployments.put(
         `deploy:${workerId}`,
@@ -1072,7 +1153,7 @@ export async function deployOpenNext(
     const errorMessage = error instanceof Error ? error.message : String(error)
     return {
       success: false,
-      error: `OpenNext deployment failed: ${errorMessage}`,
+      error: `OpenNext deployment failed: ${errorMessage}. Ensure the OpenNext build completed successfully.`,
     }
   }
 }

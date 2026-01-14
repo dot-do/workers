@@ -1,0 +1,27 @@
+{
+  "name": "@dotdo/workers.do",
+  "version": "0.1.0",
+  "description": "Worker registry and deployment service",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "dotdo": "^0.1.0",
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.12.3",
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "@vitest/runner": "3.2.4",
+    "@vitest/snapshot": "3.2.4",
+    "vitest": "3.2.4",
+    "wrangler": "^3.99.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "workers-do",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-08",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Rules for importing SQL files (if needed in future)
+  "rules": [
+    { "type": "Text", "globs": ["**/*.sql"] }
+  ],
+
+  // Routes
+  "routes": [
+    { "pattern": "workers.do", "custom_domain": true }
+  ],
+
+  // Durable Objects
+  "durable_objects": {
+    "bindings": [
+      { "name": "WORKERS_REGISTRY", "class_name": "WorkersRegistryDO" }
+    ]
+  },
+
+  // Migrations - using SQLite storage for Things store
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["WorkersRegistryDO"] }
+  ]
+}

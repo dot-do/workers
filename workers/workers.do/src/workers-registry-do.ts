@@ -26,6 +26,42 @@ export interface LinkOptions {
   folder: string
 }
 
+// ============================================================================
+// Deployments Types
+// ============================================================================
+
+export interface Deployment {
+  workerId: string
+  name: string
+  code: string
+  url: string
+  createdAt: string
+  updatedAt?: string
+}
+
+export interface CreateDeploymentOptions {
+  workerId: string
+  name: string
+  code: string
+  url: string
+}
+
+export interface ListDeploymentsOptions {
+  limit?: number
+  cursor?: string
+}
+
+export interface ListDeploymentsResult {
+  deployments: Deployment[]
+  cursor?: string
+  hasMore: boolean
+}
+
+export interface UpdateDeploymentOptions {
+  url?: string
+  code?: string
+}
+
 /**
  * Workers service - exposed via RPC as "workers"
  */
@@ -139,6 +175,160 @@ class WorkersService extends RpcTarget {
   }
 }
 
+// ============================================================================
+// Deployments Service
+// ============================================================================
+
+/**
+ * DeploymentsService - exposed via RPC as "deployments"
+ *
+ * Storage pattern:
+ * - Primary: `deployment:{workerId}` -> Deployment object
+ * - Secondary index: `name:{name}` -> workerId (for O(1) name lookup)
+ */
+class DeploymentsService extends RpcTarget {
+  private storage: DurableObjectStorage
+
+  constructor(storage: DurableObjectStorage) {
+    super()
+    this.storage = storage
+  }
+
+  /**
+   * Create a new deployment
+   * Stores deployment with secondary index for name lookup
+   */
+  async create(options: CreateDeploymentOptions): Promise<Deployment> {
+    const { workerId, name, code, url } = options
+
+    // Check if workerId already exists
+    const existingById = await this.storage.get<Deployment>(`deployment:${workerId}`)
+    if (existingById) {
+      throw new Error(`Deployment with workerId "${workerId}" already exists`)
+    }
+
+    // Check if name already exists via secondary index
+    const existingWorkerId = await this.storage.get<string>(`name:${name}`)
+    if (existingWorkerId) {
+      throw new Error(`Deployment with name "${name}" already exists`)
+    }
+
+    const deployment: Deployment = {
+      workerId,
+      name,
+      code,
+      url,
+      createdAt: new Date().toISOString(),
+    }
+
+    // Store deployment and secondary index atomically
+    await this.storage.put(`deployment:${workerId}`, deployment)
+    await this.storage.put(`name:${name}`, workerId)
+
+    return deployment
+  }
+
+  /**
+   * Get deployment by workerId
+   */
+  async get(workerId: string): Promise<Deployment | null> {
+    const deployment = await this.storage.get<Deployment>(`deployment:${workerId}`)
+    return deployment || null
+  }
+
+  /**
+   * Get deployment by name via secondary index (O(1) lookup)
+   */
+  async getByName(name: string): Promise<Deployment | null> {
+    const workerId = await this.storage.get<string>(`name:${name}`)
+    if (!workerId) {
+      return null
+    }
+    return this.get(workerId)
+  }
+
+  /**
+   * List deployments with pagination
+   */
+  async list(options: ListDeploymentsOptions = {}): Promise<ListDeploymentsResult> {
+    const { limit = 100, cursor } = options
+
+    // Build list options
+    const listOptions: DurableObjectListOptions = {
+      prefix: 'deployment:',
+      limit: limit + 1, // Fetch one extra to determine hasMore
+    }
+
+    if (cursor) {
+      listOptions.start = cursor
+    }
+
+    const map = await this.storage.list<Deployment>(listOptions)
+    const deployments: Deployment[] = []
+    let lastKey: string | undefined
+
+    for (const [key, deployment] of map) {
+      deployments.push(deployment)
+      lastKey = key
+    }
+
+    // Check if there are more results
+    const hasMore = deployments.length > limit
+    if (hasMore) {
+      deployments.pop() // Remove the extra item
+      lastKey = `deployment:${deployments[deployments.length - 1].workerId}`
+    }
+
+    return {
+      deployments,
+      cursor: hasMore ? lastKey : undefined,
+      hasMore,
+    }
+  }
+
+  /**
+   * Delete a deployment by workerId
+   * Removes both primary record and secondary index
+   */
+  async delete(workerId: string): Promise<boolean> {
+    const deployment = await this.storage.get<Deployment>(`deployment:${workerId}`)
+    if (!deployment) {
+      return false
+    }
+
+    // Remove deployment and secondary index
+    await this.storage.delete(`deployment:${workerId}`)
+    await this.storage.delete(`name:${deployment.name}`)
+
+    return true
+  }
+
+  /**
+   * Update a deployment's url and/or code
+   */
+  async update(workerId: string, options: UpdateDeploymentOptions): Promise<Deployment | null> {
+    const deployment = await this.storage.get<Deployment>(`deployment:${workerId}`)
+    if (!deployment) {
+      return null
+    }
+
+    const updated: Deployment = {
+      ...deployment,
+      updatedAt: new Date().toISOString(),
+    }
+
+    if (options.url !== undefined) {
+      updated.url = options.url
+    }
+    if (options.code !== undefined) {
+      updated.code = options.code
+    }
+
+    await this.storage.put(`deployment:${workerId}`, updated)
+    return updated
+  }
+}
+
 /**
  * Capnweb RPC message format
  */
@@ -164,10 +354,13 @@ interface RpcResponse {
 export class WorkersRegistryDO extends DurableObject<Record<string, unknown>> {
   // RPC service exposed as "workers"
   workers: WorkersService
+  // RPC service exposed as "deployments"
+  deployments: DeploymentsService
 
   constructor(state: DurableObjectState, env: Record<string, unknown>) {
     super(state, env)
     this.workers = new WorkersService(state.storage)
+    this.deployments = new DeploymentsService(state.storage)
   }
 
   /**

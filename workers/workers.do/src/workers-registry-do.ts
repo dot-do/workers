@@ -2,14 +2,13 @@
  * WorkersRegistryDO - Durable Object for worker registry
  *
  * Stores and manages worker metadata for a user.
- * Extends dotdo's DO class for SQLite storage and automatic Cap'n Web RPC.
+ * Supports both capnweb RPC protocol and REST API.
  */
 
-import { DO } from 'dotdo/objects'
+import { DurableObject, RpcTarget } from 'cloudflare:workers'
 
 export interface Worker {
   $id: string
-  $type: 'Worker'
   name: string
   url: string
   createdAt: string
@@ -27,16 +26,30 @@ export interface LinkOptions {
   folder: string
 }
 
-export class WorkersRegistryDO extends DO {
+/**
+ * Workers service - exposed via RPC as "workers"
+ */
+class WorkersService extends RpcTarget {
+  private storage: DurableObjectStorage
+
+  constructor(storage: DurableObjectStorage) {
+    super()
+    this.storage = storage
+  }
+
   /**
-   * List workers with sorting by created, deployed, or accessed timestamp.
-   * Exposed via Cap'n Web RPC automatically.
+   * List workers with sorting
    */
-  async listWorkers(options: ListOptions = {}): Promise<Worker[]> {
+  async list(options: ListOptions = {}): Promise<Worker[]> {
     const { sortBy = 'accessed', limit = 20 } = options
 
-    // Get all workers from the things store
-    const workers = await this.things.list({ type: 'Worker' }) as unknown as Worker[]
+    // Get all workers from storage
+    const map = await this.storage.list<Worker>({ prefix: 'worker:' })
+    const workers: Worker[] = []
+
+    for (const [, worker] of map) {
+      workers.push(worker)
+    }
 
     // Sort by requested field (descending - most recent first)
     workers.sort((a, b) => {
@@ -53,123 +66,239 @@ export class WorkersRegistryDO extends DO {
   }
 
   /**
-   * Get a single worker by ID.
-   * Exposed via Cap'n Web RPC automatically.
+   * Get a single worker by ID
    */
-  async getWorker(workerId: string): Promise<Worker | null> {
-    const thing = await this.things.get(workerId)
-    if (!thing || thing.$type !== 'Worker') {
-      return null
-    }
-    return this.thingToWorker(thing)
+  async get(workerId: string): Promise<Worker | null> {
+    return await this.storage.get<Worker>(`worker:${workerId}`) || null
   }
 
   /**
-   * Link a folder to a worker.
-   * Exposed via Cap'n Web RPC automatically.
+   * Link a folder to a worker
    */
-  async linkWorker(workerId: string, options: LinkOptions): Promise<boolean> {
-    const thing = await this.things.get(workerId)
-    if (!thing || thing.$type !== 'Worker') {
+  async link(workerId: string, options: LinkOptions): Promise<boolean> {
+    const worker = await this.storage.get<Worker>(`worker:${workerId}`)
+    if (!worker) {
       return false
     }
 
-    const worker = this.thingToWorker(thing)
     const folders = worker.linkedFolders || []
     if (!folders.includes(options.folder)) {
       folders.push(options.folder)
     }
 
-    const existingData = (thing.data as Record<string, unknown>) || {}
-    await this.things.update(workerId, {
-      data: {
-        ...existingData,
-        linkedFolders: folders,
-        accessedAt: new Date().toISOString()
-      }
+    await this.storage.put(`worker:${workerId}`, {
+      ...worker,
+      linkedFolders: folders,
+      accessedAt: new Date().toISOString()
     })
 
     return true
   }
 
   /**
-   * Register a new worker.
-   * Exposed via Cap'n Web RPC automatically.
+   * Register a new worker
    */
-  async registerWorker(worker: Omit<Worker, '$type' | 'createdAt'>): Promise<Worker> {
+  async register(worker: Omit<Worker, 'createdAt'>): Promise<Worker> {
     const now = new Date().toISOString()
+    const fullWorker: Worker = {
+      ...worker,
+      createdAt: now,
+      accessedAt: now
+    }
 
-    const created = await this.things.create({
-      $id: worker.$id,
-      $type: 'Worker',
-      name: worker.name,
-      data: {
-        url: worker.url,
-        createdAt: now,
-        accessedAt: now,
-        deployedAt: worker.deployedAt,
-        linkedFolders: worker.linkedFolders || []
-      }
-    })
-
-    return this.thingToWorker(created)
+    await this.storage.put(`worker:${worker.$id}`, fullWorker)
+    return fullWorker
   }
 
   /**
-   * Update the accessed timestamp for a worker.
-   * Exposed via Cap'n Web RPC automatically.
+   * Update accessed timestamp
    */
   async updateAccessed(workerId: string): Promise<void> {
-    const thing = await this.things.get(workerId)
-    if (!thing || thing.$type !== 'Worker') {
-      return
-    }
-
-    const existingData = (thing.data as Record<string, unknown>) || {}
-    await this.things.update(workerId, {
-      data: {
-        ...existingData,
+    const worker = await this.storage.get<Worker>(`worker:${workerId}`)
+    if (worker) {
+      await this.storage.put(`worker:${workerId}`, {
+        ...worker,
         accessedAt: new Date().toISOString()
-      }
-    })
+      })
+    }
   }
 
   /**
-   * Update the deployed timestamp for a worker.
-   * Exposed via Cap'n Web RPC automatically.
+   * Update deployed timestamp
    */
   async updateDeployed(workerId: string): Promise<void> {
-    const thing = await this.things.get(workerId)
-    if (!thing || thing.$type !== 'Worker') {
-      return
-    }
-
-    const now = new Date().toISOString()
-    const existingData = (thing.data as Record<string, unknown>) || {}
-    await this.things.update(workerId, {
-      data: {
-        ...existingData,
+    const worker = await this.storage.get<Worker>(`worker:${workerId}`)
+    if (worker) {
+      const now = new Date().toISOString()
+      await this.storage.put(`worker:${workerId}`, {
+        ...worker,
         deployedAt: now,
         accessedAt: now
+      })
+    }
+  }
+}
+
+/**
+ * Capnweb RPC message format
+ */
+interface RpcMessage {
+  method: string
+  params?: any[]
+  id?: string | number
+}
+
+interface RpcResponse {
+  result?: any
+  error?: { code: number; message: string }
+  id?: string | number
+}
+
+/**
+ * WorkersRegistryDO - Main Durable Object class
+ *
+ * Exposes "workers" service via both:
+ * - Cloudflare RPC (for DO-to-DO calls)
+ * - Capnweb protocol (for CLI/HTTP clients)
+ */
+export class WorkersRegistryDO extends DurableObject<Record<string, unknown>> {
+  // RPC service exposed as "workers"
+  workers: WorkersService
+
+  constructor(state: DurableObjectState, env: Record<string, unknown>) {
+    super(state, env)
+    this.workers = new WorkersService(state.storage)
+  }
+
+  /**
+   * Handle HTTP requests
+   * Supports both capnweb RPC and REST API
+   */
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url)
+
+    // Handle capnweb RPC (POST to root with JSON body)
+    if (request.method === 'POST' && (url.pathname === '/' || url.pathname === '')) {
+      return this.handleRpc(request)
+    }
+
+    // REST API endpoints
+    if (url.pathname === '/list' || url.pathname === '/workers') {
+      const sortBy = url.searchParams.get('sortBy') as 'created' | 'deployed' | 'accessed' || 'accessed'
+      const limit = parseInt(url.searchParams.get('limit') || '20')
+      const workers = await this.workers.list({ sortBy, limit })
+      return new Response(JSON.stringify(workers), {
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    if (url.pathname.startsWith('/get/') || url.pathname.startsWith('/workers/')) {
+      const workerId = url.pathname.split('/').pop() || ''
+      const worker = await this.workers.get(workerId)
+      if (!worker) {
+        return new Response(JSON.stringify({ error: 'not_found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' }
+        })
       }
+      return new Response(JSON.stringify(worker), {
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Default: return 404
+    return new Response(JSON.stringify({ error: 'not_found', path: url.pathname }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' }
     })
   }
 
   /**
-   * Convert a ThingEntity to a Worker interface.
-   * The Worker fields are stored in Thing.data for flexibility.
+   * Handle capnweb RPC requests
+   * Format: { "method": "workers.list", "params": [...], "id": 1 }
    */
-  private thingToWorker(thing: { $id: string; $type: string; name: string | null; data: unknown }): Worker {
-    const data = thing.data as Record<string, unknown> || {}
-    return {
-      $id: thing.$id,
-      $type: 'Worker',
-      name: thing.name || '',
-      url: data.url as string || '',
-      createdAt: data.createdAt as string || '',
-      deployedAt: data.deployedAt as string | undefined,
-      accessedAt: data.accessedAt as string | undefined,
-      linkedFolders: data.linkedFolders as string[] | undefined
+  private async handleRpc(request: Request): Promise<Response> {
+    try {
+      const body = await request.json() as RpcMessage | RpcMessage[]
+
+      // Handle batch requests
+      if (Array.isArray(body)) {
+        const results = await Promise.all(body.map(msg => this.executeRpc(msg)))
+        return new Response(JSON.stringify(results), {
+          headers: { 'Content-Type': 'application/json' }
+        })
+      }
+
+      // Single request
+      const result = await this.executeRpc(body)
+      return new Response(JSON.stringify(result), {
+        headers: { 'Content-Type': 'application/json' }
+      })
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      return new Response(JSON.stringify({
+        error: { code: -32700, message: `Parse error: ${errorMessage}` }
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+  }
+
+  /**
+   * Execute a single RPC call
+   */
+  private async executeRpc(msg: RpcMessage): Promise<RpcResponse> {
+    const { method, params = [], id } = msg
+
+    try {
+      // Parse method: "service.method" format
+      const [service, methodName] = method.split('.')
+
+      if (service === 'workers') {
+        const result = await this.callWorkersMethod(methodName, params)
+        return { result, id }
+      }
+
+      // Unknown service
+      return {
+        error: { code: -32601, message: `Unknown service: ${service}` },
+        id
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      return {
+        error: { code: -32603, message: errorMessage },
+        id
+      }
+    }
+  }
+
+  /**
+   * Call a method on the workers service
+   */
+  private async callWorkersMethod(method: string, params: any[]): Promise<any> {
+    switch (method) {
+      case 'list':
+        return this.workers.list(params[0] || {})
+
+      case 'get':
+        return this.workers.get(params[0])
+
+      case 'link':
+        return this.workers.link(params[0], params[1])
+
+      case 'register':
+        return this.workers.register(params[0])
+
+      case 'updateAccessed':
+        return this.workers.updateAccessed(params[0])
+
+      case 'updateDeployed':
+        return this.workers.updateDeployed(params[0])
+
+      default:
+        throw new Error(`Unknown method: workers.${method}`)
     }
   }
 }

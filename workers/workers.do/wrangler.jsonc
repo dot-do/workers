@@ -1,9 +1,16 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "workers-do",
+  "name": "workers",
+  "account_id": "b6641681fe423910342b9ffa1364c76d",
   "main": "src/index.ts",
   "compatibility_date": "2026-01-08",
   "compatibility_flags": ["nodejs_compat"],
+
+  // Observability
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
 
   // Rules for importing SQL files (if needed in future)
   "rules": [
@@ -15,15 +22,58 @@
     { "pattern": "workers.do", "custom_domain": true }
   ],
 
-  // Durable Objects
+  // Durable Objects - User registry
   "durable_objects": {
     "bindings": [
       { "name": "WORKERS_REGISTRY", "class_name": "WorkersRegistryDO" }
     ]
   },
 
-  // Migrations - using SQLite storage for Things store
+  // DO Migrations
   "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["WorkersRegistryDO"] }
+    { "tag": "v1", "new_classes": ["WorkersRegistryDO"] }
   ]
+
+  // ============ COMMENTED OUT UNTIL CONFIGURED ============
+  // Workers for Platforms - dispatch namespace
+  // "dispatch_namespaces": [
+  //   {
+  //     "binding": "apps",
+  //     "namespace": "user-apps"
+  //   }
+  // ],
+
+  // Service bindings
+  // "services": [
+  //   {
+  //     "binding": "esbuild",
+  //     "service": "esbuild"
+  //   },
+  //   {
+  //     "binding": "CLICKHOUSE",
+  //     "service": "clickhouse"
+  //   }
+  // ],
+
+  // KV for deployment metadata
+  // "kv_namespaces": [
+  //   {
+  //     "binding": "deployments",
+  //     "id": "workers-deployments-kv"
+  //   }
+  // ],
+
+  // D1 database for deployment queries
+  // "d1_databases": [
+  //   {
+  //     "binding": "db",
+  //     "database_name": "workers-platform",
+  //     "database_id": "workers-platform-d1"
+  //   }
+  // ],
+
+  // Tail consumers for logging
+  // "tail_consumers": [
+  //   { "service": "clickhouse" }
+  // ]
 }

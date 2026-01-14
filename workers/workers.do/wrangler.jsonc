@@ -32,18 +32,32 @@
   // DO Migrations
   "migrations": [
     { "tag": "v1", "new_classes": ["WorkersRegistryDO"] }
+  ],
+
+  // ============ WORKERS FOR PLATFORMS BINDINGS ============
+  // @see https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/
+
+  // Workers for Platforms - dispatch namespace
+  // Using existing 'dotdo-public' namespace (has 42 deployed scripts)
+  "dispatch_namespaces": [
+    {
+      "binding": "apps",
+      "namespace": "dotdo-public"
+    }
+  ],
+
+  // KV for deployment metadata
+  // Using existing 'DEPLOYMENTS' KV namespace
+  "kv_namespaces": [
+    {
+      "binding": "deployments",
+      "id": "02afe31f19ce439dbb4d937df5804f37"
+    }
   ]
 
-  // ============ COMMENTED OUT UNTIL CONFIGURED ============
-  // Workers for Platforms - dispatch namespace
-  // "dispatch_namespaces": [
-  //   {
-  //     "binding": "apps",
-  //     "namespace": "user-apps"
-  //   }
-  // ],
+  // ============ OPTIONAL BINDINGS (uncomment when services exist) ============
 
-  // Service bindings
+  // Service bindings (requires esbuild/clickhouse workers to be deployed)
   // "services": [
   //   {
   //     "binding": "esbuild",
@@ -55,20 +69,13 @@
   //   }
   // ],
 
-  // KV for deployment metadata
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "deployments",
-  //     "id": "workers-deployments-kv"
-  //   }
-  // ],
-
-  // D1 database for deployment queries
+  // D1 database for deployment queries (requires D1 database to be created)
+  // To create: wrangler d1 create workers-platform
   // "d1_databases": [
   //   {
   //     "binding": "db",
   //     "database_name": "workers-platform",
-  //     "database_id": "workers-platform-d1"
+  //     "database_id": "<paste-database-id-here>"
   //   }
   // ],
 

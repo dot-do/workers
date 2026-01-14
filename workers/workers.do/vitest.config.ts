@@ -47,6 +47,21 @@ export default defineWorkersConfig({
           // Compatibility settings matching wrangler.jsonc
           compatibilityDate: '2026-01-08',
           compatibilityFlags: ['nodejs_compat'],
+
+          // Workers for Platforms bindings for testing
+          // NOTE: Miniflare does NOT support dispatch_namespaces natively
+          // Real WfP tests require actual Cloudflare infrastructure
+          // These bindings provide the structure but tests will fail without real WfP
+          //
+          // To run real WfP tests:
+          // 1. Deploy to Cloudflare with: npm run deploy
+          // 2. Run integration tests against the deployed worker
+          //
+          // @see https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/
+          kvNamespaces: {
+            // KV namespace for deployment metadata (simulated in tests)
+            deployments: 'deployments-test',
+          },
         },
       },
     },

@@ -681,6 +681,282 @@ describe('DeploymentsService', () => {
     })
   })
 
+  describe('deployments.getMany', () => {
+    /**
+     * Test: GetMany retrieves multiple deployments in a single batch
+     */
+    it('retrieves multiple deployments by workerIds', async () => {
+      const stub = getDeploymentsStub('batch-get-user')
+
+      // Create several deployments
+      const workerIds: string[] = []
+      for (let i = 0; i < 3; i++) {
+        const workerId = uniqueWorkerId()
+        workerIds.push(workerId)
+        await rpc<Deployment>(stub, 'deployments.create', [
+          {
+            workerId,
+            name: `batch-api-${i}`,
+            code: `// deployment ${i}`,
+            url: `https://batch-${i}.workers.do`,
+          },
+        ])
+      }
+
+      // Get all three at once
+      const res = await rpc<Record<string, Deployment>>(stub, 'deployments.getMany', [workerIds])
+
+      expect(res.error).toBeUndefined()
+      expect(Object.keys(res.result!)).toHaveLength(3)
+      for (const workerId of workerIds) {
+        expect(res.result![workerId]).toBeDefined()
+        expect(res.result![workerId].workerId).toBe(workerId)
+      }
+    })
+
+    /**
+     * Test: GetMany returns only found deployments
+     */
+    it('returns only found deployments', async () => {
+      const stub = getDeploymentsStub('batch-get-partial-user')
+
+      const workerId = uniqueWorkerId()
+      await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId,
+          name: 'partial-batch-api',
+          code: 'export default {}',
+          url: 'https://partial.workers.do',
+        },
+      ])
+
+      // Request both existing and non-existing
+      const res = await rpc<Record<string, Deployment>>(stub, 'deployments.getMany', [
+        [workerId, 'non-existent-1', 'non-existent-2'],
+      ])
+
+      expect(res.error).toBeUndefined()
+      expect(Object.keys(res.result!)).toHaveLength(1)
+      expect(res.result![workerId]).toBeDefined()
+    })
+
+    /**
+     * Test: GetMany returns empty object for empty array
+     */
+    it('returns empty object for empty array', async () => {
+      const stub = getDeploymentsStub()
+
+      const res = await rpc<Record<string, Deployment>>(stub, 'deployments.getMany', [[]])
+
+      expect(res.error).toBeUndefined()
+      expect(Object.keys(res.result!)).toHaveLength(0)
+    })
+  })
+
+  describe('deployments.deleteMany', () => {
+    /**
+     * Test: DeleteMany removes multiple deployments
+     */
+    it('deletes multiple deployments and returns count', async () => {
+      const stub = getDeploymentsStub('batch-delete-user')
+
+      // Create several deployments
+      const workerIds: string[] = []
+      for (let i = 0; i < 3; i++) {
+        const workerId = uniqueWorkerId()
+        workerIds.push(workerId)
+        await rpc<Deployment>(stub, 'deployments.create', [
+          {
+            workerId,
+            name: `delete-batch-api-${i}`,
+            code: `// deployment ${i}`,
+            url: `https://delete-batch-${i}.workers.do`,
+          },
+        ])
+      }
+
+      // Delete all three at once
+      const res = await rpc<number>(stub, 'deployments.deleteMany', [workerIds])
+
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBe(3)
+
+      // Verify they're gone
+      for (const workerId of workerIds) {
+        const getRes = await rpc<Deployment | null>(stub, 'deployments.get', [workerId])
+        expect(getRes.result).toBeNull()
+      }
+    })
+
+    /**
+     * Test: DeleteMany removes secondary indexes
+     */
+    it('removes secondary indexes on batch delete', async () => {
+      const stub = getDeploymentsStub('batch-delete-index-user')
+
+      const workerIds: string[] = []
+      const names: string[] = []
+      for (let i = 0; i < 2; i++) {
+        const workerId = uniqueWorkerId()
+        const name = `indexed-delete-batch-${i}`
+        workerIds.push(workerId)
+        names.push(name)
+        await rpc<Deployment>(stub, 'deployments.create', [
+          {
+            workerId,
+            name,
+            code: 'export default {}',
+            url: `https://indexed-${i}.workers.do`,
+          },
+        ])
+      }
+
+      // Delete all
+      await rpc<number>(stub, 'deployments.deleteMany', [workerIds])
+
+      // Name lookups should return null
+      for (const name of names) {
+        const res = await rpc<Deployment | null>(stub, 'deployments.getByName', [name])
+        expect(res.result).toBeNull()
+      }
+    })
+
+    /**
+     * Test: DeleteMany returns 0 for non-existent workerIds
+     */
+    it('returns 0 for non-existent workerIds', async () => {
+      const stub = getDeploymentsStub()
+
+      const res = await rpc<number>(stub, 'deployments.deleteMany', [
+        ['non-existent-1', 'non-existent-2'],
+      ])
+
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBe(0)
+    })
+
+    /**
+     * Test: DeleteMany returns 0 for empty array
+     */
+    it('returns 0 for empty array', async () => {
+      const stub = getDeploymentsStub()
+
+      const res = await rpc<number>(stub, 'deployments.deleteMany', [[]])
+
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBe(0)
+    })
+  })
+
+  describe('deployments.exists', () => {
+    /**
+     * Test: Exists returns true for existing deployment
+     */
+    it('returns true for existing deployment', async () => {
+      const stub = getDeploymentsStub()
+      const workerId = uniqueWorkerId()
+
+      await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId,
+          name: 'exists-test-api',
+          code: 'export default {}',
+          url: 'https://exists.workers.do',
+        },
+      ])
+
+      const res = await rpc<boolean>(stub, 'deployments.exists', [workerId])
+
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBe(true)
+    })
+
+    /**
+     * Test: Exists returns false for non-existent deployment
+     */
+    it('returns false for non-existent deployment', async () => {
+      const stub = getDeploymentsStub()
+
+      const res = await rpc<boolean>(stub, 'deployments.exists', ['non-existent-worker-id'])
+
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBe(false)
+    })
+  })
+
+  describe('deployments.isNameAvailable', () => {
+    /**
+     * Test: IsNameAvailable returns false for taken name
+     */
+    it('returns false for taken name', async () => {
+      const stub = getDeploymentsStub()
+
+      await rpc<Deployment>(stub, 'deployments.create', [
+        {
+          workerId: uniqueWorkerId(),
+          name: 'taken-name',
+          code: 'export default {}',
+          url: 'https://taken.workers.do',
+        },
+      ])
+
+      const res = await rpc<boolean>(stub, 'deployments.isNameAvailable', ['taken-name'])
+
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBe(false)
+    })
+
+    /**
+     * Test: IsNameAvailable returns true for available name
+     */
+    it('returns true for available name', async () => {
+      const stub = getDeploymentsStub()
+
+      const res = await rpc<boolean>(stub, 'deployments.isNameAvailable', ['available-name'])
+
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBe(true)
+    })
+  })
+
+  describe('deployments.count', () => {
+    /**
+     * Test: Count returns total number of deployments
+     */
+    it('returns total number of deployments', async () => {
+      const stub = getDeploymentsStub('count-test-user')
+
+      // Create a few deployments
+      for (let i = 0; i < 3; i++) {
+        await rpc<Deployment>(stub, 'deployments.create', [
+          {
+            workerId: uniqueWorkerId(),
+            name: `count-api-${i}`,
+            code: `// deployment ${i}`,
+            url: `https://count-${i}.workers.do`,
+          },
+        ])
+      }
+
+      const res = await rpc<number>(stub, 'deployments.count', [])
+
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBe(3)
+    })
+
+    /**
+     * Test: Count returns 0 for empty store
+     */
+    it('returns 0 for empty store', async () => {
+      const stub = getDeploymentsStub('empty-count-user')
+
+      const res = await rpc<number>(stub, 'deployments.count', [])
+
+      expect(res.error).toBeUndefined()
+      expect(res.result).toBe(0)
+    })
+  })
+
   describe('isolation', () => {
     /**
      * Test: Different users have isolated deployment stores

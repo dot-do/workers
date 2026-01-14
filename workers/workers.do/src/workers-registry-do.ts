@@ -182,12 +182,35 @@ class WorkersService extends RpcTarget {
 /**
  * DeploymentsService - exposed via RPC as "deployments"
  *
- * Storage pattern:
- * - Primary: `deployment:{workerId}` -> Deployment object
- * - Secondary index: `name:{name}` -> workerId (for O(1) name lookup)
+ * Storage Architecture:
+ * =====================
+ *
+ * Key Patterns:
+ * - Primary:   `deployment:{workerId}` → Deployment object
+ * - Secondary: `name:{name}` → workerId (for O(1) name lookup)
+ *
+ * Design Decisions:
+ * - workerId is the primary key (immutable, system-generated)
+ * - name is user-facing identifier with uniqueness constraint
+ * - Secondary index enables O(1) name→deployment lookup without scanning
+ * - All multi-key operations use atomic transactions where possible
+ *
+ * Pagination:
+ * - Cursor-based using storage.list() with startAfter
+ * - Cursor is the full storage key: `deployment:{workerId}`
+ * - Fetches limit+1 to determine hasMore without extra query
+ *
+ * Consistency:
+ * - Create: check existence → put both keys atomically
+ * - Delete: remove primary → remove secondary
+ * - Name changes: not supported (would require index update)
  */
 class DeploymentsService extends RpcTarget {
   private storage: DurableObjectStorage
+
+  // Storage key prefixes
+  private static readonly PREFIX_DEPLOYMENT = 'deployment:'
+  private static readonly PREFIX_NAME = 'name:'
 
   constructor(storage: DurableObjectStorage) {
     super()
@@ -197,18 +220,24 @@ class DeploymentsService extends RpcTarget {
   /**
    * Create a new deployment
    * Stores deployment with secondary index for name lookup
+   *
+   * Storage writes:
+   * - `deployment:{workerId}` → Deployment
+   * - `name:{name}` → workerId
    */
   async create(options: CreateDeploymentOptions): Promise<Deployment> {
     const { workerId, name, code, url } = options
 
-    // Check if workerId already exists
-    const existingById = await this.storage.get<Deployment>(`deployment:${workerId}`)
+    // Check both constraints in parallel for efficiency
+    const [existingById, existingWorkerId] = await Promise.all([
+      this.storage.get<Deployment>(`${DeploymentsService.PREFIX_DEPLOYMENT}${workerId}`),
+      this.storage.get<string>(`${DeploymentsService.PREFIX_NAME}${name}`),
+    ])
+
     if (existingById) {
       throw new Error(`Deployment with workerId "${workerId}" already exists`)
     }
 
-    // Check if name already exists via secondary index
-    const existingWorkerId = await this.storage.get<string>(`name:${name}`)
     if (existingWorkerId) {
       throw new Error(`Deployment with name "${name}" already exists`)
     }
@@ -221,26 +250,37 @@ class DeploymentsService extends RpcTarget {
       createdAt: new Date().toISOString(),
     }
 
-    // Store deployment and secondary index atomically
-    await this.storage.put(`deployment:${workerId}`, deployment)
-    await this.storage.put(`name:${name}`, workerId)
+    // Store deployment and secondary index atomically using batch put
+    const entries: Record<string, Deployment | string> = {
+      [`${DeploymentsService.PREFIX_DEPLOYMENT}${workerId}`]: deployment,
+      [`${DeploymentsService.PREFIX_NAME}${name}`]: workerId,
+    }
+    await this.storage.put(entries)
 
     return deployment
   }
 
   /**
    * Get deployment by workerId
+   * Time complexity: O(1)
    */
   async get(workerId: string): Promise<Deployment | null> {
-    const deployment = await this.storage.get<Deployment>(`deployment:${workerId}`)
+    const deployment = await this.storage.get<Deployment>(
+      `${DeploymentsService.PREFIX_DEPLOYMENT}${workerId}`
+    )
     return deployment || null
   }
 
   /**
-   * Get deployment by name via secondary index (O(1) lookup)
+   * Get deployment by name via secondary index
+   * Time complexity: O(1) - two lookups
+   *
+   * Flow: name:{name} → workerId → deployment:{workerId} → Deployment
    */
   async getByName(name: string): Promise<Deployment | null> {
-    const workerId = await this.storage.get<string>(`name:${name}`)
+    const workerId = await this.storage.get<string>(
+      `${DeploymentsService.PREFIX_NAME}${name}`
+    )
     if (!workerId) {
       return null
     }
@@ -248,14 +288,45 @@ class DeploymentsService extends RpcTarget {
   }
 
   /**
-   * List deployments with pagination
+   * Get multiple deployments by workerIds in a single batch
+   * Time complexity: O(n) where n = workerIds.length
+   *
+   * @param workerIds - Array of worker IDs to fetch
+   * @returns Record of workerId → Deployment (only includes found deployments)
+   */
+  async getMany(workerIds: string[]): Promise<Record<string, Deployment>> {
+    if (workerIds.length === 0) {
+      return {}
+    }
+
+    const keys = workerIds.map((id) => `${DeploymentsService.PREFIX_DEPLOYMENT}${id}`)
+    const results = await this.storage.get<Deployment>(keys)
+
+    // Transform keys back to workerIds
+    const deployments: Record<string, Deployment> = {}
+    for (const [key, deployment] of results) {
+      const workerId = key.slice(DeploymentsService.PREFIX_DEPLOYMENT.length)
+      deployments[workerId] = deployment
+    }
+
+    return deployments
+  }
+
+  /**
+   * List deployments with cursor-based pagination
+   *
+   * Pagination strategy:
+   * - Uses storage.list() with prefix and limit
+   * - Fetches limit+1 to determine hasMore without extra query
+   * - Cursor is the full storage key for startAfter
+   * - Results are ordered by storage key (lexicographic by workerId)
    */
   async list(options: ListDeploymentsOptions = {}): Promise<ListDeploymentsResult> {
     const { limit = 100, cursor } = options
 
-    // Build list options
+    // Build list options with efficient pagination
     const listOptions: DurableObjectListOptions = {
-      prefix: 'deployment:',
+      prefix: DeploymentsService.PREFIX_DEPLOYMENT,
       limit: limit + 1, // Fetch one extra to determine hasMore
     }
 
@@ -277,7 +348,8 @@ class DeploymentsService extends RpcTarget {
     const hasMore = deployments.length > limit
     if (hasMore) {
       deployments.pop() // Remove the extra item
-      lastKey = `deployment:${deployments[deployments.length - 1].workerId}`
+      // Recompute lastKey from the last item we're keeping
+      lastKey = `${DeploymentsService.PREFIX_DEPLOYMENT}${deployments[deployments.length - 1].workerId}`
     }
 
     return {
@@ -289,26 +361,70 @@ class DeploymentsService extends RpcTarget {
 
   /**
    * Delete a deployment by workerId
-   * Removes both primary record and secondary index
+   * Removes both primary record and secondary index atomically
+   *
+   * Storage deletes:
+   * - `deployment:{workerId}`
+   * - `name:{name}`
    */
   async delete(workerId: string): Promise<boolean> {
-    const deployment = await this.storage.get<Deployment>(`deployment:${workerId}`)
+    const deployment = await this.storage.get<Deployment>(
+      `${DeploymentsService.PREFIX_DEPLOYMENT}${workerId}`
+    )
     if (!deployment) {
       return false
     }
 
-    // Remove deployment and secondary index
-    await this.storage.delete(`deployment:${workerId}`)
-    await this.storage.delete(`name:${deployment.name}`)
+    // Remove deployment and secondary index atomically
+    await this.storage.delete([
+      `${DeploymentsService.PREFIX_DEPLOYMENT}${workerId}`,
+      `${DeploymentsService.PREFIX_NAME}${deployment.name}`,
+    ])
 
     return true
   }
 
   /**
+   * Delete multiple deployments by workerIds
+   * Removes both primary records and secondary indexes atomically
+   *
+   * @param workerIds - Array of worker IDs to delete
+   * @returns Number of deployments actually deleted
+   */
+  async deleteMany(workerIds: string[]): Promise<number> {
+    if (workerIds.length === 0) {
+      return 0
+    }
+
+    // Fetch all deployments to get their names for secondary index cleanup
+    const deployments = await this.getMany(workerIds)
+    const entries = Object.entries(deployments)
+
+    if (entries.length === 0) {
+      return 0
+    }
+
+    // Build list of all keys to delete (primary + secondary)
+    const keysToDelete: string[] = []
+    for (const [workerId, deployment] of entries) {
+      keysToDelete.push(`${DeploymentsService.PREFIX_DEPLOYMENT}${workerId}`)
+      keysToDelete.push(`${DeploymentsService.PREFIX_NAME}${deployment.name}`)
+    }
+
+    // Delete all keys atomically
+    await this.storage.delete(keysToDelete)
+
+    return entries.length
+  }
+
+  /**
    * Update a deployment's url and/or code
+   * Note: name cannot be updated (would require index migration)
    */
   async update(workerId: string, options: UpdateDeploymentOptions): Promise<Deployment | null> {
-    const deployment = await this.storage.get<Deployment>(`deployment:${workerId}`)
+    const deployment = await this.storage.get<Deployment>(
+      `${DeploymentsService.PREFIX_DEPLOYMENT}${workerId}`
+    )
     if (!deployment) {
       return null
     }
@@ -325,8 +441,40 @@ class DeploymentsService extends RpcTarget {
       updated.code = options.code
     }
 
-    await this.storage.put(`deployment:${workerId}`, updated)
+    await this.storage.put(`${DeploymentsService.PREFIX_DEPLOYMENT}${workerId}`, updated)
     return updated
+  }
+
+  /**
+   * Check if a deployment exists by workerId
+   * More efficient than get() when you don't need the full deployment
+   */
+  async exists(workerId: string): Promise<boolean> {
+    const deployment = await this.storage.get<Deployment>(
+      `${DeploymentsService.PREFIX_DEPLOYMENT}${workerId}`
+    )
+    return deployment !== undefined
+  }
+
+  /**
+   * Check if a name is available (not taken by another deployment)
+   */
+  async isNameAvailable(name: string): Promise<boolean> {
+    const workerId = await this.storage.get<string>(
+      `${DeploymentsService.PREFIX_NAME}${name}`
+    )
+    return workerId === undefined
+  }
+
+  /**
+   * Count total deployments
+   * Note: This scans all deployment keys - use sparingly for large stores
+   */
+  async count(): Promise<number> {
+    const map = await this.storage.list({
+      prefix: DeploymentsService.PREFIX_DEPLOYMENT,
+    })
+    return map.size
   }
 }
 
@@ -512,6 +660,9 @@ export class WorkersRegistryDO extends DurableObject<Record<string, unknown>> {
       case 'get':
         return this.deployments.get(params[0])
 
+      case 'getMany':
+        return this.deployments.getMany(params[0])
+
       case 'getByName':
         return this.deployments.getByName(params[0])
 
@@ -521,8 +672,20 @@ export class WorkersRegistryDO extends DurableObject<Record<string, unknown>> {
       case 'delete':
         return this.deployments.delete(params[0])
 
+      case 'deleteMany':
+        return this.deployments.deleteMany(params[0])
+
       case 'update':
         return this.deployments.update(params[0], params[1])
+
+      case 'exists':
+        return this.deployments.exists(params[0])
+
+      case 'isNameAvailable':
+        return this.deployments.isNameAvailable(params[0])
+
+      case 'count':
+        return this.deployments.count()
 
       default:
         throw new Error(`Unknown method: deployments.${method}`)

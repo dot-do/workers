@@ -10,7 +10,6 @@
  */
 
 import { Hono } from 'hono'
-import { cors } from 'hono/cors'
 import { WorkersRegistryDO } from './workers-registry-do'
 import { deployWorker, getDeployment, listDeployments, deleteDeployment, deployStaticSite, deployOpenNext } from './deploy'
 import { dispatchToWorker, dispatchById, dispatchByName } from './dispatch'
@@ -37,20 +36,217 @@ interface Env {
   CLICKHOUSE?: Fetcher
 }
 
+// ============ SECURITY UTILITIES ============
+
+// Allowed CORS origins (workers.do subdomains)
+const ALLOWED_ORIGIN_PATTERN = /^https:\/\/([a-z0-9-]+\.)*workers\.do$/
+
+/**
+ * Check if an origin is allowed for CORS
+ */
+function isAllowedOrigin(origin: string | undefined): boolean {
+  if (!origin) return false
+  return ALLOWED_ORIGIN_PATTERN.test(origin)
+}
+
+/**
+ * Rate limiting state (in-memory, per-worker instance)
+ * In production, use Durable Objects or KV for distributed rate limiting
+ */
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT = 30 // requests per window (lower for quick rate limit response)
+const RATE_LIMIT_WINDOW = 60 // seconds
+
+/**
+ * Check and update rate limit for a user
+ * Returns remaining requests, or -1 if rate limited
+ */
+function checkRateLimit(userId: string): { remaining: number; limit: number; resetAt: number } {
+  const now = Math.floor(Date.now() / 1000)
+  const windowStart = now - (now % RATE_LIMIT_WINDOW)
+  const resetAt = windowStart + RATE_LIMIT_WINDOW
+
+  const key = `${userId}:${windowStart}`
+  let entry = rateLimitStore.get(key)
+
+  if (!entry || entry.resetAt !== resetAt) {
+    // Clean up old entries
+    for (const [k, v] of rateLimitStore) {
+      if (v.resetAt < now) rateLimitStore.delete(k)
+    }
+    entry = { count: 0, resetAt }
+    rateLimitStore.set(key, entry)
+  }
+
+  entry.count++
+  const remaining = Math.max(0, RATE_LIMIT - entry.count)
+
+  return { remaining, limit: RATE_LIMIT, resetAt }
+}
+
+/**
+ * Derive user ID from auth token using cryptographic hash
+ */
+async function deriveUserId(token: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(token)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  return `user_${hashHex}`
+}
+
+/**
+ * Parse and validate Authorization header
+ * Returns the token if valid, or an error response
+ */
+function parseAuthHeader(authHeader: string | undefined): { token: string } | { error: Response } {
+  if (!authHeader) {
+    return {
+      error: new Response(
+        JSON.stringify({ error: 'Authorization header required' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+  }
+
+  if (!authHeader.startsWith('Bearer ')) {
+    return {
+      error: new Response(
+        JSON.stringify({ error: 'Invalid Authorization header format. Expected: Bearer <token>' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+  }
+
+  const token = authHeader.slice(7).trim()
+  if (!token) {
+    return {
+      error: new Response(
+        JSON.stringify({ error: 'Authorization token is empty' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+  }
+
+  return { token }
+}
+
+/**
+ * Validate deploy request fields
+ * Returns validation error or null if valid
+ */
+function validateDeployRequest(body: unknown): { success: false; error: string } | null {
+  if (!body || typeof body !== 'object') {
+    return { success: false, error: 'Request body must be a JSON object' }
+  }
+
+  const { name, code, language } = body as Record<string, unknown>
+
+  // Validate name
+  if (typeof name !== 'string' || !name.trim()) {
+    return { success: false, error: 'name field is required and must be a non-empty string' }
+  }
+
+  // Check name length
+  if (name.length > 63) {
+    return { success: false, error: 'name exceeds maximum length of 63 characters' }
+  }
+
+  // Check for invalid characters in name (only allow alphanumeric, hyphens)
+  const validNamePattern = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/i
+  if (!validNamePattern.test(name) || name.includes('..') || name.includes('/') || name.includes('<') || name.includes('>')) {
+    return { success: false, error: 'name contains invalid characters. Only alphanumeric and hyphens allowed.' }
+  }
+
+  // Validate code field
+  if (code === undefined) {
+    return { success: false, error: 'code field is required' }
+  }
+
+  if (typeof code !== 'string') {
+    return { success: false, error: 'code field must be a string' }
+  }
+
+  // Check code size (max 1MB)
+  if (code.length > 1024 * 1024) {
+    return { success: false, error: 'code exceeds maximum size of 1MB' }
+  }
+
+  // Validate language if provided
+  if (language !== undefined) {
+    const validLanguages = ['ts', 'js', 'mdx']
+    if (!validLanguages.includes(language as string)) {
+      return { success: false, error: `language must be one of: ${validLanguages.join(', ')}` }
+    }
+  }
+
+  return null
+}
+
 const app = new Hono<{ Bindings: Env }>()
 
-// CORS for browser clients
-app.use('*', cors({
-  origin: '*',
-  allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-}))
+// Custom CORS middleware with origin validation
+app.use('*', async (c, next) => {
+  const origin = c.req.header('Origin')
+
+  // Handle OPTIONS preflight
+  if (c.req.method === 'OPTIONS') {
+    const headers: Record<string, string> = {
+      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
+    }
+
+    // Only set CORS headers for allowed origins
+    if (origin && isAllowedOrigin(origin)) {
+      headers['Access-Control-Allow-Origin'] = origin
+      headers['Access-Control-Allow-Credentials'] = 'true'
+    }
+
+    return new Response(null, { status: 204, headers })
+  }
+
+  await next()
+
+  // Add CORS headers to response for allowed origins
+  if (origin && isAllowedOrigin(origin)) {
+    c.res.headers.set('Access-Control-Allow-Origin', origin)
+    c.res.headers.set('Access-Control-Allow-Credentials', 'true')
+  }
+})
 
 // ============ HEALTH & LANDING ============
 
-// Health check
-app.get('/health', (c) => c.json({ status: 'ok', service: 'workers.do' }))
+// Health check (rate limited)
+app.get('/health', async (c) => {
+  // Get user ID for rate limiting (anonymous for health check is ok)
+  const authHeader = c.req.header('Authorization')
+  let userId = 'anonymous'
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7).trim()
+    if (token) {
+      userId = await deriveUserId(token)
+    }
+  }
+
+  // Check rate limit
+  const rateLimit = checkRateLimit(userId)
+  const headers: Record<string, string> = {
+    'X-RateLimit-Limit': String(rateLimit.limit),
+    'X-RateLimit-Remaining': String(rateLimit.remaining),
+    'X-RateLimit-Reset': String(rateLimit.resetAt),
+  }
+
+  if (rateLimit.remaining === 0) {
+    return c.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers }
+    )
+  }
+
+  return c.json({ status: 'ok', service: 'workers.do' }, { headers })
+})
 
 // Landing page / info (browser GET without special headers)
 app.get('/', (c) => {
@@ -113,15 +309,38 @@ function isWfPConfigured(env: Env): boolean {
 
 // Deploy worker
 app.post('/api/deploy', async (c) => {
+  // Validate Content-Type first
+  const contentType = c.req.header('Content-Type')
+  if (!contentType || !contentType.includes('application/json')) {
+    return c.json(
+      { success: false, error: 'Content-Type must be application/json' },
+      415
+    )
+  }
+
+  // Parse and validate input BEFORE checking WfP
+  let body: unknown
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ success: false, error: 'Invalid JSON body' }, 400)
+  }
+
+  const validationError = validateDeployRequest(body)
+  if (validationError) {
+    return c.json(validationError, 400)
+  }
+
+  // Now check WfP configuration
   if (!isWfPConfigured(c.env)) {
     return c.json({
       success: false,
       error: 'Workers for Platforms not configured. Required bindings: apps, esbuild, deployments, db'
     }, 503)
   }
+
   try {
-    const body = (await c.req.json()) as DeployRequest
-    const result = await deployWorker(body, c.env as any)
+    const result = await deployWorker(body as DeployRequest, c.env as any)
     return c.json(result, result.success ? 200 : 400)
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
@@ -218,20 +437,82 @@ app.delete('/api/deployments/:id', async (c) => {
 
 // ============ USER REGISTRY (DO) ============
 
-// User's workers list
+// User's workers list (protected endpoint)
 app.get('/workers', async (c) => {
-  const userId = getUserId(c)
+  // Validate authorization
+  const authResult = parseAuthHeader(c.req.header('Authorization'))
+  if ('error' in authResult) {
+    return authResult.error
+  }
+
+  const userId = await deriveUserId(authResult.token)
+
+  // Check rate limit
+  const rateLimit = checkRateLimit(userId)
+  const headers: Record<string, string> = {
+    'X-User-Id': userId,
+    'X-RateLimit-Limit': String(rateLimit.limit),
+    'X-RateLimit-Remaining': String(rateLimit.remaining),
+    'X-RateLimit-Reset': String(rateLimit.resetAt),
+  }
+
+  if (rateLimit.remaining === 0) {
+    return c.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers }
+    )
+  }
+
   const id = c.env.WORKERS_REGISTRY.idFromName(userId)
   const stub = c.env.WORKERS_REGISTRY.get(id)
-  return stub.fetch(c.req.raw)
+  const response = await stub.fetch(c.req.raw)
+
+  // Add security headers to response
+  const newResponse = new Response(response.body, response)
+  Object.entries(headers).forEach(([key, value]) => {
+    newResponse.headers.set(key, value)
+  })
+
+  return newResponse
 })
 
-// User's worker by ID
+// User's worker by ID (protected endpoint)
 app.get('/workers/:workerId', async (c) => {
-  const userId = getUserId(c)
+  // Validate authorization
+  const authResult = parseAuthHeader(c.req.header('Authorization'))
+  if ('error' in authResult) {
+    return authResult.error
+  }
+
+  const userId = await deriveUserId(authResult.token)
+
+  // Check rate limit
+  const rateLimit = checkRateLimit(userId)
+  const headers: Record<string, string> = {
+    'X-User-Id': userId,
+    'X-RateLimit-Limit': String(rateLimit.limit),
+    'X-RateLimit-Remaining': String(rateLimit.remaining),
+    'X-RateLimit-Reset': String(rateLimit.resetAt),
+  }
+
+  if (rateLimit.remaining === 0) {
+    return c.json(
+      { error: 'Rate limit exceeded' },
+      { status: 429, headers }
+    )
+  }
+
   const id = c.env.WORKERS_REGISTRY.idFromName(userId)
   const stub = c.env.WORKERS_REGISTRY.get(id)
-  return stub.fetch(c.req.raw)
+  const response = await stub.fetch(c.req.raw)
+
+  // Add security headers to response
+  const newResponse = new Response(response.body, response)
+  Object.entries(headers).forEach(([key, value]) => {
+    newResponse.headers.set(key, value)
+  })
+
+  return newResponse
 })
 
 // ============ HELPER FUNCTIONS ============

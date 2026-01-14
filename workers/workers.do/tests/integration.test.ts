@@ -71,29 +71,44 @@ describe('workers.do Worker', () => {
 
   describe('CORS', () => {
     /**
-     * Test: CORS headers are set
+     * Test: CORS headers are set for allowed origins (*.workers.do)
+     * NOTE: Security update - CORS no longer allows all origins (*)
+     * Only *.workers.do domains are allowed
      */
-    it('sets CORS headers', async () => {
+    it('sets CORS headers for allowed origins', async () => {
+      const response = await SELF.fetch(createRequest('/health', {
+        headers: { 'Origin': 'https://app.workers.do' }
+      }))
+
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://app.workers.do')
+    })
+
+    /**
+     * Test: CORS headers NOT set for disallowed origins
+     */
+    it('does not set CORS headers for disallowed origins', async () => {
       const response = await SELF.fetch(createRequest('/health', {
         headers: { 'Origin': 'https://example.com' }
       }))
 
-      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('*')
+      // Should NOT have CORS header for disallowed origin
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull()
     })
 
     /**
-     * Test: OPTIONS returns CORS headers
+     * Test: OPTIONS returns CORS headers for allowed origins
      */
-    it('handles OPTIONS preflight', async () => {
+    it('handles OPTIONS preflight for allowed origins', async () => {
       const response = await SELF.fetch(createRequest('/api', {
         method: 'OPTIONS',
         headers: {
-          'Origin': 'https://example.com',
+          'Origin': 'https://app.workers.do',
           'Access-Control-Request-Method': 'POST',
         }
       }))
 
       expect(response.status).toBeLessThan(400)
+      expect(response.headers.get('Access-Control-Allow-Origin')).toBe('https://app.workers.do')
     })
   })
 

@@ -154,12 +154,30 @@ export function getContentType(path: string): string {
 }
 
 /**
+ * Escape HTML entities to prevent XSS
+ *
+ * @param str - String to escape
+ * @returns Escaped string safe for HTML insertion
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+/**
  * Serve 404 page
  *
  * @param appId - Application identifier
  * @returns 404 response
  */
 export function serve404(appId: string): Response {
+  // Escape appId to prevent XSS
+  const safeAppId = escapeHtml(appId)
+
   const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -202,7 +220,7 @@ export function serve404(appId: string): Response {
   <div class="container">
     <h1>404</h1>
     <p>Page not found</p>
-    <div class="app-id">App: ${appId}</div>
+    <div class="app-id">App: ${safeAppId}</div>
   </div>
 </body>
 </html>

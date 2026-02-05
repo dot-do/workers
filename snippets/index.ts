@@ -11,3 +11,5 @@
 export { cacheSnippet } from './cache'
 export { authSnippet } from './auth'
 export { routerSnippet } from './router'
+export { analyticsProxySnippet } from './analytics-proxy'
+export { errorsProxySnippet } from './errors-proxy'

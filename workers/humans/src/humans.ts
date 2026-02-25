@@ -558,39 +558,43 @@ export class HumansDO {
   // ========== Alarm Handler ==========
 
   async alarm(): Promise<void> {
-    await this.ensureInitialized()
+    try {
+      await this.ensureInitialized()
 
-    const now = Date.now()
+      const now = Date.now()
 
-    // Mark expired tasks
-    const expiredTasks: HITLTask[] = []
-    for (const task of this.tasks.values()) {
-      if (task.expiresAt && task.status !== 'completed' && task.status !== 'rejected' && task.status !== 'expired') {
-        if (new Date(task.expiresAt).getTime() <= now) {
-          task.status = 'expired'
-          task.updatedAt = new Date().toISOString()
-          await this.saveTask(task)
-          expiredTasks.push(task)
+      // Mark expired tasks
+      const expiredTasks: HITLTask[] = []
+      for (const task of this.tasks.values()) {
+        if (task.expiresAt && task.status !== 'completed' && task.status !== 'rejected' && task.status !== 'expired') {
+          if (new Date(task.expiresAt).getTime() <= now) {
+            task.status = 'expired'
+            task.updatedAt = new Date().toISOString()
+            await this.saveTask(task)
+            expiredTasks.push(task)
+          }
         }
       }
-    }
 
-    // Call timeout callbacks
-    if (this.onTimeoutCallback) {
-      for (const task of expiredTasks) {
-        await this.onTimeoutCallback(task)
+      // Call timeout callbacks
+      if (this.onTimeoutCallback) {
+        for (const task of expiredTasks) {
+          await this.onTimeoutCallback(task)
+        }
       }
-    }
 
-    // Check for expiring soon tasks
-    if (this.onExpiringSoonCallback) {
-      const expiringSoon = await this.getExpiringTasks(this.onExpiringSoonCallback.threshold)
-      for (const task of expiringSoon) {
-        await this.onExpiringSoonCallback.callback(task)
+      // Check for expiring soon tasks
+      if (this.onExpiringSoonCallback) {
+        const expiringSoon = await this.getExpiringTasks(this.onExpiringSoonCallback.threshold)
+        for (const task of expiringSoon) {
+          await this.onExpiringSoonCallback.callback(task)
+        }
       }
+    } catch (err) {
+      console.error('[HumansDO] Alarm failed:', err)
     }
 
-    // Schedule next alarm
+    // Always reschedule — never let the alarm loop die
     await this.scheduleNextAlarm()
   }
 

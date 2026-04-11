@@ -3,28 +3,28 @@ domain	name	tld	package	category	subcategory	type	noun	nounPlural	verb	verbGerun
 ada.do	ada	.do	ada.do	agents	engineering	agent	Ada	-	code	coding	adaptive	AI coding assistant inspired by Ada Lovelace	Code with Ada	planned	P2	free
 amit.do	amit	.do	amit.do	agents	engineering	agent	Amit	-	architect	architecting	analytical	Systems architecture specialist	-	planned	P3	free
 amy.do	amy	.do	amy.do	agents	support	agent	Amy	-	assist	assisting	helpful	Customer support specialist	-	planned	P3	free
-andrew.do	andrew	.do	andrew.do	agents	engineering	agent	Andrew	-	develop	developing	diligent	Full-stack developer agent	-	planned	P3	free
+andrew.do	andrew	.do	andrew.do	agents	accounts	agent	Andrew	-	develop	developing	diligent	Accounts and finance operations specialist — AP/AR, bookkeeping, month-end close	Every dollar tracked, every ledger balanced	planned	P3	free
 ann.do	ann	.do	ann.do	agents	analytics	agent	Ann	-	analyze	analyzing	analytical	Data analytics specialist	-	planned	P3	free
 archie.do	archie	.do	archie.do	agents	devops	agent	Archie	-	archive	archiving	organized	Archive and backup specialist	-	planned	P3	free
 ari.do	ari	.do	ari.do	agents	research	agent	Ari	-	research	researching	curious	Research and discovery agent	-	planned	P3	free
 arya.do	arya	.do	arya.do	agents	security	agent	Arya	-	secure	securing	vigilant	Security and compliance agent	-	planned	P3	free
 bailey.do	bailey	.do	bailey.do	agents	operations	agent	Bailey	-	operate	operating	reliable	Operations management agent	-	planned	P3	free
 beau.do	beau	.do	beau.do	agents	design	agent	Beau	-	design	designing	aesthetic	UI/UX design specialist	-	planned	P3	free
-blake.do	blake	.do	blake.do	agents	engineering	agent	Blake	-	build	building	creative	Creative engineering agent	-	planned	P3	free
-bob.do	bob	.do	bob.do	agents	engineering	agent	Bob	-	build	building	practical	Pragmatic builder agent	-	planned	P3	free
+blake.do	blake	.do	blake.do	agents	brand	agent	Blake	-	build	building	creative	Brand strategist who builds identity, voice, and visual systems	Brand is the story people tell when you're not in the room	planned	P3	free
+bob.do	bob	.do	bob.do	agents	bizops	agent	Bob	-	build	building	practical	Business operations specialist who turns strategy into execution	Strategy means nothing without execution	planned	P3	free
 bryant.do	bryant	.do	bryant.do	agents	sales	agent	Bryant	-	pitch	pitching	persuasive	Sales pitch specialist	-	planned	P3	free
 cara.do	cara	.do	cara.do	agents	customer	agent	Cara	-	care	caring	empathetic	Customer care specialist	-	planned	P3	free
 casey.do	casey	.do	casey.do	agents	engineering	agent	Casey	-	code	coding	versatile	Versatile coding agent	-	planned	P3	free
 clara.do	clara	.do	clara.do	agents	documentation	agent	Clara	-	clarify	clarifying	clear	Documentation clarity specialist	-	planned	P3	free
-cody.do	cody	.do	cody.do	agents	engineering	agent	Cody	-	code	coding	focused	Focused coding agent	-	planned	P3	free
+cody.do	cody	.do	cody.do	agents	community	agent	Cody	-	code	coding	focused	Community manager who builds engaged developer and user communities	Community is the moat no competitor can copy	planned	P3	free
 cole.do	cole	.do	cole.do	agents	data	agent	Cole	-	collect	collecting	thorough	Data collection specialist	-	planned	P3	free
 dana.do	dana	.do	dana.do	agents	analytics	agent	Dana	-	analyze	analyzing	data-driven	Data analysis agent	-	planned	P3	free
 dara.do	dara	.do	dara.do	agents	data	agent	Dara	-	derive	deriving	insightful	Data insights specialist	-	planned	P3	free
 deb.do	deb	.do	deb.do	agents	debugging	agent	Deb	-	debug	debugging	meticulous	Debugging specialist	-	planned	P3	free
-devin.do	devin	.do	devin.do	agents	engineering	agent	Devin	-	develop	developing	autonomous	Autonomous development agent	-	planned	P3	free
+devin.do	devin	.do	devin.do	agents	devrel	agent	Devin	-	develop	developing	autonomous	Developer relations specialist — advocacy, SDK docs, community events	Developers don't adopt products — they adopt people	planned	P3	free
 devon.do	devon	.do	devon.do	agents	devops	agent	Devon	-	deploy	deploying	reliable	DevOps specialist	-	planned	P3	free
 drew.do	drew	.do	drew.do	agents	design	agent	Drew	-	draw	drawing	creative	Visual design agent	-	planned	P3	free
-eli.do	eli	.do	eli.do	agents	engineering	agent	Eli	-	engineer	engineering	elegant	Elegant solutions architect	-	planned	P3	free
+eli.do	eli	.do	eli.do	agents	ecommerce	agent	Eli	-	engineer	engineering	elegant	E-commerce operations specialist — conversion, catalog, fulfillment	Every click is a buying decision waiting to happen	planned	P3	free
 ella.do	ella	.do	ella.do	agents	writing	agent	Ella	-	write	writing	eloquent	Technical writing specialist	-	planned	P3	free
 emma.do	emma	.do	emma.do	agents	email	agent	Emma	-	email	emailing	professional	Email communication specialist	-	planned	P3	free
 evie.do	evie	.do	evie.do	agents	events	agent	Evie	-	orchestrate	orchestrating	organized	Event orchestration agent	-	planned	P3	free
@@ -33,16 +33,16 @@ fran.do	fran	.do	fran.do	agents	frontend	agent	Fran	-	render	rendering	polished	
 gene.do	gene	.do	gene.do	agents	generation	agent	Gene	-	generate	generating	generative	Content generation agent	-	planned	P3	free
 gio.do	gio	.do	gio.do	agents	graphics	agent	Gio	-	illustrate	illustrating	visual	Graphics and illustration agent	-	planned	P3	free
 gloria.do	gloria	.do	gloria.do	agents	growth	agent	Gloria	-	grow	growing	strategic	Growth strategy agent	-	planned	P3	free
-grace.do	grace	.do	grace.do	agents	engineering	agent	Grace	-	compute	computing	elegant	Elegant computing agent	-	planned	P3	free
+grace.do	grace	.do	grace.do	agents	government	agent	Grace	-	compute	computing	elegant	Government relations and regulatory affairs specialist	Every regulation is a market map for those who read it right	planned	P3	free
 grant.do	grant	.do	grant.do	agents	grants	agent	Grant	-	fund	funding	resourceful	Grant writing specialist	-	planned	P3	free
 hal.do	hal	.do	hal.do	agents	assistant	agent	Hal	-	assist	assisting	helpful	General assistant agent	-	planned	P3	free
 hazel.do	hazel	.do	hazel.do	agents	hr	agent	Hazel	-	hire	hiring	discerning	HR and hiring specialist	-	planned	P3	free
 henry.do	henry	.do	henry.do	agents	help	agent	Henry	-	help	helping	supportive	Help desk agent	-	planned	P3	free
 ivy.do	ivy	.do	ivy.do	agents	integration	agent	Ivy	-	integrate	integrating	connective	Integration specialist	-	planned	P3	free
-jack.do	jack	.do	jack.do	agents	engineering	agent	Jack	-	build	building	versatile	Jack-of-all-trades engineer	-	planned	P3	free
+jack.do	jack	.do	jack.do	agents	jobs	agent	Jack	-	build	building	versatile	Talent acquisition specialist — sourcing, outreach, interview coordination	Great companies are built one hire at a time	planned	P3	free
 jay.do	jay	.do	jay.do	agents	javascript	agent	Jay	-	script	scripting	dynamic	JavaScript specialist	-	planned	P3	free
-joe.do	joe	.do	joe.do	agents	engineering	agent	Joe	-	develop	developing	reliable	Reliable development agent	-	planned	P3	free
-jon.do	jon	.do	jon.do	agents	engineering	agent	Jon	-	build	building	steady	Steady builder agent	-	planned	P3	free
+joe.do	joe	.do	joe.do	agents	journey	agent	Joe	-	develop	developing	reliable	Customer journey specialist — journey mapping, VoC, touchpoint design	Every customer interaction is a chance to build or break the relationship	planned	P3	free
+jon.do	jon	.do	jon.do	agents	journalism	agent	Jon	-	build	building	steady	PR and media relations specialist — earned media, journalist outreach, crisis comms	Earned media beats paid media every time	planned	P3	free
 jules.do	jules	.do	jules.do	agents	jupyter	agent	Jules	-	notebook	notebooking	analytical	Jupyter notebook specialist	-	planned	P3	free
 jun.do	jun	.do	jun.do	agents	engineering	agent	Jun	-	develop	developing	junior	Junior development agent	-	planned	P3	free
 kat.do	kat	.do	kat.do	agents	testing	agent	Kat	-	test	testing	thorough	Test automation specialist	-	planned	P3	free
@@ -64,13 +64,13 @@ mel.do	mel	.do	mel.do	agents	ml	agent	Mel	-	train	training	intelligent	ML traini
 mia.do	mia	.do	mia.do	agents	metrics	agent	Mia	-	measure	measuring	quantitative	Metrics and KPI agent	-	planned	P3	free
 miles.do	miles	.do	miles.do	agents	mobile	agent	Miles	-	mobilize	mobilizing	responsive	Mobile development agent	-	planned	P3	free
 nat.do	nat	.do	nat.do	agents	networking	agent	Nat	-	connect	connecting	networked	Networking specialist	-	planned	P3	free
-nathan.do	nathan	.do	nathan.do	agents	engineering	agent	Nathan	-	architect	architecting	visionary	Platform architect	-	implemented	P1	free
-ned.do	ned	.do	ned.do	agents	node	agent	Ned	-	serve	serving	server-side	Node.js specialist	-	planned	P3	free
+nathan.do	nathan	.do	nathan.do	agents	platform	agent	Nathan	-	architect	architecting	visionary	Platform architect who designs systems that outlast their creators	Systems that outlast the people who built them	implemented	P1	free
+ned.do	ned	.do	ned.do	agents	nonprofit	agent	Ned	-	serve	serving	server-side	Nonprofit strategy specialist — donor relations, grant strategy, impact measurement	Mission-driven doesn't mean results-optional	planned	P3	free
 nia.do	nia	.do	nia.do	agents	nlp	agent	Nia	-	understand	understanding	semantic	NLP understanding agent	-	planned	P3	free
 nina.do	nina	.do	nina.do	agents	notifications	agent	Nina	-	notify	notifying	timely	Notification specialist	-	planned	P3	free
 noa.do	noa	.do	noa.do	agents	nocode	agent	Noa	-	build	building	accessible	No-code builder agent	-	planned	P3	free
-noah.do	noah	.do	noah.do	agents	engineering	agent	Noah	-	navigate	navigating	systematic	Systematic engineering agent	-	planned	P3	free
-nolan.do	nolan	.do	nolan.do	agents	optimization	agent	Nolan	-	optimize	optimizing	efficient	Performance optimization agent	-	planned	P3	free
+noah.do	noah	.do	noah.do	agents	networking	agent	Noah	-	navigate	navigating	systematic	Business development and partnerships manager — strategic alliances, ecosystem building	Networks compound — every relationship is an asset	planned	P3	free
+nolan.do	nolan	.do	nolan.do	agents	negotiation	agent	Nolan	-	optimize	optimizing	efficient	Negotiation specialist — deal structuring, term sheets, vendor agreements	The best deal is the one both sides execute	planned	P3	free
 oliver.do	oliver	.do	oliver.do	agents	operations	agent	Oliver	-	operate	operating	operational	Operations specialist	-	planned	P3	free
 oscar.do	oscar	.do	oscar.do	agents	observability	agent	Oscar	-	observe	observing	watchful	Observability specialist	-	planned	P3	free
 otis.do	otis	.do	otis.do	agents	automation	agent	Otis	-	automate	automating	efficient	Automation specialist	-	planned	P3	free
@@ -82,7 +82,7 @@ perry.do	perry	.do	perry.do	agents	performance	agent	Perry	-	perform	performing	
 priya.do	priya	.do	priya.do	agents	product	agent	Priya	-	specify	specifying	strategic	Product specs and roadmaps	Product vision realized	implemented	P1	free
 quinn.do	quinn	.do	quinn.do	agents	qa	agent	Quinn	-	test	testing	quality-focused	QA and testing specialist	Quality assured	implemented	P1	free
 rae.do	rae	.do	rae.do	agents	frontend	agent	Rae	-	render	rendering	reactive	React and frontend specialist	Interfaces that delight	implemented	P1	free
-raj.do	raj	.do	raj.do	agents	engineering	agent	Raj	-	architect	architecting	systematic	Systems architect	-	planned	P3	free
+raj.do	raj	.do	raj.do	agents	regulatory	agent	Raj	-	architect	architecting	systematic	Regulatory affairs specialist — compliance pathways, submissions, regulatory strategy	Regulatory clarity is a competitive advantage	planned	P3	free
 ralph.do	ralph	.do	ralph.do	agents	engineering	agent	Ralph	-	implement	implementing	iterative	Implementation specialist	Ship iteratively	implemented	P1	free
 reed.do	reed	.do	reed.do	agents	reading	agent	Reed	-	read	reading	comprehending	Document reading agent	-	planned	P3	free
 rex.do	rex	.do	rex.do	agents	regex	agent	Rex	-	match	matching	precise	Regex and pattern specialist	-	planned	P3	free
@@ -91,21 +91,21 @@ rob.do	rob	.do	rob.do	agents	robotics	agent	Rob	-	automate	automating	robotic	RP
 rod.do	rod	.do	rod.do	agents	data	agent	Rod	-	record	recording	precise	Data recording agent	-	planned	P3	free
 rory.do	rory	.do	rory.do	agents	reporting	agent	Rory	-	report	reporting	analytical	Reporting specialist	-	planned	P3	free
 rowan.do	rowan	.do	rowan.do	agents	routing	agent	Rowan	-	route	routing	directional	Routing specialist	-	planned	P3	free
-ruby.do	ruby	.do	ruby.do	agents	engineering	agent	Ruby	-	script	scripting	elegant	Ruby language specialist	-	planned	P3	free
+ruby.do	ruby	.do	ruby.do	agents	recruiting	agent	Ruby	-	script	scripting	elegant	Recruiting specialist — passive sourcing, pipeline building, technical and diversity recruiting	The best candidates aren't looking — go find them	planned	P3	free
 sage.do	sage	.do	sage.do	agents	strategy	agent	Sage	-	advise	advising	wise	Strategic advisor agent	-	planned	P3	free
 sally.do	sally	.do	sally.do	agents	sales	agent	Sally	-	sell	selling	persuasive	Sales specialist	Close with confidence	implemented	P1	free
-sam.do	sam	.do	sam.do	agents	engineering	agent	Sam	-	develop	developing	versatile	Full-stack developer agent	-	planned	P3	free
+sam.do	sam	.do	sam.do	agents	supply-chain	agent	Sam	-	develop	developing	versatile	Supply chain and logistics specialist — vendor management, inventory, demand planning	Supply chain is the backbone no one sees until it breaks	planned	P3	free
 samuel.do	samuel	.do	samuel.do	agents	security	agent	Samuel	-	secure	securing	protective	Security specialist	-	planned	P3	free
 sarah.do	sarah	.do	sarah.do	agents	search	agent	Sarah	-	search	searching	thorough	Search specialist	-	planned	P3	free
 sean.do	sean	.do	sean.do	agents	seo	agent	Sean	-	optimize	optimizing	discoverable	SEO specialist	-	planned	P3	free
 seth.do	seth	.do	seth.do	agents	settings	agent	Seth	-	configure	configuring	configurable	Configuration specialist	-	planned	P3	free
 sid.do	sid	.do	sid.do	agents	security	agent	Sid	-	secure	securing	vigilant	Security ID specialist	-	planned	P3	free
 sierra.do	sierra	.do	sierra.do	agents	systems	agent	Sierra	-	systematize	systematizing	systematic	Systems specialist	-	planned	P3	free
-stella.do	stella	.do	stella.do	agents	stellar	agent	Stella	-	shine	shining	stellar	Excellence agent	-	planned	P3	free
+stella.do	stella	.do	stella.do	agents	sustainability	agent	Stella	-	shine	shining	stellar	Sustainability and ESG specialist — carbon accounting, CSR strategy, impact reporting	Sustainable business is just good business with a longer time horizon	planned	P3	free
 susan.do	susan	.do	susan.do	agents	support	agent	Susan	-	support	supporting	supportive	Support specialist	-	planned	P3	free
 tess.do	tess	.do	tess.do	agents	testing	agent	Tess	-	test	testing	rigorous	Test specialist	-	planned	P3	free
 tom.do	tom	.do	tom.do	agents	engineering	agent	Tom	-	review	reviewing	thorough	TypeScript architect, code review	Architecture that scales	implemented	P1	free
-tyler.do	tyler	.do	tyler.do	agents	typescript	agent	Tyler	-	type	typing	typed	TypeScript specialist	-	planned	P3	free
+tyler.do	tyler	.do	tyler.do	agents	talent	agent	Tyler	-	type	typing	typed	Talent management specialist — performance, L&D, career ladders, HR analytics	People are the product — invest accordingly	planned	P3	free
 uma.do	uma	.do	uma.do	agents	ux	agent	Uma	-	design	designing	user-centric	UX design specialist	-	planned	P3	free
 umi.do	umi	.do	umi.do	agents	engineering	agent	Umi	-	build	building	framework	Framework specialist	-	planned	P3	free
 uri.do	uri	.do	uri.do	agents	api	agent	Uri	-	route	routing	RESTful	API routing specialist	-	planned	P3	free
@@ -114,7 +114,7 @@ vic.do	vic	.do	vic.do	agents	video	agent	Vic	-	record	recording	visual	Video pro
 vin.do	vin	.do	vin.do	agents	validation	agent	Vin	-	validate	validating	valid	Validation specialist	-	planned	P3	free
 wade.do	wade	.do	wade.do	agents	web	agent	Wade	-	browse	browsing	web-native	Web specialist	-	planned	P3	free
 xavi.do	xavi	.do	xavi.do	agents	xml	agent	Xavi	-	parse	parsing	structured	XML/structured data agent	-	planned	P3	free
-yuki.do	yuki	.do	yuki.do	agents	engineering	agent	Yuki	-	develop	developing	precise	Precision development agent	-	planned	P3	free
+yuki.do	yuki	.do	yuki.do	agents	yield	agent	Yuki	-	develop	developing	precise	Yield management and pricing strategist — dynamic pricing, revenue optimization	Price is the most powerful lever in the P&L	planned	P3	free
 zia.do	zia	.do	zia.do	agents	ai	agent	Zia	-	infer	inferring	intelligent	AI inference specialist	-	planned	P3	free
 zoe.do	zoe	.do	zoe.do	agents	zero	agent	Zoe	-	start	starting	fresh	Zero-to-one specialist	-	planned	P3	free
 zuri.do	zuri	.do	zuri.do	agents	engineering	agent	Zuri	-	build	building	beautiful	Beautiful code specialist	-	planned	P3	free
@@ -126,7 +126,7 @@ coo.do	coo	.do	coo.do	roles	executive	role	COO	COOs	operate	operating	operationa
 cpo.do	cpo	.do	cpo.do	roles	executive	role	CPO	CPOs	produce	producing	productive	Chief Product Officer	Product leadership	planned	P2	free
 cro.do	cro	.do	cro.do	roles	executive	role	CRO	CROs	revenue	generating	revenue-focused	Chief Revenue Officer	Revenue leadership	planned	P2	free
 cto.do	cto	.do	cto.do	roles	executive	role	CTO	CTOs	architect	architecting	technical	Chief Technology Officer	Technical leadership	planned	P2	free
-coach.do	coach	.do	coach.do	roles	management	role	Coach	Coaches	coach	coaching	supportive	Coaching and mentorship role	Develop your team	planned	P2	free
+coach.do	coach	.do	coach.do	roles	coaching	role	Coach	Coaches	coach	coaching	supportive	Leadership coach and executive mentor who develops better leaders	Great leaders are made, not born — but only if they do the work	planned	P2	free
 engineers.do	engineers	.do	engineers.do	roles	engineering	role	Engineer	Engineers	engineer	engineering	technical	Engineering team role	Build with excellence	planned	P2	free
 exec.do	exec	.do	exec.do	roles	executive	role	Executive	Executives	execute	executing	executive	Executive leadership role	Lead decisively	planned	P2	free
 mgmt.do	mgmt	.do	mgmt.do	roles	management	role	Manager	Managers	manage	managing	managerial	Management role	Manage effectively	planned	P2	free

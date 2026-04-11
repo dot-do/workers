@@ -21,6 +21,7 @@ cole.do	cole	.do	cole.do	agents	data	agent	Cole	-	collect	collecting	thorough	Da
 dana.do	dana	.do	dana.do	agents	analytics	agent	Dana	-	analyze	analyzing	data-driven	Data analysis agent	-	planned	P3	free
 dara.do	dara	.do	dara.do	agents	data	agent	Dara	-	derive	deriving	insightful	Data insights specialist	-	planned	P3	free
 deb.do	deb	.do	deb.do	agents	debugging	agent	Deb	-	debug	debugging	meticulous	Debugging specialist	-	planned	P3	free
+diana.do	diana	.do	diana.do	agents	demand	agent	Diana	-	generate	generating	growth-focused	Demand generation specialist — inbound/outbound pipeline, paid acquisition, ABM	Demand doesn't appear — it's built, channel by channel	planned	P2	free
 devin.do	devin	.do	devin.do	agents	devrel	agent	Devin	-	develop	developing	autonomous	Developer relations specialist — advocacy, SDK docs, community events	Developers don't adopt products — they adopt people	planned	P3	free
 devon.do	devon	.do	devon.do	agents	devops	agent	Devon	-	deploy	deploying	reliable	DevOps specialist	-	planned	P3	free
 drew.do	drew	.do	drew.do	agents	design	agent	Drew	-	draw	drawing	creative	Visual design agent	-	planned	P3	free

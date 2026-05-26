@@ -2,6 +2,39 @@
 
 > Job descriptions for AI agents and humans.
 
+## Getting Started
+
+### 1. Install
+
+```bash
+npm install roles.do
+```
+
+### 2. Import Roles
+
+```typescript
+import { PDM, Dev, QA } from 'roles.do'
+```
+
+### 3. Use Roles
+
+```typescript
+// Create custom agents with roles
+import { Role } from 'roles.do'
+
+class MyDev extends Dev {
+  identity = { name: 'Alex', email: 'alex@mycompany.com' }
+}
+```
+
+### What's Next
+
+- [roles.do](https://roles.do) - Full documentation
+- [agents.do](https://agents.do) - Named AI agents
+- [humans.do](https://humans.do) - Human workers with roles
+
+---
+
 ```typescript
 import { CEO, CTO, PDM, Dev } from 'roles.do'
 ```
@@ -18,6 +51,8 @@ Roles define what someone can do—their expertise, tools, and responsibilities.
 | **CFO** | Financial planning, metrics, runway |
 | **CMO** | Brand, marketing strategy, growth |
 | **CRO** | Revenue, sales strategy, partnerships |
+| **CISO** | Security strategy, threat modeling, incident response, compliance |
+| **Head of Data** | Data platform, pipelines, metrics, ML monitoring |
 
 ### Product & Engineering
 | Role | Description |

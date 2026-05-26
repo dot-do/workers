@@ -262,6 +262,58 @@ export default Service({
 })
 ```
 
+## Service Capability Catalog
+
+> Migrated from the `primitives.org.ai` `autonomous-*` catalog packages (2026-05). Those were unpublished staging-ground dogfood of the Services-as-Software v3 substrate and were **deleted**; this section preserves their Service-level capabilities so nothing is lost. Each role (a `*.do` job function, captured above and in `domains/registry.tsv`) breaks down into the concrete sub-capabilities it performs. Full per-package detail: the primitives.org.ai catalog-tier restructure plan + issues #9–#24.
+
+### Finance — `cfo.do` (named agent: `finn`)
+bookkeeper · controller · accounts-payable · accounts-receivable · tax · treasury · payroll · audit-prep · expense-policy-enforcer · cash-runway-projector · board-deck-financials-pack
+
+### Revenue / Sales — `cro.do` / `sales-lead.do`
+lead-qualification · meeting-prep · contract-redliner · proposal-generator · renewal-workbench · campaign-orchestrator · win-loss-analyzer · account-research-brief
+
+### Customer Success — `cs-lead.do` (CSM)
+support-triage · nps-followup · churn-rescue · account-review · onboarding-runbook · csm-qbr-deck · expansion-opportunity-detector · health-score-narrator
+
+### Marketing — `cmo.do`
+campaign-brief-generator · seo-content-pillar-author · paid-ad-creative-iterator · brand-voice-monitor · content-localization-orchestrator · campaign-attribution-auditor · email-nurture-sequencer · competitor-positioning-monitor · webinar-funnel-orchestrator
+
+### Product — `cpo.do`
+prd-author · customer-feedback-synthesizer · roadmap-tradeoff-evaluator · release-experiment-designer · feature-deprecation-coordinator · jobs-to-be-done-clusterer
+
+### Data — `head-of-data.do`
+dbt-model-author · data-quality-incident-triager · metrics-catalog-curator · pipeline-incident-investigator · schema-evolution-planner · ml-model-monitor
+
+### Developer Experience — `head-of-dx.do`
+api-docs-writer · changelog-generator · sdk-generator · migration-guide-writer · tutorial-author · example-suite-builder · release-readiness-checklist · incident-postmortem-author
+
+### Operations — `coo.do` *(content reads as SRE/ops-engineering — may belong under a CTO/SRE role)*
+incident-commander · oncall-handoff-narrator · capacity-planner · slo-budget-tracker · change-window-coordinator · runbook-author
+
+### People / HR — `chro.do` / `head-of-people.do`
+hiring-loop-coordinator · performance-review-narrator · org-design-impact-modeler · compensation-band-analyst · candidate-experience-evaluator · talent-pipeline-quality-monitor
+
+### Legal — `general-counsel.do`
+contract-reviewer · policy-impact-analyzer · ip-disclosure-triage · litigation-discovery-prep · compliance-attestation-author · regulatory-filing-drafter
+
+### Security — `ciso.do`
+vuln-triager · access-review-coordinator · phishing-simulation-orchestrator · incident-response-orchestrator · threat-model-author · compliance-audit-prepper
+
+### Research (academic / scientific) — `head-of-r-and-d.do`
+literature-review-synthesizer · experiment-protocol-author · manuscript-pre-submission-reviewer · grant-application-author · data-analysis-plan-author · peer-review-coordinator
+
+### IT — `head-of-it.do`
+helpdesk-ticket-resolver · endpoint-fleet-monitor · identity-lifecycle-orchestrator
+
+### Supply Chain — `head-of-supply.do` *(no dedicated registry domain yet — `supply.do` / `procurement.do` TBD)*
+vendor-onboarding-runbook · purchase-order-router · inventory-reorder-planner · supplier-risk-monitor · freight-cost-optimizer · customs-compliance-filer · demand-forecast-synthesizer · manufacturing-quality-incident-investigator · supplier-contract-renewal-orchestrator
+
+### Events / Partnerships *(no dedicated role/registry domain yet — `events.do` is taken by the pub/sub primitive)*
+event-program-curator · partnership-deal-orchestrator · event-attendee-engagement-monitor
+
+### Startups / Studio tooling *(founder/studio meta-tier, not an operate-role)*
+claude-code-feature-build · wedge-hypothesis-generator · competitor-uncopyability-prober · runtime-unit-emitter · pricing-architect · pitch-deck-builder · gtm-experiment-runner
+
 ## The Vision
 
 You're a founder. You need:
